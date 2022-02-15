@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This charm library provides common pgbouncer-specific features for the pgbouncer machine and
+Kubernetes charms.
+"""
+
 import secrets
 import string
 from typing import Dict
+
 
 def generate_password() -> str:
     """Generates a secure password.
@@ -25,23 +31,17 @@ def generate_password() -> str:
     choices = string.ascii_letters + string.digits
     return "".join([secrets.choice(choices) for _ in range(24)])
 
+
 def generate_pgbouncer_ini(users: Dict[str, str], config) -> str:
     """Generate pgbouncer.ini from config.
 
     This is a basic stub method, and will be updated in future to generate more complex
     pgbouncer.ini files in a more sophisticated way.
 
-    TODO compare to real-world pgbouncer.ini files and devise a more sophisticated way of
-    generating them. Look at the previous charm's implementation of this.
-    TODO evaluate other user types, such as stat_users etc
-    TODO define/parse databases based on relation to postgres - does it need to be an exposed
-    config option?
-
     Params:
         users: a dictionary of usernames and passwords
         config: charm config object.
     """
-
     return f"""[databases]
 {config["pgb_databases"]}
 
@@ -55,7 +55,7 @@ pidfile = pgbouncer.pid
 admin_users = {",".join(users.keys())}"""
 
 
-def generate_userlist(self, users: Dict[str, str]) -> str:
+def generate_userlist(users: Dict[str, str]) -> str:
     """Generate userlist.txt from the given dictionary of usernames:passwords.
 
     Params:
