@@ -1,6 +1,7 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import string
 import unittest
 
 from lib.charms.dp_pgbouncer_operator.v0 import pgb
@@ -10,6 +11,9 @@ class TestPgb(unittest.TestCase):
     def test_generate_password(self):
         pw = pgb.generate_password()
         self.assertEqual(len(pw), 24)
+        valid_chars = string.ascii_letters + string.digits
+        for char in pw:
+            assert char in valid_chars
 
     def test_generate_pgbouncer_ini(self):
         users = {"test1": "pw1", "test2": "pw2"}
@@ -22,16 +26,12 @@ class TestPgb(unittest.TestCase):
             "pgb_listen_address": "4.4.5.4",
         }
         pgb_ini = pgb.generate_pgbouncer_ini(users, config)
-        expected_pgb_ini = f"""[databases]
-{config["pgb_databases"]}
-[pgbouncer]
-listen_port = {config["pgb_listen_port"]}
-listen_addr = {config["pgb_listen_address"]}
-auth_type = md5
-auth_file = userlist.txt
-logfile = pgbouncer.log
-pidfile = pgbouncer.pid
-admin_users = {",".join(users.keys())}"""
+        expected_pgb_ini = pgb.PGB_INI.format(
+            databases=config["pgb_databases"],
+            listen_port=config["pgb_listen_port"],
+            listen_addr=config["pgb_listen_address"],
+            admin_users=",".join(users.keys()),
+        )
         self.assertEqual(pgb_ini, expected_pgb_ini)
 
     def test_generate_userlist(self):
@@ -40,3 +40,27 @@ admin_users = {",".join(users.keys())}"""
         expected_userlist = '''"test1" "pw1"
 "test2" "pw2"'''
         self.assertEqual(userlist, expected_userlist)
+
+    def test_parse_userlist(self):
+        userlist = '''"testuser" "testpass"
+
+"another_testuser" "anotherpass"
+"1234" ""
+"" """
+nospaces
+t o o m a n y s p a c e s
+'''
+        users = pgb.parse_userlist(userlist)
+        expected_users = {
+            "testuser": "testpass",
+            "another_testuser": "anotherpass",
+            "1234": "",
+            "": "",
+        }
+        self.assertDictEqual(users, expected_users)
+
+        # Check that we can run input through a few times without anything getting corrupted.
+        regen_userlist = pgb.generate_userlist(users)
+        regen_users = pgb.parse_userlist(regen_userlist)
+        self.assertNotEqual(regen_userlist, userlist)
+        self.assertDictEqual(users, regen_users)
