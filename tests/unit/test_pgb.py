@@ -13,7 +13,9 @@ class TestPgb(unittest.TestCase):
 
     def test_generate_pgbouncer_ini(self):
         users = {"test1": "pw1", "test2": "pw2"}
-        # This should be updated to mock a juju config object
+        # Though this isn't correctly mocking an ops.model.ConfigData object, ConfigData implements
+        # a LazyMapping under the hood that accesses variables in the same way as a dictionary -
+        # they're effectively interchangeable in this context.
         config = {
             "pgb_databases": "test-dbs",
             "pgb_listen_port": "4454",

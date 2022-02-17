@@ -21,6 +21,8 @@ import secrets
 import string
 from typing import Dict
 
+from ops.model import ConfigData
+
 
 def generate_password() -> str:
     """Generates a secure password.
@@ -31,13 +33,16 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(users: Dict[str, str], config) -> str:
+def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
     """Generate pgbouncer.ini from config.
+
     This is a basic stub method, and will be updated in future to generate more complex
     pgbouncer.ini files in a more sophisticated way.
-    Params:
+
+    Args:
         users: a dictionary of usernames and passwords
-        config: charm config object.
+    Returns:
+        A multiline string defining a valid pgbouncer.ini file
     """
     return f"""[databases]
 {config["pgb_databases"]}
@@ -53,7 +58,8 @@ admin_users = {",".join(users.keys())}"""
 
 def generate_userlist(users: Dict[str, str]) -> str:
     """Generate userlist.txt from the given dictionary of usernames:passwords.
-    Params:
+
+    Args:
         users: a dictionary of usernames and passwords
     Returns:
         A multiline string, containing each pair of usernames and passwords separated by a
