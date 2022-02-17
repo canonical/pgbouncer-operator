@@ -1,11 +1,9 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more about testing at: https://juju.is/docs/sdk/testing
 
 import unittest
 
-from lib.charms.pgbouncer_operator.v0 import pgb
+from lib.charms.dp_pgbouncer_operator.v0 import pgb
 
 
 class TestPgb(unittest.TestCase):
