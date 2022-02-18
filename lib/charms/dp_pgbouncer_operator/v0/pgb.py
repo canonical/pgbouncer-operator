@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
+"""PgBouncer Charm Library.
+
 This charm library provides common pgbouncer-specific features for the pgbouncer machine and
 Kubernetes charms.
 """
@@ -61,6 +62,7 @@ def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
 
     Args:
         users: a dictionary of usernames and passwords
+        config: A juju charm config object
     Returns:
         A multiline string defining a valid pgbouncer.ini file
     """
@@ -96,7 +98,6 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     Returns:
         users: a dictionary of usernames and passwords
     """
-
     parsed_userlist = {}
     for line in userlist.split("\n"):
         if line.strip() == "" or len(line.split(" ")) != 2:
