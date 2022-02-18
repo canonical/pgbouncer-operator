@@ -17,11 +17,14 @@ This charm library provides common pgbouncer-specific features for the pgbouncer
 Kubernetes charms.
 """
 
+import logging
 import secrets
 import string
 from typing import Dict
 
 from ops.model import ConfigData
+
+logger = logging.getLogger(__name__)
 
 PGB_INI = """\
 [databases]
@@ -97,6 +100,7 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     parsed_userlist = {}
     for line in userlist.split("\n"):
         if line.strip() == "" or len(line.split(" ")) != 2:
+            logger.warning("unable to parse line in userlist file - user not imported")
             continue
         # Userlist is formatted "{username}" "{password}""
         username, password = line.replace('"', "").split(" ")
