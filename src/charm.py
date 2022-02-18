@@ -5,11 +5,13 @@
 """Charmed PgBouncer connection pooler."""
 
 import logging
+import os
+import pwd
 import subprocess
-from typing import List
+from typing import Dict, List
 
-from lib.charms.operator_libs_linux.v0 import apt
-from lib.charms.dp_pgbouncer_operator.v0 import pgb
+from charms.dp_pgbouncer_operator.v0 import pgb
+from charms.operator_libs_linux.v0 import apt
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -24,7 +26,6 @@ USERLIST_PATH = "/etc/pgbouncer/userlist.txt"
 """
 EOD TODO
 install dummy pgbouncer.ini and userlist.txt files
-write docstrings for charm lib
 write dosctrings for methods
 get charm installing and running
 write unit tests
@@ -53,6 +54,10 @@ class PgBouncerCharm(CharmBase):
     # =======================
 
     def _on_install(self, _) -> None:
+        """On install hook.
+
+        This initialises local config files necessary for pgbouncer to run.
+        """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         self._install_apt_packages(["pgbouncer"])
@@ -62,6 +67,16 @@ class PgBouncerCharm(CharmBase):
 
     def _on_start(self, _) -> None:
 
+        try:
+            command = [
+                "pgbouncer",
+                INI_PATH,
+            ]
+            logger.debug(f"pgbouncer call: {' '.join(command)}")
+            subprocess.check_call(command)
+        except subprocess.CalledProcessError as e:
+            logger.info(e)
+            self.unit.status = BlockedStatus("failed to start pgbouncer")
         self.unit.status = ActiveStatus("pgbouncer started")
 
     def _on_config_changed(self, _) -> None:
@@ -88,26 +103,32 @@ class PgBouncerCharm(CharmBase):
             logger.error("a specified package not found in package cache or on system")
             self.unit.status = BlockedStatus("failed to install packages")
 
-    def _update_local_config(self, users=None) -> None:
+    def _update_local_config(
+        self, users: Dict[str, str] = None, reload_pgbouncer: bool = False
+    ) -> None:
         """Updates config files stored on pgbouncer machine and reloads application.
 
         Updates userlist.txt and pgbouncer.ini config files, reloading pgbouncer application once
         updated.
 
-        Params:
+        Args:
             users: a dictionary of usernames and passwords
+            reload_pgbouncer: A boolean defining whether or not to reload pgbouncer after updating
+                the config. PgBouncer must be restarted for config changes to be applied.
         """
         if users is None:
-            users = self._get_userlist_from_machine()
+            users = self._retrieve_users_from_userlist()
         else:
-            self._push_userlist(users)
+            self._update_userlist(users)
 
-        self._push_pgbouncer_ini(users, reload_pgbouncer=True)
+        self._update_pgbouncer_ini(users, reload_pgbouncer)
 
-    def _push_pgbouncer_ini(self, users=None, reload_pgbouncer=False) -> None:
+    def _update_pgbouncer_ini(
+        self, users: Dict[str, str] = None, reload_pgbouncer: bool = False
+    ) -> None:
         """Generate pgbouncer.ini from juju config and deploy it to the container.
 
-        Params:
+        Args:
             users: a dictionary of usernames and passwords
             reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
                 in the container. When config files are updated, pgbouncer must be restarted for
@@ -115,38 +136,47 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         if users is None:
-            users = self._get_userlist_from_machine()
+            users = self._retrieve_users_from_userlist()
 
-        pgbouncer_ini = pgb.generate_pgbouncer_ini(users)
-        # try:
-        #     # Check that we're not updating this file unnecessarily
-        #     if pgb_container.pull(INI_PATH).read() == pgbouncer_ini:
-        #         logger.info("updated config does not modify existing pgbouncer config")
-        #         return
-        # except FileNotFoundError:
-        #     # There is no existing pgbouncer.ini file, so carry on and add one.
-        #     pass
-
-        # pgb_container.push(
-        #     INI_PATH,
-        #     pgbouncer_ini,
-        #     user=self._pgbouncer_user,
-        #     permissions=0o600,
-        #     make_dirs=True,
-        # )
-        logging.info("initialised pgbouncer.ini file")
+        pgb_ini = pgb.generate_pgbouncer_ini(users, self.config)
+        self._render_file(pgb_ini, INI_PATH, 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
-    def _push_userlist(self):
-        pass
+    def _update_userlist(self, users: Dict[str, str] = None, reload_pgbouncer: bool = False):
+        if users is None:
+            users = self._retrieve_users_from_userlist()
 
-    def _get_userlist_from_machine(self):
-        pass
+        userlist = pgb.generate_userlist(users)
+        self._render_file(userlist, USERLIST_PATH, 0o600)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _retrieve_users_from_userlist(self):
+        return {"coolguy":"securepass"}
 
     def _reload_pgbouncer(self):
         pass
+
+    def _render_file(self, path: str, content: str, mode: int) -> None:
+        """Write a content rendered from a template to a file.
+
+        Args:
+            path: the path to the file.
+            content: the data to be written to the file.
+            mode: access permission mask applied to the
+            file using chmod (e.g. 0o640).
+        """
+        with open(path, "w+") as file:
+            file.write(content)
+        # Ensure correct permissions are set on the file.
+        os.chmod(path, mode)
+        # Get the uid/gid for the postgres user.
+        u = pwd.getpwnam("pgbouncer")
+        # Set the correct ownership for the file.
+        os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
 
 if __name__ == "__main__":
