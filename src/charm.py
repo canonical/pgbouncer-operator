@@ -11,7 +11,7 @@ import subprocess
 from typing import Dict, List
 
 from charms.dp_pgbouncer_operator.v0 import pgb
-from charms.operator_libs_linux.v0 import apt
+from charms.operator_libs_linux.v0 import apt, passwd
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -60,6 +60,7 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
+        passwd.add_user(username="pgbouncer", password="pgb")
         self._install_apt_packages(["pgbouncer"])
         self._update_local_config()
 
@@ -144,10 +145,7 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
-    def _update_userlist(self, users: Dict[str, str] = None, reload_pgbouncer: bool = False):
-        if users is None:
-            users = self._retrieve_users_from_userlist()
-
+    def _update_userlist(self, users: Dict[str, str], reload_pgbouncer: bool = False):
         userlist = pgb.generate_userlist(users)
         self._render_file(userlist, USERLIST_PATH, 0o600)
 
@@ -155,7 +153,7 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _retrieve_users_from_userlist(self):
-        return {"coolguy":"securepass"}
+        return {"coolguy": "securepass"}
 
     def _reload_pgbouncer(self):
         pass
@@ -169,11 +167,12 @@ class PgBouncerCharm(CharmBase):
             mode: access permission mask applied to the
             file using chmod (e.g. 0o640).
         """
+        logger.info(f"rendering file \n{content}")
         with open(path, "w+") as file:
             file.write(content)
         # Ensure correct permissions are set on the file.
         os.chmod(path, mode)
-        # Get the uid/gid for the postgres user.
+        # Get the uid/gid for the pgbouncer user.
         u = pwd.getpwnam("pgbouncer")
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
