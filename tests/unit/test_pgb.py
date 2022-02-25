@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 
-import inspect
 import string
 import unittest
 
@@ -41,29 +40,22 @@ class TestPgb(unittest.TestCase):
         userlist = pgb.generate_userlist(users)
         expected_userlist = '''"test1" "pw1"\n"test2" "pw2"'''
         self.assertEqual(userlist, expected_userlist)
+        self.assertDictEqual(pgb.parse_userlist(expected_userlist), users)
 
     def test_parse_userlist(self):
-        userlist = inspect.cleandoc(
-            '''"testuser" "testpass"
+        with open("tests/unit/data/test_userlist.txt") as f:
+            userlist = f.read()
+            users = pgb.parse_userlist(userlist)
+            expected_users = {
+                "testuser": "testpass",
+                "another_testuser": "anotherpass",
+                "1234": "",
+                "": "",
+            }
+            self.assertDictEqual(users, expected_users)
 
-            "another_testuser" "anotherpass"
-            "1234" ""
-            "" """
-            nospaces
-            t o o m a n y s p a c e s
-            '''
-        )
-        users = pgb.parse_userlist(userlist)
-        expected_users = {
-            "testuser": "testpass",
-            "another_testuser": "anotherpass",
-            "1234": "",
-            "": "",
-        }
-        self.assertDictEqual(users, expected_users)
-
-        # Check that we can run input through a few times without anything getting corrupted.
-        regen_userlist = pgb.generate_userlist(users)
-        regen_users = pgb.parse_userlist(regen_userlist)
-        self.assertNotEqual(regen_userlist, userlist)
-        self.assertDictEqual(users, regen_users)
+            # Check that we can run input through a few times without anything getting corrupted.
+            regen_userlist = pgb.generate_userlist(users)
+            regen_users = pgb.parse_userlist(regen_userlist)
+            self.assertNotEqual(regen_userlist, userlist)
+            self.assertDictEqual(users, regen_users)
