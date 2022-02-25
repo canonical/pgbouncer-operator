@@ -12,18 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
+"""PgBouncer Charm Library.
+
 This charm library provides common pgbouncer-specific features for the pgbouncer machine and
 Kubernetes charms.
 """
 
+import logging
 import secrets
 import string
 from typing import Dict
 
+from ops.model import ConfigData
+
+logger = logging.getLogger(__name__)
+
+PGB_INI = """\
+[databases]
+{databases}
+[pgbouncer]
+listen_port = {listen_port}
+listen_addr = {listen_addr}
+auth_type = md5
+auth_file = userlist.txt
+logfile = pgbouncer.log
+pidfile = pgbouncer.pid
+admin_users = {admin_users}
+"""
+
 
 def generate_password() -> str:
-    """Generates a secure password.
+    """Generates a secure password of alphanumeric characters.
+
+    Passwords are alphanumeric only, to ensure compatibility with the userlist.txt format -
+    specifically, spaces and double quotes may interfere with parsing this file.
 
     Returns:
         A random 24-character string of letters and numbers.
@@ -32,7 +54,7 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(users: Dict[str, str], config) -> str:
+def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
     """Generate pgbouncer.ini from config.
 
     This is a basic stub method, and will be updated in future to generate more complex
@@ -40,19 +62,16 @@ def generate_pgbouncer_ini(users: Dict[str, str], config) -> str:
 
     Args:
         users: a dictionary of usernames and passwords
-        config: charm config object.
+        config: A juju charm config object
+    Returns:
+        A multiline string defining a valid pgbouncer.ini file
     """
-    return f"""[databases]
-{config["pgb_databases"]}
-
-[pgbouncer]
-listen_port = {config["pgb_listen_port"]}
-listen_addr = {config["pgb_listen_address"]}
-auth_type = md5
-auth_file = userlist.txt
-logfile = pgbouncer.log
-pidfile = pgbouncer.pid
-admin_users = {",".join(users.keys())}"""
+    return PGB_INI.format(
+        databases=config["pgb_databases"],
+        listen_port=config["pgb_listen_port"],
+        listen_addr=config["pgb_listen_address"],
+        admin_users=",".join(users.keys()),
+    )
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
@@ -65,3 +84,27 @@ def generate_userlist(users: Dict[str, str]) -> str:
         space, one pair per line.
     """
     return "\n".join([f'"{username}" "{password}"' for username, password in users.items()])
+
+
+def parse_userlist(userlist: str) -> Dict[str, str]:
+    """Parse userlist.txt into a dictionary of usernames and passwords.
+
+    Args:
+        userlist: a multiline string of users and passwords, formatted thusly:
+        '''
+        "test-user" "password"
+        "juju-admin" "asdf1234"
+        '''
+    Returns:
+        users: a dictionary of usernames and passwords
+    """
+    parsed_userlist = {}
+    for line in userlist.split("\n"):
+        if line.strip() == "" or len(line.split(" ")) != 2:
+            logger.warning("unable to parse line in userlist file - user not imported")
+            continue
+        # Userlist is formatted "{username}" "{password}""
+        username, password = line.replace('"', "").split(" ")
+        parsed_userlist[username] = password
+
+    return parsed_userlist
