@@ -69,10 +69,7 @@ class PgBouncerCharm(CharmBase):
     def _on_start(self, _) -> None:
 
         try:
-            command = [
-                "pgbouncer",
-                INI_PATH,
-            ]
+            command = ["pgbouncer", INI_PATH]
             logger.debug(f"pgbouncer call: {' '.join(command)}")
             subprocess.check_call(command)
         except subprocess.CalledProcessError as e:
