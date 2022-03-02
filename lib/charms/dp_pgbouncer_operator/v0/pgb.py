@@ -76,6 +76,23 @@ def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
     )
 
 
+def generate_pgbouncer_ini_better(dbconfig: Dict[str, Dict[str, str]], **kwargs) -> str:
+    """Generate pgbouncer.ini using IniParser object.
+    Args:
+        dbconfig: database config dictionary
+        kwargs: kwargs following the [pgbouncer config spec](https://pgbouncer.org/config.html).
+            Note that admin_users and stats_users must be passed in as lists of strings, not in
+            their string representation in the .ini file.
+    """
+    import logging
+
+    logging.info(type(kwargs))
+    parser = IniParser()
+    cfg_dict = {"databases": dbconfig, "pgbouncer": kwargs}
+    parser.read_dict(cfg_dict)
+    return parser.write_to_string()
+
+
 def generate_userlist(users: Dict[str, str]) -> str:
     """Generate userlist.txt from the given dictionary of usernames:passwords.
 
@@ -102,8 +119,11 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     """
     parsed_userlist = {}
     for line in userlist.split("\n"):
-        # TODO add code that tests that double quotes wrap each value
-        if line.strip() == "" or len(line.split(" ")) != 2:
+        if (
+            line.strip() == ""
+            or len(line.split(" ")) != 2
+            or len(line.replace('"', "")) != len(line) - 4
+        ):
             logger.warning("unable to parse line in userlist file - user not imported")
             continue
         # Userlist is formatted "{username}" "{password}""
@@ -114,7 +134,11 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
 
 
 class IniParser(ConfigParser):
-    """A ConfigParser class used to read, write, and edit pgbouncer.ini config files."""
+    """A ConfigParser class used to read, write, and edit pgbouncer.ini config files.
+
+    This class also includes some variables for accessing more complex config entries
+    programmatically; where the .ini file stores them as delimited strings, this object stores
+    them as dictionaries"""
 
     db_section = "databases"
     pgb_section = "pgbouncer"
@@ -125,7 +149,10 @@ class IniParser(ConfigParser):
         # Preserve case in string values
         self.optionxform = str
 
-    def _read(self, fp, fpname):
+        self.dbs = {}
+        self.users = {}
+
+    def _read(self, fp, fpname) -> None:
         """Reads a pgbouncer.ini file, and uses it to populate this object.
 
         Overrides ConfigParser._read() method to include pgbouncer-specific parsing of nested
@@ -142,16 +169,15 @@ class IniParser(ConfigParser):
             fpname: Source of filepath - for example, <String>
         """
         super()._read(fp, fpname)
+        self._parse_complex_values()
 
-        # Parse db and user values into more useful python datatypes
-        self.dbs = {}
-        self.users = {}
-
+    def _parse_complex_values(self) -> None:
+        """Copies complex config values from strings into more suitable python representations."""
         # Parse nested dbs from space-separated key=value pairs to a dict.
         for name, db_config in self[IniParser.db_section].items():
             db_config_dict = {}
-            for pair in db_config.split(" "):
-                key, value = pair.split("=")
+            for kv_pair in db_config.split(" "):
+                key, value = kv_pair.split("=")
                 db_config_dict[key] = value
             self.dbs[name] = db_config_dict
 
@@ -161,8 +187,50 @@ class IniParser(ConfigParser):
                 userlist = self[IniParser.pgb_section][user]
                 self.users[user] = userlist.split(",")
             except KeyError:
-                # This user field doesn't exist, carry on.
-                continue
+                # If a user type doesn't exist, that's not a problem.
+                pass
+
+    def _encode_complex_values(self) -> None:
+        """Writes config values from accessible local variables to pgb-readable strings."""
+        # Encode db dicts to writable strings
+        for name, dbconfig in self.dbs.items():
+            # Split each dbconfig value into a space-separated string of key-value pairs
+            self[IniParser.db_section][name] = " ".join(
+                [f"{key}={value}" for key, value in dbconfig.items()]
+            )
+
+        # Encode user lists back to writable strings
+        for userlist in IniParser.user_types:
+            try:
+                self[IniParser.pgb_section][userlist] = ",".join(self.users[userlist])
+            except KeyError:
+                # If a user type doesn't exist, that's not a problem.
+                pass
+
+    def read_dict(self, dictionary, source="<dict>") -> None:
+        """Reads a dictionary and uses it to populate this object.
+
+        Overrides ConfigParser.read_dict() parent method, including some parsing for unique
+        pgbouncer variables.
+
+        Args:
+            dictionary: the dictionary to be read into this object. When forming this dictionary,
+                ensure database config is written as a sub-dictionary, and user config is written
+                as a list, rather than using the pgbouncer config string representation.
+            source: the source of the dict (used primarily for logging)
+        """
+        super().read_dict(dictionary, source)
+        self.dbs = dict(dictionary["databases"])
+        for user_type in IniParser.user_types:
+            try:
+                if isinstance(dictionary["pgbouncer"][user_type], str):
+                    self.users[user_type] = [dictionary["pgbouncer"][user_type]]
+                else:
+                    self.users[user_type] = list(dictionary["pgbouncer"][user_type])
+            except KeyError:
+                # If a user_type doesn't exist, that's not a problem.
+                pass
+        self._encode_complex_values()
 
     def write(self, fp, space_around_delimiter=True):
         """Write a pgbouncer file to the given filepath.
@@ -178,23 +246,10 @@ class IniParser(ConfigParser):
             fp: Iterable filepath object for
             space_around_delimiter: whether or not to have spaces around delimiter
         """
-        # Encode db dicts back to writable strings
-        for name, dbconfig in self.dbs.items():
-            # Split each dbconfig value into a space-separated string of key-value pairs
-            self[IniParser.db_section][name] = " ".join(
-                [f"{key}={value}" for key, value in dbconfig.items()]
-            )
-
-        # Encode user lists back to writable strings
-        for userlist in IniParser.user_types:
-            try:
-                self[IniParser.pgb_section][userlist] = ",".join(self.users[userlist])
-            except KeyError:
-                # If admin user doesn't exist, skip
-                continue
 
         # Use ConfigParser.write() to write the file normally.
         super().write(fp, space_around_delimiter)
+        self._encode_complex_values()
 
     def write_to_string(self) -> str:
         """Writes class to a string, capable of being written to a pgbouncer.ini config file.

@@ -2,6 +2,6 @@
 
 "another_testuser" "anotherpass"
 "1234" ""
-"" """
+"" ""
 "no""spaces"
 "too" "many" "spaces"
