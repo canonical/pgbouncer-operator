@@ -16,24 +16,6 @@ class TestPgb(unittest.TestCase):
             assert char in valid_chars
 
     def test_generate_pgbouncer_ini(self):
-        users = {"test1": "pw1", "test2": "pw2"}
-        # Though this isn't correctly mocking an ops.model.ConfigData object, ConfigData implements
-        # a LazyMapping under the hood that accesses variables in the same way as a dictionary.
-        config = {
-            "pgb_databases": "test-dbs",
-            "pgb_listen_port": "4454",
-            "pgb_listen_address": "4.4.5.4",
-        }
-        pgb_ini = pgb.generate_pgbouncer_ini(users, config)
-        expected_pgb_ini = pgb.PGB_INI.format(
-            databases=config["pgb_databases"],
-            listen_port=config["pgb_listen_port"],
-            listen_addr=config["pgb_listen_address"],
-            admin_users=",".join(users.keys()),
-        )
-        self.assertEqual(pgb_ini, expected_pgb_ini)
-
-    def test_generate_pgbouncer_ini_better(self):
         dbs = {
             "test": {"host": "test", "port": "4039", "dbname": "testdatabase"},
             "test2": {"host": "test2"},
@@ -42,7 +24,7 @@ class TestPgb(unittest.TestCase):
         stats_users = ["test_admin", "test_stats"]
         listen_port = "4545"
 
-        generated_ini = pgb.generate_pgbouncer_ini_better(
+        generated_ini = pgb.generate_pgbouncer_ini(
             dbs, admin_users=admin_users, stats_users=stats_users, listen_port=listen_port
         )
         expected_generated_ini = """[databases]

@@ -15,7 +15,7 @@
 """PgBouncer Charm Library.
 
 This charm library provides common pgbouncer-specific features for the pgbouncer machine and
-Kubernetes charms.
+Kubernetes charms, including automatic config management.
 """
 
 import io
@@ -25,22 +25,7 @@ import string
 from configparser import ConfigParser
 from typing import Dict
 
-from ops.model import ConfigData
-
 logger = logging.getLogger(__name__)
-
-PGB_INI = """\
-[databases]
-{databases}
-[pgbouncer]
-listen_port = {listen_port}
-listen_addr = {listen_addr}
-auth_type = md5
-auth_file = userlist.txt
-logfile = pgbouncer.log
-pidfile = pgbouncer.pid
-admin_users = {admin_users}
-"""
 
 
 def generate_password() -> str:
@@ -56,37 +41,15 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
-    """Generate pgbouncer.ini from config.
+def generate_pgbouncer_ini(dbconfig: Dict[str, Dict[str, str]], **kwargs) -> str:
+    """Generate pgbouncer.ini file from the given config options.
 
-    This is a basic stub method, and will be updated in future to generate more complex
-    pgbouncer.ini files in a more sophisticated way.
-
-    Args:
-        users: a dictionary of usernames and passwords
-        config: A juju charm config object
-    Returns:
-        A multiline string defining a valid pgbouncer.ini file
-    """
-    return PGB_INI.format(
-        databases=config["pgb_databases"],
-        listen_port=config["pgb_listen_port"],
-        listen_addr=config["pgb_listen_address"],
-        admin_users=",".join(users.keys()),
-    )
-
-
-def generate_pgbouncer_ini_better(dbconfig: Dict[str, Dict[str, str]], **kwargs) -> str:
-    """Generate pgbouncer.ini using IniParser object.
     Args:
         dbconfig: database config dictionary
         kwargs: kwargs following the [pgbouncer config spec](https://pgbouncer.org/config.html).
             Note that admin_users and stats_users must be passed in as lists of strings, not in
             their string representation in the .ini file.
     """
-    import logging
-
-    logging.info(type(kwargs))
     parser = IniParser()
     cfg_dict = {"databases": dbconfig, "pgbouncer": kwargs}
     parser.read_dict(cfg_dict)
@@ -94,13 +57,13 @@ def generate_pgbouncer_ini_better(dbconfig: Dict[str, Dict[str, str]], **kwargs)
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
-    """Generate userlist.txt from the given dictionary of usernames:passwords.
+    """Generate valid userlist.txt from the given dictionary of usernames:passwords.
 
     Args:
         users: a dictionary of usernames and passwords
     Returns:
-        A multiline string, containing each pair of usernames and passwords separated by a
-        space, one pair per line.
+        A multiline string, containing each pair of usernames and passwords in double quotes,
+        separated by a space, one pair per line.
     """
     return "\n".join([f'"{username}" "{password}"' for username, password in users.items()])
 
@@ -136,17 +99,17 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
 class IniParser(ConfigParser):
     """A ConfigParser class used to read, write, and edit pgbouncer.ini config files.
 
-    This class also includes some variables for accessing more complex config entries
-    programmatically; where the .ini file stores them as delimited strings, this object stores
-    them as dictionaries"""
+    This class also includes parsing and storage for more complex entries in the config file, 
+    allowing them to be accessed programmatically. 
+    """
 
     db_section = "databases"
     pgb_section = "pgbouncer"
     user_types = ["admin_users", "stats_users"]
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        # Preserve case in string values
+    def __init__(self):
+        super().__init__()
+        # Preserve case accurately - without this setting, everything is set to lowercase. 
         self.optionxform = str
 
         self.dbs = {}
@@ -158,21 +121,16 @@ class IniParser(ConfigParser):
         Overrides ConfigParser._read() method to include pgbouncer-specific parsing of nested
         values. This method therefore also removes comments from the .ini file.
 
-        The existing ConfigParser._read() method adequately parses the config, but it's useful for
-        us to parse dictionary and list values (such as databases and admin_users, respectively)
-        explicitly, so we can access and modify those values as we need. This necessitates
-        modifying the parent method's write() function to correctly encode these lists. This method
-        is private, since the parent class' read methods should be used.
+        The existing parent method parses the .ini file, but database and userlist values in
+        pgbouncer config are more usefully represented as dictionaries and lists respectively, so
+        they can be modified programmatically. 
 
         Args:
             fp: filepath to be read. Must be iterable.
             fpname: Source of filepath - for example, <String>
         """
         super()._read(fp, fpname)
-        self._parse_complex_values()
 
-    def _parse_complex_values(self) -> None:
-        """Copies complex config values from strings into more suitable python representations."""
         # Parse nested dbs from space-separated key=value pairs to a dict.
         for name, db_config in self[IniParser.db_section].items():
             db_config_dict = {}
@@ -220,7 +178,9 @@ class IniParser(ConfigParser):
             source: the source of the dict (used primarily for logging)
         """
         super().read_dict(dictionary, source)
+
         self.dbs = dict(dictionary["databases"])
+
         for user_type in IniParser.user_types:
             try:
                 if isinstance(dictionary["pgbouncer"][user_type], str):
@@ -230,6 +190,7 @@ class IniParser(ConfigParser):
             except KeyError:
                 # If a user_type doesn't exist, that's not a problem.
                 pass
+
         self._encode_complex_values()
 
     def write(self, fp, space_around_delimiter=True):
@@ -237,22 +198,16 @@ class IniParser(ConfigParser):
 
         Overrides ConfigParser.write() method to include pgb-specific parsing of nested values.
 
-        The existing ConfigParser.write() method adequately encodes simple config values, but
-        certain values are parsed into python lists/dicts in Ini._read(), for utility. These values
-        have to be re-encoded back to their string representations before they are written to a
-        file.
-
         Args:
             fp: Iterable filepath object for
             space_around_delimiter: whether or not to have spaces around delimiter
         """
-
         # Use ConfigParser.write() to write the file normally.
         super().write(fp, space_around_delimiter)
         self._encode_complex_values()
 
     def write_to_string(self) -> str:
-        """Writes class to a string, capable of being written to a pgbouncer.ini config file.
+        """Returns a valid pgbouncer.ini file as a string.
 
         Returns:
             str: a string that can be sent to a pgbouncer.ini file.
