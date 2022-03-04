@@ -20,6 +20,7 @@ Kubernetes charms, including automatic config management.
 
 import io
 import logging
+import re
 import secrets
 import string
 from collections.abc import MutableMapping
@@ -42,16 +43,18 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(**kwargs) -> str:
+def generate_pgbouncer_ini(config) -> str:
     """Generate pgbouncer.ini file from the given config options.
 
     Args:
-        kwargs: kwargs following the [pgbouncer config spec](https://pgbouncer.org/config.html).
+        config: dict following the [pgbouncer config spec](https://pgbouncer.org/config.html).
             Note that admin_users and stats_users must be passed in as lists of strings, not in
             their string representation in the .ini file.
+    Returns:
+        A valid pgbouncer.ini file, represented as a string.
     """
     ini = PgbIni()
-    ini.parse_dict(kwargs)
+    ini.parse_dict(config)
     return ini.render()
 
 
@@ -110,15 +113,15 @@ class PgbIni(MutableMapping):
     def __init__(self, *args, **kwargs):
         self.__dict__.update(*args, **kwargs)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str):
         """Deletes item from internal mapping."""
         del self.__dict__[key]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         """Gets item from internal mapping."""
         return self.__dict__[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value):
         """Set an item in internal mapping."""
         self.__dict__[key] = value
 
@@ -141,16 +144,24 @@ class PgbIni(MutableMapping):
         parser.optionxform = str
         parser.read_string(input)
 
+        # Convert ConfigParser and configparser.Section objects to dictionaries.
         self.__dict__.update(dict(parser).copy())
         for section, data in self.__dict__.items():
             self.__dict__[section] = dict(data)
+
+        # ConfigParser object creates a DEFAULT section of an .ini file, which we don't need.
         del self["DEFAULT"]
 
         self._parse_complex_variables()
         self.validate()
 
     def _parse_complex_variables(self) -> None:
-        """Parse complex config variables from string representation into dicts."""
+        """Parse complex config variables from string representation into dicts.
+
+        In a pgbouncer.ini file, certain values are represented by more complex data structures,
+        which are themselves represented as delimited strings. This method parses these strings
+        into more usable python objects.
+        """
         db = PgbIni.db_section
         users = PgbIni.users_section
         pgb = PgbIni.pgb_section
@@ -170,7 +181,7 @@ class PgbIni(MutableMapping):
             try:
                 self[pgb][pgb_lst] = self._parse_string_to_list(self[pgb][pgb_lst])
             except KeyError:
-                # stats_users doesn't have to exist
+                # user fields are not compulsory, so continue
                 pass
 
     def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
@@ -236,5 +247,30 @@ class PgbIni(MutableMapping):
 
     def validate(self):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
-        if not self[PgbIni.db_section]:
-            raise KeyError("database config not available")
+        essentials = {
+            "databases": [],
+            "pgbouncer": ["logfile", "pidfile"],
+        }
+        # Any characters other than these must be surrounded by double quotes
+        dbname_chars = "_-09AZaz"
+
+        if essentials.keys() not in self.__dict__.keys():
+            raise KeyError("necessary sections not found in config.")
+
+        if essentials["pgbouncer"] not in self.__dict__.["pgbouncer"].keys():
+            raise KeyError("necessary values not found in config.")
+
+        # Guarantee db names are valid 
+        for db_id in self[db].keys():
+            db_name = self[db].get("dbname", "")
+            _validate_dbname(db_id)
+            _validate_dbname(db_name)
+
+
+    def _validate_dbname(string):
+        search = re.compile(r'[^A-Za-z0-9-_]+').search
+        fltr = filter(search, string)
+        # Check dbnames are valid characters 
+        if len("".join(fltr)) == 0:
+            return
+        # TODO check invalid characters are between double quotes 
