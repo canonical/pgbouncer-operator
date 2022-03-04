@@ -22,8 +22,9 @@ import io
 import logging
 import secrets
 import string
+from collections.abc import MutableMapping
 from configparser import ConfigParser
-from typing import Dict
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -41,19 +42,17 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(dbconfig: Dict[str, Dict[str, str]], **kwargs) -> str:
+def generate_pgbouncer_ini(**kwargs) -> str:
     """Generate pgbouncer.ini file from the given config options.
 
     Args:
-        dbconfig: database config dictionary
         kwargs: kwargs following the [pgbouncer config spec](https://pgbouncer.org/config.html).
             Note that admin_users and stats_users must be passed in as lists of strings, not in
             their string representation in the .ini file.
     """
-    parser = IniParser()
-    cfg_dict = {"databases": dbconfig, "pgbouncer": kwargs}
-    parser.read_dict(cfg_dict)
-    return parser.write_to_string()
+    ini = PgbIni()
+    ini.parse_dict(kwargs)
+    return ini.render()
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
@@ -96,124 +95,146 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     return parsed_userlist
 
 
-class IniParser(ConfigParser):
-    """A ConfigParser class used to read, write, and edit pgbouncer.ini config files.
+class PgbIni(MutableMapping):
+    """A mapping that represents the pgbouncer config."""
 
-    This class also includes parsing and storage for more complex entries in the config file,
-    allowing them to be accessed programmatically.
-    """
-
+    # Define names of ini sections:
+    # [databases] defines the config options for each database. This section is mandatory.
+    # [pgbouncer] defines pgbouncer-specific config
+    # [users] defines config for specific users.
     db_section = "databases"
     pgb_section = "pgbouncer"
-    user_types = ["admin_users", "stats_users"]
+    users_section = "users"
+    pgb_list_entries = ["admin_users", "stats_users"]
 
-    def __init__(self):
-        super().__init__()
-        # Preserve case accurately - without this setting, everything is set to lowercase.
-        self.optionxform = str
+    def __init__(self, *args, **kwargs):
+        self.__dict__.update(*args, **kwargs)
 
-        self.dbs = {}
-        self.users = {}
+    def __delitem__(self, key):
+        """Deletes item from internal mapping."""
+        del self.__dict__[key]
 
-    def _read(self, fp, fpname) -> None:
-        """Reads a pgbouncer.ini file, and uses it to populate this object.
+    def __getitem__(self, key):
+        """Gets item from internal mapping."""
+        return self.__dict__[key]
 
-        Overrides ConfigParser._read() method to include pgbouncer-specific parsing of nested
-        values. This method therefore also removes comments from the .ini file.
+    def __setitem__(self, key, value):
+        """Set an item in internal mapping."""
+        self.__dict__[key] = value
 
-        The existing parent method parses the .ini file, but database and userlist values in
-        pgbouncer config are more usefully represented as dictionaries and lists respectively, so
-        they can be modified programmatically.
+    def __iter__(self):
+        """Returns an iterable of internal mapping."""
+        return iter(self.__dict__)
 
-        Args:
-            fp: filepath to be read. Must be iterable.
-            fpname: Source of filepath - for example, <String>
-        """
-        super()._read(fp, fpname)
+    def __len__(self):
+        """Gets number of key-value pairs in internal mapping."""
+        return len(self.__dict__)
 
-        # Parse nested dbs from space-separated key=value pairs to a dict.
-        for name, db_config in self[IniParser.db_section].items():
-            db_config_dict = {}
-            for kv_pair in db_config.split(" "):
-                key, value = kv_pair.split("=")
-                db_config_dict[key] = value
-            self.dbs[name] = db_config_dict
-
-        # Parse user lists from comma-separated strings to python lists.
-        for user in IniParser.user_types:
-            try:
-                userlist = self[IniParser.pgb_section][user]
-                self.users[user] = userlist.split(",")
-            except KeyError:
-                # If a user type doesn't exist, that's not a problem.
-                pass
-
-    def _encode_complex_values(self) -> None:
-        """Writes config values from accessible local variables to pgb-readable strings."""
-        # Encode db dicts to writable strings
-        for name, dbconfig in self.dbs.items():
-            # Split each dbconfig value into a space-separated string of key-value pairs
-            self[IniParser.db_section][name] = " ".join(
-                [f"{key}={value}" for key, value in dbconfig.items()]
-            )
-
-        # Encode user lists back to writable strings
-        for userlist in IniParser.user_types:
-            try:
-                self[IniParser.pgb_section][userlist] = ",".join(self.users[userlist])
-            except KeyError:
-                # If a user type doesn't exist, that's not a problem.
-                pass
-
-    def read_dict(self, dictionary, source="<dict>") -> None:
-        """Reads a dictionary and uses it to populate this object.
-
-        Overrides ConfigParser.read_dict() parent method, including some parsing for unique
-        pgbouncer variables.
+    def parse_string(self, input: str) -> None:
+        """Populates this class from a pgbouncer.ini file, passed in as a string.
 
         Args:
-            dictionary: the dictionary to be read into this object. When forming this dictionary,
-                ensure database config is written as a sub-dictionary, and user config is written
-                as a list, rather than using the pgbouncer config string representation.
-            source: the source of the dict (used primarily for logging)
+            input: pgbouncer.ini file to be parsed, represented as a string
         """
-        super().read_dict(dictionary, source)
+        # Since the parser persists data across reads, we have to create a new one for every read.
+        parser = ConfigParser()
+        parser.optionxform = str
+        parser.read_string(input)
 
-        self.dbs = dict(dictionary["databases"])
+        self.__dict__.update(dict(parser).copy())
+        for section, data in self.__dict__.items():
+            self.__dict__[section] = dict(data)
+        del self["DEFAULT"]
 
-        for user_type in IniParser.user_types:
+        self._parse_complex_variables()
+        self.validate()
+
+    def _parse_complex_variables(self) -> None:
+        """Parse complex config variables from string representation into dicts."""
+        db = PgbIni.db_section
+        users = PgbIni.users_section
+        pgb = PgbIni.pgb_section
+
+        # No error checking for [databases] section, since it has to exist for pgbouncer to run.
+        for name, cfg_string in self[db].items():
+            self[db][name] = self._parse_string_to_dict(cfg_string)
+
+        try:
+            for name, cfg_string in self[users].items():
+                self[users][name] = self._parse_string_to_dict(cfg_string)
+        except KeyError:
+            # [users] section is not compulsory, so continue.
+            pass
+
+        for pgb_lst in PgbIni.pgb_list_entries:
             try:
-                if isinstance(dictionary["pgbouncer"][user_type], str):
-                    self.users[user_type] = [dictionary["pgbouncer"][user_type]]
-                else:
-                    self.users[user_type] = list(dictionary["pgbouncer"][user_type])
+                self[pgb][pgb_lst] = self._parse_string_to_list(self[pgb][pgb_lst])
             except KeyError:
-                # If a user_type doesn't exist, that's not a problem.
+                # stats_users doesn't have to exist
                 pass
 
-        self._encode_complex_values()
+    def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
+        """Parses space-separated key=value pairs into a python dict."""
+        parsed_dict = {}
+        for kv_pair in string.split(" "):
+            key, value = kv_pair.split("=")
+            parsed_dict[key] = value
+        return parsed_dict
 
-    def write(self, fp, space_around_delimiter=True):
-        """Write a pgbouncer file to the given filepath.
+    def _parse_dict_to_string(self, dictionary: Dict[str, str]) -> str:
+        """Helper function to encode a python dict into a pgbouncer-readable string."""
+        return " ".join([f"{key}={value}" for key, value in dictionary.items()])
 
-        Overrides ConfigParser.write() method to include pgb-specific parsing of nested values.
+    def _parse_string_to_list(self, string: str) -> List[str]:
+        """Parses comma-separated strings to a list."""
+        return string.split(",")
+
+    def _parse_list_to_string(self, ls: List[str]) -> str:
+        """Helper function to encode a list into a comma-separated string."""
+        return ",".join(ls)
+
+    def parse_dict(self, input: Dict) -> None:
+        """Populates this object from a dictionary.
 
         Args:
-            fp: Iterable filepath object for
-            space_around_delimiter: whether or not to have spaces around delimiter
+            input: Dict to be parsed into this object. This dict must follow the pgbouncer config
+            spec (https://pgbouncer.org/config.html) to pass validation, implementing each section
+            as its own subdict. Lists should be represented as python lists, not comma-separated
+            strings.
         """
-        # Use ConfigParser.write() to write the file normally.
-        super().write(fp, space_around_delimiter)
-        self._encode_complex_values()
+        self.__dict__.update(input)
+        self.validate()
 
-    def write_to_string(self) -> str:
+    def render(self) -> str:
         """Returns a valid pgbouncer.ini file as a string.
 
         Returns:
             str: a string that can be sent to a pgbouncer.ini file.
         """
+        self.validate()
+
+        # Populate parser object with local data.
+        parser = ConfigParser()
+        parser.optionxform = str
+
+        output_dict = dict(self).copy()
+        for section, subdict in output_dict.items():
+            for option, config in subdict.items():
+                if isinstance(config, dict):
+                    output_dict[section][option] = self._parse_dict_to_string(config)
+                elif isinstance(config, list):
+                    output_dict[section][option] = self._parse_list_to_string(config)
+
+        parser.read_dict(output_dict)
+
+        # ConfigParser can only write to a file, so create a StringIO object to fool it.
         with io.StringIO() as string_io:
-            self.write(string_io)
+            parser.write(string_io)
             string_io.seek(0)
-            rtn_string = string_io.read()
-        return rtn_string
+            output = string_io.read()
+        return output
+
+    def validate(self):
+        """Validates that this will provide a valid pgbouncer.ini config when rendered."""
+        if not self[PgbIni.db_section]:
+            raise KeyError("database config not available")

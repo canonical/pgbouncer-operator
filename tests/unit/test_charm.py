@@ -50,7 +50,7 @@ class TestCharm(unittest.TestCase):
                     "startup": "enabled",
                     "environment": {"thing": "🎁"},
                 }
-            },
+            }
         }
         # Get the httpbin container from the model
         container = self.harness.model.unit.get_container("httpbin")

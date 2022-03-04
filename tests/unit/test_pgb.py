@@ -23,10 +23,13 @@ class TestPgb(unittest.TestCase):
         admin_users = ["test_admin"]
         stats_users = ["test_admin", "test_stats"]
         listen_port = "4545"
+        pgbouncer = {
+            "admin_users": admin_users,
+            "stats_users": stats_users,
+            "listen_port": listen_port,
+        }
 
-        generated_ini = pgb.generate_pgbouncer_ini(
-            dbs, admin_users=admin_users, stats_users=stats_users, listen_port=listen_port
-        )
+        generated_ini = pgb.generate_pgbouncer_ini(databases=dbs, pgbouncer=pgbouncer)
         expected_generated_ini = """[databases]
 test = host=test port=4039 dbname=testdatabase
 test2 = host=test2
@@ -64,90 +67,57 @@ listen_port = 4545
         self.assertNotEqual(regen_userlist, userlist)
         self.assertDictEqual(users, regen_users)
 
-    def test_ini_parser__read(self):
-        test_file = "tests/unit/data/test.ini"
-        parser = pgb.IniParser()
+    def test_pgb_ini_parse_string(self):
+        input_string = """[databases]
+test = host=test port=4039 dbname=testdatabase
+test2 = host=test2
 
-        with open(test_file) as file:
-            parser._read(file, "testfile")
+[pgbouncer]
+admin_users = test_admin
+stats_users = test_admin,test_stats
+listen_port = 4545
 
-        expected_parser_dbs = {
-            "db": {
-                "dbname": "test_db",
-                "host": "test",
-                "port": "10",
-                "user": "test",
-                "password": "test",
-                "client_encoding": "test",
-                "datestyle": "test",
-                "timezone": "test",
-                "pool_size": "test",
-                "connect_query": "test",
-            }
+"""
+        ini = pgb.PgbIni()
+        ini.parse_string(input_string)
+        expected_dict = {"host": "test", "port": "4039", "dbname": "testdatabase"}
+        self.assertDictEqual(ini["databases"]["test"], expected_dict)
+        self.assertEqual(ini["pgbouncer"]["stats_users"], ["test_admin", "test_stats"])
+
+    def test_pgb_ini_parse_dict(self):
+        input_dict = {
+            "databases": {
+                "db1": {"dbname": "test"},
+                "db2": {"host": "test_host"},
+            },
+            "pgbouncer": {
+                "logfile": "/etc/pgbouncer/pgb.log",
+                "admin_users": ["test"],
+                "stats_users": ["test", "stats_test"],
+            },
+            "users": {
+                "test": {"pool_mode": "session", "max_user_connections": "22"},
+            },
         }
-        self.assertDictEqual(parser.dbs, expected_parser_dbs)
-        expected_users = {"admin_users": ["Test"], "stats_users": ["Test", "stats_test"]}
-        self.assertDictEqual(parser.users, expected_users)
+        ini = pgb.PgbIni()
+        ini.parse_dict(input_dict)
+        self.assertDictEqual(input_dict, dict(ini))
 
-        parser_output = parser.write_to_string()
+    def test_pgb_ini_render(self):
+        input_string = """[databases]
+test = host=test port=4039 dbname=testdatabase
+test2 = host=test2
 
-        unmodded_file = ""
-        with open(test_file) as f:
-            for line in f.readlines():
-                # Remove commented lines
-                if line[0] not in ("#", ";"):
-                    unmodded_file += line
+[pgbouncer]
+admin_users = test_admin
+stats_users = test_admin,test_stats
+listen_port = 4545
 
-        self.assertEqual(parser_output, unmodded_file)
+"""
+        ini = pgb.PgbIni()
+        ini.parse_string(input_string)
+        output = ini.render()
+        self.assertEqual(input_string, output)
 
-    def test_ini_parser_read_dict(self):
-        parser = pgb.IniParser()
-        parser.read_dict(
-            {
-                "databases": {"db1": {"dbname": "test"}, "db2": {"host": "test_host"}},
-                "pgbouncer": {
-                    "admin_users": ["test"],
-                    "stats_users": ["test", "stats_test"],
-                },
-            }
-        )
-        expected_dbs = {"db1": {"dbname": "test"}, "db2": {"host": "test_host"}}
-        expected_users = {
-            "admin_users": ["test"],
-            "stats_users": ["test", "stats_test"],
-        }
-        self.assertDictEqual(parser.dbs, expected_dbs)
-        self.assertDictEqual(parser.users, expected_users)
-
-    def test_ini_parser_case_sensitive(self):
-        parser = pgb.IniParser()
-        self.assertEqual(parser.optionxform, str)
-        parser.read_dict(
-            {
-                "databases": {
-                    "db": {
-                        "dbname": "test",
-                        "port": "555",
-                    },
-                },
-                "pgbouncer": {"admin_users": "CAPSTEST"},
-            }
-        )
-        self.assertEqual(parser["pgbouncer"]["admin_users"], "CAPSTEST")
-
-    def test_ini_parser_write_to_string(self):
-        test_file = "tests/unit/data/test.ini"
-        parser = pgb.IniParser()
-
-        with open(test_file) as file:
-            parser.read_file(file)
-        parser_output = parser.write_to_string()
-
-        unmodded_file = ""
-        with open(test_file) as f:
-            for line in f.readlines():
-                # Remove commented lines
-                if line[0] not in ("#", ";"):
-                    unmodded_file += line
-
-        self.assertEqual(parser_output, unmodded_file)
+    def test_pgb_ini_validate(self):
+        pass
