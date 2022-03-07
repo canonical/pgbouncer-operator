@@ -291,7 +291,7 @@ class PgbIni(MutableMapping):
 
         # Guarantee db names are valid
         for db_id in self[db].keys():
-            db_name = self[db].get("dbname", "")
+            db_name = self[db][db_id].get("dbname", "")
             self._validate_dbname(db_id)
             self._validate_dbname(db_name)
 
@@ -323,4 +323,5 @@ class PgbIni(MutableMapping):
 
     class IniParsingError(ParsingError):
         """Error raised when parsing config fails."""
+
         pass
