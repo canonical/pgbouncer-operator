@@ -8,8 +8,8 @@ import pytest
 
 from lib.charms.dp_pgbouncer_operator.v0 import pgb
 
-
 TEST_VALID_INI = "tests/unit/data/test.ini"
+
 
 class TestPgb(unittest.TestCase):
     def test_generate_password(self):
@@ -22,7 +22,11 @@ class TestPgb(unittest.TestCase):
     def test_generate_pgbouncer_ini(self):
         config = {
             "databases": {
-                "test": {"host": "test", "port": "4039", "dbname": "testdatabase",},
+                "test": {
+                    "host": "test",
+                    "port": "4039",
+                    "dbname": "testdatabase",
+                },
                 "test2": {"host": "test2"},
             },
             "pgbouncer": {
