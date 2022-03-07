@@ -81,7 +81,7 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         "juju-admin" "asdf1234"
         '''
     Returns:
-        users: a dictionary of usernames and passwords
+        users: a dictionary of valid usernames and passwords
     """
     parsed_userlist = {}
     for line in userlist.split("\n"):
@@ -181,7 +181,7 @@ class PgbIni(MutableMapping):
 
         for pgb_lst in PgbIni.pgb_list_entries:
             try:
-                self[pgb][pgb_lst] = self._parse_string_to_list(self[pgb][pgb_lst])
+                self[pgb][pgb_lst] = self[pgb][pgb_lst].split(",")
             except KeyError:
                 # user fields are not compulsory, so continue
                 pass
@@ -210,26 +210,6 @@ class PgbIni(MutableMapping):
                 separated with spaces
         """
         return " ".join([f"{key}={value}" for key, value in dictionary.items()])
-
-    def _parse_string_to_list(self, string: str) -> List[str]:
-        """Parses comma-separated strings to a list.
-
-        Args:
-            string: a string containing a comma-separated list
-        Returns:
-            A list of strings
-        """
-        return string.split(",")
-
-    def _parse_list_to_string(self, ls: List[str]) -> str:
-        """Helper function to encode a list into a comma-separated string.
-
-        Args:
-            ls: A list of strings
-        Returns:
-            A string containing a comma-separated list
-        """
-        return ",".join(ls)
 
     def parse_dict(self, input: Dict) -> None:
         """Populates this object from a dictionary.
@@ -261,7 +241,7 @@ class PgbIni(MutableMapping):
                 if isinstance(config_value, dict):
                     output_dict[section][option] = self._parse_dict_to_string(config_value)
                 elif isinstance(config_value, list):
-                    output_dict[section][option] = self._parse_list_to_string(config_value)
+                    output_dict[section][option] = ",".join(config_value)
 
         parser.read_dict(output_dict)
 
