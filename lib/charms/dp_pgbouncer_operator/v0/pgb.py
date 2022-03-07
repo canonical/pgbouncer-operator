@@ -24,7 +24,7 @@ import re
 import secrets
 import string
 from collections.abc import MutableMapping
-from configparser import ConfigParser
+from configparser import ConfigParser, ParsingError
 from typing import Dict, List
 
 logger = logging.getLogger(__name__)
@@ -50,6 +50,7 @@ def generate_pgbouncer_ini(config) -> str:
         config: dict following the [pgbouncer config spec](https://pgbouncer.org/config.html).
             Note that admin_users and stats_users must be passed in as lists of strings, not in
             their string representation in the .ini file.
+
     Returns:
         A valid pgbouncer.ini file, represented as a string.
     """
@@ -144,10 +145,11 @@ class PgbIni(MutableMapping):
         parser.optionxform = str
         parser.read_string(input)
 
-        # Convert ConfigParser and configparser.Section objects to dictionaries.
-        self.__dict__.update(dict(parser).copy())
-        for section, data in self.__dict__.items():
-            self.__dict__[section] = dict(data)
+        self.update(dict(parser).copy())
+        # Update top-level configparser.Section objects to dictionaries so they can hold
+        # dictionaries themselves
+        for section, data in self.items():
+            self[section] = dict(data)
 
         # ConfigParser object creates a DEFAULT section of an .ini file, which we don't need.
         del self["DEFAULT"]
@@ -185,7 +187,14 @@ class PgbIni(MutableMapping):
                 pass
 
     def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
-        """Parses space-separated key=value pairs into a python dict."""
+        """Parses space-separated key=value pairs into a python dict.
+
+        Args:
+            string: a string containing a set of key=value pairs, joined with = characters and
+                separated with spaces
+        Returns:
+            A dict containing the key-value pairs represented as strings.
+        """
         parsed_dict = {}
         for kv_pair in string.split(" "):
             key, value = kv_pair.split("=")
@@ -193,15 +202,33 @@ class PgbIni(MutableMapping):
         return parsed_dict
 
     def _parse_dict_to_string(self, dictionary: Dict[str, str]) -> str:
-        """Helper function to encode a python dict into a pgbouncer-readable string."""
+        """Helper function to encode a python dict into a pgbouncer-readable string.
+
+        Args:
+            dictionary: A dict containing the key-value pairs represented as strings.
+        Returns: a string containing a set of key=value pairs, joined with = characters and
+                separated with spaces
+        """
         return " ".join([f"{key}={value}" for key, value in dictionary.items()])
 
     def _parse_string_to_list(self, string: str) -> List[str]:
-        """Parses comma-separated strings to a list."""
+        """Parses comma-separated strings to a list.
+
+        Args:
+            string: a string containing a comma-separated list
+        Returns:
+            A list of strings
+        """
         return string.split(",")
 
     def _parse_list_to_string(self, ls: List[str]) -> str:
-        """Helper function to encode a list into a comma-separated string."""
+        """Helper function to encode a list into a comma-separated string.
+
+        Args:
+            ls: A list of strings
+        Returns:
+            A string containing a comma-separated list
+        """
         return ",".join(ls)
 
     def parse_dict(self, input: Dict) -> None:
@@ -213,14 +240,14 @@ class PgbIni(MutableMapping):
             as its own subdict. Lists should be represented as python lists, not comma-separated
             strings.
         """
-        self.__dict__.update(input)
+        self.update(input)
         self.validate()
 
     def render(self) -> str:
         """Returns a valid pgbouncer.ini file as a string.
 
         Returns:
-            str: a string that can be sent to a pgbouncer.ini file.
+            str: a string containing a valid pgbouncer.ini file.
         """
         self.validate()
 
@@ -230,15 +257,16 @@ class PgbIni(MutableMapping):
 
         output_dict = dict(self).copy()
         for section, subdict in output_dict.items():
-            for option, config in subdict.items():
-                if isinstance(config, dict):
-                    output_dict[section][option] = self._parse_dict_to_string(config)
-                elif isinstance(config, list):
-                    output_dict[section][option] = self._parse_list_to_string(config)
+            for option, config_value in subdict.items():
+                if isinstance(config_value, dict):
+                    output_dict[section][option] = self._parse_dict_to_string(config_value)
+                elif isinstance(config_value, list):
+                    output_dict[section][option] = self._parse_list_to_string(config_value)
 
         parser.read_dict(output_dict)
 
-        # ConfigParser can only write to a file, so create a StringIO object to fool it.
+        # ConfigParser can only write to a file, so write to a StringIO object and then read back
+        # from it.
         with io.StringIO() as string_io:
             parser.write(string_io)
             string_io.seek(0)
@@ -247,30 +275,52 @@ class PgbIni(MutableMapping):
 
     def validate(self):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
+        db = self.db_section
         essentials = {
             "databases": [],
             "pgbouncer": ["logfile", "pidfile"],
         }
-        # Any characters other than these must be surrounded by double quotes
-        dbname_chars = "_-09AZaz"
 
-        if essentials.keys() not in self.__dict__.keys():
+        if not set(essentials.keys()).issubset(set(self.keys())):
             raise KeyError("necessary sections not found in config.")
 
-        if essentials["pgbouncer"] not in self.__dict__.["pgbouncer"].keys():
-            raise KeyError("necessary values not found in config.")
+        if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
+            logger.info(essentials["pgbouncer"])
+            logger.info(self["pgbouncer"].keys())
+            raise KeyError("necessary pgbouncer config values not found in config.")
 
-        # Guarantee db names are valid 
+        # Guarantee db names are valid
         for db_id in self[db].keys():
             db_name = self[db].get("dbname", "")
-            _validate_dbname(db_id)
-            _validate_dbname(db_name)
+            self._validate_dbname(db_id)
+            self._validate_dbname(db_name)
 
+    def _validate_dbname(self, string: str):
+        """Checks string is a valid database name.
 
-    def _validate_dbname(string):
-        search = re.compile(r'[^A-Za-z0-9-_]+').search
-        fltr = filter(search, string)
-        # Check dbnames are valid characters 
-        if len("".join(fltr)) == 0:
+        For a database name to be valid, it must contain only alphanumeric characters, hyphens,
+        and underscores. Any other invalid character must be in double quotes.
+
+        Args:
+            string: the string to be validated
+        """
+        # Check dbnames are valid characters (alphanumeric and _- )
+        search = re.compile(r"[^A-Za-z0-9-_]+").search
+        filtered_string = "".join(filter(search, string))
+        if len(filtered_string) == 0:
+            # The string only contains the permitted characters
             return
-        # TODO check invalid characters are between double quotes 
+
+        # Check the contents of the string leftover after removing valid characters are all
+        # enclosed in double quotes.
+        quoted_substrings = re.findall(r'"(?:\\.|[^"])*"', filtered_string)
+        if "".join(quoted_substrings) == filtered_string:
+            # All substrings of invalid characters are properly quoted
+            return
+
+        # dbname is invalid, throw an error
+        raise PgbIni.IniParsingError(source=filtered_string)
+
+    class IniParsingError(ParsingError):
+        """Error raised when parsing config fails."""
+        pass

@@ -16,20 +16,27 @@ class TestPgb(unittest.TestCase):
             assert char in valid_chars
 
     def test_generate_pgbouncer_ini(self):
-        dbs = {
-            "test": {"host": "test", "port": "4039", "dbname": "testdatabase"},
-            "test2": {"host": "test2"},
-        }
-        admin_users = ["test_admin"]
-        stats_users = ["test_admin", "test_stats"]
-        listen_port = "4545"
-        pgbouncer = {
-            "admin_users": admin_users,
-            "stats_users": stats_users,
-            "listen_port": listen_port,
+        config = {
+            "databases": {
+                "test": {"host": "test", "port": "4039", "dbname": "testdatabase"},
+                "test2": {"host": "test2"},
+            },
+            "pgbouncer": {
+                "admin_users": ["test_admin"],
+                "stats_users": ["test_admin", "test_stats"],
+                "listen_port": "4545",
+                "logfile": "/etc/pgbouncer/pgbouncer.log",
+                "pidfile": "/etc/pgbouncer/pgbouncer.pid",
+            },
+            "users": {
+                "test_admin": {
+                    "pool_mode": "session",
+                    "max_user_connections": "10",
+                }
+            },
         }
 
-        generated_ini = pgb.generate_pgbouncer_ini(databases=dbs, pgbouncer=pgbouncer)
+        generated_ini = pgb.generate_pgbouncer_ini(config)
         expected_generated_ini = """[databases]
 test = host=test port=4039 dbname=testdatabase
 test2 = host=test2
@@ -38,6 +45,11 @@ test2 = host=test2
 admin_users = test_admin
 stats_users = test_admin,test_stats
 listen_port = 4545
+logfile = /etc/pgbouncer/pgbouncer.log
+pidfile = /etc/pgbouncer/pgbouncer.pid
+
+[users]
+test_admin = pool_mode=session max_user_connections=10
 
 """
         self.assertEqual(generated_ini, expected_generated_ini)
@@ -76,6 +88,8 @@ test2 = host=test2
 admin_users = test_admin
 stats_users = test_admin,test_stats
 listen_port = 4545
+logfile = /etc/pgbouncer/pgbouncer.log
+pidfile = /etc/pgbouncer/pgbouncer.pid
 
 """
         ini = pgb.PgbIni()
@@ -91,7 +105,8 @@ listen_port = 4545
                 "db2": {"host": "test_host"},
             },
             "pgbouncer": {
-                "logfile": "/etc/pgbouncer/pgb.log",
+                "logfile": "/etc/pgbouncer/pgbouncer.log",
+                "pidfile": "/etc/pgbouncer/pgbouncer.pid",
                 "admin_users": ["test"],
                 "stats_users": ["test", "stats_test"],
             },
@@ -112,6 +127,8 @@ test2 = host=test2
 admin_users = test_admin
 stats_users = test_admin,test_stats
 listen_port = 4545
+logfile = /etc/pgbouncer/pgbouncer.log
+pidfile = /etc/pgbouncer/pgbouncer.pid
 
 """
         ini = pgb.PgbIni()
@@ -120,4 +137,4 @@ listen_port = 4545
         self.assertEqual(input_string, output)
 
     def test_pgb_ini_validate(self):
-        pass
+
