@@ -74,16 +74,15 @@ class TestPgb(unittest.TestCase):
         self.assertNotEqual(regen_userlist, userlist)
         self.assertDictEqual(users, regen_users)
 
-    def test_pgb_ini_parse_string(self):
+    def test_pgb_ini_read_string(self):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
-        ini = pgb.PgbIni()
-        ini.parse_string(input_string)
+        ini = pgb.PgbIni(input_string)
         expected_dict = {"host": "test", "port": "4039", "dbname": "testdatabase"}
         self.assertDictEqual(ini["databases"]["test"], expected_dict)
         self.assertEqual(ini["pgbouncer"]["stats_users"], ["Test", "test_stats"])
 
-    def test_pgb_ini_parse_dict(self):
+    def test_pgb_ini_read_dict(self):
         input_dict = {
             "databases": {
                 "db1": {"dbname": "test"},
@@ -99,63 +98,59 @@ class TestPgb(unittest.TestCase):
                 "test": {"pool_mode": "session", "max_user_connections": "22"},
             },
         }
-        ini = pgb.PgbIni()
-        ini.parse_dict(input_dict)
+        ini = pgb.PgbIni(input_dict)
         self.assertDictEqual(input_dict, dict(ini))
 
     def test_pgb_ini_render(self):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
-        ini = pgb.PgbIni()
-        ini.parse_string(input_string)
-        output = ini.render()
+        output = pgb.PgbIni(input_string).render()
         self.assertEqual(input_string, output)
 
     def test_pgb_ini_validate(self):
-        ini = pgb.PgbIni()
+        # PgbIni.validate() is called in read_string() and read_dict() methods, which are called in
+        # the constructor.
+
         with open(TEST_VALID_INI, "r") as test_ini:
             valid_ini = test_ini.read()
-        ini.parse_string(valid_ini)
+        pgb.PgbIni(valid_ini)
 
-        # Recreate ini to ensure no carryover
-        ini = pgb.PgbIni()
+        # Test parsing fails without necessary config file values
         with open("tests/unit/data/test_no_dbs.ini", "r") as test_ini_no_dbs:
             ini_no_dbs = test_ini_no_dbs.read()
         with pytest.raises(KeyError):
-            ini.parse_string(ini_no_dbs)
+            pgb.PgbIni(ini_no_dbs)
 
-        ini = pgb.PgbIni()
         with open("tests/unit/data/test_no_logfile.ini", "r") as test_ini_no_logfile:
             ini_no_logfile = test_ini_no_logfile.read()
         with pytest.raises(KeyError):
-            ini.parse_string(ini_no_logfile)
+            pgb.PgbIni(ini_no_logfile)
 
-        ini = pgb.PgbIni()
         with open("tests/unit/data/test_no_pidfile.ini", "r") as test_ini_no_pidfile:
             ini_no_pidfile = test_ini_no_pidfile.read()
         with pytest.raises(KeyError):
-            ini.parse_string(ini_no_pidfile)
+            pgb.PgbIni(ini_no_pidfile)
 
-        ini = pgb.PgbIni()
+        # Test parsing fails when database names are malformed
         with open("tests/unit/data/test_bad_db.ini", "r") as test_ini_bad_db:
             ini_bad_db = test_ini_bad_db.read()
         with pytest.raises(pgb.PgbIni.IniParsingError):
-            ini.parse_string(ini_bad_db)
+            pgb.PgbIni(ini_bad_db)
 
-        ini = pgb.PgbIni()
         with open("tests/unit/data/test_bad_dbname.ini", "r") as test_ini_bad_dbname:
             ini_bad_dbname = test_ini_bad_dbname.read()
         with pytest.raises(pgb.PgbIni.IniParsingError):
-            ini.parse_string(ini_bad_dbname)
-            ini.validate()
+            pgb.PgbIni(ini_bad_dbname)
 
     def test_pgb_ini__validate_dbname(self):
         ini = pgb.PgbIni()
-        good_dbnames = ["test-_1", 'test"%$"1', 'multiple"$"bad"^"values', '" "']
+        # Valid dbnames include alphanumeric characters and -_ characters. Everything else must
+        # be wrapped in double quotes.
+        good_dbnames = ["test-_1", 'test"%$"1', 'multiple"$"bad"^"values', '" "', '"\n"', '""']
         for dbname in good_dbnames:
             ini._validate_dbname(dbname)
 
-        bad_dbnames = ['"', "%", " ", '"$"test"']
+        bad_dbnames = ['"', "%", " ", '"$"test"', "\n"]
         for dbname in bad_dbnames:
             with pytest.raises(pgb.PgbIni.IniParsingError):
                 ini._validate_dbname(dbname)

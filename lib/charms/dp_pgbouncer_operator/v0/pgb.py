@@ -25,7 +25,7 @@ import secrets
 import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
-from typing import Dict, List
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +54,7 @@ def generate_pgbouncer_ini(config) -> str:
     Returns:
         A valid pgbouncer.ini file, represented as a string.
     """
-    ini = PgbIni()
-    ini.parse_dict(config)
-    return ini.render()
+    return PgbIni(config).render()
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
@@ -92,7 +90,7 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         ):
             logger.warning("unable to parse line in userlist file - user not imported")
             continue
-        # Userlist is formatted "{username}" "{password}""
+        # Userlist is formatted '"username" "password"'
         username, password = line.replace('"', "").split(" ")
         parsed_userlist[username] = password
 
@@ -111,8 +109,13 @@ class PgbIni(MutableMapping):
     users_section = "users"
     pgb_list_entries = ["admin_users", "stats_users"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None, *args, **kwargs):
         self.__dict__.update(*args, **kwargs)
+
+        if isinstance(config, str):
+            self.read_string(config)
+        elif isinstance(config, dict):
+            self.read_dict(config)
 
     def __delitem__(self, key: str):
         """Deletes item from internal mapping."""
@@ -134,7 +137,7 @@ class PgbIni(MutableMapping):
         """Gets number of key-value pairs in internal mapping."""
         return len(self.__dict__)
 
-    def parse_string(self, input: str) -> None:
+    def read_string(self, input: str) -> None:
         """Populates this class from a pgbouncer.ini file, passed in as a string.
 
         Args:
@@ -211,11 +214,11 @@ class PgbIni(MutableMapping):
         """
         return " ".join([f"{key}={value}" for key, value in dictionary.items()])
 
-    def parse_dict(self, input: Dict) -> None:
+    def read_dict(self, input: Dict) -> None:
         """Populates this object from a dictionary.
 
         Args:
-            input: Dict to be parsed into this object. This dict must follow the pgbouncer config
+            input: Dict to be read into this object. This dict must follow the pgbouncer config
             spec (https://pgbouncer.org/config.html) to pass validation, implementing each section
             as its own subdict. Lists should be represented as python lists, not comma-separated
             strings.
@@ -231,10 +234,7 @@ class PgbIni(MutableMapping):
         """
         self.validate()
 
-        # Populate parser object with local data.
-        parser = ConfigParser()
-        parser.optionxform = str
-
+        # Create a copy of the config with dicts and lists parsed into valid ini strings
         output_dict = dict(self).copy()
         for section, subdict in output_dict.items():
             for option, config_value in subdict.items():
@@ -243,6 +243,9 @@ class PgbIni(MutableMapping):
                 elif isinstance(config_value, list):
                     output_dict[section][option] = ",".join(config_value)
 
+        # Populate parser object with local data.
+        parser = ConfigParser()
+        parser.optionxform = str
         parser.read_dict(output_dict)
 
         # ConfigParser can only write to a file, so write to a StringIO object and then read back
@@ -265,8 +268,6 @@ class PgbIni(MutableMapping):
             raise KeyError("necessary sections not found in config.")
 
         if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
-            logger.info(essentials["pgbouncer"])
-            logger.info(self["pgbouncer"].keys())
             raise KeyError("necessary pgbouncer config values not found in config.")
 
         # Guarantee db names are valid
