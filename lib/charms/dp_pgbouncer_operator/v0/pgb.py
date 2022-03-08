@@ -82,12 +82,10 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         users: a dictionary of valid usernames and passwords
     """
     parsed_userlist = {}
+    # Each line in userlist can only be two space-separated substrings, wrapped in double quotes.
+    valid_userlist_regex = re.compile(r'^"[^"]*" "[^"]*"$')
     for line in userlist.split("\n"):
-        if (
-            line.strip() == ""
-            or len(line.split(" ")) != 2
-            or len(line.replace('"', "")) != len(line) - 4
-        ):
+        if valid_userlist_regex.fullmatch(line) is None:
             logger.warning("unable to parse line in userlist file - user not imported")
             continue
         # Userlist is formatted '"username" "password"'
