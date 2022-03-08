@@ -283,6 +283,10 @@ class PgbIni(MutableMapping):
         Args:
             string: the string to be validated
         """
+        # Check dbnames don't use the reserved "pgbouncer" database name
+        if string == "pgbouncer":
+            raise PgbIni.IniParsingError(source=string)
+
         # Check dbnames are valid characters (alphanumeric and _- )
         search = re.compile(r"[^A-Za-z0-9-_]+").search
         filtered_string = "".join(filter(search, string))

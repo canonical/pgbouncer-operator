@@ -8,7 +8,8 @@ import pytest
 
 from lib.charms.dp_pgbouncer_operator.v0 import pgb
 
-TEST_VALID_INI = "tests/unit/data/test.ini"
+DATA_DIR = "tests/unit/data"
+TEST_VALID_INI = f"{DATA_DIR}/test.ini"
 
 
 class TestPgb(unittest.TestCase):
@@ -112,35 +113,33 @@ class TestPgb(unittest.TestCase):
         # the constructor.
 
         with open(TEST_VALID_INI, "r") as test_ini:
-            valid_ini = test_ini.read()
-        pgb.PgbIni(valid_ini)
+            pgb.PgbIni(test_ini.read())
 
         # Test parsing fails without necessary config file values
-        with open("tests/unit/data/test_no_dbs.ini", "r") as test_ini_no_dbs:
-            ini_no_dbs = test_ini_no_dbs.read()
-        with pytest.raises(KeyError):
-            pgb.PgbIni(ini_no_dbs)
+        with open(f"{DATA_DIR}/test_no_dbs.ini", "r") as no_dbs:
+            with pytest.raises(KeyError):
+                pgb.PgbIni(no_dbs.read())
 
-        with open("tests/unit/data/test_no_logfile.ini", "r") as test_ini_no_logfile:
-            ini_no_logfile = test_ini_no_logfile.read()
-        with pytest.raises(KeyError):
-            pgb.PgbIni(ini_no_logfile)
+        with open(f"{DATA_DIR}/test_no_logfile.ini", "r") as no_logfile:
+            with pytest.raises(KeyError):
+                pgb.PgbIni(no_logfile.read())
 
-        with open("tests/unit/data/test_no_pidfile.ini", "r") as test_ini_no_pidfile:
-            ini_no_pidfile = test_ini_no_pidfile.read()
-        with pytest.raises(KeyError):
-            pgb.PgbIni(ini_no_pidfile)
+        with open(f"{DATA_DIR}/test_no_pidfile.ini", "r") as no_pidfile:
+            with pytest.raises(KeyError):
+                pgb.PgbIni(no_pidfile.read())
 
         # Test parsing fails when database names are malformed
-        with open("tests/unit/data/test_bad_db.ini", "r") as test_ini_bad_db:
-            ini_bad_db = test_ini_bad_db.read()
-        with pytest.raises(pgb.PgbIni.IniParsingError):
-            pgb.PgbIni(ini_bad_db)
+        with open(f"{DATA_DIR}/test_bad_db.ini", "r") as bad_db:
+            with pytest.raises(pgb.PgbIni.IniParsingError):
+                pgb.PgbIni(bad_db.read())
 
-        with open("tests/unit/data/test_bad_dbname.ini", "r") as test_ini_bad_dbname:
-            ini_bad_dbname = test_ini_bad_dbname.read()
-        with pytest.raises(pgb.PgbIni.IniParsingError):
-            pgb.PgbIni(ini_bad_dbname)
+        with open(f"{DATA_DIR}/test_bad_dbname.ini", "r") as bad_dbname:
+            with pytest.raises(pgb.PgbIni.IniParsingError):
+                pgb.PgbIni(bad_dbname.read())
+
+        with open(f"{DATA_DIR}/test_reserved_db.ini", "r") as reserved_db:
+            with pytest.raises(pgb.PgbIni.IniParsingError):
+                pgb.PgbIni(reserved_db.read())
 
     def test_pgb_ini__validate_dbname(self):
         ini = pgb.PgbIni()
