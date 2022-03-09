@@ -60,9 +60,30 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
+        # Initialise prereqs to run pgbouncer
         passwd.add_user(username="pgbouncer", password="pgb")
         self._install_apt_packages(["pgbouncer"])
-        self._update_local_config()
+
+        # Initialise config files.
+        # For now, use a dummy config dict - in future, we're going to have a static default
+        # config file which may be overridden by a user uploading new files.
+        initial_config = {
+            "databases": {},
+            "pgbouncer": {
+                "logfile": "/etc/pgbouncer/pgbouncer.log",
+                "pidfile": "/etc/pgbouncer/pgbouncer.pid",
+                "admin_users": ["juju-admin"],
+            },
+        }
+
+        ini = pgb.PgbConfig(initial_config)
+        self._render_pgb_config(ini)
+
+        # Generate passwords for initial users
+        userlist = {}
+        for user in initial_config["pgbouncer"]["admin_users"]:
+            userlist[user] = pgb.generate_password()
+        self._render_userlist(userlist)
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -80,9 +101,9 @@ class PgBouncerCharm(CharmBase):
     def _on_config_changed(self, _) -> None:
         pass
 
-    # ==================
-    #  Helper Functions
-    # ==================
+    # ==========================
+    #  Generic Helper Functions
+    # ==========================
 
     def _install_apt_packages(self, packages: List[str]):
         """Simple wrapper around 'apt-get install -y."""
@@ -100,60 +121,6 @@ class PgBouncerCharm(CharmBase):
         except apt.PackageNotFoundError:
             logger.error("a specified package not found in package cache or on system")
             self.unit.status = BlockedStatus("failed to install packages")
-
-    def _update_local_config(
-        self, users: Dict[str, str] = None, reload_pgbouncer: bool = False
-    ) -> None:
-        """Updates config files stored on pgbouncer machine and reloads application.
-
-        Updates userlist.txt and pgbouncer.ini config files, reloading pgbouncer application once
-        updated.
-
-        Args:
-            users: a dictionary of usernames and passwords
-            reload_pgbouncer: A boolean defining whether or not to reload pgbouncer after updating
-                the config. PgBouncer must be restarted for config changes to be applied.
-        """
-        if users is None:
-            users = self._retrieve_users_from_userlist()
-        else:
-            self._update_userlist(users)
-
-        self._update_pgbouncer_ini(users, reload_pgbouncer)
-
-    def _update_pgbouncer_ini(
-        self, users: Dict[str, str] = None, reload_pgbouncer: bool = False
-    ) -> None:
-        """Generate pgbouncer.ini from juju config and deploy it to the container.
-
-        Args:
-            users: a dictionary of usernames and passwords
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
-                minimising the amount of necessary restarts.
-        """
-        if users is None:
-            users = self._retrieve_users_from_userlist()
-
-        pgb_ini = pgb.generate_pgbouncer_ini(users, self.config)
-        self._render_file(pgb_ini, INI_PATH, 0o600)
-
-        if reload_pgbouncer:
-            self._reload_pgbouncer()
-
-    def _update_userlist(self, users: Dict[str, str], reload_pgbouncer: bool = False):
-        userlist = pgb.generate_userlist(users)
-        self._render_file(userlist, USERLIST_PATH, 0o600)
-
-        if reload_pgbouncer:
-            self._reload_pgbouncer()
-
-    def _retrieve_users_from_userlist(self):
-        return {"coolguy": "securepass"}
-
-    def _reload_pgbouncer(self):
-        pass
 
     def _render_file(self, path: str, content: str, mode: int) -> None:
         """Write a content rendered from a template to a file.
@@ -173,6 +140,60 @@ class PgBouncerCharm(CharmBase):
         u = pwd.getpwnam("pgbouncer")
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
+
+    # =====================================
+    #  PgBouncer-Specific Helper Functions
+    # =====================================
+
+    def _read_pgb_config(self) -> pgb.PgbConfig:
+        """Get config object from pgbouncer.ini file.
+
+        Returns:
+            PgbConfig object containing pgbouncer config.
+        """
+        with open(INI_PATH, "r") as existing_file:
+            existing_config = pgb.PgbConfig(existing_file.read())
+        return existing_config
+
+    def _render_pgb_config(
+        self, pgbouncer_ini: pgb.PgbConfig, reload_pgbouncer: bool = False
+    ) -> None:
+        """Render config object to pgbouncer.ini file.
+
+        Args:
+            pgbouncer_ini: PgbConfig object containing pgbouncer config.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+        """
+        self._render_file(pgbouncer_ini.render(), INI_PATH, 0o600)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _read_userlist(self) -> Dict[str, str]:
+        with open(USERLIST_PATH, "r") as existing_userlist:
+            userlist = pgb.parse_userlist(existing_userlist.read())
+        return userlist
+
+    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+        """Render user list (with encoded passwords) to pgbouncer.ini file.
+
+        Args:
+            userlist: dictionary of users:password strings.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+        """
+        self._render_file(pgb.generate_userlist(userlist), USERLIST_PATH, 0o600)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _reload_pgbouncer(self):
+        pass
 
 
 if __name__ == "__main__":
