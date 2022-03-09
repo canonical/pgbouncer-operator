@@ -75,10 +75,10 @@ class TestPgb(unittest.TestCase):
         self.assertNotEqual(regen_userlist, userlist)
         self.assertDictEqual(users, regen_users)
 
-    def test_pgb_ini_read_string(self):
+    def test_pgb_config_read_string(self):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
-        ini = pgb.PgbIni(input_string)
+        ini = pgb.PgbConfig(input_string)
         expected_dict = {
             "databases": {
                 "test": {
@@ -104,7 +104,7 @@ class TestPgb(unittest.TestCase):
         }
         self.assertDictEqual(dict(ini), expected_dict)
 
-    def test_pgb_ini_read_dict(self):
+    def test_pgb_config_read_dict(self):
         input_dict = {
             "databases": {
                 "db1": {"dbname": "test"},
@@ -120,50 +120,50 @@ class TestPgb(unittest.TestCase):
                 "test": {"pool_mode": "session", "max_user_connections": "22"},
             },
         }
-        ini = pgb.PgbIni(input_dict)
+        ini = pgb.PgbConfig(input_dict)
         self.assertDictEqual(input_dict, dict(ini))
 
-    def test_pgb_ini_render(self):
+    def test_pgb_config_render(self):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
-        output = pgb.PgbIni(input_string).render()
+        output = pgb.PgbConfig(input_string).render()
         self.assertEqual(input_string, output)
 
-    def test_pgb_ini_validate(self):
-        # PgbIni.validate() is called in read_string() and read_dict() methods, which are called in
-        # the constructor.
+    def test_pgb_config_validate(self):
+        # PgbConfig.validate() is called in read_string() and read_dict() methods, which are called
+        # in the constructor.
 
         with open(TEST_VALID_INI, "r") as test_ini:
-            pgb.PgbIni(test_ini.read())
+            pgb.PgbConfig(test_ini.read())
 
         # Test parsing fails without necessary config file values
         with open(f"{DATA_DIR}/test_no_dbs.ini", "r") as no_dbs:
             with pytest.raises(KeyError):
-                pgb.PgbIni(no_dbs.read())
+                pgb.PgbConfig(no_dbs.read())
 
         with open(f"{DATA_DIR}/test_no_logfile.ini", "r") as no_logfile:
             with pytest.raises(KeyError):
-                pgb.PgbIni(no_logfile.read())
+                pgb.PgbConfig(no_logfile.read())
 
         with open(f"{DATA_DIR}/test_no_pidfile.ini", "r") as no_pidfile:
             with pytest.raises(KeyError):
-                pgb.PgbIni(no_pidfile.read())
+                pgb.PgbConfig(no_pidfile.read())
 
         # Test parsing fails when database names are malformed
         with open(f"{DATA_DIR}/test_bad_db.ini", "r") as bad_db:
-            with pytest.raises(pgb.PgbIni.IniParsingError):
-                pgb.PgbIni(bad_db.read())
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
+                pgb.PgbConfig(bad_db.read())
 
         with open(f"{DATA_DIR}/test_bad_dbname.ini", "r") as bad_dbname:
-            with pytest.raises(pgb.PgbIni.IniParsingError):
-                pgb.PgbIni(bad_dbname.read())
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
+                pgb.PgbConfig(bad_dbname.read())
 
         with open(f"{DATA_DIR}/test_reserved_db.ini", "r") as reserved_db:
-            with pytest.raises(pgb.PgbIni.IniParsingError):
-                pgb.PgbIni(reserved_db.read())
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
+                pgb.PgbConfig(reserved_db.read())
 
-    def test_pgb_ini__validate_dbname(self):
-        ini = pgb.PgbIni()
+    def test_pgb_config__validate_dbname(self):
+        ini = pgb.PgbConfig()
         # Valid dbnames include alphanumeric characters and -_ characters. Everything else must
         # be wrapped in double quotes.
         good_dbnames = ["test-_1", 'test"%$"1', 'multiple"$"bad"^"values', '" "', '"\n"', '""']
@@ -172,5 +172,5 @@ class TestPgb(unittest.TestCase):
 
         bad_dbnames = ['"', "%", " ", '"$"test"', "\n"]
         for dbname in bad_dbnames:
-            with pytest.raises(pgb.PgbIni.IniParsingError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 ini._validate_dbname(dbname)

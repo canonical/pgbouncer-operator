@@ -54,7 +54,7 @@ def generate_pgbouncer_ini(config) -> str:
     Returns:
         A valid pgbouncer.ini file, represented as a string.
     """
-    return PgbIni(config).render()
+    return PgbConfig(config).render()
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
@@ -95,7 +95,7 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     return parsed_userlist
 
 
-class PgbIni(MutableMapping):
+class PgbConfig(MutableMapping):
     """A mapping that represents the pgbouncer config."""
 
     # Define names of ini sections:
@@ -135,6 +135,18 @@ class PgbIni(MutableMapping):
         """Gets number of key-value pairs in internal mapping."""
         return len(self.__dict__)
 
+    def read_dict(self, input: Dict) -> None:
+        """Populates this object from a dictionary.
+
+        Args:
+            input: Dict to be read into this object. This dict must follow the pgbouncer config
+            spec (https://pgbouncer.org/config.html) to pass validation, implementing each section
+            as its own subdict. Lists should be represented as python lists, not comma-separated
+            strings.
+        """
+        self.update(input)
+        self.validate()
+
     def read_string(self, input: str) -> None:
         """Populates this class from a pgbouncer.ini file, passed in as a string.
 
@@ -147,8 +159,7 @@ class PgbIni(MutableMapping):
         parser.read_string(input)
 
         self.update(dict(parser).copy())
-        # Update top-level configparser.Section objects to dictionaries so they can hold
-        # dictionaries themselves
+        # Convert Section objects to dictionaries, so they can hold dictionaries themselves.
         for section, data in self.items():
             self[section] = dict(data)
 
@@ -165,9 +176,9 @@ class PgbIni(MutableMapping):
         which are themselves represented as delimited strings. This method parses these strings
         into more usable python objects.
         """
-        db = PgbIni.db_section
-        users = PgbIni.users_section
-        pgb = PgbIni.pgb_section
+        db = PgbConfig.db_section
+        users = PgbConfig.users_section
+        pgb = PgbConfig.pgb_section
 
         # No error checking for [databases] section, since it has to exist for pgbouncer to run.
         for name, cfg_string in self[db].items():
@@ -180,11 +191,11 @@ class PgbIni(MutableMapping):
             # [users] section is not compulsory, so continue.
             pass
 
-        for pgb_lst in PgbIni.pgb_list_entries:
+        for ls in PgbConfig.pgb_list_entries:
             try:
-                self[pgb][pgb_lst] = self[pgb][pgb_lst].split(",")
+                self[pgb][ls] = self[pgb][ls].split(",")
             except KeyError:
-                # user fields are not compulsory, so continue
+                # list fields are not compulsory, so continue
                 pass
 
     def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
@@ -211,18 +222,6 @@ class PgbIni(MutableMapping):
                 separated with spaces
         """
         return " ".join([f"{key}={value}" for key, value in dictionary.items()])
-
-    def read_dict(self, input: Dict) -> None:
-        """Populates this object from a dictionary.
-
-        Args:
-            input: Dict to be read into this object. This dict must follow the pgbouncer config
-            spec (https://pgbouncer.org/config.html) to pass validation, implementing each section
-            as its own subdict. Lists should be represented as python lists, not comma-separated
-            strings.
-        """
-        self.update(input)
-        self.validate()
 
     def render(self) -> str:
         """Returns a valid pgbouncer.ini file as a string.
@@ -285,7 +284,7 @@ class PgbIni(MutableMapping):
         """
         # Check dbnames don't use the reserved "pgbouncer" database name
         if string == "pgbouncer":
-            raise PgbIni.IniParsingError(source=string)
+            raise PgbConfig.ConfigParsingError(source=string)
 
         # Check dbnames are valid characters (alphanumeric and _- )
         search = re.compile(r"[^A-Za-z0-9-_]+").search
@@ -294,17 +293,17 @@ class PgbIni(MutableMapping):
             # The string only contains the permitted characters
             return
 
-        # Check the contents of the string leftover after removing valid characters are all
-        # enclosed in double quotes.
+        # Check the contents of the string left after removing valid characters are all enclosed
+        # in double quotes.
         quoted_substrings = re.findall(r'"(?:\\.|[^"])*"', filtered_string)
         if "".join(quoted_substrings) == filtered_string:
             # All substrings of invalid characters are properly quoted
             return
 
-        # dbname is invalid, throw an error
-        raise PgbIni.IniParsingError(source=filtered_string)
+        # dbname is invalid, raise parsing error
+        raise PgbConfig.ConfigParsingError(source=filtered_string)
 
-    class IniParsingError(ParsingError):
+    class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""
 
         pass
