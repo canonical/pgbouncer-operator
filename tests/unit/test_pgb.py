@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 import string
@@ -79,9 +79,30 @@ class TestPgb(unittest.TestCase):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
         ini = pgb.PgbIni(input_string)
-        expected_dict = {"host": "test", "port": "4039", "dbname": "testdatabase"}
-        self.assertDictEqual(ini["databases"]["test"], expected_dict)
-        self.assertEqual(ini["pgbouncer"]["stats_users"], ["Test", "test_stats"])
+        expected_dict = {
+            "databases": {
+                "test": {
+                    "host": "test",
+                    "port": "4039",
+                    "dbname": "testdatabase",
+                },
+                "test2": {"host": "test2"},
+            },
+            "pgbouncer": {
+                "logfile": "test/logfile",
+                "pidfile": "test/pidfile",
+                "admin_users": ["Test"],
+                "stats_users": ["Test", "test_stats"],
+                "listen_port": "4545",
+            },
+            "users": {
+                "Test": {
+                    "pool_mode": "session",
+                    "max_user_connections": "10",
+                }
+            },
+        }
+        self.assertDictEqual(dict(ini), expected_dict)
 
     def test_pgb_ini_read_dict(self):
         input_dict = {
