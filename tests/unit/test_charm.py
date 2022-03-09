@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
@@ -50,7 +50,7 @@ class TestCharm(unittest.TestCase):
                     "startup": "enabled",
                     "environment": {"thing": "🎁"},
                 }
-            },
+            }
         }
         # Get the httpbin container from the model
         container = self.harness.model.unit.get_container("httpbin")

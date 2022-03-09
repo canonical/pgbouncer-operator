@@ -15,30 +15,19 @@
 """PgBouncer Charm Library.
 
 This charm library provides common pgbouncer-specific features for the pgbouncer machine and
-Kubernetes charms.
+Kubernetes charms, including automatic config management.
 """
 
+import io
 import logging
+import re
 import secrets
 import string
+from collections.abc import MutableMapping
+from configparser import ConfigParser, ParsingError
 from typing import Dict
 
-from ops.model import ConfigData
-
 logger = logging.getLogger(__name__)
-
-PGB_INI = """\
-[databases]
-{databases}
-[pgbouncer]
-listen_port = {listen_port}
-listen_addr = {listen_addr}
-auth_type = md5
-auth_file = userlist.txt
-logfile = pgbouncer.log
-pidfile = pgbouncer.pid
-admin_users = {admin_users}
-"""
 
 
 def generate_password() -> str:
@@ -54,34 +43,28 @@ def generate_password() -> str:
     return "".join([secrets.choice(choices) for _ in range(24)])
 
 
-def generate_pgbouncer_ini(users: Dict[str, str], config: ConfigData) -> str:
-    """Generate pgbouncer.ini from config.
-
-    This is a basic stub method, and will be updated in future to generate more complex
-    pgbouncer.ini files in a more sophisticated way.
+def generate_pgbouncer_ini(config) -> str:
+    """Generate pgbouncer.ini file from the given config options.
 
     Args:
-        users: a dictionary of usernames and passwords
-        config: A juju charm config object
+        config: dict following the [pgbouncer config spec](https://pgbouncer.org/config.html).
+            Note that admin_users and stats_users must be passed in as lists of strings, not in
+            their string representation in the .ini file.
+
     Returns:
-        A multiline string defining a valid pgbouncer.ini file
+        A valid pgbouncer.ini file, represented as a string.
     """
-    return PGB_INI.format(
-        databases=config["pgb_databases"],
-        listen_port=config["pgb_listen_port"],
-        listen_addr=config["pgb_listen_address"],
-        admin_users=",".join(users.keys()),
-    )
+    return PgbConfig(config).render()
 
 
 def generate_userlist(users: Dict[str, str]) -> str:
-    """Generate userlist.txt from the given dictionary of usernames:passwords.
+    """Generate valid userlist.txt from the given dictionary of usernames:passwords.
 
     Args:
         users: a dictionary of usernames and passwords
     Returns:
-        A multiline string, containing each pair of usernames and passwords separated by a
-        space, one pair per line.
+        A multiline string, containing each pair of usernames and passwords in double quotes,
+        separated by a space, one pair per line.
     """
     return "\n".join([f'"{username}" "{password}"' for username, password in users.items()])
 
@@ -96,15 +79,231 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         "juju-admin" "asdf1234"
         '''
     Returns:
-        users: a dictionary of usernames and passwords
+        users: a dictionary of valid usernames and passwords
     """
     parsed_userlist = {}
+    # Each line in userlist can only be two space-separated substrings, wrapped in double quotes.
+    valid_userlist_regex = re.compile(r'^"[^"]*" "[^"]*"$')
     for line in userlist.split("\n"):
-        if line.strip() == "" or len(line.split(" ")) != 2:
+        if valid_userlist_regex.fullmatch(line) is None:
             logger.warning("unable to parse line in userlist file - user not imported")
             continue
-        # Userlist is formatted "{username}" "{password}""
+        # Userlist is formatted '"username" "password"'
         username, password = line.replace('"', "").split(" ")
         parsed_userlist[username] = password
 
     return parsed_userlist
+
+
+class PgbConfig(MutableMapping):
+    """A mapping that represents the pgbouncer config."""
+
+    # Define names of ini sections:
+    # [databases] defines the config options for each database. This section is mandatory.
+    # [pgbouncer] defines pgbouncer-specific config
+    # [users] defines config for specific users.
+    db_section = "databases"
+    pgb_section = "pgbouncer"
+    users_section = "users"
+    pgb_list_entries = ["admin_users", "stats_users"]
+
+    def __init__(self, config=None, *args, **kwargs):
+        self.__dict__.update(*args, **kwargs)
+
+        if isinstance(config, str):
+            self.read_string(config)
+        elif isinstance(config, dict):
+            self.read_dict(config)
+
+    def __delitem__(self, key: str):
+        """Deletes item from internal mapping."""
+        del self.__dict__[key]
+
+    def __getitem__(self, key: str):
+        """Gets item from internal mapping."""
+        return self.__dict__[key]
+
+    def __setitem__(self, key: str, value):
+        """Set an item in internal mapping."""
+        self.__dict__[key] = value
+
+    def __iter__(self):
+        """Returns an iterable of internal mapping."""
+        return iter(self.__dict__)
+
+    def __len__(self):
+        """Gets number of key-value pairs in internal mapping."""
+        return len(self.__dict__)
+
+    def read_dict(self, input: Dict) -> None:
+        """Populates this object from a dictionary.
+
+        Args:
+            input: Dict to be read into this object. This dict must follow the pgbouncer config
+            spec (https://pgbouncer.org/config.html) to pass validation, implementing each section
+            as its own subdict. Lists should be represented as python lists, not comma-separated
+            strings.
+        """
+        self.update(input)
+        self.validate()
+
+    def read_string(self, input: str) -> None:
+        """Populates this class from a pgbouncer.ini file, passed in as a string.
+
+        Args:
+            input: pgbouncer.ini file to be parsed, represented as a string
+        """
+        # Since the parser persists data across reads, we have to create a new one for every read.
+        parser = ConfigParser()
+        parser.optionxform = str
+        parser.read_string(input)
+
+        self.update(dict(parser).copy())
+        # Convert Section objects to dictionaries, so they can hold dictionaries themselves.
+        for section, data in self.items():
+            self[section] = dict(data)
+
+        # ConfigParser object creates a DEFAULT section of an .ini file, which we don't need.
+        del self["DEFAULT"]
+
+        self._parse_complex_variables()
+        self.validate()
+
+    def _parse_complex_variables(self) -> None:
+        """Parse complex config variables from string representation into dicts.
+
+        In a pgbouncer.ini file, certain values are represented by more complex data structures,
+        which are themselves represented as delimited strings. This method parses these strings
+        into more usable python objects.
+        """
+        db = PgbConfig.db_section
+        users = PgbConfig.users_section
+        pgb = PgbConfig.pgb_section
+
+        # No error checking for [databases] section, since it has to exist for pgbouncer to run.
+        for name, cfg_string in self[db].items():
+            self[db][name] = self._parse_string_to_dict(cfg_string)
+
+        try:
+            for name, cfg_string in self[users].items():
+                self[users][name] = self._parse_string_to_dict(cfg_string)
+        except KeyError:
+            # [users] section is not compulsory, so continue.
+            pass
+
+        for ls in PgbConfig.pgb_list_entries:
+            try:
+                self[pgb][ls] = self[pgb][ls].split(",")
+            except KeyError:
+                # list fields are not compulsory, so continue
+                pass
+
+    def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
+        """Parses space-separated key=value pairs into a python dict.
+
+        Args:
+            string: a string containing a set of key=value pairs, joined with = characters and
+                separated with spaces
+        Returns:
+            A dict containing the key-value pairs represented as strings.
+        """
+        parsed_dict = {}
+        for kv_pair in string.split(" "):
+            key, value = kv_pair.split("=")
+            parsed_dict[key] = value
+        return parsed_dict
+
+    def _parse_dict_to_string(self, dictionary: Dict[str, str]) -> str:
+        """Helper function to encode a python dict into a pgbouncer-readable string.
+
+        Args:
+            dictionary: A dict containing the key-value pairs represented as strings.
+        Returns: a string containing a set of key=value pairs, joined with = characters and
+                separated with spaces
+        """
+        return " ".join([f"{key}={value}" for key, value in dictionary.items()])
+
+    def render(self) -> str:
+        """Returns a valid pgbouncer.ini file as a string.
+
+        Returns:
+            str: a string containing a valid pgbouncer.ini file.
+        """
+        self.validate()
+
+        # Create a copy of the config with dicts and lists parsed into valid ini strings
+        output_dict = dict(self).copy()
+        for section, subdict in output_dict.items():
+            for option, config_value in subdict.items():
+                if isinstance(config_value, dict):
+                    output_dict[section][option] = self._parse_dict_to_string(config_value)
+                elif isinstance(config_value, list):
+                    output_dict[section][option] = ",".join(config_value)
+
+        # Populate parser object with local data.
+        parser = ConfigParser()
+        parser.optionxform = str
+        parser.read_dict(output_dict)
+
+        # ConfigParser can only write to a file, so write to a StringIO object and then read back
+        # from it.
+        with io.StringIO() as string_io:
+            parser.write(string_io)
+            string_io.seek(0)
+            output = string_io.read()
+        return output
+
+    def validate(self):
+        """Validates that this will provide a valid pgbouncer.ini config when rendered."""
+        db = self.db_section
+        essentials = {
+            "databases": [],
+            "pgbouncer": ["logfile", "pidfile"],
+        }
+
+        if not set(essentials.keys()).issubset(set(self.keys())):
+            raise KeyError("necessary sections not found in config.")
+
+        if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
+            raise KeyError("necessary pgbouncer config values not found in config.")
+
+        # Guarantee db names are valid
+        for db_id in self[db].keys():
+            db_name = self[db][db_id].get("dbname", "")
+            self._validate_dbname(db_id)
+            self._validate_dbname(db_name)
+
+    def _validate_dbname(self, string: str):
+        """Checks string is a valid database name.
+
+        For a database name to be valid, it must contain only alphanumeric characters, hyphens,
+        and underscores. Any other invalid character must be in double quotes.
+
+        Args:
+            string: the string to be validated
+        """
+        # Check dbnames don't use the reserved "pgbouncer" database name
+        if string == "pgbouncer":
+            raise PgbConfig.ConfigParsingError(source=string)
+
+        # Check dbnames are valid characters (alphanumeric and _- )
+        search = re.compile(r"[^A-Za-z0-9-_]+").search
+        filtered_string = "".join(filter(search, string))
+        if len(filtered_string) == 0:
+            # The string only contains the permitted characters
+            return
+
+        # Check the contents of the string left after removing valid characters are all enclosed
+        # in double quotes.
+        quoted_substrings = re.findall(r'"(?:\\.|[^"])*"', filtered_string)
+        if "".join(quoted_substrings) == filtered_string:
+            # All substrings of invalid characters are properly quoted
+            return
+
+        # dbname is invalid, raise parsing error
+        raise PgbConfig.ConfigParsingError(source=filtered_string)
+
+    class ConfigParsingError(ParsingError):
+        """Error raised when parsing config fails."""
+
+        pass
