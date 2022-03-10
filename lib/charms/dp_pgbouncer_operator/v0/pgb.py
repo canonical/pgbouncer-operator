@@ -286,15 +286,7 @@ def initialise_userlist_from_ini(
     """
     users = []
     for user_type in ini.user_types:
-        users += ini[ini.pgb_section][user_type]
-
-    for user in ini["pgbouncer"].get("admin_users", []):
-        if user not in existing_users:
-            existing_users[user] = generate_password()
-
-    for user in ini["pgbouncer"].get("stats_users", []):
-        if user not in existing_users:
-            existing_users[user] = generate_password()
+        users += ini[ini.pgb_section].get(user_type, [])
 
     for user in users:
         if user not in existing_users:
