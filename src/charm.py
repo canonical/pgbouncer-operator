@@ -75,15 +75,11 @@ class PgBouncerCharm(CharmBase):
                 "admin_users": ["juju-admin"],
             },
         }
-
         ini = pgb.PgbConfig(initial_config)
         self._render_pgb_config(ini)
 
         # Generate passwords for initial users
-        userlist = {}
-        for user in initial_config["pgbouncer"]["admin_users"]:
-            userlist[user] = pgb.generate_password()
-        self._render_userlist(userlist)
+        self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -92,6 +88,7 @@ class PgBouncerCharm(CharmBase):
         try:
             command = ["pgbouncer", INI_PATH]
             logger.debug(f"pgbouncer call: {' '.join(command)}")
+            #TODO change to use pgbouncer user
             subprocess.check_call(command)
         except subprocess.CalledProcessError as e:
             logger.info(e)
@@ -131,7 +128,6 @@ class PgBouncerCharm(CharmBase):
             mode: access permission mask applied to the
             file using chmod (e.g. 0o640).
         """
-        logger.info(f"rendering file \n{content}")
         with open(path, "w+") as file:
             file.write(content)
         # Ensure correct permissions are set on the file.
@@ -167,7 +163,7 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
-        self._render_file(pgbouncer_ini.render(), INI_PATH, 0o600)
+        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -187,7 +183,7 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
-        self._render_file(pgb.generate_userlist(userlist), USERLIST_PATH, 0o600)
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()

@@ -1,14 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more about config at: https://juju.is/docs/sdk/config
 
 options:
-  pgb_databases:
-    default: "exampledb = host=pg-host port=5432 dbname=exampledb"
-    description: "multiline string containing database config (one per line)."
-    type: "string"
-
   pgb_listen_port:
     default: 6432
     description: "Port on which PGBouncer listens for traffic"

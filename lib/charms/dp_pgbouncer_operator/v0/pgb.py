@@ -25,6 +25,7 @@ import secrets
 import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
+from copy import deepcopy
 from typing import Dict
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ class PgbConfig(MutableMapping):
             as its own subdict. Lists should be represented as python lists, not comma-separated
             strings.
         """
-        self.update(input)
+        self.update(deepcopy(input))
         self.validate()
 
     def read_string(self, input: str) -> None:
@@ -93,7 +94,7 @@ class PgbConfig(MutableMapping):
         parser.optionxform = str
         parser.read_string(input)
 
-        self.update(dict(parser).copy())
+        self.update(deepcopy(dict(parser)))
         # Convert Section objects to dictionaries, so they can hold dictionaries themselves.
         for section, data in self.items():
             self[section] = dict(data)
@@ -167,7 +168,7 @@ class PgbConfig(MutableMapping):
         self.validate()
 
         # Create a copy of the config with dicts and lists parsed into valid ini strings
-        output_dict = dict(self).copy()
+        output_dict = deepcopy(dict(self))
         for section, subdict in output_dict.items():
             for option, config_value in subdict.items():
                 if isinstance(config_value, dict):
@@ -285,7 +286,15 @@ def initialise_userlist_from_ini(
     """
     users = []
     for user_type in ini.user_types:
-        users += ini[ini.pgb_section].get(user_type, [])
+        users += ini[ini.pgb_section][user_type]
+
+    for user in ini["pgbouncer"].get("admin_users", []):
+        if user not in existing_users:
+            existing_users[user] = generate_password()
+
+    for user in ini["pgbouncer"].get("stats_users", []):
+        if user not in existing_users:
+            existing_users[user] = generate_password()
 
     for user in users:
         if user not in existing_users:
