@@ -158,8 +158,8 @@ class TestPgb(unittest.TestCase):
         blank_userlist = {}
         new_userlist = pgb.initialise_userlist_from_ini(config, blank_userlist)
         for key in config["pgbouncer"]["admin_users"] + config["pgbouncer"]["stats_users"]:
-            assert key in new_userlist
-            assert new_userlist[key] is not None
+            self.assertIn(key, new_userlist)
+            self.assertIsNotNone(new_userlist[key])
 
         # Test with existing userlist
         existing_userlist = {
@@ -168,10 +168,10 @@ class TestPgb(unittest.TestCase):
         }
         updated_userlist = pgb.initialise_userlist_from_ini(config, existing_userlist)
         for key in config["pgbouncer"]["admin_users"] + config["pgbouncer"]["stats_users"]:
-            assert key in updated_userlist
-            assert updated_userlist[key] is not None
+            self.assertIn(key, updated_userlist)
+            self.assertIsNotNone(updated_userlist[key])
         for key, value in existing_userlist.items():
-            assert updated_userlist[key] == value
+            self.assertEqual(updated_userlist[key], value)
 
     def test_generate_userlist(self):
         users = {"test1": "pw1", "test2": "pw2"}

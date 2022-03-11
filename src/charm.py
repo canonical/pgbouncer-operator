@@ -19,8 +19,9 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 
 logger = logging.getLogger(__name__)
 
-INI_PATH = "/etc/pgbouncer/pgbouncer.ini"
-USERLIST_PATH = "/etc/pgbouncer/userlist.txt"
+PGB_DIR = "/etc/pgbouncer"
+INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
+USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 
 """
@@ -40,10 +41,13 @@ class PgBouncerCharm(CharmBase):
 
     _stored = StoredState()
 
+
     def __init__(self, *args):
         super().__init__(*args)
 
         self._pgbouncer_service = "pgbouncer"
+        self._pgb_user = "pgbouncer"
+        self._pgb_uid = 1100
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
@@ -61,8 +65,15 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         # Initialise prereqs to run pgbouncer
-        passwd.add_user(username="pgbouncer", password="pgb")
         self._install_apt_packages(["pgbouncer"])
+        #passwd.add_group("postgres")
+        passwd.add_user(
+            username=self._pgb_user, password="pgb", uid=self._pgb_uid, primary_group="postgres"
+        )
+        os.chown(PGB_DIR, self._pgb_uid, 120)
+        os.chown(INI_PATH, self._pgb_uid, 120)
+        os.chown(USERLIST_PATH, self._pgb_uid, 120)
+        os.setuid(self._pgb_uid)
 
         # Initialise config files.
         # For now, use a dummy config dict - in future, we're going to have a static default
@@ -70,9 +81,9 @@ class PgBouncerCharm(CharmBase):
         initial_config = {
             "databases": {},
             "pgbouncer": {
-                "logfile": "/etc/pgbouncer/pgbouncer.log",
-                "pidfile": "/etc/pgbouncer/pgbouncer.pid",
-                "admin_users": ["juju-admin"],
+                "logfile": f"{PGB_DIR}/pgbouncer.log",
+                "pidfile": f"{PGB_DIR}/pgbouncer.pid",
+                "admin_users": ",".split(self.config["admin_users"]),
             },
         }
         ini = pgb.PgbConfig(initial_config)
@@ -86,9 +97,11 @@ class PgBouncerCharm(CharmBase):
     def _on_start(self, _) -> None:
 
         try:
-            command = ["pgbouncer", INI_PATH]
+            # Run pgbouncer as daemon so check_call doesn't hang on it indefinitely
+            command = ["pgbouncer", "-d", INI_PATH]
             logger.debug(f"pgbouncer call: {' '.join(command)}")
-            #TODO change to use pgbouncer user
+            # TODO change to use pgbouncer user
+            os.setuid(self._pgb_uid)
             subprocess.check_call(command)
         except subprocess.CalledProcessError as e:
             logger.info(e)
@@ -133,7 +146,7 @@ class PgBouncerCharm(CharmBase):
         # Ensure correct permissions are set on the file.
         os.chmod(path, mode)
         # Get the uid/gid for the pgbouncer user.
-        u = pwd.getpwnam("pgbouncer")
+        u = pwd.getpwnam(self._pgb_user)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
