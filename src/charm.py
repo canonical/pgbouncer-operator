@@ -34,7 +34,6 @@ class PgBouncerCharm(CharmBase):
 
         self._pgbouncer_service = "pgbouncer"
         self._pgb_user = "pgbouncer"
-        self._pgb_uid = 1100
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
@@ -55,12 +54,16 @@ class PgBouncerCharm(CharmBase):
         self._install_apt_packages(["pgbouncer"])
         # add pgbouncer user to postgres group, created in above line
         passwd.add_user(
-            username=self._pgb_user, password="pgb", uid=self._pgb_uid, primary_group="postgres"
+            username=self._pgb_user, password="pgb", primary_group="postgres"
         )
-        os.chown(PGB_DIR, self._pgb_uid, 120)
-        os.chown(INI_PATH, self._pgb_uid, 120)
-        os.chown(USERLIST_PATH, self._pgb_uid, 120)
-        os.setuid(self._pgb_uid)
+        u = pwd.getpwnam(self._pgb_user)
+        self._postgres_gid = u.pw_gid
+        self._pgbouncer_uid = u.pw_uid
+
+        os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
+        os.chown(INI_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.setuid(self._pgbouncer_uid)
 
         # Initialise config files.
         # For now, use a dummy config dict - in future, we're going to have a static default
@@ -87,7 +90,8 @@ class PgBouncerCharm(CharmBase):
             command = ["pgbouncer", "-d", INI_PATH]
             logger.debug(f"pgbouncer call: {' '.join(command)}")
             # Ensure pgbouncer command runs as pgbouncer user.
-            os.setuid(self._pgb_uid)
+            self._pgbouncer_uid = pwd.getpwnam(self._pgb_user).pw_uid
+            os.setuid(self._pgbouncer_uid)
             subprocess.check_call(command)
             self.unit.status = ActiveStatus("pgbouncer started")
         except subprocess.CalledProcessError as e:
@@ -114,18 +118,17 @@ class PgBouncerCharm(CharmBase):
         try:
             logger.debug(f"installing apt packages: {', '.join(packages)}")
             apt.add_package(packages)
-        except apt.PackageNotFoundError:
-            logger.error("a specified package not found in package cache or on system")
+        except apt.PackageNotFoundError as e:
+            logger.error(e)
             self.unit.status = BlockedStatus("failed to install packages")
 
     def _render_file(self, path: str, content: str, mode: int) -> None:
-        """Write a content rendered from a template to a file.
+        """Write content rendered from a template to a file.
 
         Args:
             path: the path to the file.
             content: the data to be written to the file.
-            mode: access permission mask applied to the
-            file using chmod (e.g. 0o640).
+            mode: access permission mask applied to the file using chmod (e.g. 0o640).
         """
         with open(path, "w+") as file:
             file.write(content)

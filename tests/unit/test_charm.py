@@ -33,14 +33,15 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm._render_file")
     @patch("os.setuid")
     @patch("os.chown")
-    def test_on_install(self, _chown, _setuid, _render_file, _install, _userlist, _add_user):
+    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
+    def test_on_install(self, _getpwnam, _chown, _setuid, _render_file, _install, _userlist, _add_user):
         _userlist.return_value = {"juju-admin": "test"}
 
         self.harness.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])
         _add_user.assert_called_with(
-            username="pgbouncer", password="pgb", uid=1100, primary_group="postgres"
+            username="pgbouncer", password="pgb", primary_group="postgres"
         )
 
         _chown.assert_any_call(USERLIST_PATH, 1100, 120)
@@ -58,9 +59,8 @@ admin_users = juju-admin
 
 """
         initial_userlist = '"juju-admin" "test"'
-        permissions = 0o600
         _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o600)
-        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, permissions)
+        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o600)
 
         self.assertEqual(
             self.harness.model.unit.status,
@@ -68,8 +68,9 @@ admin_users = juju-admin
         )
 
     @patch("os.setuid")
+    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("subprocess.check_call")
-    def test_on_start(self, _call, _setuid):
+    def test_on_start(self, _call, _getpwnam, _setuid):
         self.harness.charm.on.start.emit()
         _setuid.assert_called_with(1100)
         command = ["pgbouncer", "-d", INI_PATH]
@@ -103,7 +104,7 @@ admin_users = juju-admin
 
     @patch("os.chmod")
     @patch("os.chown")
-    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid="test_group"))
+    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     def test_render_file(self, _getpwnam, _chown, _chmod):
         path = "test/test_render_file.txt"
         content = "this text file should never be written"
@@ -113,7 +114,7 @@ admin_users = juju-admin
 
         _chmod.assert_called_with(path, mode)
         _getpwnam.assert_called_with("pgbouncer")
-        _chown.assert_called_with(path, uid=1100, gid="test_group")
+        _chown.assert_called_with(path, uid=1100, gid=120)
 
     def test_read_pgb_config(self):
         with open(TEST_VALID_INI, "r") as ini:
