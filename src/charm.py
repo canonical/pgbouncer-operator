@@ -2,7 +2,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charmed PgBouncer connection pooler."""
+"""Charmed PgBouncer connection pooler, to run on machine charms."""
 
 import logging
 import os
@@ -24,23 +24,10 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 
-"""
-EOD TODO
-install dummy pgbouncer.ini and userlist.txt files
-write dosctrings for methods
-get charm installing and running
-write unit tests
-manual test
-write integration tests (build and deploy, change config)
-open pr
-"""
-
-
 class PgBouncerCharm(CharmBase):
     """A class implementing charmed PgBouncer."""
 
     _stored = StoredState()
-
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -66,7 +53,7 @@ class PgBouncerCharm(CharmBase):
 
         # Initialise prereqs to run pgbouncer
         self._install_apt_packages(["pgbouncer"])
-        #passwd.add_group("postgres")
+        # add pgbouncer user to postgres group, created in above line
         passwd.add_user(
             username=self._pgb_user, password="pgb", uid=self._pgb_uid, primary_group="postgres"
         )
@@ -83,30 +70,29 @@ class PgBouncerCharm(CharmBase):
             "pgbouncer": {
                 "logfile": f"{PGB_DIR}/pgbouncer.log",
                 "pidfile": f"{PGB_DIR}/pgbouncer.pid",
-                "admin_users": ",".split(self.config["admin_users"]),
+                "admin_users": self.config["admin_users"].split(","),
             },
         }
         ini = pgb.PgbConfig(initial_config)
         self._render_pgb_config(ini)
 
-        # Generate passwords for initial users
+        # Initialise userlist, generating passwords for initial users
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
     def _on_start(self, _) -> None:
-
         try:
-            # Run pgbouncer as daemon so check_call doesn't hang on it indefinitely
+            # -d flag ensures pgbouncer runs as a daemon, not as an active process.
             command = ["pgbouncer", "-d", INI_PATH]
             logger.debug(f"pgbouncer call: {' '.join(command)}")
-            # TODO change to use pgbouncer user
+            # Ensure pgbouncer command runs as pgbouncer user.
             os.setuid(self._pgb_uid)
             subprocess.check_call(command)
+            self.unit.status = ActiveStatus("pgbouncer started")
         except subprocess.CalledProcessError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
-        self.unit.status = ActiveStatus("pgbouncer started")
 
     def _on_config_changed(self, _) -> None:
         pass
