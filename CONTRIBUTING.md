@@ -6,7 +6,7 @@ This documents explains the processes and practices recommended for contributing
 this operator.
 
 - Generally, before developing enhancements to this charm, you should consider [opening an issue
-  ](https://github.com/canonical/pgbouncer-k8s-operator/issues) explaining your use case.
+  ](https://github.com/canonical/pgbouncer-operator/issues) explaining your use case.
 - If you would like to chat with us about your use-cases or proposed implementation, you can reach
   us at [Canonical Mattermost public channel](https://chat.charmhub.io/charmhub/channels/charm-dev)
   or [Discourse](https://discourse.charmhub.io/).
@@ -54,7 +54,7 @@ juju add-model dev
 # Enable DEBUG logging
 juju model-config logging-config="<root>=INFO;unit=DEBUG"
 # Deploy the charm
-juju deploy ./pgbouncer-k8s-operator_ubuntu-20.04-amd64.charm \
+juju deploy ./pgbouncer-operator_ubuntu-20.04-amd64.charm \
     --resource pgbouncer-image=pgbouncer:0.8
 ```
 
