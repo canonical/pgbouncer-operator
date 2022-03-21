@@ -6,7 +6,7 @@ import unittest
 
 import pytest
 
-from lib.charms.dp_pgbouncer_operator.v0 import pgb
+from lib.charms.pgbouncer_operator.v0 import pgb
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -195,5 +195,6 @@ class TestPgb(unittest.TestCase):
         # Check that we can run input through a few times without anything getting corrupted.
         regen_userlist = pgb.generate_userlist(users)
         regen_users = pgb.parse_userlist(regen_userlist)
+        # Assert invalid users aren't represented anywhere in userlist data
         self.assertNotEqual(regen_userlist, userlist)
         self.assertDictEqual(users, regen_users)

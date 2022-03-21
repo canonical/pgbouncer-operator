@@ -6,8 +6,8 @@ import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
-from charms.dp_pgbouncer_operator.v0 import pgb
 from charms.operator_libs_linux.v0 import apt
+from charms.pgbouncer_operator.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -28,13 +28,16 @@ class TestCharm(unittest.TestCase):
         self.harness.begin()
 
     @patch("charms.operator_libs_linux.v0.passwd.add_user")
-    @patch("charms.dp_pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
+    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
+    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="pgb")
     @patch("charm.PgBouncerCharm._install_apt_packages")
     @patch("charm.PgBouncerCharm._render_file")
     @patch("os.setuid")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
-    def test_on_install(self, _getpwnam, _chown, _setuid, _render_file, _install, _userlist, _add_user):
+    def test_on_install(
+        self, _getpwnam, _chown, _setuid, _render_file, _install, _password, _userlist, _add_user
+    ):
         _userlist.return_value = {"juju-admin": "test"}
 
         self.harness.charm.on.install.emit()

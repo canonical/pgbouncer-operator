@@ -44,5 +44,5 @@ jobs:
       #   uses: canonical/charm-logdump-action@main
       #   if: failure()
       #   with:
-      #     app: dp-pgbouncer-operator
+      #     app: pgbouncer-operator
       #     model: testing

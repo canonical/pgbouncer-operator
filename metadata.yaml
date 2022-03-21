@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: dp-pgbouncer-operator
+name: pgbouncer-operator
 display-name: |
   PgBouncer Machine Operator
 description: |
@@ -10,8 +10,3 @@ summary: |
   The aim of pgbouncer is to lower the performance impact of opening new connections to PostgreSQL. For more information, see https://www.pgbouncer.org/usage.html
 maintainers:
   "Will Fitch <will.fitch@canonical.com>"
-
-series:
-  # TODO add jammy once it's available
-  - focal
-  - bionic

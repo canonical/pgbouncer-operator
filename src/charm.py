@@ -10,8 +10,8 @@ import pwd
 import subprocess
 from typing import Dict, List
 
-from charms.dp_pgbouncer_operator.v0 import pgb
 from charms.operator_libs_linux.v0 import apt, passwd
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -52,13 +52,14 @@ class PgBouncerCharm(CharmBase):
 
         # Initialise prereqs to run pgbouncer
         self._install_apt_packages(["pgbouncer"])
-        # add pgbouncer user to postgres group, created in above line
+        # create & add pgbouncer user to postgres group, which is created when installing
+        # pgbouncer apt package
         passwd.add_user(
-            username=self._pgb_user, password="pgb", primary_group="postgres"
+            username=self._pgb_user, password=pgb.generate_password(), primary_group="postgres"
         )
-        u = pwd.getpwnam(self._pgb_user)
-        self._postgres_gid = u.pw_gid
-        self._pgbouncer_uid = u.pw_uid
+        user = pwd.getpwnam(self._pgb_user)
+        self._postgres_gid = user.pw_gid
+        self._pgbouncer_uid = user.pw_uid
 
         os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
         os.chown(INI_PATH, self._pgbouncer_uid, self._postgres_gid)
