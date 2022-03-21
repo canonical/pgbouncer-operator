@@ -6,75 +6,13 @@ import unittest
 
 import pytest
 
-from lib.charms.dp_pgbouncer_operator.v0 import pgb
+from lib.charms.pgbouncer_operator.v0 import pgb
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
 
 
 class TestPgb(unittest.TestCase):
-    def test_generate_password(self):
-        pw = pgb.generate_password()
-        self.assertEqual(len(pw), 24)
-        valid_chars = string.ascii_letters + string.digits
-        for char in pw:
-            assert char in valid_chars
-
-    def test_generate_pgbouncer_ini(self):
-        config = {
-            "databases": {
-                "test": {
-                    "host": "test",
-                    "port": "4039",
-                    "dbname": "testdatabase",
-                },
-                "test2": {"host": "test2"},
-            },
-            "pgbouncer": {
-                "logfile": "test/logfile",
-                "pidfile": "test/pidfile",
-                "admin_users": ["Test"],
-                "stats_users": ["Test", "test_stats"],
-                "listen_port": "4545",
-            },
-            "users": {
-                "Test": {
-                    "pool_mode": "session",
-                    "max_user_connections": "10",
-                }
-            },
-        }
-
-        generated_ini = pgb.generate_pgbouncer_ini(config)
-        with open(TEST_VALID_INI, "r") as test_ini:
-            expected_generated_ini = test_ini.read()
-        self.assertEqual(generated_ini, expected_generated_ini)
-
-    def test_generate_userlist(self):
-        users = {"test1": "pw1", "test2": "pw2"}
-        userlist = pgb.generate_userlist(users)
-        expected_userlist = '''"test1" "pw1"\n"test2" "pw2"'''
-        self.assertEqual(userlist, expected_userlist)
-        self.assertDictEqual(pgb.parse_userlist(expected_userlist), users)
-
-    def test_parse_userlist(self):
-        with open("tests/unit/data/test_userlist.txt") as f:
-            userlist = f.read()
-        users = pgb.parse_userlist(userlist)
-        expected_users = {
-            "testuser": "testpass",
-            "another_testuser": "anotherpass",
-            "1234": "",
-            "": "",
-        }
-        self.assertDictEqual(users, expected_users)
-
-        # Check that we can run input through a few times without anything getting corrupted.
-        regen_userlist = pgb.generate_userlist(users)
-        regen_users = pgb.parse_userlist(regen_userlist)
-        self.assertNotEqual(regen_userlist, userlist)
-        self.assertDictEqual(users, regen_users)
-
     def test_pgb_config_read_string(self):
         with open(TEST_VALID_INI, "r") as test_ini:
             input_string = test_ini.read()
@@ -174,3 +112,89 @@ class TestPgb(unittest.TestCase):
         for dbname in bad_dbnames:
             with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 ini._validate_dbname(dbname)
+
+    def test_generate_password(self):
+        pw = pgb.generate_password()
+        self.assertEqual(len(pw), 24)
+        valid_chars = string.ascii_letters + string.digits
+        for char in pw:
+            assert char in valid_chars
+
+    def test_generate_pgbouncer_ini(self):
+        config = {
+            "databases": {
+                "test": {
+                    "host": "test",
+                    "port": "4039",
+                    "dbname": "testdatabase",
+                },
+                "test2": {"host": "test2"},
+            },
+            "pgbouncer": {
+                "logfile": "test/logfile",
+                "pidfile": "test/pidfile",
+                "admin_users": ["Test"],
+                "stats_users": ["Test", "test_stats"],
+                "listen_port": "4545",
+            },
+            "users": {
+                "Test": {
+                    "pool_mode": "session",
+                    "max_user_connections": "10",
+                }
+            },
+        }
+
+        generated_ini = pgb.generate_pgbouncer_ini(config)
+        with open(TEST_VALID_INI, "r") as test_ini:
+            expected_generated_ini = test_ini.read()
+        self.assertEqual(generated_ini, expected_generated_ini)
+
+    def test_initialise_userlist_from_ini(self):
+        with open(TEST_VALID_INI, "r") as test_ini:
+            config = pgb.PgbConfig(test_ini.read())
+
+        # Test with blank userlist
+        blank_userlist = {}
+        new_userlist = pgb.initialise_userlist_from_ini(config, blank_userlist)
+        for key in config["pgbouncer"]["admin_users"] + config["pgbouncer"]["stats_users"]:
+            self.assertIn(key, new_userlist)
+            self.assertIsNotNone(new_userlist[key])
+
+        # Test with existing userlist
+        existing_userlist = {
+            "test_user": "test_pass",
+            "programmerfuel": "coffee",
+        }
+        updated_userlist = pgb.initialise_userlist_from_ini(config, existing_userlist)
+        for key in config["pgbouncer"]["admin_users"] + config["pgbouncer"]["stats_users"]:
+            self.assertIn(key, updated_userlist)
+            self.assertIsNotNone(updated_userlist[key])
+        for key, value in existing_userlist.items():
+            self.assertEqual(updated_userlist[key], value)
+
+    def test_generate_userlist(self):
+        users = {"test1": "pw1", "test2": "pw2"}
+        userlist = pgb.generate_userlist(users)
+        expected_userlist = '''"test1" "pw1"\n"test2" "pw2"'''
+        self.assertEqual(userlist, expected_userlist)
+        self.assertDictEqual(pgb.parse_userlist(expected_userlist), users)
+
+    def test_parse_userlist(self):
+        with open("tests/unit/data/test_userlist.txt") as f:
+            userlist = f.read()
+        users = pgb.parse_userlist(userlist)
+        expected_users = {
+            "testuser": "testpass",
+            "another_testuser": "anotherpass",
+            "1234": "",
+            "": "",
+        }
+        self.assertDictEqual(users, expected_users)
+
+        # Check that we can run input through a few times without anything getting corrupted.
+        regen_userlist = pgb.generate_userlist(users)
+        regen_users = pgb.parse_userlist(regen_userlist)
+        # Assert invalid users aren't represented anywhere in userlist data
+        self.assertNotEqual(regen_userlist, userlist)
+        self.assertDictEqual(users, regen_users)

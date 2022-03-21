@@ -1,104 +1,199 @@
 #!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more at: https://juju.is/docs/sdk
 
-"""Charm the service.
-
-Refer to the following post for a quick-start guide that will help you
-develop a new k8s charm using the Operator Framework:
-
-    https://discourse.charmhub.io/t/4208
-"""
+"""Charmed PgBouncer connection pooler, to run on machine charms."""
 
 import logging
+import os
+import pwd
+import subprocess
+from typing import Dict, List
 
+from charms.operator_libs_linux.v0 import apt, passwd
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
+PGB_DIR = "/etc/pgbouncer"
+INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
+USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
-class OperatorTemplateCharm(CharmBase):
-    """Charm the service."""
+
+class PgBouncerCharm(CharmBase):
+    """A class implementing charmed PgBouncer."""
 
     _stored = StoredState()
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.framework.observe(self.on.httpbin_pebble_ready, self._on_httpbin_pebble_ready)
+
+        self._pgbouncer_service = "pgbouncer"
+        self._pgb_user = "pgbouncer"
+
+        self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
-        self.framework.observe(self.on.fortune_action, self._on_fortune_action)
-        self._stored.set_default(things=[])
 
-    def _on_httpbin_pebble_ready(self, event):
-        """Define and start a workload using the Pebble API.
+    # =======================
+    #  Charm Lifecycle Hooks
+    # =======================
 
-        TEMPLATE-TODO: change this example to suit your needs.
-        You'll need to specify the right entrypoint and environment
-        configuration for your specific workload. Tip: you can see the
-        standard entrypoint of an existing container using docker inspect
+    def _on_install(self, _) -> None:
+        """On install hook.
 
-        Learn more about Pebble layers at https://github.com/canonical/pebble
+        This initialises local config files necessary for pgbouncer to run.
         """
-        # Get a reference the container attribute on the PebbleReadyEvent
-        container = event.workload
-        # Define an initial Pebble layer configuration
-        pebble_layer = {
-            "summary": "httpbin layer",
-            "description": "pebble config layer for httpbin",
-            "services": {
-                "httpbin": {
-                    "override": "replace",
-                    "summary": "httpbin",
-                    "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
-                    "startup": "enabled",
-                    "environment": {"thing": self.model.config["thing"]},
-                }
+        self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
+
+        # Initialise prereqs to run pgbouncer
+        self._install_apt_packages(["pgbouncer"])
+        # create & add pgbouncer user to postgres group, which is created when installing
+        # pgbouncer apt package
+        passwd.add_user(
+            username=self._pgb_user, password=pgb.generate_password(), primary_group="postgres"
+        )
+        user = pwd.getpwnam(self._pgb_user)
+        self._postgres_gid = user.pw_gid
+        self._pgbouncer_uid = user.pw_uid
+
+        os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
+        os.chown(INI_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.setuid(self._pgbouncer_uid)
+
+        # Initialise config files.
+        # For now, use a dummy config dict - in future, we're going to have a static default
+        # config file which may be overridden by a user uploading new files.
+        initial_config = {
+            "databases": {},
+            "pgbouncer": {
+                "logfile": f"{PGB_DIR}/pgbouncer.log",
+                "pidfile": f"{PGB_DIR}/pgbouncer.pid",
+                "admin_users": self.config["admin_users"].split(","),
             },
         }
-        # Add initial Pebble config layer using the Pebble API
-        container.add_layer("httpbin", pebble_layer, combine=True)
-        # Autostart any services that were defined with startup: enabled
-        container.autostart()
-        # Learn more about statuses in the SDK docs:
-        # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = ActiveStatus()
+        ini = pgb.PgbConfig(initial_config)
+        self._render_pgb_config(ini)
 
-    def _on_config_changed(self, _):
-        """Just an example to show how to deal with changed configuration.
+        # Initialise userlist, generating passwords for initial users
+        self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
-        TEMPLATE-TODO: change this example to suit your needs.
-        If you don't need to handle config, you can remove this method,
-        the hook created in __init__.py for it, the corresponding test,
-        and the config.py file.
+        self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
-        Learn more about config at https://juju.is/docs/sdk/config
+    def _on_start(self, _) -> None:
+        try:
+            # -d flag ensures pgbouncer runs as a daemon, not as an active process.
+            command = ["pgbouncer", "-d", INI_PATH]
+            logger.debug(f"pgbouncer call: {' '.join(command)}")
+            # Ensure pgbouncer command runs as pgbouncer user.
+            self._pgbouncer_uid = pwd.getpwnam(self._pgb_user).pw_uid
+            os.setuid(self._pgbouncer_uid)
+            subprocess.check_call(command)
+            self.unit.status = ActiveStatus("pgbouncer started")
+        except subprocess.CalledProcessError as e:
+            logger.info(e)
+            self.unit.status = BlockedStatus("failed to start pgbouncer")
+
+    def _on_config_changed(self, _) -> None:
+        pass
+
+    # ==========================
+    #  Generic Helper Functions
+    # ==========================
+
+    def _install_apt_packages(self, packages: List[str]):
+        """Simple wrapper around 'apt-get install -y."""
+        try:
+            logger.debug("updating apt cache")
+            apt.update()
+        except subprocess.CalledProcessError as e:
+            logger.exception("failed to update apt cache, CalledProcessError", exc_info=e)
+            self.unit.status = BlockedStatus("failed to update apt cache")
+            return
+
+        try:
+            logger.debug(f"installing apt packages: {', '.join(packages)}")
+            apt.add_package(packages)
+        except apt.PackageNotFoundError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("failed to install packages")
+
+    def _render_file(self, path: str, content: str, mode: int) -> None:
+        """Write content rendered from a template to a file.
+
+        Args:
+            path: the path to the file.
+            content: the data to be written to the file.
+            mode: access permission mask applied to the file using chmod (e.g. 0o640).
         """
-        current = self.config["thing"]
-        if current not in self._stored.things:
-            logger.debug("found a new thing: %r", current)
-            self._stored.things.append(current)
+        with open(path, "w+") as file:
+            file.write(content)
+        # Ensure correct permissions are set on the file.
+        os.chmod(path, mode)
+        # Get the uid/gid for the pgbouncer user.
+        u = pwd.getpwnam(self._pgb_user)
+        # Set the correct ownership for the file.
+        os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
-    def _on_fortune_action(self, event):
-        """Just an example to show how to receive actions.
+    # =====================================
+    #  PgBouncer-Specific Helper Functions
+    # =====================================
 
-        TEMPLATE-TODO: change this example to suit your needs.
-        If you don't need to handle actions, you can remove this method,
-        the hook created in __init__.py for it, the corresponding test,
-        and the actions.py file.
+    def _read_pgb_config(self) -> pgb.PgbConfig:
+        """Get config object from pgbouncer.ini file.
 
-        Learn more about actions at https://juju.is/docs/sdk/actions
+        Returns:
+            PgbConfig object containing pgbouncer config.
         """
-        fail = event.params["fail"]
-        if fail:
-            event.fail(fail)
-        else:
-            event.set_results({"fortune": "A bug in the code is worth two in the documentation."})
+        with open(INI_PATH, "r") as existing_file:
+            existing_config = pgb.PgbConfig(existing_file.read())
+        return existing_config
+
+    def _render_pgb_config(
+        self, pgbouncer_ini: pgb.PgbConfig, reload_pgbouncer: bool = False
+    ) -> None:
+        """Render config object to pgbouncer.ini file.
+
+        Args:
+            pgbouncer_ini: PgbConfig object containing pgbouncer config.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+        """
+        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o600)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _read_userlist(self) -> Dict[str, str]:
+        with open(USERLIST_PATH, "r") as existing_userlist:
+            userlist = pgb.parse_userlist(existing_userlist.read())
+        return userlist
+
+    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+        """Render user list (with encoded passwords) to pgbouncer.ini file.
+
+        Args:
+            userlist: dictionary of users:password strings.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+        """
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _reload_pgbouncer(self):
+        pass
 
 
 if __name__ == "__main__":
-    main(OperatorTemplateCharm)
+    main(PgBouncerCharm)

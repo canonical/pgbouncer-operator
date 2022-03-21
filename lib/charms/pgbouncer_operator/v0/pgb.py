@@ -25,74 +25,10 @@ import secrets
 import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
+from copy import deepcopy
 from typing import Dict
 
 logger = logging.getLogger(__name__)
-
-
-def generate_password() -> str:
-    """Generates a secure password of alphanumeric characters.
-
-    Passwords are alphanumeric only, to ensure compatibility with the userlist.txt format -
-    specifically, spaces and double quotes may interfere with parsing this file.
-
-    Returns:
-        A random 24-character string of letters and numbers.
-    """
-    choices = string.ascii_letters + string.digits
-    return "".join([secrets.choice(choices) for _ in range(24)])
-
-
-def generate_pgbouncer_ini(config) -> str:
-    """Generate pgbouncer.ini file from the given config options.
-
-    Args:
-        config: dict following the [pgbouncer config spec](https://pgbouncer.org/config.html).
-            Note that admin_users and stats_users must be passed in as lists of strings, not in
-            their string representation in the .ini file.
-
-    Returns:
-        A valid pgbouncer.ini file, represented as a string.
-    """
-    return PgbConfig(config).render()
-
-
-def generate_userlist(users: Dict[str, str]) -> str:
-    """Generate valid userlist.txt from the given dictionary of usernames:passwords.
-
-    Args:
-        users: a dictionary of usernames and passwords
-    Returns:
-        A multiline string, containing each pair of usernames and passwords in double quotes,
-        separated by a space, one pair per line.
-    """
-    return "\n".join([f'"{username}" "{password}"' for username, password in users.items()])
-
-
-def parse_userlist(userlist: str) -> Dict[str, str]:
-    """Parse userlist.txt into a dictionary of usernames and passwords.
-
-    Args:
-        userlist: a multiline string of users and passwords, formatted thusly:
-        '''
-        "test-user" "password"
-        "juju-admin" "asdf1234"
-        '''
-    Returns:
-        users: a dictionary of valid usernames and passwords
-    """
-    parsed_userlist = {}
-    # Each line in userlist can only be two space-separated substrings, wrapped in double quotes.
-    valid_userlist_regex = re.compile(r'^"[^"]*" "[^"]*"$')
-    for line in userlist.split("\n"):
-        if valid_userlist_regex.fullmatch(line) is None:
-            logger.warning("unable to parse line in userlist file - user not imported")
-            continue
-        # Userlist is formatted '"username" "password"'
-        username, password = line.replace('"', "").split(" ")
-        parsed_userlist[username] = password
-
-    return parsed_userlist
 
 
 class PgbConfig(MutableMapping):
@@ -105,7 +41,7 @@ class PgbConfig(MutableMapping):
     db_section = "databases"
     pgb_section = "pgbouncer"
     users_section = "users"
-    pgb_list_entries = ["admin_users", "stats_users"]
+    user_types = ["admin_users", "stats_users"]
 
     def __init__(self, config=None, *args, **kwargs):
         self.__dict__.update(*args, **kwargs)
@@ -144,7 +80,7 @@ class PgbConfig(MutableMapping):
             as its own subdict. Lists should be represented as python lists, not comma-separated
             strings.
         """
-        self.update(input)
+        self.update(deepcopy(input))
         self.validate()
 
     def read_string(self, input: str) -> None:
@@ -158,7 +94,7 @@ class PgbConfig(MutableMapping):
         parser.optionxform = str
         parser.read_string(input)
 
-        self.update(dict(parser).copy())
+        self.update(deepcopy(dict(parser)))
         # Convert Section objects to dictionaries, so they can hold dictionaries themselves.
         for section, data in self.items():
             self[section] = dict(data)
@@ -191,11 +127,11 @@ class PgbConfig(MutableMapping):
             # [users] section is not compulsory, so continue.
             pass
 
-        for ls in PgbConfig.pgb_list_entries:
+        for user_type in PgbConfig.user_types:
             try:
-                self[pgb][ls] = self[pgb][ls].split(",")
+                self[pgb][user_type] = self[pgb][user_type].split(",")
             except KeyError:
-                # list fields are not compulsory, so continue
+                # user type fields are not compulsory, so continue
                 pass
 
     def _parse_string_to_dict(self, string: str) -> Dict[str, str]:
@@ -232,7 +168,7 @@ class PgbConfig(MutableMapping):
         self.validate()
 
         # Create a copy of the config with dicts and lists parsed into valid ini strings
-        output_dict = dict(self).copy()
+        output_dict = deepcopy(dict(self))
         for section, subdict in output_dict.items():
             for option, config_value in subdict.items():
                 if isinstance(config_value, dict):
@@ -307,3 +243,91 @@ class PgbConfig(MutableMapping):
         """Error raised when parsing config fails."""
 
         pass
+
+
+def generate_password() -> str:
+    """Generates a secure password of alphanumeric characters.
+
+    Passwords are alphanumeric only, to ensure compatibility with the userlist.txt format -
+    specifically, spaces and double quotes may interfere with parsing this file.
+
+    Returns:
+        A random 24-character string of letters and numbers.
+    """
+    choices = string.ascii_letters + string.digits
+    return "".join([secrets.choice(choices) for _ in range(24)])
+
+
+def generate_pgbouncer_ini(config) -> str:
+    """Generate pgbouncer.ini file from the given config options.
+
+    Args:
+        config: dict following the [pgbouncer config spec](https://pgbouncer.org/config.html).
+            Note that admin_users and stats_users must be passed in as lists of strings, not in
+            their string representation in the .ini file.
+
+    Returns:
+        A valid pgbouncer.ini file, represented as a string.
+    """
+    return PgbConfig(config).render()
+
+
+def initialise_userlist_from_ini(
+    ini: PgbConfig, existing_users: Dict[str, str] = {}
+) -> Dict[str, str]:
+    """Helper function to generate userlist dict from users in ini config file.
+
+    Args:
+        ini: a PgbConfig object containing the current pgbouncer config
+        existing_users: an existing userlist, which will have new users appended to it.
+
+    Returns:
+        a new userlist, updated with new users.
+    """
+    users = []
+    for user_type in ini.user_types:
+        users += ini[ini.pgb_section].get(user_type, [])
+
+    for user in users:
+        if user not in existing_users:
+            existing_users[user] = generate_password()
+
+    return existing_users
+
+
+def generate_userlist(users: Dict[str, str]) -> str:
+    """Generate valid userlist.txt from the given dictionary of usernames:passwords.
+
+    Args:
+        users: a dictionary of usernames and passwords
+    Returns:
+        A multiline string, containing each pair of usernames and passwords in double quotes,
+        separated by a space, one pair per line.
+    """
+    return "\n".join([f'"{username}" "{password}"' for username, password in users.items()])
+
+
+def parse_userlist(userlist: str) -> Dict[str, str]:
+    """Parse userlist.txt into a dictionary of usernames and passwords.
+
+    Args:
+        userlist: a multiline string of users and passwords, formatted thusly:
+        '''
+        "test-user" "password"
+        "juju-admin" "asdf1234"
+        '''
+    Returns:
+        users: a dictionary of valid usernames and passwords
+    """
+    parsed_userlist = {}
+    # Each line in userlist can only be two space-separated substrings, wrapped in double quotes.
+    valid_userlist_regex = re.compile(r'^"[^"]*" "[^"]*"$')
+    for line in userlist.split("\n"):
+        if valid_userlist_regex.fullmatch(line) is None:
+            logger.warning("unable to parse line in userlist file - user not imported")
+            continue
+        # Userlist is formatted '"username" "password"'
+        username, password = line.replace('"', "").split(" ")
+        parsed_userlist[username] = password
+
+    return parsed_userlist
