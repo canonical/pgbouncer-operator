@@ -86,6 +86,11 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
     def _on_start(self, _) -> None:
+        """
+        On Start hook.
+
+        Switches to pgbouncer user and runs pgbouncer as daemon
+        """
         try:
             # -d flag ensures pgbouncer runs as a daemon, not as an active process.
             command = ["pgbouncer", "-d", INI_PATH]
@@ -100,7 +105,16 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_config_changed(self, _) -> None:
-        pass
+        """
+        Config changed handler.
+
+        Reads config values and parses them to pgbouncer config, restarting if necessary.
+        """
+        # Check whether pgbouncer.ini needs updating
+        # Check whether userlist.txt needs updating
+
+        if self.config["reload_on_config_changed"]:
+            self._reload_pgbouncer()
 
     # ==========================
     #  Generic Helper Functions

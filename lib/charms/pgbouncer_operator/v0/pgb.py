@@ -30,6 +30,124 @@ from typing import Dict
 
 logger = logging.getLogger(__name__)
 
+PGB_DIR = "/etc/pgbouncer"
+
+# We need to be able to iterate through all the config values we're exposing, and have constants
+# for the ones we're not. Check the documentation (https://www.pgbouncer.org/config.html) for
+# details. This only applies to settings in the [pgbouncer] section of the config files. The
+# [databases] section is handled by the charm, and the [users] section is unsupported until user
+# management is solved.
+EXPOSED_CONFIG_VALUES = {
+    # Generic Settings
+    "listen_addr": "localhost",
+    "listen_port": "5432",
+    "auth_type": "md5",
+    "pool_mode": "session",
+    "max_client_conn": "100",
+    "default_pool_size": "20",
+    "min_pool_size": "0",
+    "reserve_pool_size": "0",
+    "reserve_pool_timeout": "5.0",
+    "max_db_connections": "0",  # 0 = unlimited
+    "max_user_connections": "0",  # 0 = unlimited
+    "server_round_robin": "0",
+    "disable_pqexec": "0",
+
+    # Log Settings
+    "syslog": "0",
+    "log_connections": "1",
+    "log_disconnections": "1",
+    "log_pooler_errors": "1",
+    "log_stats": "1",
+    "verbose": "0",
+
+    # Console Access Control
+    "admin_users": "juju-admin",
+    "stats_users": "cos",
+
+    # Connection Sanity Checks, Timeouts
+    "server_reset_query_always": "0",
+    "server_check_delay": "30.0",
+    "server_fast_close": "0",
+    "server_lifetime": "3600.0",
+    "server_idle_timeout": "600.0",
+    "server_connect_timeout": "15.0",
+    "server_login_retry": "15.0",
+    "client_login_timeout": "60.0",
+    "autodb_idle_timeout": "3600.0",
+    "dns_max_ttl": "15.0",
+    "dns_nxdomain_ttl": "15.0",
+    "dns_zone_check_period": "0.0",
+
+    # TLS Settings
+    "client_tls_sslmode": "disable",
+    "client_tls_protocols": "secure",
+    "client_tls_ciphers": "fast",
+    "client_tls_ecdhcurve": "auto",
+    "client_tls_dheparams": "auto",
+    "server_tls_sslmode": "disable",
+    "server_tls_protocols": "secure",
+    "server_tls_ciphers": "fast",
+
+    # Dangerous Timeouts
+    # TODO warn users when these are edited
+    "query_timeout": "0.0",
+    "query_wait_timeout": "120",
+    "client_idle_timeout": "0.0",
+    "idle_transaction_timeout": "0.0",
+    "suspend_timeout": "10",
+
+    # Low-Level Network Settings
+    "pkt_buf": "4096",
+    "max_packet_size": "2147483647", # 2.5 GiB, minus 33 bits.
+    "listen_backlog": "128",
+    "sbuf_loopcnt": "5",
+    "tcp_defer_accept": "45",
+    "tcp_socket_buffer": "",
+    "tcp_keepalive": "1",
+    "tcp_keepcnt": "",
+    "tcp_keepidle": "",
+    "tcp_keepintvl": "",
+    "tcp_user_timeout": "0",
+}
+
+PRIVATE_CONFIG_VALUES = {
+    # Generic Settings
+    "logfile": f"{PGB_DIR}/pgbouncer.log",
+    "pidfile": f"{PGB_DIR}/pgbouncer.pid",
+    "unix_socket_dir": "/tmp",
+    "unix_socket_mode": "0777",
+    "unix_socket_group": "",
+    "user": "pgbouncer",
+    "auth_file": f"{PGB_DIR}/userlist.txt",
+    "auth_hba_file": "",
+    "auth_query": "SELECT usename, passwd FROM pg_shadow WHERE usename=$1",
+    "ignore_startup_parameters": "",
+    "application_name_add_host": "0",
+    "conffile": f"{PGB_DIR}/pgbouncer.ini",
+    "stats_period": "60",
+
+    # Log Settings
+    "syslog_ident": "pgbouncer",
+    "syslog_facility": "daemon",
+
+    # Connection Sanity Checks, Timeouts
+    "server_reset_query": "DISCARD ALL",
+    "server_check_query": "SELECT 1",
+    "resolv_conf": "",
+
+    # TLS Settings
+    "client_tls_key_file": "",
+    "client_tls_cert_file": "",
+    "client_tls_ca_file": "",
+    "server_tls_key_file": "",
+    "server_tls_cert_file": "",
+    "server_tls_ca_file": "",
+
+    # Low-Level Network Settings
+    "so_reuseport": "0",
+}
+
 
 class PgbConfig(MutableMapping):
     """A mapping that represents the pgbouncer config."""

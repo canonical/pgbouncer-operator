@@ -2,6 +2,12 @@
 # See LICENSE file for licensing details.
 
 options:
+
+  reload_on_config_changed:
+    default: true
+    description: "Whether or not to reload pgbouncer after every config change."
+    type: "bool"
+
   listen_port:
     default: 6432
     description: "Port on which PGBouncer listens for traffic"
