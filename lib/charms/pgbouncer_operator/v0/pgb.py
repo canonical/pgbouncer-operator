@@ -23,6 +23,7 @@ import logging
 import re
 import secrets
 import string
+import yaml
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
 from copy import deepcopy
@@ -40,8 +41,6 @@ PGB_DIR = "/etc/pgbouncer"
 EXPOSED_CONFIG_VALUES = {
     # Generic Settings
     "listen_addr": "localhost",
-    "listen_port": "5432",
-    "auth_type": "md5",
     "pool_mode": "session",
     "max_client_conn": "100",
     "default_pool_size": "20",
@@ -52,7 +51,9 @@ EXPOSED_CONFIG_VALUES = {
     "max_user_connections": "0",  # 0 = unlimited
     "server_round_robin": "0",
     "disable_pqexec": "0",
-
+    # Authentication Settings
+    "auth_type": "md5",
+    "auth_user": "",
     # Log Settings
     "syslog": "0",
     "log_connections": "1",
@@ -60,11 +61,9 @@ EXPOSED_CONFIG_VALUES = {
     "log_pooler_errors": "1",
     "log_stats": "1",
     "verbose": "0",
-
     # Console Access Control
     "admin_users": "juju-admin",
     "stats_users": "cos",
-
     # Connection Sanity Checks, Timeouts
     "server_reset_query_always": "0",
     "server_check_delay": "30.0",
@@ -78,9 +77,11 @@ EXPOSED_CONFIG_VALUES = {
     "dns_max_ttl": "15.0",
     "dns_nxdomain_ttl": "15.0",
     "dns_zone_check_period": "0.0",
-
     # TLS Settings
     "client_tls_sslmode": "disable",
+    "client_tls_key_file": "",
+    "client_tls_cert_file": "",
+    "client_tls_ca_file": "",
     "client_tls_protocols": "secure",
     "client_tls_ciphers": "fast",
     "client_tls_ecdhcurve": "auto",
@@ -88,7 +89,9 @@ EXPOSED_CONFIG_VALUES = {
     "server_tls_sslmode": "disable",
     "server_tls_protocols": "secure",
     "server_tls_ciphers": "fast",
-
+    "server_tls_key_file": "",
+    "server_tls_cert_file": "",
+    "server_tls_ca_file": "",
     # Dangerous Timeouts
     # TODO warn users when these are edited
     "query_timeout": "0.0",
@@ -96,10 +99,9 @@ EXPOSED_CONFIG_VALUES = {
     "client_idle_timeout": "0.0",
     "idle_transaction_timeout": "0.0",
     "suspend_timeout": "10",
-
     # Low-Level Network Settings
     "pkt_buf": "4096",
-    "max_packet_size": "2147483647", # 2.5 GiB, minus 33 bits.
+    "max_packet_size": "2147483647",  # 2.5 GiB, minus 33 bits.
     "listen_backlog": "128",
     "sbuf_loopcnt": "5",
     "tcp_defer_accept": "45",
@@ -115,35 +117,26 @@ PRIVATE_CONFIG_VALUES = {
     # Generic Settings
     "logfile": f"{PGB_DIR}/pgbouncer.log",
     "pidfile": f"{PGB_DIR}/pgbouncer.pid",
+    "listen_port": "5432",
     "unix_socket_dir": "/tmp",
     "unix_socket_mode": "0777",
     "unix_socket_group": "",
     "user": "pgbouncer",
-    "auth_file": f"{PGB_DIR}/userlist.txt",
-    "auth_hba_file": "",
-    "auth_query": "SELECT usename, passwd FROM pg_shadow WHERE usename=$1",
     "ignore_startup_parameters": "",
     "application_name_add_host": "0",
     "conffile": f"{PGB_DIR}/pgbouncer.ini",
     "stats_period": "60",
-
+    # Authentication Settings
+    "auth_file": f"{PGB_DIR}/userlist.txt",
+    "auth_hba_file": "",
+    "auth_query": "SELECT usename, passwd FROM pg_shadow WHERE usename=$1",
     # Log Settings
     "syslog_ident": "pgbouncer",
     "syslog_facility": "daemon",
-
     # Connection Sanity Checks, Timeouts
     "server_reset_query": "DISCARD ALL",
     "server_check_query": "SELECT 1",
     "resolv_conf": "",
-
-    # TLS Settings
-    "client_tls_key_file": "",
-    "client_tls_cert_file": "",
-    "client_tls_ca_file": "",
-    "server_tls_key_file": "",
-    "server_tls_cert_file": "",
-    "server_tls_ca_file": "",
-
     # Low-Level Network Settings
     "so_reuseport": "0",
 }
