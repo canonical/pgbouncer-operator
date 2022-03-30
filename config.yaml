@@ -2,27 +2,8 @@
 # See LICENSE file for licensing details.
 
 options:
-
-  # Charm Settings
-  reload_on_config_changed:
-    default: true
-    description: |
-      Whether to automatically reload pgbouncer after every config change, or
-      rely on manual reloads using the reload-pgbouncer action.
-    type: boolean
-
   # Pgbouncer-specific settings - see https://www.pgbouncer.org/config.html
   # Generic Settings
-  listen_addr:
-    default: "*"
-    description: |
-      Specifies a list (comma-separated) of addresses where to listen for TCP
-      connections. You may also use * meaning “listen on all addresses”. When
-      not set, only Unix socket connections are accepted.
-
-      Addresses can be specified numerically (IPv4/IPv6) or by name.
-    type: string
-
   pool_mode:
     default: session
     description: |
@@ -133,17 +114,6 @@ options:
       0 = unlimited
     type: int
 
-  server_round_robin:
-    default: 0
-    description: |
-      By default, PgBouncer reuses server connections in LIFO (last-in,
-      first-out) manner, so that few connections get the most load. This gives
-      best performance if you have a single server serving a database. But if
-      there is a round-robin system behind a database address (TCP, DNS, or
-      host list), then it is better if PgBouncer also uses connections in that
-      manner, thus achieving uniform load.
-    type: int
-
   disable_pqexec:
     default: 0
     description: |
@@ -175,18 +145,16 @@ options:
       Use password check with SCRAM-SHA-256. auth_file has to contain SCRAM
       secrets or plain-text passwords.
 
-      plain
-      The clear-text password is sent over the wire. Deprecated.
-
       trust
       No authentication is done. The user name must still exist in auth_file.
+
       any
       Like the trust method, but the user name given is ignored. Requires that
       all databases are configured to log in as a specific user. Additionally,
       the console database allows any user to log in as admin.
 
       hba
-      The actual authentication type is loaded from auth_hba_file. This allows
+      The actual authentication type is loaded from a file. This allows
       different authentication methods for different access paths, for example:
       connections over Unix socket use the peer auth method, connections over
       TCP must use TLS.
@@ -211,40 +179,21 @@ options:
     type: string
 
   # Log Settings
-  syslog:
-    default: 0
-    description: Toggles syslog on/off.
-    type: int
-
-  log_connections:
-    default: 1
-    description: Log successful logins.
-    type: int
-
-  log_disconnections:
-    default: 1
-    description: Log disconnections with reasons.
-    type: int
-
-  log_pooler_errors:
-    default: 1
-    description: Log error messages the pooler sends to clients.
-    type: int
-
-  log_stats:
-    default: 1
+  log_level:
+    default: normal
     description: |
-      Write aggregated statistics into the log, every stats_period. This can be
-      disabled if external monitoring tools are used to grab the same data from
-      SHOW commands.
-    type: int
+      The level to which information is logged. Similar to the pgbouncer
+      "verbose" option, but also handles connections, disconnections, pooler
+      errors, and statistics. Controls the following pgbouncer options:
+      "log_connections", "log_disconnections", "log_pooler_errors",
+      "log_stats", "verbose".
 
-  verbose:
-    default: 0
-    description: |
-      Increase verbosity. Mirrors the “-v” switch on the command line. For
-      example, using “-v -v” on the command line is the same as verbose=2.
-    type: int
+      Levels:
+      stats: verbose 0, and stats.
+      normal: verbose 1, logs connection information and pooler errors.
+      full: max verbose, logs connection information, pooler errors, and
+      statistics.
+    type: string
 
   # Console Access Control
   admin_users:
@@ -252,6 +201,9 @@ options:
     description: |
       A comma-separated list of admin users. A password will be generated for
       each user, which can be overridden using an action.
+
+      Postgres admin users will be imported from the postgres charm
+      automatically.
     type: string
 
   stats_users:
@@ -306,15 +258,6 @@ options:
       session state. But note that no transactions will be lost, because
       running transactions are not interrupted, only idle sessions.
     type: int
-
-  server_lifetime:
-    default: 3600.0
-    description: |
-      The pooler will close an unused (not currently linked to any client
-      connection) server connection that has been connected longer than this.
-      Setting it to 0 means the connection is to be used only once, then
-      closed. [seconds]
-    type: float
 
   server_idle_timeout:
     default: 600.0
@@ -392,13 +335,15 @@ options:
     type: float
 
   # TLS Settings
-  client_tls_sslmode:
+  client_tls_mode:
     default: disable
     description: |
       TLS mode to use for connections from clients. TLS connections are
       disabled by default. When enabled, client_tls_key_file and
       client_tls_cert_file must be also configured to set up the key and
       certificate PgBouncer uses to accept client connections.
+
+      Analogous to client_tls_sslmode in pgbouncer config.
 
       disable
       Plain TCP. If client requests TLS, it’s ignored. Default.
@@ -407,18 +352,12 @@ options:
       If client requests TLS, it is used. If not, plain TCP is used. If the
       client presents a client certificate, it is not validated.
 
-      prefer
-      Same as allow.
-
       require
       Client must use TLS. If not, the client connection is rejected. If the
       client presents a client certificate, it is not validated.
 
-      verify-ca
+      verify
       Client must use TLS with valid client certificate.
-
-      verify-full
-      Same as verify-ca.
     type: string
 
   client_tls_key_file:
@@ -433,60 +372,16 @@ options:
     description: Root certificate file to validate client certificates.
     type: string
 
-  client_tls_protocols:
-    default: secure
-    description: |
-      Which TLS protocol versions are allowed.
-
-      Allowed values:
-      tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3.
-
-      Shortcuts:
-      all (tlsv1.0,tlsv1.1,tlsv1.2,tlsv1.3), secure (tlsv1.2,tlsv1.3), legacy (all).
-    type: string
-
-  client_tls_ciphers:
-    default: fast
-    description: |
-      Allowed TLS ciphers, in OpenSSL syntax.
-
-      Shortcuts:
-      default/secure, compat/legacy, insecure/all, normal, fast.
-
-      Only connections using TLS version 1.2 and lower are affected. There is
-      currently no setting that controls the cipher choices used by TLS version
-      1.3 connections
-    type: string
-
-  client_tls_ecdhcurve:
-    default: auto
-    description: |
-      Elliptic Curve name to use for ECDH key exchanges.
-
-      Allowed values:
-      none (DH is disabled), auto (256-bit ECDH), curve name
-    type: string
-
-  client_tls_dheparams:
-    default: auto
-    description: |
-      DHE key exchange type.
-
-      Allowed values:
-      none (DH is disabled), auto (2048-bit DH), legacy (1024-bit DH)
-    type: string
-
-  server_tls_sslmode:
+  server_tls_mode:
     default: disable
     description: |
       TLS mode to use for connections to PostgreSQL servers. TLS connections
       are disabled by default.
 
+      Analogous to server_tls_sslmode in pgbouncer config.
+
       disable
       Plain TCP. TCP is not even requested from the server. Default.
-
-      allow
-      FIXME: if server rejects plain, try TLS?
 
       prefer
       TLS connection is always requested first from PostgreSQL. If refused, the
@@ -520,164 +415,3 @@ options:
     description: Root certificate file to validate PostgreSQL server certificates.
     type: string
 
-  server_tls_protocols:
-    default: secure
-    description: |
-      Which TLS protocol versions are allowed.
-
-      Allowed values:
-      tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3.
-
-      Shortcuts:
-      all (tlsv1.0,tlsv1.1,tlsv1.2,tlsv1.3), secure (tlsv1.2,tlsv1.3), legacy (all).
-    type: string
-
-  server_tls_ciphers:
-    default: fast
-    description: |
-      Allowed TLS ciphers, in OpenSSL syntax.
-
-      Shortcuts:
-      default/secure, compat/legacy, insecure/all, normal, fast.
-
-      Only connections using TLS version 1.2 and lower are affected. There is
-      currently no setting that controls the cipher choices used by TLS
-      version 1.3 connections.
-    type: string
-
-  # Dangerous Timeouts
-  # Charms shouldn't really have dangerous timeout options, so these should probably be removed.
-  query_timeout:
-    default: 0.0
-    description: |
-      Queries running longer than that are canceled. This should be used only
-      with a slightly smaller server-side statement_timeout, to apply only for
-      network problems. [seconds]
-
-      WARNING - Setting this timeout can cause unexpected errors.
-    type: float
-
-  query_wait_timeout:
-    default: 120
-    description: |
-      Maximum time queries are allowed to spend waiting for execution. If the
-      query is not assigned to a server during that time, the client is
-      disconnected. 0 disables. If this is disabled, clients will be queued
-      indefinitely. [seconds]
-
-      This setting is used to prevent unresponsive servers from grabbing up
-      connections. It also helps when the server is down or rejects
-      connections for any reason.
-
-      WARNING - Setting this timeout can cause unexpected errors.
-    type: int
-
-  client_idle_timeout:
-    default: 0.0
-    description: |
-      Client connections idling longer than this many seconds are closed. This
-      should be larger than the client-side connection lifetime settings, and
-      only used for network problems. [seconds]
-
-      WARNING - Setting this timeout can cause unexpected errors.
-    type: float
-
-  idle_transaction_timeout:
-    default: 0.0
-    description: |
-      If a client has been in “idle in transaction” state longer, it will be
-      disconnected. [seconds]
-
-      WARNING - Setting this timeout can cause unexpected errors.
-    type: float
-
-  suspend_timeout:
-    default: 10
-    description: |
-      How long to wait for buffer flush during SUSPEND or reboot (-R). A
-      connection is dropped if the flush does not succeed. [seconds]
-
-      WARNING - Setting this timeout can cause unexpected errors.
-    type: int
-
-
-  # Low Level Network Settings
-  # These are likely not suitable for charm development, since charms are
-  # intended to abstract niche knowledge.
-  pkt_buf:
-    default: 4096
-    description: |
-      Internal buffer size for packets. Affects size of TCP packets sent and
-      general memory usage. Actual libpq packets can be larger than this, so no
-      need to set it large.
-    type: int
-
-  max_packet_size:
-    default: 2147483647 # 2.5 GiB, minus 33 bits.
-    description: |
-      Maximum size for PostgreSQL packets that PgBouncer allows through. One
-      packet is either one query or one result set row. The full result set can
-      be larger.
-    type: int
-
-  listen_backlog:
-    default: 128
-    description: |
-      Backlog argument for listen(2). Determines how many new unanswered
-      connection attempts are kept in the queue. When the queue is full,
-      further new connections are dropped.
-    type: int
-
-  sbuf_loopcnt:
-    default: 5
-    description: |
-      How many times to process data on one connection, before proceeding.
-      Without this limit, one connection with a big result set can stall
-      PgBouncer for a long time. One loop processes one pkt_buf amount of data.
-      0 means no limit.
-    type: int
-
-  tcp_defer_accept:
-    default: 1
-    description: |
-      Sets the TCP_DEFER_ACCEPT socket option; see man 7 tcp for details. (This
-      is a Boolean option: 1 means enabled. The actual value set if enabled is
-      currently hardcoded to 45 seconds.)
-    type: int
-
-  # No docs in pgbouncer
-  tcp_socket_buffer:
-    description:
-    type: int
-
-  tcp_keepalive:
-    default: 1
-    description: |
-      Turns on basic keepalive with the following defaults:
-      tcp_keepidle=7200, tcp_keepintvl=75, tcp_keepcnt=9.
-    type: int
-
-  # No docs in pgbouncer
-  tcp_keepcnt:
-    description:
-    type: int
-
-  # No docs in pgbouncer
-  tcp_keepidle:
-    description:
-    type: int
-
-  # No docs in pgbouncer
-  tcp_keepintvl:
-    description:
-    type: int
-
-  tcp_user_timeout:
-    default: 0
-    # TODO what is linux default value for this?
-    description: |
-      Sets the TCP_USER_TIMEOUT socket option. This specifies the maximum
-      amount of time in milliseconds that transmitted data may remain
-      unacknowledged before the TCP connection is forcibly closed. If set to 0,
-      then linux default is used.
-    type: int
