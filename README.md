@@ -8,6 +8,31 @@ The PgBouncer Operator deploys and operates the [PgBouncer](https://www.pgbounce
 
 As this charm is not yet published, you need to follow the build and deploy instructions from [CONTRIBUTING.md](https://github.com/canonical/pgbouncer-operator/CONTRIBUTING.md).
 
+### Config Options
+
+Set these using the command `juju config <option>=<value>`>
+
+- pool_mode:
+  - default: session
+  - description: |
+    - Specifies when a server connection can be reused by other clients.
+    - Can be one of the following values:
+
+      - session
+        - Server is released back to pool after client disconnects. Default.
+
+      - transaction
+        - Server is released back to pool after transaction finishes.
+
+      - statement
+        - Server is released back to pool after query finishes. Transactions spanning multiple statements are disallowed in this mode.
+
+- max_db_connections:
+  - default: 0
+  - Do not allow more than this many server connections per database (regardless of user). This considers the PgBouncer database that the client has connected to, not the PostgreSQL database of the outgoing connection.
+  - Note that when you hit the limit, closing a client connection to one pool will not immediately allow a server connection to be established for another pool, because the server connection for the first pool is still open. Once the server connection closes (due to idle timeout), a new server connection will immediately be opened for the waiting pool.
+  - 0 = unlimited
+
 ## Relations
 
 #### Planned
