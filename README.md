@@ -10,21 +10,18 @@ As this charm is not yet published, you need to follow the build and deploy inst
 
 ### Config Options
 
-Set these using the command `juju config <option>=<value>`>
+Set these using the command `juju config <option>=<value>`
 
 - pool_mode:
   - default: session
-  - description: |
+  - description:
     - Specifies when a server connection can be reused by other clients.
     - Can be one of the following values:
-
-      - session
-        - Server is released back to pool after client disconnects. Default.
-
-      - transaction
+      - **session**
+        - Server is released back to pool after client disconnects.
+      - **transaction**
         - Server is released back to pool after transaction finishes.
-
-      - statement
+      - **statement**
         - Server is released back to pool after query finishes. Transactions spanning multiple statements are disallowed in this mode.
 
 - max_db_connections:
