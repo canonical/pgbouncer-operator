@@ -6,11 +6,11 @@ The PgBouncer Operator deploys and operates the [PgBouncer](https://www.pgbounce
 
 ## Usage
 
-As this charm is not yet published, you need to follow the build and deploy instructions from [CONTRIBUTING.md](https://github.com/canonical/pgbouncer-operator/CONTRIBUTING.md).
+As this charm is not yet published, you need to follow the build and deploy instructions from [CONTRIBUTING.md](https://github.com/canonical/pgbouncer-operator/CONTRIBUTING.md). This charm creates one pgbouncer application instance per CPU core on each machine it is deployed.
 
 ### Config Options
 
-Set these using the command `juju config <option>=<value>`
+Set these using the command `juju config <option>=<value>`.
 
 - pool_mode:
   - default: session
@@ -30,9 +30,22 @@ Set these using the command `juju config <option>=<value>`
   - Note that when you hit the limit, closing a client connection to one pool will not immediately allow a server connection to be established for another pool, because the server connection for the first pool is still open. Once the server connection closes (due to idle timeout), a new server connection will immediately be opened for the waiting pool.
   - 0 = unlimited
 
+From these values and the current deployment, the following pgbouncer.ini config values are calculated:
+
+- effective_db_connections = max_db_connections / number of charm instances
+- default_pool_size = effective_db_connections / 2
+- min_pool_size = effective_db_connections / 4
+- reserve_pool_size = effective_db_connections / 4
+- ignore_startup_parameters = extra_float_digits (extracted from postgres charm)
+
+The following config values are set as constants in the charm:
+
+- max_client_conn = 10000
+
 ## Relations
 
-#### Planned
+### Planned
+
 - `db:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
 - `db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
 - `backend-db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
