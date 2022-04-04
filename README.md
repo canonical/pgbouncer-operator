@@ -14,15 +14,14 @@ Set these using the command `juju config <option>=<value>`.
 
 - pool_mode:
   - default: session
-  - description:
-    - Specifies when a server connection can be reused by other clients.
-    - Can be one of the following values:
-      - **session**
-        - Server is released back to pool after client disconnects.
-      - **transaction**
-        - Server is released back to pool after transaction finishes.
-      - **statement**
-        - Server is released back to pool after query finishes. Transactions spanning multiple statements are disallowed in this mode.
+  - Specifies when a server connection can be reused by other clients.
+  - Can be one of the following values:
+    - **session**
+      - Server is released back to pool after client disconnects.
+    - **transaction**
+      - Server is released back to pool after transaction finishes.
+    - **statement**
+      - Server is released back to pool after query finishes. Transactions spanning multiple statements are disallowed in this mode.
 
 - max_db_connections:
   - default: 0
