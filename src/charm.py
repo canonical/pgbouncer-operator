@@ -74,7 +74,7 @@ class PgBouncerCharm(CharmBase):
             "pgbouncer": {
                 "logfile": f"{PGB_DIR}/pgbouncer.log",
                 "pidfile": f"{PGB_DIR}/pgbouncer.pid",
-                "admin_users": self.config["admin_users"].split(","),
+                "admin_users": "juju-admin",
             },
         }
         ini = pgb.PgbConfig(initial_config)
