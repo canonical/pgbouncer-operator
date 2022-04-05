@@ -12,8 +12,8 @@ As this charm is not yet published, you need to follow the build and deploy inst
 
 Set these using the command `juju config <option>=<value>`.
 
-- pool_mode:
-  - default: session
+- `pool_mode`:
+  - default: `session`
   - Specifies when a server connection can be reused by other clients.
   - Can be one of the following values:
     - **session**
@@ -23,23 +23,24 @@ Set these using the command `juju config <option>=<value>`.
     - **statement**
       - Server is released back to pool after query finishes. Transactions spanning multiple statements are disallowed in this mode.
 
-- max_db_connections:
-  - default: 0
+- `max_db_connections`:
+  - default: `0`
   - Do not allow more than this many server connections per database (regardless of user). This considers the PgBouncer database that the client has connected to, not the PostgreSQL database of the outgoing connection.
   - Note that when you hit the limit, closing a client connection to one pool will not immediately allow a server connection to be established for another pool, because the server connection for the first pool is still open. Once the server connection closes (due to idle timeout), a new server connection will immediately be opened for the waiting pool.
   - 0 = unlimited
 
 From these values and the current deployment, the following pgbouncer.ini config values are calculated:
 
-- effective_db_connections = max_db_connections / number of charm instances
-- default_pool_size = effective_db_connections / 2
-- min_pool_size = effective_db_connections / 4
-- reserve_pool_size = effective_db_connections / 4
-- ignore_startup_parameters = extra_float_digits (extracted from postgres charm)
+- `effective_db_connections = max_db_connections / number of pgbouncer instances running on a machine`
+- `default_pool_size = effective_db_connections / 2`
+- `min_pool_size = effective_db_connections / 4`
+- `reserve_pool_size = effective_db_connections / 4`
 
 The following config values are set as constants in the charm:
 
-- max_client_conn = 10000
+- `max_client_conn = 10000`
+- `ignore_startup_parameters = extra_float_digits`
+  - `extra_float_digits` is a [parameter in postgres](https://postgresqlco.nf/doc/en/param/extra_float_digits/)
 
 ## Relations
 
