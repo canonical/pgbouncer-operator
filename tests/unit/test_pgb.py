@@ -76,15 +76,15 @@ class TestPgb(unittest.TestCase):
 
         # Test parsing fails without necessary config file values
         with open(f"{DATA_DIR}/test_no_dbs.ini", "r") as no_dbs:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_dbs.read())
 
         with open(f"{DATA_DIR}/test_no_logfile.ini", "r") as no_logfile:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_logfile.read())
 
         with open(f"{DATA_DIR}/test_no_pidfile.ini", "r") as no_pidfile:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_pidfile.read())
 
         # Test parsing fails when database names are malformed

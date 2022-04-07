@@ -59,6 +59,8 @@ class TestCharm(unittest.TestCase):
 logfile = /etc/pgbouncer/pgbouncer.log
 pidfile = /etc/pgbouncer/pgbouncer.pid
 admin_users = juju-admin
+max_client_conn = 10000
+ignore_startup_parameters = extra_float_digits
 
 """
         initial_userlist = '"juju-admin" "test"'
@@ -85,6 +87,24 @@ admin_users = juju-admin
         self.assertEqual(
             self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
         )
+
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._render_pgb_config")
+    @patch("os.cpu_count", return_value=1)
+    def test_on_config_changed(self, _cpu_count, _render, _read):
+        # set config to include pool_mode and max_db_connections
+        self.harness.model.set_config({
+            "pool_mode": "transaction",
+            "max_db_connections": 44,
+        })
+
+        config = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        config["pgbouncer"]["pool_mode"] = "transaction"
+        config.set_max_db_connection_derivatives(44, 1)
+
+        self.harness.charm.on.config_changed.emit()
+        _read.assertCalledOnce()
+        _render.assertCalledOnce()
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")

@@ -31,7 +31,8 @@ Set these using the command `juju config <option>=<value>`.
 
 From these values and the current deployment, the following pgbouncer.ini config values are calculated:
 
-- `effective_db_connections = max_db_connections / number of pgbouncer instances running on a machine`
+- `effective_db_connections = max_db_connections / number of pgbouncer instances running in a unit`
+  - Number of pgbouncer instances is equal to number of cpu cores on unit.
 - `default_pool_size = effective_db_connections / 2`
 - `min_pool_size = effective_db_connections / 4`
 - `reserve_pool_size = effective_db_connections / 4`
@@ -64,7 +65,6 @@ The Charmed PgBouncer Operator is free software, distributed under the Apache So
 ## Security
 
 Security issues in the Charmed PgBouncer Operator can be reported through [LaunchPad](https://wiki.ubuntu.com/DebuggingSecurity#How%20to%20File). Please do not file GitHub issues about security issues.
-
 
 ## Contributing
 

@@ -66,18 +66,10 @@ class PgBouncerCharm(CharmBase):
         os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
         os.setuid(self._pgbouncer_uid)
 
-        # Initialise config files.
-        # For now, use a dummy config dict - in future, we're going to have a static default
-        # config file which may be overridden by a user uploading new files.
-        initial_config = {
-            "databases": {},
-            "pgbouncer": {
-                "logfile": f"{PGB_DIR}/pgbouncer.log",
-                "pidfile": f"{PGB_DIR}/pgbouncer.pid",
-                "admin_users": "juju-admin",
-            },
-        }
-        ini = pgb.PgbConfig(initial_config)
+        # Initialise pgbouncer.ini config file from defaults in charm lib.
+        ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        logger.info(ini)
+        logger.info(dict(ini))
         self._render_pgb_config(ini)
 
         # Initialise userlist, generating passwords for initial users
@@ -86,8 +78,7 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
     def _on_start(self, _) -> None:
-        """
-        On Start hook.
+        """On Start hook.
 
         Switches to pgbouncer user and runs pgbouncer as daemon
         """
@@ -105,16 +96,18 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_config_changed(self, _) -> None:
-        """
-        Config changed handler.
+        """Config changed handler.
 
         Reads config values and parses them to pgbouncer config, restarting if necessary.
         """
-        # Check whether pgbouncer.ini needs updating
-        # Check whether userlist.txt needs updating
+        config = self._read_pgb_config()
+        config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
-        if self.config["reload_on_config_changed"]:
-            self._reload_pgbouncer()
+        config.set_max_db_connection_derivatives(
+            self.config["max_db_connections"],
+            os.cpu_count(),
+        )
+        self._render_pgb_config(config, reload_pgbouncer=True)
 
     # ==========================
     #  Generic Helper Functions
@@ -180,6 +173,7 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
+        self.unit.status = MaintenanceStatus("updating PgBouncer config")
         self._render_file(INI_PATH, pgbouncer_ini.render(), 0o600)
 
         if reload_pgbouncer:
@@ -200,13 +194,16 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
+        self.unit.status = MaintenanceStatus("updating PgBouncer users")
         self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
     def _reload_pgbouncer(self):
-        pass
+        self.unit.status = MaintenanceStatus("Restarting PgBouncer")
+        # Restart pgbouncer here
+        self.unit.status = ActiveStatus()
 
 
 if __name__ == "__main__":
