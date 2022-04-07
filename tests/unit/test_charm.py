@@ -6,6 +6,7 @@ import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import ops.testing
 from charms.operator_libs_linux.v0 import apt
 from charms.pgbouncer_operator.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
@@ -19,6 +20,8 @@ USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
+
+ops.testing.SIMULATE_CAN_CONNECT = True
 
 
 class TestCharm(unittest.TestCase):
@@ -92,19 +95,28 @@ ignore_startup_parameters = extra_float_digits
     @patch("charm.PgBouncerCharm._render_pgb_config")
     @patch("os.cpu_count", return_value=1)
     def test_on_config_changed(self, _cpu_count, _render, _read):
-        # set config to include pool_mode and max_db_connections
-        self.harness.model.set_config({
-            "pool_mode": "transaction",
-            "max_db_connections": 44,
-        })
-
-        config = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        max_db_connections = 44
+        # Copy config object and modify it as we expect in the hook.
+        config = deepcopy(_read.return_value)
         config["pgbouncer"]["pool_mode"] = "transaction"
-        config.set_max_db_connection_derivatives(44, 1)
+        config.set_max_db_connection_derivatives(
+            max_db_connections=max_db_connections,
+            pgb_instances=_cpu_count.return_value,
+        )
 
-        self.harness.charm.on.config_changed.emit()
-        _read.assertCalledOnce()
-        _render.assertCalledOnce()
+        # set config to include pool_mode and max_db_connections
+        self.harness.update_config(
+            {
+                "pool_mode": "transaction",
+                "max_db_connections": max_db_connections,
+            }
+        )
+
+        _read.assert_called_once()
+        # _read.return_value is modified on config update, but the object reference is the same.
+        _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
+
+        self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
