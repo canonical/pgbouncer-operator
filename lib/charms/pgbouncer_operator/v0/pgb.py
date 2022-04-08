@@ -36,7 +36,7 @@ DEFAULT_CONFIG = {
     "pgbouncer": {
         "logfile": f"{PGB_DIR}/pgbouncer.log",
         "pidfile": f"{PGB_DIR}/pgbouncer.pid",
-        "admin_users": "juju-admin",
+        "admin_users": ["juju-admin"],
         "max_client_conn": "10000",
         "ignore_startup_parameters": "extra_float_digits",
     },

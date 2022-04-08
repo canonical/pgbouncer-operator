@@ -46,32 +46,21 @@ async def test_change_config(ops_test: OpsTest):
             "max_db_connections": "44",
         }
     )
-    # Assert pgbouncer.ini is what we expect
-    logger.info(ops_test.model.units)
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    pgb_ini = await pull_content_from_unit_file(unit, INI_PATH)
-    logging.info(pgb_ini)
-    existing_pgb_ini = pgb.PgbConfig(pgb_ini)
-    expected_pgb_ini = pgb.PgbConfig(
-        {
-            "databases": {},
-            "pgbouncer": {
-                "logfile": "/etc/pgbouncer/pgbouncer.log",
-                "pidfile": "/etc/pgbouncer/pgbouncer.pid",
-                "admin_users": ["juju-admin"],
-                "max_client_conn": "10000",
-                "ignore_startup_parameters": "extra_float_digits",
-                "pool_mode": "transaction",
-            },
-        }
-    )
-    expected_pgb_ini.set_max_db_connection_derivatives(
-        44,
-        os.cpu_count(),
-    )
-    logging.info(dict(existing_pgb_ini))
-    logging.info(dict(expected_pgb_ini))
-    TestCase().assertDictEqual(dict(existing_pgb_ini), dict(expected_pgb_ini))
+    cfg = await pull_content_from_unit_file(unit, INI_PATH)
+    existing_cfg = pgb.PgbConfig(cfg)
+
+    # The config changes depending on the amount of cores on the unit, so get that info.
+    get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
+    cores = get_cores_action.results.get("Stdout", None)
+
+    expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+    expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
+    expected_cfg.set_max_db_connection_derivatives(44, int(cores))
+
+    logger.info(dict(expected_cfg))
+    logger.info(dict(existing_cfg))
+    TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:

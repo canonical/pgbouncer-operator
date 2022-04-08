@@ -50,22 +50,16 @@ class TestCharm(unittest.TestCase):
             username="pgbouncer", password="pgb", primary_group="postgres"
         )
 
-        _chown.assert_any_call(USERLIST_PATH, 1100, 120)
-        _chown.assert_any_call(INI_PATH, 1100, 120)
-        _chown.assert_any_call(PGB_DIR, 1100, 120)
-        _setuid.assert_called_with(1100)
+        # Assert files are written with the correct permissions
+        pgb_uid = 1100
+        pg_gid = 120
+        _chown.assert_any_call(USERLIST_PATH, pgb_uid, pg_gid)
+        _chown.assert_any_call(INI_PATH, pgb_uid, pg_gid)
+        _chown.assert_any_call(PGB_DIR, pgb_uid, pg_gid)
+        _setuid.assert_called_with(pgb_uid)
 
-        # Check config files are rendered correctly, including correct permissions
-        initial_pgbouncer_ini = """[databases]
-
-[pgbouncer]
-logfile = /etc/pgbouncer/pgbouncer.log
-pidfile = /etc/pgbouncer/pgbouncer.pid
-admin_users = juju-admin
-max_client_conn = 10000
-ignore_startup_parameters = extra_float_digits
-
-"""
+        # Check default config files are rendered correctly, including correct permissions
+        initial_pgbouncer_ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG).render()
         initial_userlist = '"juju-admin" "test"'
         _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o600)
         _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o600)

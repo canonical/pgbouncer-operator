@@ -66,7 +66,7 @@ class PgBouncerCharm(CharmBase):
         os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
         os.setuid(self._pgbouncer_uid)
 
-        # Initialise pgbouncer.ini config file from defaults in charm lib.
+        # Initialise pgbouncer.ini config file from defaults set in charm lib.
         ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self._render_pgb_config(ini)
 
@@ -90,7 +90,7 @@ class PgBouncerCharm(CharmBase):
             subprocess.check_call(command)
             self.unit.status = ActiveStatus("pgbouncer started")
         except subprocess.CalledProcessError as e:
-            logger.info(e)
+            logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_config_changed(self, _) -> None:
@@ -100,11 +100,13 @@ class PgBouncerCharm(CharmBase):
         """
         config = self._read_pgb_config()
         config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
+
         config.set_max_db_connection_derivatives(
             self.config["max_db_connections"],
             os.cpu_count(),
         )
         logger.info(dict(config))
+
         self._render_pgb_config(config, reload_pgbouncer=True)
 
     # ==========================
@@ -207,9 +209,7 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _reload_pgbouncer(self):
-        self.unit.status = MaintenanceStatus("Restarting PgBouncer")
-        # Restart pgbouncer here
-        self.unit.status = ActiveStatus()
+        pass
 
 
 if __name__ == "__main__":

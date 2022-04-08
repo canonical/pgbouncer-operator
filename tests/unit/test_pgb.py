@@ -116,11 +116,12 @@ class TestPgb(unittest.TestCase):
     def test_set_max_db_connection_derivatives(self):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         max_db_connections = 44
+        pgb_instances = 2
 
-        cfg.set_max_db_connection_derivatives(max_db_connections, 2)
+        cfg.set_max_db_connection_derivatives(max_db_connections, pgb_instances)
         self.assertEqual(cfg["pgbouncer"]["max_db_connections"], str(max_db_connections))
 
-        effective_db_connections = max_db_connections / 2
+        effective_db_connections = max_db_connections / pgb_instances
         self.assertEqual(
             cfg["pgbouncer"]["default_pool_size"], str(int(effective_db_connections / 2))
         )
