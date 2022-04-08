@@ -151,13 +151,14 @@ ignore_startup_parameters = extra_float_digits
         _getpwnam.assert_called_with("pgbouncer")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
-    def test_read_pgb_config(self):
+    @patch("charm.PgBouncerCharm._read_file")
+    def test_read_pgb_config(self, _read):
         with open(TEST_VALID_INI, "r") as ini:
             test_ini = ini.read()
             existing_config = pgb.PgbConfig(test_ini)
 
-        with patch("builtins.open", unittest.mock.mock_open(read_data=test_ini)):
-            test_config = self.harness.charm._read_pgb_config()
+        _read.return_value = test_ini
+        test_config = self.harness.charm._read_pgb_config()
 
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
@@ -180,12 +181,10 @@ ignore_startup_parameters = extra_float_digits
         _render.assert_called_with(INI_PATH, reload_config.render(), 0o600)
         _reload.assert_called()
 
-    def test_read_userlist(self):
+    @patch("charm.PgBouncerCharm._read_file", return_value='"test_user" "test_pass"')
+    def test_read_userlist(self, _read):
         test_users = {"test_user": "test_pass"}
-        test_userlist = '"test_user" "test_pass"'
-
-        with patch("builtins.open", unittest.mock.mock_open(read_data=test_userlist)):
-            output = self.harness.charm._read_userlist()
+        output = self.harness.charm._read_userlist()
         self.assertEqual(test_users, output)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")

@@ -68,8 +68,6 @@ class PgBouncerCharm(CharmBase):
 
         # Initialise pgbouncer.ini config file from defaults in charm lib.
         ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        logger.info(ini)
-        logger.info(dict(ini))
         self._render_pgb_config(ini)
 
         # Initialise userlist, generating passwords for initial users
@@ -102,11 +100,11 @@ class PgBouncerCharm(CharmBase):
         """
         config = self._read_pgb_config()
         config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
-
         config.set_max_db_connection_derivatives(
             self.config["max_db_connections"],
             os.cpu_count(),
         )
+        logger.info(dict(config))
         self._render_pgb_config(config, reload_pgbouncer=True)
 
     # ==========================
@@ -147,6 +145,18 @@ class PgBouncerCharm(CharmBase):
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
+    def _read_file(self, path: str) -> str:
+        """Get content from file.
+
+        Args:
+            path: path to file
+        Returns:
+            string containing file content.
+        """
+        with open(path, "r") as f:
+            file = f.read()
+        return file
+
     # =====================================
     #  PgBouncer-Specific Helper Functions
     # =====================================
@@ -157,9 +167,7 @@ class PgBouncerCharm(CharmBase):
         Returns:
             PgbConfig object containing pgbouncer config.
         """
-        with open(INI_PATH, "r") as existing_file:
-            existing_config = pgb.PgbConfig(existing_file.read())
-        return existing_config
+        return pgb.PgbConfig(self._read_file(INI_PATH))
 
     def _render_pgb_config(
         self, pgbouncer_ini: pgb.PgbConfig, reload_pgbouncer: bool = False
@@ -180,9 +188,7 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _read_userlist(self) -> Dict[str, str]:
-        with open(USERLIST_PATH, "r") as existing_userlist:
-            userlist = pgb.parse_userlist(existing_userlist.read())
-        return userlist
+        return pgb.parse_userlist(self._read_file(USERLIST_PATH))
 
     def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.

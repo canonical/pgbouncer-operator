@@ -269,16 +269,19 @@ class PgbConfig(MutableMapping):
             max_db_connections: the maximum number of database connections, given by the user in
                 the juju config
             pgb_instances: the number of pgbouncer instances, which is equal to the number of CPU
-                cores available on the juju unit.
+                cores available on the juju unit. Setting this to zero throws an error.
         """
+        if pgb_instances < 1:
+            raise PgbConfig.ConfigParsingError(source="pgb_instances cannot be less than 1 ")
+
         pgb = PgbConfig.pgb_section
 
-        self[pgb]["max_db_connections"] = max_db_connections
+        self[pgb]["max_db_connections"] = str(max_db_connections)
 
         effective_db_connections = max_db_connections / pgb_instances
-        self[pgb]["default_pool_size"] = int(effective_db_connections / 2)
-        self[pgb]["min_pool_size"] = int(effective_db_connections / 4)
-        self[pgb]["reserve_pool_size"] = int(effective_db_connections / 4)
+        self[pgb]["default_pool_size"] = str(int(effective_db_connections / 2))
+        self[pgb]["min_pool_size"] = str(int(effective_db_connections / 4))
+        self[pgb]["reserve_pool_size"] = str(int(effective_db_connections / 4))
 
     class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""
