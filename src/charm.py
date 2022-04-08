@@ -105,7 +105,6 @@ class PgBouncerCharm(CharmBase):
             self.config["max_db_connections"],
             os.cpu_count(),
         )
-        logger.info(dict(config))
 
         self._render_pgb_config(config, reload_pgbouncer=True)
 

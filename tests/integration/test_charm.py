@@ -50,7 +50,7 @@ async def test_change_config(ops_test: OpsTest):
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
-    cores = get_cores_action.results.get("Stdout", None)
+    cores = get_cores_action.results.get("Stdout")
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
@@ -58,9 +58,6 @@ async def test_change_config(ops_test: OpsTest):
 
     cfg = await pull_content_from_unit_file(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(cfg)
-
-    logger.info(dict(expected_cfg))
-    logger.info(dict(existing_cfg))
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 

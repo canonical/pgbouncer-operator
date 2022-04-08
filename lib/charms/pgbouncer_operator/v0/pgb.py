@@ -260,10 +260,12 @@ class PgbConfig(MutableMapping):
     def set_max_db_connection_derivatives(
         self, max_db_connections: int, pgb_instances: int
     ) -> None:
-        """Calculate max_db_connections derivatives.
+        """Calculates and sets config values from the charm config & deployment state.
 
-        There's a set of values that we calculate from the configured max_db_connections value and
-        the cpu cores available.
+        The config values that are set include:
+            - default_pool_size
+            - min_pool_size
+            - reserve_pool_size
 
         Args:
             max_db_connections: the maximum number of database connections, given by the user in
