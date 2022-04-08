@@ -209,7 +209,7 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _reload_pgbouncer(self):
-        pass
+        self.unit.status = ActiveStatus("pgbouncer has reloaded")
 
 
 if __name__ == "__main__":
