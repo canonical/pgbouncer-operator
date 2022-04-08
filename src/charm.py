@@ -11,6 +11,7 @@ import subprocess
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt, passwd
+from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
@@ -19,6 +20,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 
 logger = logging.getLogger(__name__)
 
+PGB = "pgbouncer"
 PGB_DIR = "/etc/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
@@ -93,7 +95,8 @@ class PgBouncerCharm(CharmBase):
             # Ensure pgbouncer command runs as pgbouncer user.
             self._pgbouncer_uid = pwd.getpwnam(self._pgb_user).pw_uid
             os.setuid(self._pgbouncer_uid)
-            subprocess.check_call(command)
+            #subprocess.check_call(command)
+            systemd.service_start(PGB)
             self.unit.status = ActiveStatus("pgbouncer started")
         except subprocess.CalledProcessError as e:
             logger.info(e)
@@ -192,7 +195,9 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _reload_pgbouncer(self):
-        pass
+        self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
+        systemd.service_restart(PGB)
+        self.unit.status = ActiveStatus("PgBouncer Reloaded")
 
 
 if __name__ == "__main__":

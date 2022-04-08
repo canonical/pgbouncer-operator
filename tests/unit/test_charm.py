@@ -7,6 +7,7 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 from charms.operator_libs_linux.v0 import apt
+from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
@@ -73,18 +74,21 @@ admin_users = juju-admin
     @patch("os.setuid")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("subprocess.check_call")
-    def test_on_start(self, _call, _getpwnam, _setuid):
+    @patch("charms.operator_libs_linux.v1.systemd.service_start")
+    def test_on_start(self, _start, _call, _getpwnam, _setuid):
         self.harness.charm.on.start.emit()
         _setuid.assert_called_with(1100)
         command = ["pgbouncer", "-d", INI_PATH]
-        _call.assert_called_with(command)
+        #_call.assert_called_with(command)
+        _start.assert_called_with("pgbouncer")
+
         self.assertEqual(self.harness.model.unit.status, ActiveStatus("pgbouncer started"))
 
-        _call.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail test case")
-        self.harness.charm.on.start.emit()
-        self.assertEqual(
-            self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
-        )
+        # _call.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail test case")
+        # self.harness.charm.on.start.emit()
+        # self.assertEqual(
+        #     self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
+        # )
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
