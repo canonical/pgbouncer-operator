@@ -4,7 +4,6 @@
 
 
 import logging
-import os
 from pathlib import Path
 from unittest import TestCase
 
@@ -40,15 +39,14 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
+    unit = ops_test.model.units["pgbouncer-operator/0"]
     await ops_test.model.applications["pgbouncer-operator"].set_config(
         {
             "pool_mode": "transaction",
             "max_db_connections": "44",
         }
     )
-    unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await pull_content_from_unit_file(unit, INI_PATH)
-    existing_cfg = pgb.PgbConfig(cfg)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
@@ -58,8 +56,12 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, int(cores))
 
+    cfg = await pull_content_from_unit_file(unit, INI_PATH)
+    existing_cfg = pgb.PgbConfig(cfg)
+
     logger.info(dict(expected_cfg))
     logger.info(dict(existing_cfg))
+
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
 
