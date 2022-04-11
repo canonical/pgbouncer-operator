@@ -20,6 +20,7 @@ Kubernetes charms, including automatic config management.
 
 import io
 import logging
+import math
 import re
 import secrets
 import string
@@ -281,9 +282,9 @@ class PgbConfig(MutableMapping):
         self[pgb]["max_db_connections"] = str(max_db_connections)
 
         effective_db_connections = max_db_connections / pgb_instances
-        self[pgb]["default_pool_size"] = str(int(effective_db_connections / 2))
-        self[pgb]["min_pool_size"] = str(int(effective_db_connections / 4))
-        self[pgb]["reserve_pool_size"] = str(int(effective_db_connections / 4))
+        self[pgb]["default_pool_size"] = str(math.ceil(effective_db_connections / 2))
+        self[pgb]["min_pool_size"] = str(math.ceil(effective_db_connections / 4))
+        self[pgb]["reserve_pool_size"] = str(math.ceil(effective_db_connections / 4))
 
     class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""
