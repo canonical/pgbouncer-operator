@@ -39,7 +39,11 @@ From these values and the current deployment, the following pgbouncer.ini config
   - Larger `min_pool_size` and `reserve_pool_size` (relative to pgbouncer defaults) means that if a unit goes down for whatever reason, the other units in the cluster should be able to easily handle its workload.
 - `reserve_pool_size = effective_db_connections / 4`
 
-NB: These values will be set to 0 if `max_db_connections` is 0. This behaviour is untested.
+If `max_db_connections` is set to 0, the derivatives are set as below, based on pgbouncer defaults. It's advised to avoid this and instead set `max_db_connections` to an amount you're expecting to use, as it will set the following values to better suit your use case.
+
+- `default_pool_size = 20`
+- `min_pool_size = 10`
+- `reserve_pool_size = 10`
 
 The following config values are set as constants in the charm:
 

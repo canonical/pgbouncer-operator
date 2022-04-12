@@ -281,6 +281,16 @@ class PgbConfig(MutableMapping):
 
         self[pgb]["max_db_connections"] = str(max_db_connections)
 
+        if max_db_connections == 0:
+            # Values have to be derived differently if max_db_connections is unlimited. These
+            # values are set based on the pgbouncer default value for default_pool_size, which is
+            # used to create values for min_pool_size and reserve_pool_size according to the same
+            # ratio as below.
+            self[pgb]["default_pool_size"] = "20"
+            self[pgb]["min_pool_size"] = "10"
+            self[pgb]["reserve_pool_size"] = "10"
+            return
+
         effective_db_connections = max_db_connections / pgb_instances
         self[pgb]["default_pool_size"] = str(math.ceil(effective_db_connections / 2))
         self[pgb]["min_pool_size"] = str(math.ceil(effective_db_connections / 4))

@@ -44,6 +44,11 @@ options:
       - min_pool_size = effective connections / 4
       - reserve_pool_size = effective connections / 4
 
-      0 = unlimited. However, note that this also sets the derived values above
-      to 0.
+      If max_db_connections is set to 0, the derivatives are set thusly, based
+      on pgbouncer defaults:
+      - default_pool_size = 20
+      - min_pool_size = 10
+      - reserve_pool_size = 10
+
+      0 = unlimited.
     type: int

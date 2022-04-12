@@ -115,12 +115,21 @@ class TestPgb(unittest.TestCase):
 
     def test_set_max_db_connection_derivatives(self):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+
         cfg.set_max_db_connection_derivatives(44, 2)
 
         self.assertEqual(cfg["pgbouncer"]["max_db_connections"], "44")
         self.assertEqual(cfg["pgbouncer"]["default_pool_size"], "11")
         self.assertEqual(cfg["pgbouncer"]["min_pool_size"], "6")
         self.assertEqual(cfg["pgbouncer"]["reserve_pool_size"], "6")
+
+        # Test defaults when max_db_connection is unlimited
+        cfg.set_max_db_connection_derivatives(0, 123252)
+
+        self.assertEqual(cfg["pgbouncer"]["max_db_connections"], "0")
+        self.assertEqual(cfg["pgbouncer"]["default_pool_size"], "20")
+        self.assertEqual(cfg["pgbouncer"]["min_pool_size"], "10")
+        self.assertEqual(cfg["pgbouncer"]["reserve_pool_size"], "10")
 
     def test_generate_password(self):
         pw = pgb.generate_password()
