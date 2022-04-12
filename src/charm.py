@@ -11,12 +11,12 @@ import subprocess
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt, passwd
-from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v1.systemd import service_reload, service_running, service_start, service_stop, SystemdError
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, UnknownStatus, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -85,25 +86,39 @@ class PgBouncerCharm(CharmBase):
         # Initialise userlist, generating passwords for initial users
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
+        # Pgbouncer starts on apt install, so reload to ensure config changes are applied
+        self._reload_pgbouncer()
+
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
     def _on_start(self, _) -> None:
         try:
-            # -d flag ensures pgbouncer runs as a daemon, not as an active process.
-            command = ["pgbouncer", "-d", INI_PATH]
-            logger.debug(f"pgbouncer call: {' '.join(command)}")
-            # Ensure pgbouncer command runs as pgbouncer user.
-            self._pgbouncer_uid = pwd.getpwnam(self._pgb_user).pw_uid
-            os.setuid(self._pgbouncer_uid)
-            #subprocess.check_call(command)
-            systemd.service_start(PGB)
+            if not service_running(PGB):
+                service_start(PGB)
             self.unit.status = ActiveStatus("pgbouncer started")
-        except subprocess.CalledProcessError as e:
+        except SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
+    def _on_stop(self, _) -> None:
+        try:
+            if service_running(PGB):
+                service_stop(PGB)
+        except SystemdError as e:
+            logger.info(e)
+            self.unit.status = BlockedStatus("failed to stop pgbouncer")
+
     def _on_config_changed(self, _) -> None:
-        pass
+        self._reload_pgbouncer()
+
+    def _on_update_status(self, _) -> None:
+        try:
+            if not service_running(PGB):
+                self.unit.status = BlockedStatus("pgbouncer is not running")
+            self.unit.status = ActiveStatus()
+        except SystemdError as e:
+            logger.info(e)
+            self.unit.status = UnknownStatus("failed to get pgbouncer status")
 
     # ==========================
     #  Generic Helper Functions
@@ -196,8 +211,13 @@ class PgBouncerCharm(CharmBase):
 
     def _reload_pgbouncer(self):
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
-        systemd.service_restart(PGB)
-        self.unit.status = ActiveStatus("PgBouncer Reloaded")
+        try:
+            service_reload(PGB, restart_on_failure=True)
+            self.unit.status = ActiveStatus("PgBouncer Reloaded")
+            return
+        except SystemdError as e:
+            logger.info(e)
+            self.unit.status = BlockedStatus("failed to restart pgbouncer")
 
 
 if __name__ == "__main__":
