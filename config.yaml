@@ -20,7 +20,7 @@ options:
     type: string
 
   max_db_connections:
-    default: 0
+    default: 100
     description: |
       Do not allow more than this many server connections per database
       (regardless of user). This considers the PgBouncer database that the
@@ -44,5 +44,6 @@ options:
       - min_pool_size = effective connections / 4
       - reserve_pool_size = effective connections / 4
 
-      0 = unlimited
+      0 = unlimited. However, note that this also sets the derived values above
+      to 0.
     type: int
