@@ -7,11 +7,12 @@
 import logging
 import os
 import pwd
+import shutil
 import subprocess
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt, passwd
-from charms.operator_libs_linux.v1.systemd import service_reload, service_running, service_start, service_stop, SystemdError
+from charms.operator_libs_linux.v1.systemd import daemon_reload, service_reload, service_running, service_start, service_stop, SystemdError, _systemctl
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
@@ -55,6 +56,10 @@ class PgBouncerCharm(CharmBase):
 
         # Initialise prereqs to run pgbouncer
         self._install_apt_packages(["pgbouncer"])
+        shutil.copy("src/pgbouncer.service", "/etc/systemd/system/pgbouncer.service")
+        _systemctl("enable", PGB)
+        daemon_reload()
+
         # create & add pgbouncer user to postgres group, which is created when installing
         # pgbouncer apt package
         passwd.add_user(
@@ -64,9 +69,15 @@ class PgBouncerCharm(CharmBase):
         self._postgres_gid = user.pw_gid
         self._pgbouncer_uid = user.pw_uid
 
+        # TODO issues with getting the service running stem from the postgres user not being able
+        # to access files in a subdir of /etc
+
         os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
+        os.chmod(PGB_DIR, 0o666)
         os.chown(INI_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.chmod(INI_PATH, 0o666)
         os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
+        os.chmod(USERLIST_PATH, 0o666)
         os.setuid(self._pgbouncer_uid)
 
         # Initialise config files.
@@ -113,9 +124,10 @@ class PgBouncerCharm(CharmBase):
 
     def _on_update_status(self, _) -> None:
         try:
-            if not service_running(PGB):
+            if service_running(PGB):
+                self.unit.status = ActiveStatus()
+            else:
                 self.unit.status = BlockedStatus("pgbouncer is not running")
-            self.unit.status = ActiveStatus()
         except SystemdError as e:
             logger.info(e)
             self.unit.status = UnknownStatus("failed to get pgbouncer status")
@@ -184,7 +196,7 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
-        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o600)
+        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o664)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -204,7 +216,7 @@ class PgBouncerCharm(CharmBase):
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o664)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
