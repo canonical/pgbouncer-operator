@@ -129,7 +129,6 @@ class PgbConfig(MutableMapping):
         users = PgbConfig.users_section
         pgb = PgbConfig.pgb_section
 
-        # No error checking for [databases] section, since it has to exist for pgbouncer to run.
         try:
             for name, cfg_string in self[db].items():
                 self[db][name] = self._parse_string_to_dict(cfg_string)
