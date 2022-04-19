@@ -17,12 +17,12 @@ from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, UnknownStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
 PGB = "pgbouncer"
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
@@ -36,7 +36,7 @@ class PgBouncerCharm(CharmBase):
         super().__init__(*args)
 
         self._pgbouncer_service = "pgbouncer"
-        self._pgb_user = "pgbouncer"
+        self._pgb_user = "postgres"
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
@@ -57,28 +57,16 @@ class PgBouncerCharm(CharmBase):
         # Initialise prereqs to run pgbouncer
         self._install_apt_packages(["pgbouncer"])
         shutil.copy("src/pgbouncer.service", "/etc/systemd/system/pgbouncer.service")
-        _systemctl("enable", PGB)
-        daemon_reload()
-
-        # create & add pgbouncer user to postgres group, which is created when installing
-        # pgbouncer apt package
-        passwd.add_user(
-            username=self._pgb_user, password=pgb.generate_password(), primary_group="postgres"
-        )
-        user = pwd.getpwnam(self._pgb_user)
-        self._postgres_gid = user.pw_gid
-        self._pgbouncer_uid = user.pw_uid
 
         # TODO issues with getting the service running stem from the postgres user not being able
         # to access files in a subdir of /etc
 
+        user = pwd.getpwnam(self._pgb_user)
+        self._postgres_gid = user.pw_gid
+        self._pgbouncer_uid = user.pw_uid
+
+        os.mkdir(PGB_DIR, 0o777)
         os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
-        os.chmod(PGB_DIR, 0o666)
-        os.chown(INI_PATH, self._pgbouncer_uid, self._postgres_gid)
-        os.chmod(INI_PATH, 0o666)
-        os.chown(USERLIST_PATH, self._pgbouncer_uid, self._postgres_gid)
-        os.chmod(USERLIST_PATH, 0o666)
-        os.setuid(self._pgbouncer_uid)
 
         # Initialise config files.
         # For now, use a dummy config dict - in future, we're going to have a static default
@@ -97,8 +85,9 @@ class PgBouncerCharm(CharmBase):
         # Initialise userlist, generating passwords for initial users
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
-        # Pgbouncer starts on apt install, so reload to ensure config changes are applied
-        self._reload_pgbouncer()
+        # Enable pgbouncer and reload systemd
+        _systemctl("enable", PGB)
+        daemon_reload()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -106,7 +95,10 @@ class PgBouncerCharm(CharmBase):
         try:
             if not service_running(PGB):
                 service_start(PGB)
-            self.unit.status = ActiveStatus("pgbouncer started")
+            if service_running(PGB):
+                self.unit.status = ActiveStatus("pgbouncer started")
+            else:
+                raise SystemdError("failed to start pgbouncer")
         except SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
@@ -130,7 +122,7 @@ class PgBouncerCharm(CharmBase):
                 self.unit.status = BlockedStatus("pgbouncer is not running")
         except SystemdError as e:
             logger.info(e)
-            self.unit.status = UnknownStatus("failed to get pgbouncer status")
+            self.unit.status = BlockedStatus("failed to get pgbouncer status")
 
     # ==========================
     #  Generic Helper Functions
