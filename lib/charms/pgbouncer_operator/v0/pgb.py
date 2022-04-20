@@ -31,7 +31,7 @@ from typing import Dict
 
 logger = logging.getLogger(__name__)
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 DEFAULT_CONFIG = {
     "databases": {},
     "pgbouncer": {

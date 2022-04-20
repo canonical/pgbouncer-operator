@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
@@ -58,6 +58,11 @@ async def test_change_config(ops_test: OpsTest):
 
     cfg = await pull_content_from_unit_file(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(cfg)
+
+    import logging
+
+    logging.info(dict(existing_cfg))
+    logging.info(dict(expected_cfg))
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
