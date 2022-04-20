@@ -20,6 +20,7 @@ Kubernetes charms, including automatic config management.
 
 import io
 import logging
+import math
 import re
 import secrets
 import string
@@ -29,6 +30,18 @@ from copy import deepcopy
 from typing import Dict
 
 logger = logging.getLogger(__name__)
+
+PGB_DIR = "/etc/pgbouncer"
+DEFAULT_CONFIG = {
+    "databases": {},
+    "pgbouncer": {
+        "logfile": f"{PGB_DIR}/pgbouncer.log",
+        "pidfile": f"{PGB_DIR}/pgbouncer.pid",
+        "admin_users": ["juju-admin"],
+        "max_client_conn": "10000",
+        "ignore_startup_parameters": "extra_float_digits",
+    },
+}
 
 
 class PgbConfig(MutableMapping):
@@ -116,9 +129,11 @@ class PgbConfig(MutableMapping):
         users = PgbConfig.users_section
         pgb = PgbConfig.pgb_section
 
-        # No error checking for [databases] section, since it has to exist for pgbouncer to run.
-        for name, cfg_string in self[db].items():
-            self[db][name] = self._parse_string_to_dict(cfg_string)
+        try:
+            for name, cfg_string in self[db].items():
+                self[db][name] = self._parse_string_to_dict(cfg_string)
+        except KeyError as err:
+            raise PgbConfig.ConfigParsingError(source=str(err))
 
         try:
             for name, cfg_string in self[users].items():
@@ -198,10 +213,13 @@ class PgbConfig(MutableMapping):
         }
 
         if not set(essentials.keys()).issubset(set(self.keys())):
-            raise KeyError("necessary sections not found in config.")
+            raise PgbConfig.ConfigParsingError("necessary sections not found in config.")
 
         if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
-            raise KeyError("necessary pgbouncer config values not found in config.")
+            missing_config_values = set(essentials["pgbouncer"]) - set(self["pgbouncer"].keys())
+            raise PgbConfig.ConfigParsingError(
+                f"necessary pgbouncer config values not found in config: {', '.join(missing_config_values)}"
+            )
 
         # Guarantee db names are valid
         for db_id in self[db].keys():
@@ -238,6 +256,44 @@ class PgbConfig(MutableMapping):
 
         # dbname is invalid, raise parsing error
         raise PgbConfig.ConfigParsingError(source=filtered_string)
+
+    def set_max_db_connection_derivatives(
+        self, max_db_connections: int, pgb_instances: int
+    ) -> None:
+        """Calculates and sets config values from the charm config & deployment state.
+
+        The config values that are set include:
+            - default_pool_size
+            - min_pool_size
+            - reserve_pool_size
+
+        Args:
+            max_db_connections: the maximum number of database connections, given by the user in
+                the juju config
+            pgb_instances: the number of pgbouncer instances, which is equal to the number of CPU
+                cores available on the juju unit. Setting this to zero throws an error.
+        """
+        if pgb_instances < 1:
+            raise PgbConfig.ConfigParsingError(source="pgb_instances cannot be less than 1 ")
+
+        pgb = PgbConfig.pgb_section
+
+        self[pgb]["max_db_connections"] = str(max_db_connections)
+
+        if max_db_connections == 0:
+            # Values have to be derived differently if max_db_connections is unlimited. These
+            # values are set based on the pgbouncer default value for default_pool_size, which is
+            # used to create values for min_pool_size and reserve_pool_size according to the same
+            # ratio as below.
+            self[pgb]["default_pool_size"] = "20"
+            self[pgb]["min_pool_size"] = "10"
+            self[pgb]["reserve_pool_size"] = "10"
+            return
+
+        effective_db_connections = max_db_connections / pgb_instances
+        self[pgb]["default_pool_size"] = str(math.ceil(effective_db_connections / 2))
+        self[pgb]["min_pool_size"] = str(math.ceil(effective_db_connections / 4))
+        self[pgb]["reserve_pool_size"] = str(math.ceil(effective_db_connections / 4))
 
     class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""

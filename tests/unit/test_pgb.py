@@ -76,15 +76,15 @@ class TestPgb(unittest.TestCase):
 
         # Test parsing fails without necessary config file values
         with open(f"{DATA_DIR}/test_no_dbs.ini", "r") as no_dbs:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_dbs.read())
 
         with open(f"{DATA_DIR}/test_no_logfile.ini", "r") as no_logfile:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_logfile.read())
 
         with open(f"{DATA_DIR}/test_no_pidfile.ini", "r") as no_pidfile:
-            with pytest.raises(KeyError):
+            with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(no_pidfile.read())
 
         # Test parsing fails when database names are malformed
@@ -101,17 +101,35 @@ class TestPgb(unittest.TestCase):
                 pgb.PgbConfig(reserved_db.read())
 
     def test_pgb_config__validate_dbname(self):
-        ini = pgb.PgbConfig()
+        config = pgb.PgbConfig()
         # Valid dbnames include alphanumeric characters and -_ characters. Everything else must
         # be wrapped in double quotes.
         good_dbnames = ["test-_1", 'test"%$"1', 'multiple"$"bad"^"values', '" "', '"\n"', '""']
         for dbname in good_dbnames:
-            ini._validate_dbname(dbname)
+            config._validate_dbname(dbname)
 
         bad_dbnames = ['"', "%", " ", '"$"test"', "\n"]
         for dbname in bad_dbnames:
             with pytest.raises(pgb.PgbConfig.ConfigParsingError):
-                ini._validate_dbname(dbname)
+                config._validate_dbname(dbname)
+
+    def test_set_max_db_connection_derivatives(self):
+        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+
+        cfg.set_max_db_connection_derivatives(44, 2)
+
+        self.assertEqual(cfg["pgbouncer"]["max_db_connections"], "44")
+        self.assertEqual(cfg["pgbouncer"]["default_pool_size"], "11")
+        self.assertEqual(cfg["pgbouncer"]["min_pool_size"], "6")
+        self.assertEqual(cfg["pgbouncer"]["reserve_pool_size"], "6")
+
+        # Test defaults when max_db_connection is unlimited
+        cfg.set_max_db_connection_derivatives(0, 123252)
+
+        self.assertEqual(cfg["pgbouncer"]["max_db_connections"], "0")
+        self.assertEqual(cfg["pgbouncer"]["default_pool_size"], "20")
+        self.assertEqual(cfg["pgbouncer"]["min_pool_size"], "10")
+        self.assertEqual(cfg["pgbouncer"]["reserve_pool_size"], "10")
 
     def test_generate_password(self):
         pw = pgb.generate_password()

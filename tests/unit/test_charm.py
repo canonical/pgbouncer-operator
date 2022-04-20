@@ -6,6 +6,7 @@ import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import ops.testing
 from charms.operator_libs_linux.v0 import apt
 from charms.pgbouncer_operator.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
@@ -19,6 +20,8 @@ USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
+
+ops.testing.SIMULATE_CAN_CONNECT = True
 
 
 class TestCharm(unittest.TestCase):
@@ -47,20 +50,16 @@ class TestCharm(unittest.TestCase):
             username="pgbouncer", password="pgb", primary_group="postgres"
         )
 
-        _chown.assert_any_call(USERLIST_PATH, 1100, 120)
-        _chown.assert_any_call(INI_PATH, 1100, 120)
-        _chown.assert_any_call(PGB_DIR, 1100, 120)
-        _setuid.assert_called_with(1100)
+        # Assert files are written with the correct permissions
+        pgb_uid = 1100
+        pg_gid = 120
+        _chown.assert_any_call(USERLIST_PATH, pgb_uid, pg_gid)
+        _chown.assert_any_call(INI_PATH, pgb_uid, pg_gid)
+        _chown.assert_any_call(PGB_DIR, pgb_uid, pg_gid)
+        _setuid.assert_called_with(pgb_uid)
 
-        # Check config files are rendered correctly, including correct permissions
-        initial_pgbouncer_ini = """[databases]
-
-[pgbouncer]
-logfile = /etc/pgbouncer/pgbouncer.log
-pidfile = /etc/pgbouncer/pgbouncer.pid
-admin_users = juju-admin
-
-"""
+        # Check default config files are rendered correctly, including correct permissions
+        initial_pgbouncer_ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG).render()
         initial_userlist = '"juju-admin" "test"'
         _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o600)
         _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o600)
@@ -85,6 +84,33 @@ admin_users = juju-admin
         self.assertEqual(
             self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
         )
+
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._render_pgb_config")
+    @patch("os.cpu_count", return_value=1)
+    def test_on_config_changed(self, _cpu_count, _render, _read):
+        max_db_connections = 44
+        # Copy config object and modify it as we expect in the hook.
+        config = deepcopy(_read.return_value)
+        config["pgbouncer"]["pool_mode"] = "transaction"
+        config.set_max_db_connection_derivatives(
+            max_db_connections=max_db_connections,
+            pgb_instances=_cpu_count.return_value,
+        )
+
+        # set config to include pool_mode and max_db_connections
+        self.harness.update_config(
+            {
+                "pool_mode": "transaction",
+                "max_db_connections": max_db_connections,
+            }
+        )
+
+        _read.assert_called_once()
+        # _read.return_value is modified on config update, but the object reference is the same.
+        _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
+
+        self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
