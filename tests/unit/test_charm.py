@@ -9,17 +9,20 @@ from unittest.mock import MagicMock, patch
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
+from ops import testing
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
+
+testing.SIMULATE_CAN_CONNECT = True
 
 
 class TestCharm(unittest.TestCase):
@@ -28,67 +31,74 @@ class TestCharm(unittest.TestCase):
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
 
-    @patch("charms.operator_libs_linux.v0.passwd.add_user")
-    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="pgb")
     @patch("charm.PgBouncerCharm._install_apt_packages")
-    @patch("charm.PgBouncerCharm._render_file")
-    @patch("os.setuid")
+    @patch("os.mkdir")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
+    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
+    @patch("shutil.copy")
+    @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
-        self, _getpwnam, _chown, _setuid, _render_file, _install, _password, _userlist, _add_user
+        self, _reload, _copy, _userlist, _render_file, _getpwnam, _chown, _mkdir, _install
     ):
         _userlist.return_value = {"juju-admin": "test"}
 
         self.harness.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])
-        _add_user.assert_called_with(
-            username="pgbouncer", password="pgb", primary_group="postgres"
-        )
 
-        _chown.assert_any_call(USERLIST_PATH, 1100, 120)
-        _chown.assert_any_call(INI_PATH, 1100, 120)
+        _mkdir.assert_called_once_with(PGB_DIR, 0o660)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
-        _setuid.assert_called_with(1100)
 
         # Check config files are rendered correctly, including correct permissions
-        initial_pgbouncer_ini = """[databases]
+        initial_pgbouncer_ini = f"""[databases]
 
 [pgbouncer]
-logfile = /etc/pgbouncer/pgbouncer.log
-pidfile = /etc/pgbouncer/pgbouncer.pid
+logfile = {PGB_DIR}/pgbouncer.log
+pidfile = {PGB_DIR}/pgbouncer.pid
 admin_users = juju-admin
 
 """
         initial_userlist = '"juju-admin" "test"'
-        _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o600)
-        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o600)
+        _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o664)
+        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o664)
 
-        self.assertEqual(
-            self.harness.model.unit.status,
-            WaitingStatus("Waiting to start PgBouncer"),
-        )
+        self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
 
-    @patch("os.setuid")
-    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
-    @patch("subprocess.check_call")
     @patch("charms.operator_libs_linux.v1.systemd.service_start")
-    def test_on_start(self, _start, _call, _getpwnam, _setuid):
+    def test_on_start(self, _start):
         self.harness.charm.on.start.emit()
-        _setuid.assert_called_with(1100)
-        command = ["pgbouncer", "-d", INI_PATH]
-        #_call.assert_called_with(command)
-        _start.assert_called_with("pgbouncer")
+        _start.assert_called_once_with("pgbouncer")
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
 
-        self.assertEqual(self.harness.model.unit.status, ActiveStatus("pgbouncer started"))
+        _start.side_effect = systemd.SystemdError()
+        self.harness.charm.on.start.emit()
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
 
-        # _call.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail test case")
-        # self.harness.charm.on.start.emit()
-        # self.assertEqual(
-        #     self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
-        # )
+    @patch("charms.operator_libs_linux.v1.systemd.service_reload")
+    def test_reload_pgbouncer(self, _reload):
+        self.harness.charm._reload_pgbouncer()
+        _reload.assert_called_once_with("pgbouncer", restart_on_failure=True)
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
+
+        _reload.side_effect = systemd.SystemdError()
+        self.harness.charm._reload_pgbouncer()
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
+
+    @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
+    def test_on_update_status(self, _running):
+        self.harness.charm.on.update_status.emit()
+        _running.assert_called_once_with("pgbouncer")
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
+
+        _running.return_value = True
+        self.harness.charm.on.update_status.emit()
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
+
+        _running.side_effect = systemd.SystemdError()
+        self.harness.charm.on.update_status.emit()
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
@@ -120,7 +130,7 @@ admin_users = juju-admin
             self.harness.charm._render_file(path, content, mode)
 
         _chmod.assert_called_with(path, mode)
-        _getpwnam.assert_called_with("pgbouncer")
+        _getpwnam.assert_called_with("postgres")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
     def test_read_pgb_config(self):
@@ -141,7 +151,7 @@ admin_users = juju-admin
             test_config = pgb.PgbConfig(ini.read())
 
         self.harness.charm._render_pgb_config(test_config, reload_pgbouncer=False)
-        _render.assert_called_with(INI_PATH, test_config.render(), 0o600)
+        _render.assert_called_with(INI_PATH, test_config.render(), 0o664)
         _reload.assert_not_called()
 
         # Copy config and edit a value
@@ -149,7 +159,7 @@ admin_users = juju-admin
         reload_config["pgbouncer"]["admin_users"] = ["test_admin"]
 
         self.harness.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
-        _render.assert_called_with(INI_PATH, reload_config.render(), 0o600)
+        _render.assert_called_with(INI_PATH, reload_config.render(), 0o664)
         _reload.assert_called()
 
     def test_read_userlist(self):
@@ -166,10 +176,10 @@ admin_users = juju-admin
         test_users = {"test_user": "test_pass"}
 
         self.harness.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o600)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o664)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
         self.harness.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o600)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o664)
         _reload.assert_called()
