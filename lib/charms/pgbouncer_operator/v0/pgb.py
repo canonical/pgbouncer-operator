@@ -207,11 +207,12 @@ class PgbConfig(MutableMapping):
     def validate(self):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
         db = self.db_section
+
+        # Ensure the config contains at least this config.
         essentials = {
             "databases": [],
             "pgbouncer": ["logfile", "pidfile"],
         }
-
         if not set(essentials.keys()).issubset(set(self.keys())):
             raise PgbConfig.ConfigParsingError("necessary sections not found in config.")
 

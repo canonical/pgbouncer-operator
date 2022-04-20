@@ -97,9 +97,6 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to get pgbouncer status")
-            # Ensure pgbouncer command runs as pgbouncer user.
-            self._pgbouncer_uid = pwd.getpwnam(self._pgb_user).pw_uid
-            os.setuid(self._pgbouncer_uid)
 
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
