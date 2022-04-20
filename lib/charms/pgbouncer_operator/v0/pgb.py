@@ -208,7 +208,7 @@ class PgbConfig(MutableMapping):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
         db = self.db_section
 
-        # Ensure the config contains at least this config.
+        # Ensure the config contains the bare minimum it needs to be valid
         essentials = {
             "databases": [],
             "pgbouncer": ["logfile", "pidfile"],

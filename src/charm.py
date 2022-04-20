@@ -36,7 +36,7 @@ class PgBouncerCharm(CharmBase):
         super().__init__(*args)
 
         self._pgbouncer_service = PGB
-        self._pgb_user = "postgres"
+        self._postgres_user = "postgres"
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
@@ -57,11 +57,11 @@ class PgBouncerCharm(CharmBase):
         # Initialise prereqs to run pgbouncer
         self._install_apt_packages([self._pgbouncer_service])
 
-        user = pwd.getpwnam(self._pgb_user)
+        user = pwd.getpwnam(self._postgres_user)
         self._postgres_gid = user.pw_gid
         self._pgbouncer_uid = user.pw_uid
 
-        os.mkdir(PGB_DIR, 0o660)
+        os.mkdir(PGB_DIR, 0o600)
         os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
 
         # Initialise pgbouncer.ini config file from defaults set in charm lib.
@@ -85,7 +85,7 @@ class PgBouncerCharm(CharmBase):
             systemd.service_start(PGB)
             self.unit.status = ActiveStatus("pgbouncer started")
         except systemd.SystemdError as e:
-            logger.info(e)
+            logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_update_status(self, _) -> None:
@@ -153,7 +153,7 @@ class PgBouncerCharm(CharmBase):
         # Ensure correct permissions are set on the file.
         os.chmod(path, mode)
         # Get the uid/gid for the pgbouncer user.
-        u = pwd.getpwnam(self._pgb_user)
+        u = pwd.getpwnam(self._postgres_user)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
@@ -184,7 +184,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o660)
+        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -205,7 +205,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o660)
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
