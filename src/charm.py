@@ -11,8 +11,8 @@ import shutil
 import subprocess
 from typing import Dict, List
 
-from charms.operator_libs_linux.v0 import apt, passwd
-from charms.operator_libs_linux.v1.systemd import daemon_reload, service_reload, service_running, service_start, service_stop, SystemdError, _systemctl
+from charms.operator_libs_linux.v0 import apt
+from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase
 from ops.framework import StoredState
@@ -35,7 +35,7 @@ class PgBouncerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self._pgbouncer_service = "pgbouncer"
+        self._pgbouncer_service = PGB
         self._pgb_user = "postgres"
 
         self.framework.observe(self.on.install, self._on_install)
@@ -55,17 +55,13 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         # Initialise prereqs to run pgbouncer
-        self._install_apt_packages(["pgbouncer"])
-        shutil.copy("src/pgbouncer.service", "/etc/systemd/system/pgbouncer.service")
-
-        # TODO issues with getting the service running stem from the postgres user not being able
-        # to access files in a subdir of /etc
+        self._install_apt_packages([self._pgbouncer_service])
 
         user = pwd.getpwnam(self._pgb_user)
         self._postgres_gid = user.pw_gid
         self._pgbouncer_uid = user.pw_uid
 
-        os.mkdir(PGB_DIR, 0o777)
+        os.mkdir(PGB_DIR, 0o660)
         os.chown(PGB_DIR, self._pgbouncer_uid, self._postgres_gid)
 
         # Initialise config files.
@@ -81,46 +77,34 @@ class PgBouncerCharm(CharmBase):
         }
         ini = pgb.PgbConfig(initial_config)
         self._render_pgb_config(ini)
-
         # Initialise userlist, generating passwords for initial users
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
         # Enable pgbouncer and reload systemd
-        _systemctl("enable", PGB)
-        daemon_reload()
+        shutil.copy("src/pgbouncer.service", "/etc/systemd/system/pgbouncer.service")
+        systemd.daemon_reload()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
     def _on_start(self, _) -> None:
         try:
-            if not service_running(PGB):
-                service_start(PGB)
-            if service_running(PGB):
-                self.unit.status = ActiveStatus("pgbouncer started")
-            else:
-                raise SystemdError("failed to start pgbouncer")
-        except SystemdError as e:
+            systemd.service_start(PGB)
+            self.unit.status = ActiveStatus("pgbouncer started")
+        except systemd.SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
-    def _on_stop(self, _) -> None:
-        try:
-            if service_running(PGB):
-                service_stop(PGB)
-        except SystemdError as e:
-            logger.info(e)
-            self.unit.status = BlockedStatus("failed to stop pgbouncer")
-
     def _on_config_changed(self, _) -> None:
+        # TODO update once PR6 is merged in
         self._reload_pgbouncer()
 
     def _on_update_status(self, _) -> None:
         try:
-            if service_running(PGB):
+            if systemd.service_running(PGB):
                 self.unit.status = ActiveStatus()
             else:
                 self.unit.status = BlockedStatus("pgbouncer is not running")
-        except SystemdError as e:
+        except systemd.SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to get pgbouncer status")
 
@@ -216,10 +200,9 @@ class PgBouncerCharm(CharmBase):
     def _reload_pgbouncer(self):
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
-            service_reload(PGB, restart_on_failure=True)
+            systemd.service_reload(PGB, restart_on_failure=True)
             self.unit.status = ActiveStatus("PgBouncer Reloaded")
-            return
-        except SystemdError as e:
+        except systemd.SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to restart pgbouncer")
 
