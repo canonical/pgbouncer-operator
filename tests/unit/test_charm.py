@@ -54,8 +54,8 @@ class TestCharm(unittest.TestCase):
         # Check config files are rendered correctly, including correct permissions
         initial_pgbouncer_ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG).render()
         initial_userlist = '"juju-admin" "test"'
-        _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o664)
-        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o664)
+        _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o660)
+        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o660)
 
         self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
 
@@ -171,7 +171,7 @@ class TestCharm(unittest.TestCase):
             test_config = pgb.PgbConfig(ini.read())
 
         self.harness.charm._render_pgb_config(test_config, reload_pgbouncer=False)
-        _render.assert_called_with(INI_PATH, test_config.render(), 0o664)
+        _render.assert_called_with(INI_PATH, test_config.render(), 0o660)
         _reload.assert_not_called()
 
         # Copy config and edit a value
@@ -179,7 +179,7 @@ class TestCharm(unittest.TestCase):
         reload_config["pgbouncer"]["admin_users"] = ["test_admin"]
 
         self.harness.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
-        _render.assert_called_with(INI_PATH, reload_config.render(), 0o664)
+        _render.assert_called_with(INI_PATH, reload_config.render(), 0o660)
         _reload.assert_called()
 
     def test_read_userlist(self):
@@ -196,10 +196,10 @@ class TestCharm(unittest.TestCase):
         test_users = {"test_user": "test_pass"}
 
         self.harness.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o664)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o660)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
         self.harness.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o664)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o660)
         _reload.assert_called()

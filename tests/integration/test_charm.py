@@ -59,12 +59,14 @@ async def test_change_config(ops_test: OpsTest):
     cfg = await pull_content_from_unit_file(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(cfg)
 
-    import logging
-
-    logging.info(dict(existing_cfg))
-    logging.info(dict(expected_cfg))
-
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
+
+
+async def test_systemd_restarts_pgbouncer_process(ops_test: OpsTest):
+    unit = ops_test.model.units["pgbouncer-operator/0"]
+    # Kill pgbouncer process and wait for it to restart
+    await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:

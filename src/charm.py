@@ -79,7 +79,7 @@ class PgBouncerCharm(CharmBase):
     def _on_start(self, _) -> None:
         """On Start hook.
 
-        Switches to pgbouncer user and runs pgbouncer as daemon
+        Runs pgbouncer through systemd (configured in src/pgbouncer.service)
         """
         try:
             systemd.service_start(PGB)
@@ -89,11 +89,17 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_update_status(self, _) -> None:
+        """Update Status hook.
+
+        Uses systemd status to verify pgbouncer is running.
+        """
         try:
             if systemd.service_running(PGB):
                 self.unit.status = ActiveStatus()
             else:
-                self.unit.status = BlockedStatus("pgbouncer is not running")
+                self.unit.status = BlockedStatus(
+                    "pgbouncer is not running - try restarting using `juju actions pgbouncer restart`"
+                )
         except systemd.SystemdError as e:
             logger.info(e)
             self.unit.status = BlockedStatus("failed to get pgbouncer status")
@@ -178,7 +184,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o664)
+        self._render_file(INI_PATH, pgbouncer_ini.render(), 0o660)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -199,19 +205,20 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o664)
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o660)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
     def _reload_pgbouncer(self):
+        """Reloads systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             systemd.service_reload(PGB, restart_on_failure=True)
             self.unit.status = ActiveStatus("PgBouncer Reloaded")
         except systemd.SystemdError as e:
             logger.info(e)
-            self.unit.status = BlockedStatus("failed to restart pgbouncer")
+            self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
 
 if __name__ == "__main__":
