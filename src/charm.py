@@ -4,6 +4,7 @@
 
 """Charmed PgBouncer connection pooler, to run on machine charms."""
 
+from imp import reload
 import logging
 import os
 import pwd
@@ -12,7 +13,7 @@ from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt, passwd
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import CharmBase
+from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationCreatedEvent, RelationDepartedEvent, RelationJoinedEvent
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
@@ -38,6 +39,12 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
+
+        self.framework.observe(self.on.postgres_relation_created, self._on_postgres_relation_created)
+        self.framework.observe(self.on.postgres_relation_joined, self._on_postgres_relation_joined)
+        self.framework.observe(self.on.postgres_relation_changed, self._on_postgres_relation_changed)
+        self.framework.observe(self.on.postgres_relation_departed, self._on_postgres_relation_departed)
+        self.framework.observe(self.on.postgres_relation_broken, self._on_postgres_relation_broken)
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -109,6 +116,36 @@ class PgBouncerCharm(CharmBase):
         )
 
         self._render_pgb_config(config, reload_pgbouncer=True)
+
+    # ===================================
+    #  Postgres relation hooks & helpers
+    # ===================================
+
+    def _on_postgres_relation_created(self, create_event: RelationCreatedEvent):
+        self._extract_dbs_from_relation()
+
+    def _on_postgres_relation_joined(self, join_event: RelationJoinedEvent):
+        self._extract_dbs_from_relation()
+
+    def _on_postgres_relation_changed(self, change_event: RelationChangedEvent):
+        self._extract_dbs_from_relation()
+
+    def _on_postgres_relation_departed(self, depart_event: RelationDepartedEvent):
+        # TODO block incoming transmissions
+        # TODO ensure any final transmissions are sent
+        pass
+
+    def _on_postgres_relation_broken(self, broken_event: RelationBrokenEvent):
+        # TODO block incoming transmissions
+        # TODO ensure any final transmissions are sent
+        pass
+
+    def _extract_dbs_from_relation(self):
+        cfg = self._read_pgb_config()
+        # extract db information from relation databag
+        # write it into config in an intelligent way
+        self._render_pgb_config(cfg, reload_pgbouncer=True)
+
 
     # ==========================
     #  Generic Helper Functions
