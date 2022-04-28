@@ -296,9 +296,11 @@ class PgbConfig(MutableMapping):
         self[pgb]["min_pool_size"] = str(math.ceil(effective_db_connections / 4))
         self[pgb]["reserve_pool_size"] = str(math.ceil(effective_db_connections / 4))
 
+    def add_dbs_to_config(dbs):
+        pass
+
     class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""
-
         pass
 
 

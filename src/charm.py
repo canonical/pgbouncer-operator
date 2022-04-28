@@ -28,6 +28,9 @@ PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
+PG_RELATION = "postgres"
+DB_KEY = "databases"
+
 
 class PgBouncerCharm(CharmBase):
     """A class implementing charmed PgBouncer."""
@@ -42,11 +45,11 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.framework.observe(self.on.postgres_relation_created, self._on_postgres_relation_created)
-        self.framework.observe(self.on.postgres_relation_joined, self._on_postgres_relation_joined)
-        self.framework.observe(self.on.postgres_relation_changed, self._on_postgres_relation_changed)
-        self.framework.observe(self.on.postgres_relation_departed, self._on_postgres_relation_departed)
-        self.framework.observe(self.on.postgres_relation_broken, self._on_postgres_relation_broken)
+        self.framework.observe(self.on[PG_RELATION].relation_created, self._on_postgres_relation_created)
+        self.framework.observe(self.on[PG_RELATION].relation_joined, self._on_postgres_relation_joined)
+        self.framework.observe(self.on[PG_RELATION].relation_changed, self._on_postgres_relation_changed)
+        self.framework.observe(self.on[PG_RELATION].relation_departed, self._on_postgres_relation_departed)
+        self.framework.observe(self.on[PG_RELATION].relation_broken, self._on_postgres_relation_broken)
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -127,26 +130,34 @@ class PgBouncerCharm(CharmBase):
     # ===================================
 
     def _on_postgres_relation_created(self, create_event: RelationCreatedEvent):
-        self._extract_dbs_from_relation()
+        """Handle relation-created event"""
+        self._extract_dbs_from_relation(create_event)
 
     def _on_postgres_relation_joined(self, join_event: RelationJoinedEvent):
-        self._extract_dbs_from_relation()
+        """Handle relation-joined event"""
+        self._extract_dbs_from_relation(join_event)
 
     def _on_postgres_relation_changed(self, change_event: RelationChangedEvent):
-        self._extract_dbs_from_relation()
+        """Handle relation-changed event"""
+        self._extract_dbs_from_relation(change_event)
 
     def _on_postgres_relation_departed(self, depart_event: RelationDepartedEvent):
+        """Handle relation-departed event"""
         # TODO block incoming transmissions
         # TODO ensure any final transmissions are sent
         pass
 
     def _on_postgres_relation_broken(self, broken_event: RelationBrokenEvent):
+        """Handle relation-broken event"""
         # TODO block incoming transmissions
         # TODO ensure any final transmissions are sent
         pass
 
-    def _extract_dbs_from_relation(self):
+    def _extract_dbs_from_relation(self, event):
+        """Extract database information from relation databag and write it to config"""
         cfg = self._read_pgb_config()
+        dbs = event.relation.data[event.app][DB_KEY]
+        cfg.add_dbs_to_config(dbs)
         # extract db information from relation databag
         # write it into config in an intelligent way
         self._render_pgb_config(cfg, reload_pgbouncer=True)
