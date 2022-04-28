@@ -72,12 +72,12 @@ class TestPgb(unittest.TestCase):
         # in the constructor.
 
         with open(TEST_VALID_INI, "r") as test_ini:
-            pgb.PgbConfig(test_ini.read())
+            normal_cfg = pgb.PgbConfig(test_ini.read())
 
-        # Test parsing fails without necessary config file values
-        with open(f"{DATA_DIR}/test_no_dbs.ini", "r") as no_dbs:
+            # Test parsing fails without necessary config file values
+            del normal_cfg["databases"]
             with pytest.raises(pgb.PgbConfig.ConfigParsingError):
-                pgb.PgbConfig(no_dbs.read())
+                normal_cfg.validate()
 
         with open(f"{DATA_DIR}/test_no_logfile.ini", "r") as no_logfile:
             with pytest.raises(pgb.PgbConfig.ConfigParsingError):

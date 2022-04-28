@@ -8,13 +8,14 @@ from unittest.mock import MagicMock, patch
 
 import ops.testing
 from charms.operator_libs_linux.v0 import apt
+from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
@@ -30,60 +31,67 @@ class TestCharm(unittest.TestCase):
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
 
-    @patch("charms.operator_libs_linux.v0.passwd.add_user")
-    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="pgb")
     @patch("charm.PgBouncerCharm._install_apt_packages")
-    @patch("charm.PgBouncerCharm._render_file")
-    @patch("os.setuid")
+    @patch("os.mkdir")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
+    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
+    @patch("shutil.copy")
+    @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
-        self, _getpwnam, _chown, _setuid, _render_file, _install, _password, _userlist, _add_user
+        self, _reload, _copy, _userlist, _render_file, _getpwnam, _chown, _mkdir, _install
     ):
         _userlist.return_value = {"juju-admin": "test"}
 
         self.harness.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])
-        _add_user.assert_called_with(
-            username="pgbouncer", password="pgb", primary_group="postgres"
-        )
 
-        # Assert files are written with the correct permissions
-        pgb_uid = 1100
-        pg_gid = 120
-        _chown.assert_any_call(USERLIST_PATH, pgb_uid, pg_gid)
-        _chown.assert_any_call(INI_PATH, pgb_uid, pg_gid)
-        _chown.assert_any_call(PGB_DIR, pgb_uid, pg_gid)
-        _setuid.assert_called_with(pgb_uid)
+        _mkdir.assert_called_once_with(PGB_DIR, 0o600)
+        _chown.assert_any_call(PGB_DIR, 1100, 120)
 
-        # Check default config files are rendered correctly, including correct permissions
+        # Check config files are rendered correctly, including correct permissions
         initial_pgbouncer_ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG).render()
         initial_userlist = '"juju-admin" "test"'
         _render_file.assert_any_call(INI_PATH, initial_pgbouncer_ini, 0o600)
         _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o600)
 
-        self.assertEqual(
-            self.harness.model.unit.status,
-            WaitingStatus("Waiting to start PgBouncer"),
-        )
+        self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
 
-    @patch("os.setuid")
-    @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
-    @patch("subprocess.check_call")
-    def test_on_start(self, _call, _getpwnam, _setuid):
+    @patch("charms.operator_libs_linux.v1.systemd.service_start")
+    def test_on_start(self, _start):
         self.harness.charm.on.start.emit()
-        _setuid.assert_called_with(1100)
-        command = ["pgbouncer", "-d", INI_PATH]
-        _call.assert_called_with(command)
-        self.assertEqual(self.harness.model.unit.status, ActiveStatus("pgbouncer started"))
+        _start.assert_called_once_with("pgbouncer")
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
 
-        _call.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail test case")
+        _start.side_effect = systemd.SystemdError()
         self.harness.charm.on.start.emit()
-        self.assertEqual(
-            self.harness.model.unit.status, BlockedStatus("failed to start pgbouncer")
-        )
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
+
+    @patch("charms.operator_libs_linux.v1.systemd.service_reload")
+    def test_reload_pgbouncer(self, _reload):
+        self.harness.charm._reload_pgbouncer()
+        _reload.assert_called_once_with("pgbouncer", restart_on_failure=True)
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
+
+        _reload.side_effect = systemd.SystemdError()
+        self.harness.charm._reload_pgbouncer()
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
+
+    @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
+    def test_on_update_status(self, _running):
+        self.harness.charm.on.update_status.emit()
+        _running.assert_called_once_with("pgbouncer")
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
+
+        _running.return_value = True
+        self.harness.charm.on.update_status.emit()
+        self.assertTrue(isinstance(self.harness.model.unit.status, ActiveStatus))
+
+        _running.side_effect = systemd.SystemdError()
+        self.harness.charm.on.update_status.emit()
+        self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_pgb_config")
@@ -142,7 +150,7 @@ class TestCharm(unittest.TestCase):
             self.harness.charm._render_file(path, content, mode)
 
         _chmod.assert_called_with(path, mode)
-        _getpwnam.assert_called_with("pgbouncer")
+        _getpwnam.assert_called_with("postgres")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
     def test_read_pgb_config(self):
