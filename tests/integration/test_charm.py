@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
@@ -60,6 +60,13 @@ async def test_change_config(ops_test: OpsTest):
     existing_cfg = pgb.PgbConfig(cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
+
+
+async def test_systemd_restarts_pgbouncer_process(ops_test: OpsTest):
+    unit = ops_test.model.units["pgbouncer-operator/0"]
+    # Kill pgbouncer process and wait for it to restart
+    await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:

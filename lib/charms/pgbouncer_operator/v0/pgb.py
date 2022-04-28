@@ -31,7 +31,7 @@ from typing import Dict
 
 logger = logging.getLogger(__name__)
 
-PGB_DIR = "/etc/pgbouncer"
+PGB_DIR = "/var/lib/postgresql/pgbouncer"
 DEFAULT_CONFIG = {
     "databases": {},
     "pgbouncer": {
@@ -207,11 +207,12 @@ class PgbConfig(MutableMapping):
     def validate(self):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
         db = self.db_section
+
+        # Ensure the config contains the bare minimum it needs to be valid
         essentials = {
             "databases": [],
             "pgbouncer": ["logfile", "pidfile"],
         }
-
         if not set(essentials.keys()).issubset(set(self.keys())):
             raise PgbConfig.ConfigParsingError("necessary sections not found in config.")
 
