@@ -6,7 +6,6 @@
 
 import logging
 import os
-from pickle import INST
 import pwd
 import shutil
 import subprocess
@@ -77,15 +76,14 @@ class PgBouncerCharm(CharmBase):
             os.mkdir(f"{INSTANCE_PATH}{port}", 0o777)
             os.chown(f"{INSTANCE_PATH}{port}", pg_user.pw_uid, pg_user.pw_gid)
 
-        self._update_pgb_config(ini)
+        self._render_service_configs(ini)
 
-        # Initialise userlist, generating passwords for initial users
-        # All config files point to the same userlist, so we only need one.
+        # Initialise userlist, generating passwords for initial users. All config files use the
+        # same userlist, so we only need one.
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
         # Enable pgbouncer and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
-        #shutil.copy("src/pgbouncer@.socket", "/etc/systemd/system/pgbouncer@.socket")
         systemd.daemon_reload()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -135,7 +133,102 @@ class PgBouncerCharm(CharmBase):
             self._cores,
         )
 
-        self._render_pgb_config(config, reload_pgbouncer=True)
+        self._render_service_configs(config, reload_pgbouncer=True)
+
+    # =====================================
+    #  PgBouncer-Specific Helper Functions
+    # =====================================
+
+    def _read_pgb_config(self) -> pgb.PgbConfig:
+        """Get config object from pgbouncer.ini file.
+
+        Returns:
+            PgbConfig object containing pgbouncer config.
+        """
+        with open(INI_PATH, "r") as file:
+            config = pgb.PgbConfig(file.read())
+        return config
+
+    def _render_service_configs(self, primary_config: pgb.PgbConfig, reload_pgbouncer=False):
+        """Derives config files for the number of required services from given config.
+
+        This method takes a primary config and generates one unique config for each intended
+        instance of pgbouncer, implemented as a templated systemd service.
+
+        TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
+        TODO https://warthogs.atlassian.net/browse/DPE-218
+        """
+        self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        # Render primary config
+        self._render_pgb_config(primary_config, config_path=INI_PATH)
+
+        # Modify & render config files for each service instance
+        for port in self.service_ports:
+            instance_dir = f"{INSTANCE_PATH}{port}"  # Generated in on_install hook
+
+            primary_config[PGB]["unix_socket_dir"] = instance_dir
+            primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
+            primary_config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
+
+            self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _render_pgb_config(
+        self,
+        pgbouncer_ini: pgb.PgbConfig,
+        reload_pgbouncer: bool = False,
+        config_path: str = INI_PATH,
+    ) -> None:
+        """Render config object to pgbouncer.ini file.
+
+        Args:
+            pgbouncer_ini: PgbConfig object containing pgbouncer config.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+            config_path: intended location for the config.
+        """
+        self.unit.status = MaintenanceStatus("updating PgBouncer config")
+        self._render_file(config_path, pgbouncer_ini.render(), 0o777)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _read_userlist(self) -> Dict[str, str]:
+        with open(USERLIST_PATH, "r") as file:
+            userlist = pgb.parse_userlist(file.read())
+        return userlist
+
+    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+        """Render user list (with encoded passwords) to pgbouncer.ini file.
+
+        Args:
+            userlist: dictionary of users:password strings.
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
+                in the container. When config files are updated, pgbouncer must be restarted for
+                the changes to take effect. However, these config updates can be done in batches,
+                minimising the amount of necessary restarts.
+        """
+        self.unit.status = MaintenanceStatus("updating PgBouncer users")
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o777)
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
+
+    def _reload_pgbouncer(self):
+        """Reloads systemd pgbouncer service."""
+        self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
+        try:
+            for service in self.pgb_services:
+                systemd.service_reload(service, restart_on_failure=True)
+            self.unit.status = ActiveStatus("PgBouncer Reloaded")
+        except systemd.SystemdError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
     # ==========================
     #  Generic Helper Functions
@@ -174,92 +267,6 @@ class PgBouncerCharm(CharmBase):
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
-
-    # =====================================
-    #  PgBouncer-Specific Helper Functions
-    # =====================================
-
-    def _read_pgb_config(self) -> pgb.PgbConfig:
-        """Get config object from pgbouncer.ini file.
-
-        Returns:
-            PgbConfig object containing pgbouncer config.
-        """
-        with open(INI_PATH, "r") as file:
-            config = pgb.PgbConfig(file.read())
-        return config
-
-    def _update_pgb_config(self, primary_config: pgb.PgbConfig, reload_pgbouncer=False):
-        """update config files from given config
-
-        TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
-        TODO https://warthogs.atlassian.net/browse/DPE-218
-        """
-        # Render primary config
-        self._render_pgb_config(primary_config, ini_path = INI_PATH)
-
-        # Modify & render config files for each service instance
-        for port in self.service_ports:
-            instance_dir = f"{INSTANCE_PATH}{port}"
-
-            primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            primary_config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
-            primary_config[PGB]["unix_socket_dir"] = instance_dir
-
-            self._render_pgb_config(primary_config, ini_path = f"{instance_dir}/pgbouncer.ini")
-
-        if reload_pgbouncer:
-            self._reload_pgbouncer()
-
-    def _render_pgb_config(
-        self, pgbouncer_ini: pgb.PgbConfig, reload_pgbouncer: bool = False, ini_path:str = INI_PATH
-    ) -> None:
-        """Render config object to pgbouncer.ini file.
-
-        Args:
-            pgbouncer_ini: PgbConfig object containing pgbouncer config.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
-                minimising the amount of necessary restarts.
-        """
-        self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(ini_path, pgbouncer_ini.render(), 0o777)
-
-        if reload_pgbouncer:
-            self._reload_pgbouncer()
-
-    def _read_userlist(self) -> Dict[str, str]:
-        with open(USERLIST_PATH, "r") as file:
-            userlist = pgb.parse_userlist(file.read())
-        return userlist
-
-    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
-        """Render user list (with encoded passwords) to pgbouncer.ini file.
-
-        Args:
-            userlist: dictionary of users:password strings.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
-                minimising the amount of necessary restarts.
-        """
-        self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o777)
-
-        if reload_pgbouncer:
-            self._reload_pgbouncer()
-
-    def _reload_pgbouncer(self):
-        """Reloads systemd pgbouncer service."""
-        self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
-        try:
-            for service in self.pgb_services:
-                systemd.service_reload(service, restart_on_failure=True)
-            self.unit.status = ActiveStatus("PgBouncer Reloaded")
-        except systemd.SystemdError as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
 
 if __name__ == "__main__":

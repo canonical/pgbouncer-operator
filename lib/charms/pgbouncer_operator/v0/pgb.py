@@ -27,7 +27,7 @@ import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -38,16 +38,12 @@ DEFAULT_CONFIG = {
         "listen_port": "6432",
         "logfile": f"{PGB_DIR}/pgbouncer.log",
         "pidfile": f"{PGB_DIR}/pgbouncer.pid",
-
         "admin_users": ["juju-admin"],
         "auth_file": f"{PGB_DIR}/userlist.txt",
         "user": "postgres",
-
         "max_client_conn": "10000",
         "ignore_startup_parameters": "extra_float_digits",
         "so_reuseport": "1",
-        # # Disabling unix socket to prefent conflicts?
-        # "unix_socket_dir": "",
     },
 }
 
@@ -65,10 +61,10 @@ class PgbConfig(MutableMapping):
     user_types = ["admin_users", "stats_users"]
 
     def __init__(self, config=None, *args, **kwargs):
-        """constructor for pgbconfig.
+        """Constructor.
 
-        params:
-            config: an existing config. Can be passed in as a string or dict.
+        Args:
+            config: an existing config. Can be passed in as a string or a dict.
         """
         self.__dict__.update(*args, **kwargs)
 
@@ -217,19 +213,6 @@ class PgbConfig(MutableMapping):
             output = string_io.read()
         return output
 
-    def render_multiple(self, instances: int) -> List[str]:
-        """renders multiple instances of a config file, with no collisions
-
-        This exists to allow focal to create multiple instances
-
-        Args:
-            instances: number of instances to render
-        """
-        renders = []
-        for i in range(0, instances):
-            cp = PgbConfig(deepcopy(self))
-            renders.add(cp.render())
-
     def validate(self):
         """Validates that this will provide a valid pgbouncer.ini config when rendered."""
         db = self.db_section
@@ -237,7 +220,7 @@ class PgbConfig(MutableMapping):
         # Ensure the config contains the bare minimum it needs to be valid
         essentials = {
             "databases": [],
-            "pgbouncer": []#["logfile", "pidfile"],
+            "pgbouncer": ["logfile", "pidfile"],
         }
         if not set(essentials.keys()).issubset(set(self.keys())):
             raise PgbConfig.ConfigParsingError("necessary sections not found in config.")

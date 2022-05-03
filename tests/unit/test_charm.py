@@ -32,6 +32,7 @@ class TestCharm(unittest.TestCase):
         self.harness.begin()
 
     @patch("charm.PgBouncerCharm._install_apt_packages")
+    @patch("charms.operator_libs_linux.v1.systemd.service_stop")
     @patch("os.mkdir")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
@@ -40,7 +41,7 @@ class TestCharm(unittest.TestCase):
     @patch("shutil.copy")
     @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
-        self, _reload, _copy, _userlist, _render_file, _getpwnam, _chown, _mkdir, _install
+        self, _reload, _copy, _userlist, _render_file, _getpwnam, _chown, _mkdir, _stop, _install
     ):
         _userlist.return_value = {"juju-admin": "test"}
 
@@ -48,7 +49,7 @@ class TestCharm(unittest.TestCase):
 
         _install.assert_called_with(["pgbouncer"])
 
-        _mkdir.assert_called_once_with(PGB_DIR, 0o600)
+        _mkdir.assert_called_once_with(PGB_DIR, 0o777)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
 
         # Check config files are rendered correctly, including correct permissions
@@ -94,7 +95,7 @@ class TestCharm(unittest.TestCase):
         self.assertTrue(isinstance(self.harness.model.unit.status, BlockedStatus))
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm._render_pgb_config")
+    @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("os.cpu_count", return_value=1)
     def test_on_config_changed(self, _cpu_count, _render, _read):
         max_db_connections = 44
@@ -118,6 +119,9 @@ class TestCharm(unittest.TestCase):
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
 
+        import logging
+        logging.info(dict(_read.return_value))
+        logging.info(dict(config))
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
@@ -181,6 +185,11 @@ class TestCharm(unittest.TestCase):
         self.harness.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
         _render.assert_called_with(INI_PATH, reload_config.render(), 0o600)
         _reload.assert_called()
+
+    @patch("charm.PgBouncerCharm._reload_pgbouncer")
+    @patch("charm.PgBouncerCharm._render_file")
+    def test_render_service_configs(self, _render, _reload):
+        pass
 
     def test_read_userlist(self):
         test_users = {"test_user": "test_pass"}
