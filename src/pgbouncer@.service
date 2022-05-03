@@ -1,0 +1,13 @@
+[Unit]
+Description=connection pooler for postgresql (%i)
+After=network.target
+
+[Service]
+Type=simple
+User=postgres
+ExecStart=/sbin/pgbouncer /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
