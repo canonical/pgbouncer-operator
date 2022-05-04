@@ -56,10 +56,12 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg.set_max_db_connection_derivatives(44, int(cores))
 
     # TODO verify the required service configs are all changed in the correct corresponding way.
-    cfg = await pull_content_from_unit_file(unit, INI_PATH)
-    existing_cfg = pgb.PgbConfig(cfg)
+    primary_cfg = await pull_content_from_unit_file(unit, INI_PATH)
+    existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
+
+    # validating service config files are correctly written is handled by the modification method
     assert False
 
 

@@ -227,11 +227,11 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm._render_file")
     def test_render_service_configs(self, _render, _reload):
-        self.harness.charm.service_ports = 2
+        self.harness.charm.service_ports = [0, 1]
         default_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         cfg_list = [default_cfg.render()]
 
-        for port in range(self.harness.charm.service_ports):
+        for port in self.harness.charm.service_ports:
             cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
             instance_dir = f"{PGB_DIR}/instance_{port}"
 

@@ -163,7 +163,7 @@ class PgBouncerCharm(CharmBase):
         self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=INI_PATH)
 
         # Modify & render config files for each service instance
-        for port in range(self.service_ports):
+        for port in self.service_ports:
             instance_dir = f"{INSTANCE_PATH}{port}"  # Generated in on_install hook
 
             primary_config[PGB]["unix_socket_dir"] = instance_dir
