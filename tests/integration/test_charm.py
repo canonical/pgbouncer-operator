@@ -49,11 +49,11 @@ async def test_change_config(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    cores = await get_unit_cores(unit)
+    cores = int(await get_unit_cores(unit))
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
-    expected_cfg.set_max_db_connection_derivatives(44, int(cores))
+    expected_cfg.set_max_db_connection_derivatives(44, cores)
 
     # TODO verify the required service configs are all changed in the correct corresponding way.
     primary_cfg = await pull_content_from_unit_file(unit, INI_PATH)
@@ -61,18 +61,39 @@ async def test_change_config(ops_test: OpsTest):
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
-    # validating service config files are correctly written is handled by the modification method
-    assert False
+    # validating service config files are correctly written is handled by _render_service_config
+    # and its tests, but we need to make sure they at least exist in the right places.
+    for service in range(2000, 2000 + cores):
+        path = f"{PGB_DIR}/instance_{service}/pgbouncer.ini"
+        service_cfg = await pull_content_from_unit_file(unit, path)
+        assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    # TODO verify the correct amount of processes are running
+    expected_processes = int(await get_unit_cores(unit))
+
+    # verify the correct amount of processes are running
+    get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
+    running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
+
+    import logging
+    logging.info(running_pgb_instances)
+    logging.info(len(running_pgb_instances.split("\n")))
+    # one extra for grep process, and one for a blank line
+    assert len(running_pgb_instances.split("\n")) == expected_processes + 2
+
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
-    # TODO verify all processes start
-    assert False
+
+    # verify all processes start again
+    get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
+    running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
+
+    logging.info(running_pgb_instances)
+    # one extra for grep process, and one for a blank line
+    assert len(running_pgb_instances.split("\n")) == expected_processes + 2
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:

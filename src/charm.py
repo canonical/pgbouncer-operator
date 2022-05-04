@@ -59,9 +59,6 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         self._install_apt_packages([PGB])
-        # Apt package starts its own pgbouncer service. Disable this so we can start and control
-        # our own.
-        systemd.service_stop(PGB)
 
         pg_user = pwd.getpwnam(PG_USER)
         os.mkdir(PGB_DIR, 0o777)
@@ -84,6 +81,9 @@ class PgBouncerCharm(CharmBase):
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
         systemd.daemon_reload()
+        # Apt package starts its own pgbouncer service. Disable this so we can start and control
+        # our own.
+        systemd.service_stop(PGB)
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
