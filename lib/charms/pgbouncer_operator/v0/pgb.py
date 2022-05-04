@@ -44,6 +44,7 @@ DEFAULT_CONFIG = {
         "max_client_conn": "10000",
         "ignore_startup_parameters": "extra_float_digits",
         "so_reuseport": "1",
+        "unix_socket_dir": PGB_DIR,
     },
 }
 
@@ -72,6 +73,8 @@ class PgbConfig(MutableMapping):
             self.read_string(config)
         elif isinstance(config, dict):
             self.read_dict(config)
+        elif isinstance(config, PgbConfig):
+            self.read_dict(deepcopy(config))
 
     def __delitem__(self, key: str):
         """Deletes item from internal mapping."""
@@ -133,6 +136,9 @@ class PgbConfig(MutableMapping):
         In a pgbouncer.ini file, certain values are represented by more complex data structures,
         which are themselves represented as delimited strings. This method parses these strings
         into more usable python objects.
+
+        Raises:
+            PgbConfig.ConfigParsingError: raised when [databases] section is not available
         """
         db = PgbConfig.db_section
         users = PgbConfig.users_section
@@ -214,7 +220,13 @@ class PgbConfig(MutableMapping):
         return output
 
     def validate(self):
-        """Validates that this will provide a valid pgbouncer.ini config when rendered."""
+        """Validates that this object will provide a valid pgbouncer.ini config when rendered.
+
+        Raises:
+            PgbConfig.ConfigParsingError:
+                - when necessary config sections [databases] and [pgbouncer] are not present.
+                - when necessary "logfile" and "pidfile" config values are not present.
+        """
         db = self.db_section
 
         # Ensure the config contains the bare minimum it needs to be valid
@@ -245,6 +257,11 @@ class PgbConfig(MutableMapping):
 
         Args:
             string: the string to be validated
+        Raises:
+            PgbConfig.ConfigParsingError when database names are invalid. This can occur when
+                database names use the reserved "pgbouncer" database name, and when database names
+                do not quote invalid characters (anything that isn't alphanumeric, hyphens, or
+                underscores).
         """
         # Check dbnames don't use the reserved "pgbouncer" database name
         if string == "pgbouncer":

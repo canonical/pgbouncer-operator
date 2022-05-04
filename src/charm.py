@@ -63,26 +63,25 @@ class PgBouncerCharm(CharmBase):
         # our own.
         systemd.service_stop(PGB)
 
-        os.mkdir(PGB_DIR, 0o777)
-
         pg_user = pwd.getpwnam(PG_USER)
+        os.mkdir(PGB_DIR, 0o777)
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib.
-        ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        self._render_pgb_config(ini)
-
+        # Make a directory for each service to store logs, configs, pidfiles and sockets.
+        # TODO this can be removed once socket activation is implemented (JIRA-218)
         for port in self.service_ports:
             os.mkdir(f"{INSTANCE_PATH}{port}", 0o777)
             os.chown(f"{INSTANCE_PATH}{port}", pg_user.pw_uid, pg_user.pw_gid)
 
+        # Initialise pgbouncer.ini config files from defaults set in charm lib.
+        ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self._render_service_configs(ini)
 
         # Initialise userlist, generating passwords for initial users. All config files use the
         # same userlist, so we only need one.
         self._render_userlist(pgb.initialise_userlist_from_ini(ini))
 
-        # Enable pgbouncer and reload systemd
+        # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
         systemd.daemon_reload()
 
@@ -161,10 +160,10 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
         # Render primary config
-        self._render_pgb_config(primary_config, config_path=INI_PATH)
+        self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=INI_PATH)
 
         # Modify & render config files for each service instance
-        for port in self.service_ports:
+        for port in range(self.service_ports):
             instance_dir = f"{INSTANCE_PATH}{port}"  # Generated in on_install hook
 
             primary_config[PGB]["unix_socket_dir"] = instance_dir

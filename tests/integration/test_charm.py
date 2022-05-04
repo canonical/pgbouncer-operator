@@ -49,24 +49,28 @@ async def test_change_config(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
-    cores = get_cores_action.results.get("Stdout")
+    cores = await get_unit_cores(unit)
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, int(cores))
 
+    # TODO verify the required service configs are all changed in the correct corresponding way.
     cfg = await pull_content_from_unit_file(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
+    assert False
 
 
-async def test_systemd_restarts_pgbouncer_process(ops_test: OpsTest):
+async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
+    # TODO verify the correct amount of processes are running
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
+    # TODO verify all processes start
+    assert False
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:
@@ -81,3 +85,20 @@ async def pull_content_from_unit_file(unit, path: str) -> str:
     """
     action = await unit.run(f"cat {path}")
     return action.results.get("Stdout", None)
+
+
+async def get_unit_cores(unit: str) -> str:
+    """Get the number of CPU cores available on the given unit.
+
+    Since PgBouncer is single-threaded, the charm automatically creates one instance of pgbouncer
+    per CPU core on a given unit. Therefore, the number of cores is the expected number of
+    pgbouncer instances.
+
+    Args:
+        unit: the juju unit instance
+    Returns:
+        The number of cores on the unit.
+    """
+    get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
+    cores = get_cores_action.results.get("Stdout")
+    return cores
