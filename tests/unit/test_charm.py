@@ -76,6 +76,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     def test_on_start(self, _start):
+        self.harness.charm._cores = 2
         self.harness.charm.on.start.emit()
         _start.assert_called()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -86,21 +87,18 @@ class TestCharm(unittest.TestCase):
             [
                 call("pgbouncer@2000"),
                 call("pgbouncer@2001"),
-                call("pgbouncer@2002"),
-                call("pgbouncer@2003"),
             ]
         )
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_reload")
     def test_reload_pgbouncer(self, _reload):
+        self.harness.charm._cores = 2
         self.harness.charm._reload_pgbouncer()
         _reload.assert_has_calls(
             [
                 call("pgbouncer@2000", restart_on_failure=True),
                 call("pgbouncer@2001", restart_on_failure=True),
-                call("pgbouncer@2002", restart_on_failure=True),
-                call("pgbouncer@2003", restart_on_failure=True),
             ]
         )
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
@@ -111,6 +109,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     def test_on_update_status(self, _running):
+        self.harness.charm._cores = 2
         self.harness.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
@@ -120,8 +119,6 @@ class TestCharm(unittest.TestCase):
             [
                 call("pgbouncer@2000"),
                 call("pgbouncer@2001"),
-                call("pgbouncer@2002"),
-                call("pgbouncer@2003"),
             ]
         )
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
