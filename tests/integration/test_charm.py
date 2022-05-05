@@ -55,7 +55,6 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
 
-    # TODO verify the required service configs are all changed in the correct corresponding way.
     primary_cfg = await pull_content_from_unit_file(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
@@ -73,14 +72,10 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
     expected_processes = int(await get_unit_cores(unit))
 
-    # verify the correct amount of processes are running
+    # verify the correct amount of pgbouncer processes are running
     get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
     running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
-
-    import logging
-    logging.info(running_pgb_instances)
-    logging.info(len(running_pgb_instances.split("\n")))
-    # one extra for grep process, and one for a blank line
+    # one extra for grep process, and one for a blank line at the end
     assert len(running_pgb_instances.split("\n")) == expected_processes + 2
 
     # Kill pgbouncer process and wait for it to restart
@@ -90,9 +85,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     # verify all processes start again
     get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
     running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
-
-    logging.info(running_pgb_instances)
-    # one extra for grep process, and one for a blank line
+    # one extra for grep process, and one for a blank line at the end
     assert len(running_pgb_instances.split("\n")) == expected_processes + 2
 
 

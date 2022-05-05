@@ -8,6 +8,8 @@ User=postgres
 ExecStart=/sbin/pgbouncer /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
