@@ -60,7 +60,7 @@ async def test_change_config(ops_test: OpsTest):
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
-    # validating service config files are correctly written is handled by _render_service_config
+    # Validating service config files are correctly written is handled by _render_service_config
     # and its tests, but we need to make sure they at least exist in the right places.
     for service in range(2000, 2000 + cores):
         path = f"{PGB_DIR}/instance_{service}/pgbouncer.ini"
@@ -70,23 +70,17 @@ async def test_change_config(ops_test: OpsTest):
 
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    expected_processes = int(await get_unit_cores(unit))
+    expected_processes = await get_unit_cores(unit)
 
     # verify the correct amount of pgbouncer processes are running
-    get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
-    running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
-    # one extra for grep process, and one for a blank line at the end
-    assert len(running_pgb_instances.split("\n")) == expected_processes + 2
+    assert await get_running_instances(unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
 
     # verify all processes start again
-    get_running_pgb_instances = await unit.run("ps aux | grep pgbouncer")
-    running_pgb_instances = get_running_pgb_instances.results.get("Stdout")
-    # one extra for grep process, and one for a blank line at the end
-    assert len(running_pgb_instances.split("\n")) == expected_processes + 2
+    assert await get_running_instances(unit, "pgbouncer") == expected_processes
 
 
 async def pull_content_from_unit_file(unit, path: str) -> str:
@@ -103,7 +97,7 @@ async def pull_content_from_unit_file(unit, path: str) -> str:
     return action.results.get("Stdout", None)
 
 
-async def get_unit_cores(unit: str) -> str:
+async def get_unit_cores(unit: str) -> int:
     """Get the number of CPU cores available on the given unit.
 
     Since PgBouncer is single-threaded, the charm automatically creates one instance of pgbouncer
@@ -117,4 +111,21 @@ async def get_unit_cores(unit: str) -> str:
     """
     get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
     cores = get_cores_action.results.get("Stdout")
-    return cores
+    return int(cores)
+
+async def get_running_instances(unit: str, service: str) -> int:
+    """Returns the number of running instances of the given service.
+
+    Uses `ps` to find the number of instances of a given service.
+
+    Args:
+        unit: the juju unit running the service
+        service: a string that can be used to grep for the intended service.
+    Returns:
+        an integer defining the number of running instances.
+    """
+    get_running_instances = await unit.run(f"ps aux | grep {service}")
+    ps_output = get_running_instances.results.get("Stdout")
+    num_of_ps_lines = len(ps_output.split("\n"))
+    # one extra for grep process, and one for a blank line at the end
+    return num_of_ps_lines - 2
