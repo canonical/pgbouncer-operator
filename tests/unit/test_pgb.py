@@ -220,3 +220,11 @@ class TestPgb(unittest.TestCase):
         # Assert invalid users aren't represented anywhere in userlist data
         self.assertNotEqual(regen_userlist, userlist)
         self.assertDictEqual(users, regen_users)
+
+    def test_get_port_range(self):
+        # Assert lowest values are set correctly
+        self.assertEqual(pgb.get_port_range(-100, -100), [1])
+        # Assert extremes are adhered to
+        self.assertEqual(pgb.get_port_range(-100, 1000000), list(range(1, 49151)))
+        #assert normal ranges work normally
+        self.assertEqual(pgb.get_port_range(335, 10), list(range(335, 345)))

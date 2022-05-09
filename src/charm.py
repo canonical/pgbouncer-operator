@@ -43,8 +43,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._on_update_status)
 
         self._cores = os.cpu_count()
-        port_start = 2000
-        self.service_ports = [port for port in range(port_start, port_start + self._cores)]
+        self.service_ports = pgb.get_port_range(2000, self._cores)
         self.pgb_services = [f"{PGB}@{port}" for port in self.service_ports]
 
     # =======================

@@ -27,7 +27,7 @@ import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
 from copy import deepcopy
-from typing import Dict
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -414,3 +414,14 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         parsed_userlist[username] = password
 
     return parsed_userlist
+
+
+def get_port_range(port_start: int, cores: int) -> List[int]:
+    if cores < 1:
+        cores = 1
+    port_max = 49151 # Maximum valid port number before we get into ephemeral ports
+    port_start = max(port_start, 1)
+    port_start = min(port_start, port_max)
+    port_end = min(port_start + cores, port_max)
+    return [port for port in range(port_start, port_end)]
+
