@@ -416,12 +416,23 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
     return parsed_userlist
 
 
-def get_port_range(port_start: int, cores: int) -> List[int]:
-    if cores < 1:
-        cores = 1
-    port_max = 49151 # Maximum valid port number before we get into ephemeral ports
+def get_port_range(port_start: int, num_of_ports: int) -> List[int]:
+    """Gets a valid range of ports for pgbouncer services to use.
+
+    Returns a range of valid ports for pgbouncer services between 1 and 49151.
+
+    Args:
+        port_start: the start of the valid ports. Will be set to between 1 and 49151 if it's not
+            already in this range
+        num_of_ports: the number of ports required.
+
+    Return:
+        A list of valid port integers
+    """
+    if num_of_ports < 1:
+        num_of_ports = 1
+    port_max = 49151  # Maximum valid port number before we get into ephemeral ports
     port_start = max(port_start, 1)
     port_start = min(port_start, port_max)
-    port_end = min(port_start + cores, port_max)
+    port_end = min(port_start + num_of_ports, port_max)
     return [port for port in range(port_start, port_end)]
-
