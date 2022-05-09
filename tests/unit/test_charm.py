@@ -77,10 +77,13 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     def test_on_start(self, _start):
         self.harness.charm._cores = 2
+        # Testing charm blocks when systemd is in error
         self.harness.charm.on.start.emit()
         _start.assert_called()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
+        # Testing charm starts the correct amount of pgbouncer instances and enters activestatus if
+        # everything's working fine.
         _start.side_effect = None
         self.harness.charm.on.start.emit()
         _start.assert_has_calls(
@@ -103,6 +106,7 @@ class TestCharm(unittest.TestCase):
         )
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
+        # Verify that if systemd is in error, the charm enters blocked status.
         _reload.side_effect = systemd.SystemdError()
         self.harness.charm._reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -110,9 +114,11 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     def test_on_update_status(self, _running):
         self.harness.charm._cores = 2
+        # Testing charm blocks when the pgbouncer services aren't running
         self.harness.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
+        # If all pgbouncer services are running, verify we enter an active status.
         _running.return_value = True
         self.harness.charm.on.update_status.emit()
         _running.assert_has_calls(

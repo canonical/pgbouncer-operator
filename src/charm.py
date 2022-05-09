@@ -134,9 +134,9 @@ class PgBouncerCharm(CharmBase):
 
         self._render_service_configs(config, reload_pgbouncer=True)
 
-    # =====================================
-    #  PgBouncer-Specific Helper Functions
-    # =====================================
+    # ==============================
+    #  PgBouncer-Specific Utilities
+    # ==============================
 
     def _read_pgb_config(self) -> pgb.PgbConfig:
         """Get config object from pgbouncer.ini file.
@@ -229,9 +229,9 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
-    # ==========================
-    #  Generic Helper Functions
-    # ==========================
+    # =================
+    #  Charm Utilities
+    # =================
 
     def _install_apt_packages(self, packages: List[str]):
         """Simple wrapper around 'apt-get install -y."""
@@ -246,7 +246,7 @@ class PgBouncerCharm(CharmBase):
         try:
             logger.debug(f"installing apt packages: {', '.join(packages)}")
             apt.add_package(packages)
-        except apt.PackageNotFoundError as e:
+        except (apt.PackageNotFoundError, apt.PackageError, TypeError) as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to install packages")
 
@@ -262,7 +262,7 @@ class PgBouncerCharm(CharmBase):
             file.write(content)
         # Ensure correct permissions are set on the file.
         os.chmod(path, mode)
-        # Get the uid/gid for the pgbouncer user.
+        # Get the uid/gid for the postgres user.
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
