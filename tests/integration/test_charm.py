@@ -57,16 +57,16 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
 
-    primary_cfg = await helpers.pull_content_from_unit_file(unit, INI_PATH)
+    primary_cfg = await helpers.cat_from(unit, INI_PATH)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
     # Validating service config files are correctly written is handled by _render_service_config
     # and its tests, but we need to make sure they at least exist in the right places.
-    for service in range(2000, 2000 + cores):
-        path = f"{PGB_DIR}/instance_{service}/pgbouncer.ini"
-        service_cfg = await helpers.pull_content_from_unit_file(unit, path)
+    for port in range(2000, 2000 + cores):
+        path = f"{PGB_DIR}/instance_{port}/pgbouncer.ini"
+        service_cfg = await helpers.cat_from(unit, path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 

@@ -158,7 +158,8 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
-        # Render primary config
+        # Render primary config. This config is the only copy that the charm reads from to create
+        # PgbConfig objects, and is modified below to implement individual services.
         self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=INI_PATH)
 
         # Modify & render config files for each service instance

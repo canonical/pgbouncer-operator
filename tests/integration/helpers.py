@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def pull_content_from_unit_file(unit, path: str) -> str:
+async def cat_from(unit, path: str) -> str:
     """Pull the content of a file from one unit.
 
     Args:
@@ -35,8 +35,8 @@ async def get_unit_cores(unit: str) -> int:
     Returns:
         The number of cores on the unit.
     """
-    get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
-    cores = get_cores_action.results.get("Stdout")
+    get_cores_from_unit = await unit.run('python3 -c "import os; print(os.cpu_count())"')
+    cores = get_cores_from_unit.results.get("Stdout")
     return int(cores)
 
 
