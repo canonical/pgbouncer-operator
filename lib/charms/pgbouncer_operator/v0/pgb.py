@@ -32,6 +32,8 @@ from typing import Dict, List
 logger = logging.getLogger(__name__)
 
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
+PORT_MAX = 49151  # Maximum valid port number before we get into ephemeral ports
+
 DEFAULT_CONFIG = {
     "databases": {},
     "pgbouncer": {
@@ -431,8 +433,8 @@ def get_port_range(port_start: int, num_of_ports: int) -> List[int]:
     """
     if num_of_ports < 1:
         num_of_ports = 1
-    port_max = 49151  # Maximum valid port number before we get into ephemeral ports
+
     port_start = max(port_start, 1)
-    port_start = min(port_start, port_max)
-    port_end = min(port_start + num_of_ports, port_max)
+    port_start = min(port_start, PORT_MAX)
+    port_end = min(port_start + num_of_ports, PORT_MAX)
     return [port for port in range(port_start, port_end)]
