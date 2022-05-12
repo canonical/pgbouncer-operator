@@ -64,8 +64,8 @@ async def test_change_config(ops_test: OpsTest):
 
     # Validating service config files are correctly written is handled by _render_service_config
     # and its tests, but we need to make sure they at least exist in the right places.
-    for port in range(2000, 2000 + cores):
-        path = f"{PGB_DIR}/instance_{port}/pgbouncer.ini"
+    for service_id in range(cores):
+        path = f"{PGB_DIR}/instance_{service_id}/pgbouncer.ini"
         service_cfg = await helpers.cat_from(unit, path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 

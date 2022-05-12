@@ -1,6 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import os
 import subprocess
 import unittest
 from copy import deepcopy
@@ -62,9 +63,9 @@ class TestCharm(unittest.TestCase):
         _mkdir.assert_any_call(PGB_DIR, 0o777)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
 
-        for port in self.harness.charm.service_ports:
-            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{port}", 0o777)
-            _chown.assert_any_call(f"{PGB_DIR}/instance_{port}", 1100, 120)
+        for service_id in self.harness.charm.service_ids:
+            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o777)
+            _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
@@ -76,7 +77,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     def test_on_start(self, _start):
-        self.harness.charm._cores = 2
+        intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
         self.harness.charm.on.start.emit()
         _start.assert_called()
@@ -86,24 +87,19 @@ class TestCharm(unittest.TestCase):
         # everything's working fine.
         _start.side_effect = None
         self.harness.charm.on.start.emit()
-        _start.assert_has_calls(
-            [
-                call("pgbouncer@2000"),
-                call("pgbouncer@2001"),
-            ]
-        )
+        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_reload")
     def test_reload_pgbouncer(self, _reload):
-        self.harness.charm._cores = 2
+        intended_instances = self._cores = os.cpu_count()
         self.harness.charm._reload_pgbouncer()
-        _reload.assert_has_calls(
-            [
-                call("pgbouncer@2000", restart_on_failure=True),
-                call("pgbouncer@2001", restart_on_failure=True),
-            ]
-        )
+        calls = [
+            call(f"pgbouncer@{instance}", restart_on_failure=True)
+            for instance in range(intended_instances)
+        ]
+        _reload.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
         # Verify that if systemd is in error, the charm enters blocked status.
@@ -113,7 +109,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     def test_on_update_status(self, _running):
-        self.harness.charm._cores = 2
+        intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
         self.harness.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -121,12 +117,8 @@ class TestCharm(unittest.TestCase):
         # If all pgbouncer services are running, verify we enter an active status.
         _running.return_value = True
         self.harness.charm.on.update_status.emit()
-        _running.assert_has_calls(
-            [
-                call("pgbouncer@2000"),
-                call("pgbouncer@2001"),
-            ]
-        )
+        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
         _running.side_effect = systemd.SystemdError()
@@ -230,13 +222,13 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm._render_file")
     def test_render_service_configs(self, _render, _reload):
-        self.harness.charm.service_ports = [0, 1]
+        self.harness.charm.service_ids = [0, 1]
         default_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         cfg_list = [default_cfg.render()]
 
-        for port in self.harness.charm.service_ports:
+        for service_id in self.harness.charm.service_ids:
             cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-            instance_dir = f"{PGB_DIR}/instance_{port}"
+            instance_dir = f"{PGB_DIR}/instance_{service_id}"
 
             cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
             cfg["pgbouncer"]["logfile"] = f"{instance_dir}/pgbouncer.log"

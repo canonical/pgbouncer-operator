@@ -43,8 +43,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._on_update_status)
 
         self._cores = os.cpu_count()
-        self.service_ports = pgb.get_port_range(2000, self._cores)
-        self.pgb_services = [f"{PGB}@{port}" for port in self.service_ports]
+        self.service_ids = [service_id for service_id in range(self._cores)]
+        self.pgb_services = [f"{PGB}@{service_id}" for service_id in self.service_ids]
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -65,9 +65,9 @@ class PgBouncerCharm(CharmBase):
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
         # TODO this can be removed once socket activation is implemented (JIRA-218)
-        for port in self.service_ports:
-            os.mkdir(f"{INSTANCE_PATH}{port}", 0o777)
-            os.chown(f"{INSTANCE_PATH}{port}", pg_user.pw_uid, pg_user.pw_gid)
+        for service_id in self.service_ids:
+            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o777)
+            os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib.
         ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
@@ -163,8 +163,8 @@ class PgBouncerCharm(CharmBase):
         self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=INI_PATH)
 
         # Modify & render config files for each service instance
-        for port in self.service_ports:
-            instance_dir = f"{INSTANCE_PATH}{port}"  # Generated in on_install hook
+        for service_id in self.service_ids:
+            instance_dir = f"{INSTANCE_PATH}{service_id}"  # Generated in on_install hook
 
             primary_config[PGB]["unix_socket_dir"] = instance_dir
             primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"

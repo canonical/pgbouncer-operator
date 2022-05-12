@@ -27,7 +27,7 @@ import string
 from collections.abc import MutableMapping
 from configparser import ConfigParser, ParsingError
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, Union
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +63,17 @@ class PgbConfig(MutableMapping):
     users_section = "users"
     user_types = ["admin_users", "stats_users"]
 
-    def __init__(self, config=None, *args, **kwargs):
+    def __init__(
+        self,
+        config: Union[str, dict, "PgbConfig"] = None,
+        *args,
+        **kwargs,
+    ):
         """Constructor.
 
         Args:
-            config: an existing config. Can be passed in as a string or a dict.
+            config: an existing config. Can be passed in as a string, dict, or PgbConfig object.
+                pgb.DEFAULT_CONFIG can be used here as a default dict.
         """
         self.__dict__.update(*args, **kwargs)
 
@@ -416,25 +422,3 @@ def parse_userlist(userlist: str) -> Dict[str, str]:
         parsed_userlist[username] = password
 
     return parsed_userlist
-
-
-def get_port_range(port_start: int, num_of_ports: int) -> List[int]:
-    """Gets a valid range of ports for pgbouncer services to use.
-
-    Returns a range of valid ports for pgbouncer services between 1 and 49151.
-
-    Args:
-        port_start: the start of the valid ports. Will be set to between 1 and 49151 if it's not
-            already in this range
-        num_of_ports: the number of ports required.
-
-    Return:
-        A list of valid port integers
-    """
-    if num_of_ports < 1:
-        num_of_ports = 1
-
-    port_start = max(port_start, 1)
-    port_start = min(port_start, PORT_MAX)
-    port_end = min(port_start + num_of_ports, PORT_MAX)
-    return [port for port in range(port_start, port_end)]
