@@ -19,5 +19,8 @@ maintainers:
 
 requires:
   postgres:
-    interface: postgres
+    interface: db
     optional: false
+
+series:
+  - focal

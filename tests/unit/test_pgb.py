@@ -116,6 +116,10 @@ class TestPgb(unittest.TestCase):
     def test_set_max_db_connection_derivatives(self):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
 
+        # Test setting 0 instances fails to update config
+        with pytest.raises(pgb.PgbConfig.ConfigParsingError):
+            cfg.set_max_db_connection_derivatives(44, 0)
+
         cfg.set_max_db_connection_derivatives(44, 2)
 
         self.assertEqual(cfg["pgbouncer"]["max_db_connections"], "44")

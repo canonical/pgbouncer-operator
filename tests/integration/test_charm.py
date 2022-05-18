@@ -12,6 +12,8 @@ import yaml
 from charms.pgbouncer_operator.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
+from tests.integration import helpers
+
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -49,35 +51,35 @@ async def test_change_config(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    get_cores_action = await unit.run('python3 -c "import os; print(os.cpu_count())"')
-    cores = get_cores_action.results.get("Stdout")
+    cores = await helpers.get_unit_cores(unit)
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
-    expected_cfg.set_max_db_connection_derivatives(44, int(cores))
+    expected_cfg.set_max_db_connection_derivatives(44, cores)
 
-    cfg = await pull_content_from_unit_file(unit, INI_PATH)
-    existing_cfg = pgb.PgbConfig(cfg)
+    primary_cfg = await helpers.cat_from(unit, INI_PATH)
+    existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
+    # Validating service config files are correctly written is handled by _render_service_config
+    # and its tests, but we need to make sure they at least exist in the right places.
+    for service_id in range(cores):
+        path = f"{PGB_DIR}/instance_{service_id}/pgbouncer.ini"
+        service_cfg = await helpers.cat_from(unit, path)
+        assert service_cfg is not f"cat: {path}: No such file or directory"
 
-async def test_systemd_restarts_pgbouncer_process(ops_test: OpsTest):
+
+async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
+    expected_processes = await helpers.get_unit_cores(unit)
+
+    # verify the correct amount of pgbouncer processes are running
+    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
 
-
-async def pull_content_from_unit_file(unit, path: str) -> str:
-    """Pull the content of a file from one unit.
-
-    Args:
-        unit: the Juju unit instance.
-        path: the path of the file to get the contents from.
-
-    Returns:
-        the entire content of the file.
-    """
-    action = await unit.run(f"cat {path}")
-    return action.results.get("Stdout", None)
+    # verify all processes start again
+    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
