@@ -17,10 +17,20 @@ issues: |
 maintainers:
   "Will Fitch <will.fitch@canonical.com>"
 
-requires:
-  postgres:
-    interface: db
-    optional: false
-
 series:
   - focal
+
+provides:
+  # Legacy relations - these will be deprecated in a future release
+  db:
+    interface: pgsql
+    optional: true
+  db-admin:
+    interface: pgsql
+    optional: true
+
+requires:
+  # Legacy relations - these will be deprecated in a future release
+  backend-db-admin:
+    interface: pgsql
+    optional: true

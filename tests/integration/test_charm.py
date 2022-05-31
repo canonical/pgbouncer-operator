@@ -19,8 +19,13 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
+PGB_DIR = pgb.PGB_DIR
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
+
+
+# =============================
+#  Independent pgbouncer tests
+# =============================
 
 
 @pytest.mark.abort_on_fail
@@ -83,3 +88,24 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
     # verify all processes start again
     assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+
+
+# ===================================
+#  Pgbouncer-postgres relation tests
+# ===================================
+
+
+async def test_legacy_postgres_relation(ops_test: OpsTest):
+    """Test that the pgbouncer and postgres charms can relate to one another"""
+    pg_charm_name = "postgresql-operator"
+    # TODO replace this with the existing legacy postgres charm, or a stub charm
+    postgres_charm = await ops_test.build_charm(".")
+    await ops_test.model.deploy(
+        postgres_charm,
+        application_name=pg_charm_name,
+    )
+    # TODO ensure this uses the LEGACY relation
+    await ops_test.model.add_relation(APP_NAME, pg_charm_name)
+    await ops_test.model.wait_for_idle(
+        apps=[APP_NAME, pg_charm_name], status="active", timeout=1000
+    )

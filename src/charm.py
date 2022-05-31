@@ -4,18 +4,25 @@
 
 """Charmed PgBouncer connection pooler, to run on machine charms."""
 
-from imp import reload
 import logging
 import os
 import pwd
 import shutil
 import subprocess
+from imp import reload
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationCreatedEvent, RelationDepartedEvent, RelationJoinedEvent
+from ops.charm import (
+    CharmBase,
+    RelationBrokenEvent,
+    RelationChangedEvent,
+    RelationCreatedEvent,
+    RelationDepartedEvent,
+    RelationJoinedEvent,
+)
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
@@ -46,11 +53,21 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.framework.observe(self.on[PG_RELATION].relation_created, self._on_postgres_relation_created)
-        self.framework.observe(self.on[PG_RELATION].relation_joined, self._on_postgres_relation_joined)
-        self.framework.observe(self.on[PG_RELATION].relation_changed, self._on_postgres_relation_changed)
-        self.framework.observe(self.on[PG_RELATION].relation_departed, self._on_postgres_relation_departed)
-        self.framework.observe(self.on[PG_RELATION].relation_broken, self._on_postgres_relation_broken)
+        self.framework.observe(
+            self.on[PG_RELATION].relation_created, self._on_postgres_relation_created
+        )
+        self.framework.observe(
+            self.on[PG_RELATION].relation_joined, self._on_postgres_relation_joined
+        )
+        self.framework.observe(
+            self.on[PG_RELATION].relation_changed, self._on_postgres_relation_changed
+        )
+        self.framework.observe(
+            self.on[PG_RELATION].relation_departed, self._on_postgres_relation_departed
+        )
+        self.framework.observe(
+            self.on[PG_RELATION].relation_broken, self._on_postgres_relation_broken
+        )
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
@@ -179,7 +196,6 @@ class PgBouncerCharm(CharmBase):
         # extract db information from relation databag
         # write it into config in an intelligent way
         self._render_pgb_config(cfg, reload_pgbouncer=True)
-
 
     # ==========================
     #  Generic Helper Functions

@@ -335,6 +335,12 @@ class PgbConfig(MutableMapping):
 
     class ConfigParsingError(ParsingError):
         """Error raised when parsing config fails."""
+
+        pass
+
+    class PgbConfigError(Exception):
+        """Generic Pgbouncer config error"""
+
         pass
 
 
