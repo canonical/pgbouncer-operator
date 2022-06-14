@@ -154,6 +154,22 @@ class TestCharm(unittest.TestCase):
 
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
+    def test_backend_db_admin_relation_changed(self):
+        """This test exists to check the basics for how the config is expected to change.
+
+        The integration tests for this relation are a more extensive test of this functionality.
+        """
+        # TODO
+        assert False
+
+    def test_backend_db_admin_relation_departed(self):
+        """This test exists to check the basics for how the config is expected to change.
+
+        The integration tests for this relation are a more extensive test of this functionality.
+        """
+        # TODO
+        assert False
+
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
     def test_install_apt_packages(self, _update, _add_package):
