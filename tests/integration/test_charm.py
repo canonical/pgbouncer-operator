@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 
+import asyncio
 import logging
 from pathlib import Path
 from unittest import TestCase
@@ -95,17 +96,17 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 # ===================================
 
 
-async def test_legacy_postgres_relation(ops_test: OpsTest):
+async def test_legacy_postgres_backend_db_admin_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
-    pg_charm_name = "postgresql-operator"
-    # TODO replace this with the existing legacy postgres charm, or a stub charm
-    postgres_charm = await ops_test.build_charm(".")
-    await ops_test.model.deploy(
-        postgres_charm,
-        application_name=pg_charm_name,
-    )
-    # TODO ensure this uses the LEGACY relation
-    await ops_test.model.add_relation(APP_NAME, pg_charm_name)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, pg_charm_name], status="active", timeout=1000
-    )
+    pg = "postgresql"
+    await ops_test.model.deploy(pg)
+    await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
+
+    unit = ops_test.model.units["pgbouncer-operator/0"]
+    cfg_str = await helpers.cat_from(unit, INI_PATH)
+    cfg = pgb.PgbConfig(cfg_str)
+    assert "pg_master" in cfg["databases"]
+
+    await ops_test.model.applications[pg].add_units(count=2)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)

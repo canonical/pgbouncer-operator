@@ -15,10 +15,10 @@ from typing import Dict, List
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import CharmBase, RelationChangedEvent
+from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, Unit, WaitingStatus
 from pgconnstr import ConnectionString
 
 logger = logging.getLogger(__name__)
@@ -52,11 +52,7 @@ class PgBouncerCharm(CharmBase):
         )
         self.framework.observe(
             self.on[BACKEND_DB_ADMIN_RELATION].relation_departed,
-            self._on_backend_db_admin_relation_ended,
-        )
-        self.framework.observe(
-            self.on[BACKEND_DB_ADMIN_RELATION].relation_broken,
-            self._on_backend_db_admin_relation_ended,
+            self._on_backend_db_admin_relation_departed,
         )
 
         self._cores = os.cpu_count()
@@ -215,54 +211,61 @@ class PgBouncerCharm(CharmBase):
     def _on_backend_db_admin_relation_changed(self, change_event: RelationChangedEvent):
         """Handle relation-changed event."""
         cfg = self._read_pgb_config()
+        dbs = cfg["databases"]
         # Add data from relation into config
         event_data = change_event.relation.data
         pg_data = event_data[change_event.unit]
+        # Test that relation data contains everything we need
 
         dbchange = "database change detected - updating config"
         self.unit.status = ActiveStatus(dbchange)
         logger.info(dbchange)
 
         if pg_data.get("master"):
-            cfg["databases"]["master"] = pgb.parse_kv_string_to_dict(pg_data.get("master"))
+            dbs["pg_master"] = pgb.parse_kv_string_to_dict(pg_data.get("master"))
 
-        standbys = pg_data.get("standbys", [])
-        logger.info(standbys)
-        logger.info(type(standbys))
-        # if standbys only contains 1 value, it'll return a string, so convert it to a list.
-        if isinstance(standbys, str):
-            standbys = [standbys]
+        # update standbys
+        standbys = pg_data.get("standbys")
+        standbys = standbys.split("\n") if standbys else []
+        standby_names = []
 
         for idx, standby in enumerate(standbys):
-            logger.info(standby)
-            # TODO check if pgconnstr_to_dict needs error checking
-            cfg["databases"][f"pgb_postgres_standby_{idx}"] = pgb.parse_kv_string_to_dict(standby)
+            standby_name = f"pgb_postgres_standby_{idx}"
+            standby_names.append(standby_name)
+            dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
 
-        # remove standby information if all postgresql replicas have been removed. Standalone
-        # should be mutually exclusive with standbys, so this shouldn't run if the above step does.
-        if pg_data.get("state") == "standalone":
-            for db in list(cfg["databases"].keys()):
-                if db[21:] == "pgb_postgres_standby_":
-                    del cfg["databases"][db]
+        # Remove old standby information
+        for db in list(dbs.keys()):
+            if db[:21] == "pgb_postgres_standby_" and db not in standby_names:
+                del dbs[db]
 
         self._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def _on_backend_db_admin_relation_ended(self, event):
-        """Handle relation-departed and relation-broken event."""
+    def _on_backend_db_admin_relation_departed(self, departed_event: RelationDepartedEvent):
+        """Handle relation-departed event."""
         dbchange = "backend database removed - updating config"
         self.unit.status = ActiveStatus(dbchange)
         logger.info(dbchange)
 
         cfg = self._read_pgb_config()
-        # Add data from relation into config
-        event_data = event.relation.data[event.app]
 
-        if event_data.get("master"):
-            del cfg["databases"]["master"]
+        if cfg["databases"].get("pg_master"):
+            del cfg["databases"]["pg_master"]
 
-        for standby in event_data.get("standbys", []):
-            standby_name = ConnectionString(standby).dbname
-            del cfg["databases"][f"{standby_name}_standby"]
+        # Get postgres leader unit from relation data through iteration. Using departed_event.unit
+        # appears to pick a unit at random, and relation data is not copied over to
+        # departed_event.app, so we do this instead.
+        event_data = {}
+        for key, value in departed_event.relation.data.items():
+            if isinstance(key, Unit) and key is not self.unit:
+                event_data = value
+                break
+
+        standbys = event_data.get("standbys")
+        standbys = standbys.split("\n") if standbys else []
+
+        for idx, _ in enumerate(standbys):
+            del cfg["databases"][f"pgb_postgres_standby_{idx}"]
 
         self._render_service_configs(cfg, reload_pgbouncer=True)
 
