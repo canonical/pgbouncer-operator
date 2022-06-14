@@ -9,23 +9,17 @@ import os
 import pwd
 import shutil
 import subprocess
-from imp import reload
+from copy import deepcopy
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import (
-    CharmBase,
-    RelationBrokenEvent,
-    RelationChangedEvent,
-    RelationCreatedEvent,
-    RelationDepartedEvent,
-    RelationJoinedEvent,
-)
+from ops.charm import CharmBase, RelationChangedEvent
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from pgconnstr import ConnectionString
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +30,7 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
 
-PG_RELATION = "postgres"
-DB_KEY = "databases"
+BACKEND_DB_ADMIN_RELATION = "backend-db-admin"
 
 
 class PgBouncerCharm(CharmBase):
@@ -54,19 +47,16 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.framework.observe(
-            self.on[PG_RELATION].relation_created, self._on_postgres_relation_created
+            self.on[BACKEND_DB_ADMIN_RELATION].relation_changed,
+            self._on_backend_db_admin_relation_changed,
         )
         self.framework.observe(
-            self.on[PG_RELATION].relation_joined, self._on_postgres_relation_joined
+            self.on[BACKEND_DB_ADMIN_RELATION].relation_departed,
+            self._on_backend_db_admin_relation_ended,
         )
         self.framework.observe(
-            self.on[PG_RELATION].relation_changed, self._on_postgres_relation_changed
-        )
-        self.framework.observe(
-            self.on[PG_RELATION].relation_departed, self._on_postgres_relation_departed
-        )
-        self.framework.observe(
-            self.on[PG_RELATION].relation_broken, self._on_postgres_relation_broken
+            self.on[BACKEND_DB_ADMIN_RELATION].relation_broken,
+            self._on_backend_db_admin_relation_ended,
         )
 
         self._cores = os.cpu_count()
@@ -123,6 +113,7 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(f"{service}")
 
+            # TODO update to wait for relation instead of entering active status
             self.unit.status = ActiveStatus("pgbouncer started")
         except systemd.SystemdError as e:
             logger.error(e)
@@ -140,6 +131,10 @@ class PgBouncerCharm(CharmBase):
                         f"{service} is not running - try restarting using `juju actions pgbouncer restart`"
                     )
                     return
+
+            # TODO Check backend-db-admin relation is up - if not, set blockedstatus
+
+            # All is well, set ActiveStatus
             self.unit.status = ActiveStatus()
         except systemd.SystemdError as e:
             logger.error(e)
@@ -158,65 +153,110 @@ class PgBouncerCharm(CharmBase):
             self._cores,
         )
 
-        self._render_pgb_config(config, reload_pgbouncer=True)
+        self._render_service_configs(config, reload_pgbouncer=True)
 
     # ===================================
     #  Postgres relation hooks & helpers
     # ===================================
 
-    def _on_postgres_relation_created(self, create_event: RelationCreatedEvent):
-        """Handle relation-created event"""
-        self._extract_dbs_from_relation(create_event)
+    """
+    Some example relation data:
+    ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
+    ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ metadata  │        endpoint │ 'backend-db-admin'    │ 'db-admin'                            │
+    │           │          leader │ True                  │ True                                  │
+    ├───────────┼─────────────────┼───────────────────────┼───────────────────────────────────────┤
+    │ unit data │ allowed-subnets │                       │ 10.101.233.152/32                     │
+    │           │   allowed-units │                       │ pgbouncer-operator/23                 │
+    │           │        database │                       │ pgbouncer-operator                    │
+    │           │            host │                       │ 10.101.233.241                        │
+    │           │          master │                       │ dbname=pgbouncer-operator             │
+    │           │                 │                       │ host=10.101.233.241                   │
+    │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
+    │           │                 │                       │ cP2qjnwdj port=5432                   │
+    │           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+    │           │        password │                       │ zWRHxMgqZBPcLPh5VXCfGyjJj4c7cP2qjnwdj │
+    │           │            port │                       │ 5432                                  │
+    │           │        standbys │                       │ dbname=pgbouncer-operator             │
+    │           │                 │                       │ host=10.101.233.169                   │
+    │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
+    │           │                 │                       │ cP2qjnwdj port=5432                   │
+    │           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+    │           │           state │                       │ master                                │
+    │           │            user │                       │ jujuadmin_pgbouncer-operator          │
+    │           │         version │                       │ 12                                    │
+    └───────────┴─────────────────┴───────────────────────┴───────────────────────────────────────┘
 
-    def _on_postgres_relation_joined(self, join_event: RelationJoinedEvent):
-        """Handle relation-joined event"""
-        self._extract_dbs_from_relation(join_event)
+    ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
+    ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ metadata  │        endpoint │ 'backend-db-admin'    │ 'db-admin'                            │
+    │           │          leader │ True                  │ True                                  │
+    ├───────────┼─────────────────┼───────────────────────┼───────────────────────────────────────┤
+    │ unit data │ allowed-subnets │                       │ 10.101.233.152/32                     │
+    │           │   allowed-units │                       │ pgbouncer-operator/23                 │
+    │           │        database │                       │ pgbouncer-operator                    │
+    │           │            host │                       │ 10.101.233.241                        │
+    │           │          master │                       │ dbname=pgbouncer-operator             │
+    │           │                 │                       │ host=10.101.233.241                   │
+    │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
+    │           │                 │                       │ cP2qjnwdj port=5432                   │
+    │           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+    │           │        password │                       │ zWRHxMgqZBPcLPh5VXCfGyjJj4c7cP2qjnwdj │
+    │           │            port │                       │ 5432                                  │
+    │           │           state │                       │ standalone                            │
+    │           │            user │                       │ jujuadmin_pgbouncer-operator          │
+    │           │         version │                       │ 12                                    │
+    └───────────┴─────────────────┴───────────────────────┴───────────────────────────────────────┘
 
-    def _on_postgres_relation_changed(self, change_event: RelationChangedEvent):
-        """Handle relation-changed event"""
-        self._extract_dbs_from_relation(change_event)
+    """
 
-    def _on_postgres_relation_departed(self, depart_event: RelationDepartedEvent):
-        """Handle relation-departed event"""
-        # TODO block incoming transmissions
-        # TODO ensure any final transmissions are sent
-        pass
-
-    def _on_postgres_relation_broken(self, broken_event: RelationBrokenEvent):
-        """Handle relation-broken event"""
-        # TODO block incoming transmissions
-        # TODO ensure any final transmissions are sent
-        pass
-
-    def _extract_dbs_from_relation(self, event):
-        """Extract database information from relation databag and write it to config"""
+    def _on_backend_db_admin_relation_changed(self, change_event: RelationChangedEvent):
+        """Handle relation-changed event."""
         cfg = self._read_pgb_config()
-        dbs = event.relation.data[event.app][DB_KEY]
-        cfg.add_dbs_to_config(dbs)
-        # extract db information from relation databag
-        # write it into config in an intelligent way
-        self._render_pgb_config(cfg, reload_pgbouncer=True)
+        # Add data from relation into config
+        event_data = change_event.relation.data
+        pg_data = event_data[change_event.unit]
 
-    # ==========================
-    #  Generic Helper Functions
-    # ==========================
+        dbchange = "database change detected - updating config"
+        self.unit.status = ActiveStatus(dbchange)
+        logger.info(dbchange)
 
-    def _install_apt_packages(self, packages: List[str]):
-        """Simple wrapper around 'apt-get install -y."""
-        try:
-            logger.debug("updating apt cache")
-            apt.update()
-        except subprocess.CalledProcessError as e:
-            logger.exception("failed to update apt cache, CalledProcessError", exc_info=e)
-            self.unit.status = BlockedStatus("failed to update apt cache")
-            return
+        if pg_data.get("master"):
+            cfg["databases"]["master"] = pgb.pgconnstr_to_dict(pg_data.get("master"))
 
-        try:
-            logger.debug(f"installing apt packages: {', '.join(packages)}")
-            apt.add_package(packages)
-        except apt.PackageNotFoundError as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("failed to install packages")
+        for standby in pg_data.get("standbys", []):
+            standby_name = ConnectionString(standby).dbname
+            # TODO check if pgconnstr_to_dict needs error checking
+            cfg["databases"][f"{standby_name}_standby"] = pgb.pgconnstr_to_dict(standby)
+
+        # remove standby information if all postgresql replicas have been removed
+        if pg_data.get("state") == "standalone":
+            for db in list(cfg["databases"].keys()):
+                if db[-8:] == "_standby":
+                    del cfg["databases"][db]
+
+        self._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _on_backend_db_admin_relation_ended(self, event):
+        """Handle relation-departed and relation-broken event."""
+        dbchange = "backend database removed - updating config"
+        self.unit.status = ActiveStatus(dbchange)
+        logger.info(dbchange)
+
+        cfg = self._read_pgb_config()
+        # Add data from relation into config
+        event_data = event.relation.data[event.app]
+
+        if event_data.get("master"):
+            del cfg["databases"]["master"]
+
+        for standby in event_data.get("standbys", []):
+            standby_name = ConnectionString(standby).dbname
+            del cfg["databases"][f"{standby_name}_standby"]
+
+        self._render_service_configs(cfg, reload_pgbouncer=True)
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -232,16 +272,20 @@ class PgBouncerCharm(CharmBase):
             config = pgb.PgbConfig(file.read())
         return config
 
-    def _render_service_configs(self, primary_config: pgb.PgbConfig, reload_pgbouncer=False):
+    def _render_service_configs(self, config: pgb.PgbConfig, reload_pgbouncer=False):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
         instance of pgbouncer, implemented as a templated systemd service.
 
         TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
-        TODO https://warthogs.atlassian.net/browse/DPE-218
+             https://warthogs.atlassian.net/browse/DPE-218. This is available in Ubuntu 22.04, but
+             not 20.04.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        # create a copy of the config so the original reference is unchanged.
+        primary_config = deepcopy(config)
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.

@@ -96,7 +96,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
 
 async def test_legacy_postgres_relation(ops_test: OpsTest):
-    """Test that the pgbouncer and postgres charms can relate to one another"""
+    """Test that the pgbouncer and postgres charms can relate to one another."""
     pg_charm_name = "postgresql-operator"
     # TODO replace this with the existing legacy postgres charm, or a stub charm
     postgres_charm = await ops_test.build_charm(".")

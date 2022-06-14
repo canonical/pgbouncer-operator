@@ -1,1 +1,3 @@
 ops >= 1.4.0
+#ops-lib-pgsql
+pgconnstr >= 1.0.1
