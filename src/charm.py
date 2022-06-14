@@ -224,17 +224,25 @@ class PgBouncerCharm(CharmBase):
         logger.info(dbchange)
 
         if pg_data.get("master"):
-            cfg["databases"]["master"] = pgb.pgconnstr_to_dict(pg_data.get("master"))
+            cfg["databases"]["master"] = pgb.parse_kv_string_to_dict(pg_data.get("master"))
 
-        for standby in pg_data.get("standbys", []):
-            standby_name = ConnectionString(standby).dbname
+        standbys = pg_data.get("standbys", [])
+        logger.info(standbys)
+        logger.info(type(standbys))
+        # if standbys only contains 1 value, it'll return a string, so convert it to a list.
+        if isinstance(standbys, str):
+            standbys = [standbys]
+
+        for idx, standby in enumerate(standbys):
+            logger.info(standby)
             # TODO check if pgconnstr_to_dict needs error checking
-            cfg["databases"][f"{standby_name}_standby"] = pgb.pgconnstr_to_dict(standby)
+            cfg["databases"][f"pgb_postgres_standby_{idx}"] = pgb.parse_kv_string_to_dict(standby)
 
-        # remove standby information if all postgresql replicas have been removed
+        # remove standby information if all postgresql replicas have been removed. Standalone
+        # should be mutually exclusive with standbys, so this shouldn't run if the above step does.
         if pg_data.get("state") == "standalone":
             for db in list(cfg["databases"].keys()):
-                if db[-8:] == "_standby":
+                if db[21:] == "pgb_postgres_standby_":
                     del cfg["databases"][db]
 
         self._render_service_configs(cfg, reload_pgbouncer=True)

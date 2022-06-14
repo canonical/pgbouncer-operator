@@ -154,13 +154,13 @@ class PgbConfig(MutableMapping):
 
         try:
             for name, cfg_string in self[db].items():
-                self[db][name] = pgconnstr_to_dict(cfg_string)
+                self[db][name] = parse_kv_string_to_dict(cfg_string)
         except KeyError as err:
             raise PgbConfig.ConfigParsingError(source=str(err))
 
         try:
             for name, cfg_string in self[users].items():
-                self[users][name] = pgconnstr_to_dict(cfg_string)
+                self[users][name] = parse_kv_string_to_dict(cfg_string)
         except KeyError:
             # [users] section is not compulsory, so continue.
             pass
@@ -185,7 +185,7 @@ class PgbConfig(MutableMapping):
         for section, subdict in output_dict.items():
             for option, config_value in subdict.items():
                 if isinstance(config_value, dict):
-                    output_dict[section][option] = dict_to_pgconnstr(config_value)
+                    output_dict[section][option] = parse_dict_to_kv_string(config_value)
                 elif isinstance(config_value, list):
                     output_dict[section][option] = ",".join(config_value)
 
@@ -316,7 +316,7 @@ class PgbConfig(MutableMapping):
         pass
 
 
-def pgconnstr_to_dict(string: str) -> Dict[str, str]:
+def parse_kv_string_to_dict(string: str) -> Dict[str, str]:
     """Parses space-separated key=value pairs into a python dict.
 
     TODO this could make use of pgconnstr, but that requires that this charm lib has a dependency.
@@ -334,7 +334,7 @@ def pgconnstr_to_dict(string: str) -> Dict[str, str]:
     return parsed_dict
 
 
-def dict_to_pgconnstr(dictionary: Dict[str, str]) -> str:
+def parse_dict_to_kv_string(dictionary: Dict[str, str]) -> str:
     """Helper function to encode a python dict into a pgbouncer-readable string.
 
     Args:

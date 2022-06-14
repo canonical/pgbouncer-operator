@@ -154,44 +154,6 @@ class TestCharm(unittest.TestCase):
 
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_backend_db_admin_relation_changed(self, _render, _read):
-        # set up big mock. An EventMock utility class would be cool.
-        mock_event = MagicMock()
-        mock_event.unit = "mock_unit"
-        mock_event.relation.data = {
-            "mock_unit": {
-                "master": "master = host=test port=4039 dbname=testdatabase",
-                "standbys": "test1 = host=test1 port=4039 dbname=testdatabase",
-                "state": "master",
-            },
-        }
-
-        self.harness.charm._on_backend_db_admin_relation_changed(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
-        # TODO assert existing config contains standby info
-
-        mock_event.relation.data = {
-            "mock_unit": {
-                "master": "master = host=test port=4039 dbname=testdatabase",
-                "state": "standalone",
-            },
-        }
-
-        self.harness.charm._on_backend_db_admin_relation_changed(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
-        # TODO assert existing config no longer contains standby info
-
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_backend_db_admin_relation_ended(self, _render, _read):
-        mock_event = MagicMock()
-        self.harness.charm._on_backend_db_admin_relation_ended(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
