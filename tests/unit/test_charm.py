@@ -154,7 +154,6 @@ class TestCharm(unittest.TestCase):
 
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
-
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
     def test_install_apt_packages(self, _update, _add_package):

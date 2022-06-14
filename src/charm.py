@@ -18,8 +18,13 @@ from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, Unit, WaitingStatus
-from pgconnstr import ConnectionString
+from ops.model import (
+    ActiveStatus,
+    BlockedStatus,
+    MaintenanceStatus,
+    Unit,
+    WaitingStatus,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -5,6 +5,8 @@
 
 import logging
 
+from charms.pgbouncer_operator.v0 import pgb
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +22,16 @@ async def cat_from(unit, path: str) -> str:
     """
     action = await unit.run(f"cat {path}")
     return action.results.get("Stdout", None)
+
+
+async def get_cfg(unit) -> pgb.PgbConfig:
+    """Get primary config file from a unit.
+
+    Returns:
+        pgb.PgbConfig config object
+    """
+    cfg_str = await cat_from(unit, pgb.INI_PATH)
+    return pgb.PgbConfig(cfg_str)
 
 
 async def get_unit_cores(unit: str) -> int:
