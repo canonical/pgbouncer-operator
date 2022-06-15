@@ -28,11 +28,12 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
     # Build, deploy, and relate charms.
     pg = "postgresql"
     charm = await ops_test.build_charm(".")
-    await asyncio.join(ops_test.model.deploy(
+    await asyncio.gather(
+        ops_test.model.deploy(
             charm,
             application_name=APP_NAME,
         ),
-        ops_test.model.deploy(pg)
+        ops_test.model.deploy(pg),
     )
     # Pgbouncer enters a waiting state without backend postgres relation
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="waiting", timeout=1000)
@@ -43,10 +44,10 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     # When there's only one postgres unit, we're in "standalone" mode with no standby replicas.
-    assert "pg_master" in cfg["databases"].keys()
+    assert list(cfg["databases"].keys()) == ["pg_master"]
 
     await ops_test.model.applications[pg].add_units(count=2)
-    await asyncio.join(
+    await asyncio.gather(
         ops_test.model.wait_for_idle(
             apps=[pg], status="active", timeout=1000, wait_for_exact_units=3
         ),
@@ -56,12 +57,14 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
     )
     cfg = await helpers.get_cfg(unit)
     # Now there are three postgres units, we're in "standby" mode, with two standby replicas.
-    assert ["pg_master", "pgb_postgres_standby_0", "pgb_postgres_standby_1"] in cfg[
-        "databases"
-    ].keys()
+    assert list(cfg["databases"].keys()) == [
+        "pg_master",
+        "pgb_postgres_standby_0",
+        "pgb_postgres_standby_1",
+    ]
 
     await ops_test.model.applications[pg].scale(2)
-    await asyncio.join(
+    await asyncio.gather(
         ops_test.model.wait_for_idle(
             apps=[pg], status="active", timeout=1000, wait_for_exact_units=2
         ),
@@ -71,16 +74,14 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
     )
     cfg = await helpers.get_cfg(unit)
     # Now there are two postgres units, and the config reflects this.
-    assert ["pg_master", "pgb_postgres_standby_0"] in cfg["databases"].keys()
+    assert list(cfg["databases"].keys()) == ["pg_master", "pgb_postgres_standby_0"]
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
 
     await ops_test.model.applications[pg].scale(1)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, pg], status="active", timeout=1000
-    )
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
     cfg = await helpers.get_cfg(unit)
     # Now there is only one config, with no replicas, and the config reflects this.
-    assert "pg_master" in cfg["databases"].keys()
+    assert list(cfg["databases"].keys()) == ["pg_master"]
     assert "pgb_postgres_standby_0" not in cfg["databases"].keys()
 
     await ops_test.model.remove_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
