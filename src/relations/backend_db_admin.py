@@ -61,7 +61,7 @@ Some example relation data is below. The only parts of this we actually need are
 import logging
 
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import RelationChangedEvent, RelationDepartedEvent
+from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import Unit
 
@@ -79,7 +79,7 @@ class BackendDbAdminRequires(Object):
         - relation-departed
     """
 
-    def __init__(self, charm):
+    def __init__(self, charm: CharmBase):
         super().__init__(charm, RELATION_ID)
 
         self.framework.observe(charm.on[RELATION_ID].relation_changed, self._on_relation_changed)
@@ -131,9 +131,7 @@ class BackendDbAdminRequires(Object):
         logger.info("backend database removed - updating config")
 
         cfg = self.charm._read_pgb_config()
-
-        if cfg["databases"].get("pg_master"):
-            del cfg["databases"]["pg_master"]
+        cfg["databases"].pop("pg_master", None)
 
         # Get postgres leader unit from relation data through iteration. Using departed_event.unit
         # appears to pick a unit at random, and relation data is not copied over to
@@ -148,6 +146,6 @@ class BackendDbAdminRequires(Object):
         standbys = standbys.split("\n") if standbys else []
 
         for idx, _ in enumerate(standbys):
-            del cfg["databases"][f"{STANDBY_PREFIX}{idx}"]
+            cfg["databases"].pop(f"{STANDBY_PREFIX}{idx}", None)
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)

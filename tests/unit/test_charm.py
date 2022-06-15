@@ -133,7 +133,7 @@ class TestCharm(unittest.TestCase):
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
-         # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
+        # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
         _running.reset_mock()
         _running.return_value = True
         _has_relation.return_value = True

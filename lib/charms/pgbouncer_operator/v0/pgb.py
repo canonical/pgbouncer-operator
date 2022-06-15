@@ -82,7 +82,7 @@ class PgbConfig(MutableMapping):
         elif isinstance(config, dict):
             self.read_dict(config)
         elif isinstance(config, PgbConfig):
-            self.read_dict(deepcopy(config))
+            self.read_dict(config)
 
     def __delitem__(self, key: str):
         """Deletes item from internal mapping."""

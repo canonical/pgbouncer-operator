@@ -2,13 +2,20 @@
 # See LICENSE file for licensing details.
 
 import unittest
+from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+from ops.model import Unit
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from lib.charms.pgbouncer_operator.v0 import pgb
-from relations.backend_db_admin import BackendDbAdminRequires
+from relations.backend_db_admin import STANDBY_PREFIX
+
+TEST_UNIT = {
+    "master": "host=master port=1 dbname=testdatabase",
+    "standbys": "host=standby1 port=1 dbname=testdatabase",
+}
 
 
 class TestBackendDbAdmin(unittest.TestCase):
@@ -28,44 +35,41 @@ class TestBackendDbAdmin(unittest.TestCase):
         """
         mock_event = MagicMock()
         mock_event.unit = "mock_unit"
-        mock_event.relation.data = {
-            "mock_unit": {
-                "master": "host=test port=4039 dbname=testdatabase",
-                "standbys": "host=test1 port=4039 dbname=testdatabase",
-                "state": "master",
-            },
-        }
+        mock_event.relation.data = {"mock_unit": deepcopy(TEST_UNIT)}
 
         self.relation._on_relation_changed(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
-        # TODO assert existing config contains standby info
 
-        mock_event.relation.data = {
-            "mock_unit": {
-                "master": "host=test port=4039 dbname=testdatabase",
-                "state": "standalone",
-            },
-        }
+        # get rendered config from _render, and compare it to expected.
+        rendered_cfg = _render.call_args[0][0]
+        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
+        expected_cfg["databases"][f"{STANDBY_PREFIX}0"] = pgb.parse_kv_string_to_dict(
+            TEST_UNIT["standbys"]
+        )
+
+        self.assertEqual(expected_cfg.render(), rendered_cfg.render())
+
+        del mock_event.relation.data["mock_unit"]["standbys"]
 
         self.relation._on_relation_changed(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
-        # TODO assert existing config no longer contains standby info
 
-        assert False
+        rendered_cfg = _render.call_args[0][0]
+        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
+        self.assertEqual(expected_cfg.render(), rendered_cfg.render())
+        self.assertNotIn(f"{STANDBY_PREFIX}0", rendered_cfg.keys())
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_backend_db_admin_relation_ended(self, _render, _read):
+    def test_on__relation_departed(self, _render, _read):
         """This test exists to check the basics for how the config is expected to change.
 
         The integration tests for this relation are a more extensive test of this functionality.
         """
         mock_event = MagicMock()
-        self.relation._on_relation_changed(mock_event)
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        _render.assert_called_with(expected_cfg, reload_pgbouncer=True)
+        self.relation._on_relation_departed(mock_event)
 
-        # TODO
-        assert False
+        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        rendered_cfg = _render.call_args[0][0]
+        self.assertEqual(expected_cfg.render(), rendered_cfg.render())
+        self.assertNotIn(f"pg_master", rendered_cfg.keys())
