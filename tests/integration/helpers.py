@@ -9,6 +9,9 @@ from charms.pgbouncer_operator.v0 import pgb
 
 logger = logging.getLogger(__name__)
 
+PGB_DIR = pgb.PGB_DIR
+INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
+
 
 async def cat_from(unit, path: str) -> str:
     """Pull the content of a file from one unit.
@@ -30,7 +33,7 @@ async def get_cfg(unit) -> pgb.PgbConfig:
     Returns:
         pgb.PgbConfig config object
     """
-    cfg_str = await cat_from(unit, pgb.INI_PATH)
+    cfg_str = await cat_from(unit, INI_PATH)
     return pgb.PgbConfig(cfg_str)
 
 

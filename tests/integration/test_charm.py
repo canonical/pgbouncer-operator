@@ -39,9 +39,8 @@ async def test_build_and_deploy(ops_test: OpsTest):
         charm,
         application_name=APP_NAME,
     )
-    # pgbouncer start command has to be successful for status to be active, and it fails if config
-    # is invalid. However, this will be tested further once health monitoring is implemented.
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    # Pgbouncer enters a waiting status without a postgres backend database relation
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="waiting", timeout=1000)
 
 
 async def test_change_config(ops_test: OpsTest):
@@ -53,7 +52,7 @@ async def test_change_config(ops_test: OpsTest):
             "max_db_connections": "44",
         }
     )
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="waiting", timeout=1000)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await helpers.get_unit_cores(unit)
@@ -84,63 +83,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="waiting", timeout=300)
 
     # verify all processes start again
     assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
-
-
-# ===================================
-#  Pgbouncer-postgres relation tests
-# ===================================
-
-
-async def test_backend_db_admin_relation_slowtest(ops_test: OpsTest):
-    """Test that the pgbouncer and postgres charms can relate to one another.
-
-    This test is marked "slowtest", meaning it won't run when you run "tox -e fast-integration".
-    This is because it's very slow.
-    """
-    pg = "postgresql"
-    await ops_test.model.deploy(pg)
-    await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
-
-    unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
-    # When there's only one postgres unit, we're in "standalone" mode with no standby replicas.
-    assert "pg_master" in cfg["databases"].keys()
-
-    await ops_test.model.applications[pg].add_units(count=2)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, pg], status="active", timeout=1000, wait_for_exact_units=3
-    )
-    cfg = await helpers.get_cfg(unit)
-    # Now there are three postgres units, we're in "standby" mode, with two standby replicas.
-    assert ["pg_master", "pgb_postgres_standby_0", "pgb_postgres_standby_1"] in cfg[
-        "databases"
-    ].keys()
-
-    await ops_test.model.applications[pg].scale(2)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, pg], status="active", timeout=1000, wait_for_exact_units=2
-    )
-    cfg = await helpers.get_cfg(unit)
-    # Now there are two postgres units, and the config reflects this.
-    assert ["pg_master", "pgb_postgres_standby_0"] in cfg["databases"].keys()
-    assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
-
-    await ops_test.model.applications[pg].scale(1)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, pg], status="active", timeout=1000, wait_for_exact_units=1
-    )
-    cfg = await helpers.get_cfg(unit)
-    # Now there is only one config, with no replicas, and the config reflects this.
-    assert "pg_master" in cfg["databases"].keys()
-    assert "pgb_postgres_standby_0" not in cfg["databases"].keys()
-
-    await ops_test.model.remove_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
-    cfg = await helpers.get_cfg(unit)
-    # No gods, no pg_masters! assert pgb and pg are completely disconnected.
-    assert "pg_master" not in cfg["databases"].keys()
