@@ -50,6 +50,14 @@ async def test_create_backend_db_admin_relation_slowtest_current(ops_test: OpsTe
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
     # Test pgbouncer database exists on postgres charm
+    # This section currently doesn't work, because postgresql has security rules that block access
+    # from anywhere that isn't the pgbouncer charm. This is great, except that I can't access
+    # anything for testing.
+
+    # TODO test with the following command:
+    # psql --host=10.101.233.51 --port=6432 --username=jujuadmin_pgbouncer-operator --password --dbname=pgbouncer-operator
+
+
     # connection_string = pgb.parse_dict_to_kv_string(cfg['databases']['pg_master'])
     # with psycopg2.connect(
     #     f"{connection_string} connect_timeout=1"
