@@ -63,7 +63,7 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
         "pgb_postgres_standby_1",
     ]
 
-    await ops_test.model.applications[pg].destroy_unit("postgresql/2")
+    await ops_test.model.destroy_unit("postgresql/2")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
             apps=[pg], status="active", timeout=1000, wait_for_exact_units=2
@@ -77,7 +77,7 @@ async def test_backend_db_admin_relation_slowtest_current(ops_test: OpsTest):
     assert list(cfg["databases"].keys()) == ["pg_master", "pgb_postgres_standby_0"]
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
 
-    await ops_test.model.applications[pg].destroy_unit("postgresql/1")
+    await ops_test.model.destroy_unit("postgresql/1")
     await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
     cfg = await helpers.get_cfg(unit)
     # Now there is only one config, with no replicas, and the config reflects this.
