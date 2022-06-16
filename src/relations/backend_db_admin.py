@@ -138,7 +138,7 @@ class BackendDbAdminRequires(Object):
         # departed_event.app, so we do this instead.
         event_data = {}
         for key, value in departed_event.relation.data.items():
-            if isinstance(key, Unit) and key is not self.unit:
+            if isinstance(key, Unit) and key is not self.charm.unit:
                 event_data = value
                 break
 
