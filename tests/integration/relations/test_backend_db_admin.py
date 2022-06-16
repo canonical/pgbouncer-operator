@@ -50,12 +50,9 @@ async def test_create_backend_db_admin_relation_slowtest_current(ops_test: OpsTe
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
     # Test pgbouncer database exists on postgres charm
-    host = await helpers.get_unit_address(ops_test, pg, f"{APP_NAME}/0")
-    logger.info("connecting to the database host: %s", host)
-    password = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])["password"]
+    connection_string = pgb.parse_dict_to_kv_string(cfg['databases']['pg_master'])
     with psycopg2.connect(
-        # TODO could replace most of this string (apart from connect_timeout) with cfg pg_master
-        f"dbname='pgbouncer-operator' user='jujuadmin_pgbouncer-operator' host='{host}' password='{password}' connect_timeout=1"
+        f"{connection_string} connect_timeout=1"
     ) as connection, connection.cursor() as cursor:
         assert connection.status == psycopg2.extensions.STATUS_READY
 
@@ -64,13 +61,15 @@ async def test_create_backend_db_admin_relation_slowtest_current(ops_test: OpsTe
         # and its value, filtering the retrieved data to return only the settings
         # that were set by Patroni.
         cursor.execute(
-            """SELECT datname FROM pg_catalog.pg_database WHERE datname='pgbouncer-operator'"""
+            """SELECT datname
+            FROM pg_catalog.pg_database
+            WHERE datname='pgbouncer-operator'"""
         )
         records = cursor.fetchall()
         assert "pgbouncer-operator" in records
 
 
-async def test_backend_db_admin_relation_scaling_slowtest_current(ops_test: OpsTest):
+async def test_backend_db_admin_relation_scaling_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer config accurately reflects postgres replication changes.
 
     Requires existing deployed pgbouncer and legacy postgres charms, connected by a
