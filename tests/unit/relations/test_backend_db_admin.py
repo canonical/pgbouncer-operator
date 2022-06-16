@@ -5,7 +5,6 @@ import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
-from ops.model import Unit
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
@@ -72,4 +71,4 @@ class TestBackendDbAdmin(unittest.TestCase):
         expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         rendered_cfg = _render.call_args[0][0]
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
-        self.assertNotIn(f"pg_master", rendered_cfg.keys())
+        self.assertNotIn("pg_master", rendered_cfg.keys())
