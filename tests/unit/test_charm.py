@@ -81,16 +81,17 @@ class TestCharm(unittest.TestCase):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
         self.harness.charm.on.start.emit()
-        _start.assert_called()
+        # Charm should fail out after calling _start once
+        _start.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
-        # Testing charm starts the correct amount of pgbouncer instances but enters WaitingStatus
+        # Testing charm starts the correct amount of pgbouncer instances but enters BlockedStatus
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
         self.harness.charm.on.start.emit()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
+        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
         # Testing charm starts the correct amount of pgbouncer instances and enters activestatus if
         # everything's working fine.
@@ -124,14 +125,17 @@ class TestCharm(unittest.TestCase):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
         self.harness.charm.on.update_status.emit()
+        # Verify we immediately block once we know we have services that aren't running.
+        _running.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
-        # If all pgbouncer services are running, verify we wait for the backend relation.
+        # If all pgbouncer services are running but we have no backend relation, verify we block &
+        # wait for the backend relation.
         _running.return_value = True
         self.harness.charm.on.update_status.emit()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
+        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
         # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
         _running.reset_mock()

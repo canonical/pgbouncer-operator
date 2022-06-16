@@ -106,7 +106,7 @@ class PgBouncerCharm(CharmBase):
                 self.unit.status = ActiveStatus("pgbouncer started")
             else:
                 # Wait for backend relation relation if it doesn't exist
-                self.unit.status = WaitingStatus("waiting for backend database relation")
+                self.unit.status = BlockedStatus("waiting for backend database relation")
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
@@ -128,7 +128,9 @@ class PgBouncerCharm(CharmBase):
                 # All is well, set ActiveStatus
                 self.unit.status = ActiveStatus()
             else:
-                self.unit.status = WaitingStatus("waiting for backend database relation")
+                # If we don't have any backend, this charm doesn't serve a purpose, and therefore
+                # should be related to one or removed.
+                self.unit.status = BlockedStatus("waiting for backend database relation")
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to get pgbouncer status")

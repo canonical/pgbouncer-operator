@@ -36,7 +36,7 @@ async def test_create_backend_db_admin_relation_slowtest(ops_test: OpsTest):
         ops_test.model.deploy(pg),
     )
     # Pgbouncer enters a waiting state without backend postgres relation
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="waiting", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
     await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
     # Pgbouncer enters a waiting status without a postgres backend database relation
     await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
@@ -94,7 +94,9 @@ async def test_backend_db_admin_relation_scaling_slowtest(ops_test: OpsTest):
     assert "pgb_postgres_standby_0" not in cfg["databases"].keys()
 
     # Remove relation but keep pg application because we're going to need it for future tests.
-    await ops_test.model.remove_relation(f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin")
+    await ops_test.model.applications[pg].remove_relation(
+        f"{APP_NAME}:backend-db-admin", f"{pg}:db-admin"
+    )
     await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
     cfg = await helpers.get_cfg(unit)
     # assert pgb and pg are completely disconnected.

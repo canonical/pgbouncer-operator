@@ -6,7 +6,9 @@
 This relation uses the pgsql interface.
 
 Some example relation data is below. The only parts of this we actually need are the "master" and
-"standbys" fields.
+"standbys" fields. All values are examples taken from a test deployment, and are not definite.
+
+Example with 2 postgresql instances:
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -33,7 +35,10 @@ Some example relation data is below. The only parts of this we actually need are
 │           │            user │                       │ jujuadmin_pgbouncer-operator          │
 │           │         version │                       │ 12                                    │
 └───────────┴─────────────────┴───────────────────────┴───────────────────────────────────────┘
+If there were multiple standbys, they would be separated by a newline character.
 
+
+Example with 1 postgresql instance:
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -93,24 +98,27 @@ class BackendDbAdminRequires(Object):
         Takes master and standby information from the postgresql leader unit databag and copies it
         into the pgbouncer.ini config, removing redundant standby information along the way.
         """
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
-        # Add data from relation into config
+        logger.info("database change detected - updating config")
+        logger.info(
+            "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
+        )
+
         event_data = change_event.relation.data
         pg_data = event_data[change_event.unit]
+
+        cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
+
         # Test that relation data contains everything we need
-
-        logger.info("database change detected - updating config")
-
         if pg_data.get("master"):
             dbs["pg_master"] = pgb.parse_kv_string_to_dict(pg_data.get("master"))
 
         # update standbys
-        standbys = pg_data.get("standbys")
-        standbys = standbys.split("\n") if standbys else []
+        standbys_str = pg_data.get("standbys")
+        standby_data = standbys_str.split("\n") if standbys_str else []
         standby_names = []
 
-        for idx, standby in enumerate(standbys):
+        for idx, standby in enumerate(standby_data):
             standby_name = f"{STANDBY_PREFIX}{idx}"
             standby_names.append(standby_name)
             dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
@@ -129,6 +137,9 @@ class BackendDbAdminRequires(Object):
         is removed.
         """
         logger.info("backend database removed - updating config")
+        logger.info(
+            "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
+        )
 
         cfg = self.charm._read_pgb_config()
         cfg["databases"].pop("pg_master", None)
