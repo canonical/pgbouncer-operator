@@ -4,9 +4,9 @@
 """Helper functions for pgbouncer integration tests."""
 
 import logging
-from pytest_operator.plugin import OpsTest
 
 from charms.pgbouncer_operator.v0 import pgb
+from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +40,12 @@ async def get_cfg(unit) -> pgb.PgbConfig:
 
 async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
     """Get unit IP address.
+
     Args:
         ops_test: The ops test framework instance
         application_name: The name of the application
         unit_name: The name of the unit
+
     Returns:
         IP address of the unit
     """

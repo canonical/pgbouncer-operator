@@ -1,14 +1,14 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import psycopg2
 import asyncio
 import logging
 from pathlib import Path
 
-from charms.pgbouncer_operator.v0 import pgb
-
+import psycopg2
+import pytest
 import yaml
+from charms.pgbouncer_operator.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
 from tests.integration import helpers
@@ -49,12 +49,12 @@ async def test_create_backend_db_admin_relation_slowtest_current(ops_test: OpsTe
     # When there's only one postgres unit, we're in "standalone" mode with no standby replicas.
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
-    #Test pgbouncer database exists on postgres charm
+    # Test pgbouncer database exists on postgres charm
     host = await helpers.get_unit_address(ops_test, pg, f"{APP_NAME}/0")
     logger.info("connecting to the database host: %s", host)
     password = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])["password"]
     with psycopg2.connect(
-        #TODO could replace most of this string (apart from connect_timeout) with cfg pg_master val.
+        # TODO could replace most of this string (apart from connect_timeout) with cfg pg_master
         f"dbname='pgbouncer-operator' user='jujuadmin_pgbouncer-operator' host='{host}' password='{password}' connect_timeout=1"
     ) as connection, connection.cursor() as cursor:
         assert connection.status == psycopg2.extensions.STATUS_READY
