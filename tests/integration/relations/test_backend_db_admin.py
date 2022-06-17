@@ -18,7 +18,6 @@ APP_NAME = METADATA["name"]
 
 
 @pytest.mark.abort_on_fail
-# TODO assert ordering of integration tests, specifically in deployment
 async def test_create_backend_db_admin_relation_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another.
 
@@ -99,5 +98,5 @@ async def test_backend_db_admin_relation_scaling_slowtest(ops_test: OpsTest):
     )
     await ops_test.model.wait_for_idle(apps=[APP_NAME, pg], status="active", timeout=1000)
     cfg = await helpers.get_cfg(unit)
-    # assert pgb and pg are completely disconnected.
+    # assert pgbouncer and postgres are completely disconnected.
     assert "pg_master" not in cfg["databases"].keys()

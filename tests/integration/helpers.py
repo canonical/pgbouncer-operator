@@ -10,8 +10,7 @@ from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
-PGB_DIR = pgb.PGB_DIR
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
+INI_PATH = f"{pgb.PGB_DIR}/pgbouncer.ini"
 
 
 async def cat_from(unit, path: str) -> str:
@@ -32,7 +31,7 @@ async def get_cfg(unit) -> pgb.PgbConfig:
     """Get primary config file from a unit.
 
     Returns:
-        pgb.PgbConfig config object
+        pgb.PgbConfig: primary config object from the given unit
     """
     cfg_str = await cat_from(unit, INI_PATH)
     return pgb.PgbConfig(cfg_str)
