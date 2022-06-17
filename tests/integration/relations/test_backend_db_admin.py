@@ -45,6 +45,32 @@ async def test_create_backend_db_admin_legacy_relation_slowtest(ops_test: OpsTes
     # When there's only one postgres unit, we're in "standalone" mode with no standby replicas.
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
+    # Test pgbouncer database exists on postgres charm
+    # This section currently doesn't work, because postgresql has security rules that block access
+    # from anywhere that isn't the pgbouncer charm. This is great, except that I can't access
+    # anything for testing.
+
+    # TODO test with the following command:
+    # psql --host=10.101.233.51 --port=6432 --username=jujuadmin_pgbouncer-operator --password --dbname=pgbouncer-operator
+
+
+    # connection_string = pgb.parse_dict_to_kv_string(cfg['databases']['pg_master'])
+    # with psycopg2.connect(
+    #     f"{connection_string} connect_timeout=1"
+    # ) as connection, connection.cursor() as cursor:
+    #     assert connection.status == psycopg2.extensions.STATUS_READY
+
+    #     # Retrieve settings from PostgreSQL pg_settings table.
+    #     # Here the SQL query gets a key-value pair composed by the name of the setting
+    #     # and its value, filtering the retrieved data to return only the settings
+    #     # that were set by Patroni.
+    #     cursor.execute(
+    #         """SELECT datname
+    #         FROM pg_catalog.pg_database
+    #         WHERE datname='pgbouncer-operator'"""
+    #     )
+    #     records = cursor.fetchall()
+    #     assert "pgbouncer-operator" in records
 
 async def test_backend_db_admin_legacy_relation_scaling_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer config accurately reflects postgres replication changes.
