@@ -18,7 +18,7 @@ APP_NAME = METADATA["name"]
 
 
 @pytest.mark.abort_on_fail
-async def test_create_backend_db_admin_relation_slowtest(ops_test: OpsTest):
+async def test_create_backend_db_admin_legacy_relation_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another.
 
     This test is marked "slowtest", meaning it won't run when you run "tox -e fast-integration".
@@ -46,7 +46,7 @@ async def test_create_backend_db_admin_relation_slowtest(ops_test: OpsTest):
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
 
-async def test_backend_db_admin_relation_scaling_slowtest(ops_test: OpsTest):
+async def test_backend_db_admin_legacy_relation_scaling_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer config accurately reflects postgres replication changes.
 
     Requires existing deployed pgbouncer and legacy postgres charms, connected by a
