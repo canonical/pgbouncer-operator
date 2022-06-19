@@ -60,7 +60,7 @@ class TestBackendDbAdmin(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on__relation_departed(self, _render, _read):
+    def test_on_relation_departed(self, _render, _read):
         """This test exists to check the basics for how the config is expected to change.
 
         The integration tests for this relation are a more extensive test of this functionality.

@@ -48,6 +48,7 @@ class PgBouncerCharm(CharmBase):
 
         self.legacy_backend_relation = BackendDbAdminRequires(self)
 
+
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
         self.pgb_services = [f"{PGB}@{service_id}" for service_id in self.service_ids]
@@ -76,12 +77,13 @@ class PgBouncerCharm(CharmBase):
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib.
-        ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        self._render_service_configs(ini)
+        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        cfg["pgbouncer"]["listen_addr"] =
+        self._render_service_configs(cfg)
 
         # Initialise userlist, generating passwords for initial users. All config files use the
         # same userlist, so we only need one.
-        self._render_userlist(pgb.initialise_userlist_from_ini(ini))
+        self._render_userlist(pgb.initialise_userlist_from_ini(cfg))
 
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
