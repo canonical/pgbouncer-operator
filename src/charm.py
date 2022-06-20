@@ -19,6 +19,9 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
+from relations.peers import RELATION_ID as LEGACY_BACKEND_RELATION_ID
+from relations.peers import BackendDbAdminRequires
+
 logger = logging.getLogger(__name__)
 
 PGB = "pgbouncer"

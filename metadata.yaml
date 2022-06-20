@@ -19,3 +19,7 @@ maintainers:
 
 series:
   - focal
+
+peers:
+  pgbouncer-replicas:
+    interface: pgbouncer-replicas
