@@ -22,15 +22,14 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 
 from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
+from relations.db_admin import RELATION_ID as LEGACY_DB_ADMIN_RELATION_ID
+from relations.db_admin import DbAdminProvides
+from literals import PGB, PG_USER, PGB_DIR, INI_PATH, USERLIST_PATH
 
 logger = logging.getLogger(__name__)
 
-PGB = "pgbouncer"
-PG_USER = "postgres"
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
+PEER = "pgbouncer-replicas"
 
 
 class PgBouncerCharm(CharmBase):
@@ -47,7 +46,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.legacy_backend_relation = BackendDbAdminRequires(self)
-
+        self.legacy_db_admin_relation = DbAdminProvides(self)
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
@@ -112,6 +111,12 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
+
+    def _on_leader_elected(self, _) -> None:
+        """Handle the leader-elected event."""
+        data = self._peers.data[self.app]
+        cfg = self._read_pgb_config()
+        data.
 
     def _on_update_status(self, _) -> None:
         """Update Status hook.
@@ -252,14 +257,6 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
-    def _has_backend_relation(self) -> bool:
-        """Returns whether or not this charm is related to a postgresql backend.
-
-        TODO this will be updated to include the new backend relation once it is written.
-        """
-        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
-        return legacy_backend_relation is not None
-
     # =================
     #  Charm Utilities
     # =================
@@ -297,6 +294,26 @@ class PgBouncerCharm(CharmBase):
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
+
+    def _has_backend_relation(self) -> bool:
+        """Returns whether or not this charm is related to a postgresql backend.
+
+        TODO this will be updated to include the new backend relation once it is written.
+        """
+        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        return legacy_backend_relation is not None
+
+    def is_leader(self) -> bool:
+        """Stub method for checking leadership in relation interfaces.
+
+        This function isn't implemented yet, since replication isn't implemented in this charm.
+        """
+        return True
+
+    @property
+    def _unit_ip(self) -> str:
+        """Current unit ip."""
+        return self.model.get_binding(PEER).network.bind_address
 
 
 if __name__ == "__main__":

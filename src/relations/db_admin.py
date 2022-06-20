@@ -64,6 +64,9 @@ class DbAdminProvides(Object):
         Takes information from the db-admin relation databag and copies it into the pgbouncer.ini
         config.
         """
+        if not self.charm.is_leader():
+            return
+
         logger.info("database change detected - updating config")
         logger.info(
             "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
@@ -76,53 +79,24 @@ class DbAdminProvides(Object):
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
-        # # Test that relation data contains everything we need
-        # if pg_data.get("master"):
-        #     dbs["pg_master"] = pgb.parse_kv_string_to_dict(pg_data.get("master"))
-
-        # # update standbys
-        # standbys_str = pg_data.get("standbys")
-        # standby_data = standbys_str.split("\n") if standbys_str else []
-        # standby_names = []
-
-        # for idx, standby in enumerate(standby_data):
-        #     standby_name = f"{STANDBY_PREFIX}{idx}"
-        #     standby_names.append(standby_name)
-        #     dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
-
-        # # Remove old standby information
-        # for db in list(dbs.keys()):
-        #     if db[:21] == STANDBY_PREFIX and db not in standby_names:
-        #         del dbs[db]
-
-        # self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-admin-relation-departed event.
 
         Removes relevant information from pgbouncer config when db-admin relation is removed.
         """
+        if not self.charm.is_leader():
+            return
+
         logger.info("db-admin relation removed - updating config")
         logger.info(
             "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
         cfg = self.charm._read_pgb_config()
-        cfg["databases"].pop("pg_master", None)
 
-        # # Get postgres leader unit from relation data through iteration. Using departed_event.unit
-        # # appears to pick a unit at random, and relation data is not copied over to
-        # # departed_event.app, so we do this instead.
-        # event_data = {}
-        # for key, value in departed_event.relation.data.items():
-        #     if isinstance(key, Unit) and key is not self.charm.unit:
-        #         event_data = value
-        #         break
+        # TODO remove relevant info from cfg. Should this delete database tables? Does this happen
+        #      automatically?
 
-        # standbys = event_data.get("standbys")
-        # standbys = standbys.split("\n") if standbys else []
-
-        # for idx, _ in enumerate(standbys):
-        #     cfg["databases"].pop(f"{STANDBY_PREFIX}{idx}", None)
-
-        # self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
