@@ -20,11 +20,11 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
+from literals import INI_PATH, PG_USER, PGB, PGB_DIR, USERLIST_PATH
 from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
-from relations.db_admin import RELATION_ID as LEGACY_DB_ADMIN_RELATION_ID
+from relations.db import DbProvides
 from relations.db_admin import DbAdminProvides
-from literals import PGB, PG_USER, PGB_DIR, INI_PATH, USERLIST_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,9 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.legacy_backend_relation = BackendDbAdminRequires(self)
+        self.legacy_db_relation = DbProvides(self)
         self.legacy_db_admin_relation = DbAdminProvides(self)
+        self.legacy_backend_relation = BackendDbAdminRequires(self)
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
@@ -75,9 +76,8 @@ class PgBouncerCharm(CharmBase):
             os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o777)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib.
+        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        cfg["pgbouncer"]["listen_addr"] =
         self._render_service_configs(cfg)
 
         # Initialise userlist, generating passwords for initial users. All config files use the
@@ -112,12 +112,6 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
-    def _on_leader_elected(self, _) -> None:
-        """Handle the leader-elected event."""
-        data = self._peers.data[self.app]
-        cfg = self._read_pgb_config()
-        data.
-
     def _on_update_status(self, _) -> None:
         """Update Status hook.
 
@@ -147,15 +141,17 @@ class PgBouncerCharm(CharmBase):
 
         Reads config values and parses them to pgbouncer config, restarting if necessary.
         """
-        config = self._read_pgb_config()
-        config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
+        cfg = self._read_pgb_config()
+        cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
-        config.set_max_db_connection_derivatives(
+        cfg.set_max_db_connection_derivatives(
             self.config["max_db_connections"],
             self._cores,
         )
 
-        self._render_service_configs(config, reload_pgbouncer=True)
+        cfg["pgbouncer"]["listen_addr"] = self._unit_ip()
+
+        self._render_service_configs(cfg, reload_pgbouncer=True)
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -302,13 +298,6 @@ class PgBouncerCharm(CharmBase):
         """
         legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
         return legacy_backend_relation is not None
-
-    def is_leader(self) -> bool:
-        """Stub method for checking leadership in relation interfaces.
-
-        This function isn't implemented yet, since replication isn't implemented in this charm.
-        """
-        return True
 
     @property
     def _unit_ip(self) -> str:

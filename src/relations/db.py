@@ -1,46 +1,45 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Postgres db-admin relation hooks & helpers.
+"""Postgres db relation hooks & helpers.
 
-The db-admin relation effectively does the same thing as db, but the user that it adds is given
-administrative permissions. This relation uses the pgsql interface.
+This relation uses the pgsql interface.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
-┃ category  ┃          keys ┃ pgbouncer/23                                                                   ┃ psql/0 ┃
+┃ category  ┃          keys ┃ pgbouncer/25                                                                   ┃ psql/1 ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
-│ metadata  │      endpoint │ 'db-admin'                                                                     │ 'db'   │
+│ metadata  │      endpoint │ 'db'                                                                           │ 'db'   │
 │           │        leader │ True                                                                           │ True   │
 ├───────────┼───────────────┼────────────────────────────────────────────────────────────────────────────────┼────────┤
-│ unit data │ allowed-units │ psql/0                                                                         │        │
+│ unit data │ allowed-units │ psql/1                                                                         │        │
 │           │      database │ cli                                                                            │ cli    │
-│           │          host │ 10.101.233.178                                                                 │        │
-│           │        master │ dbname=cli host=10.101.233.178 password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K │        │
-│           │               │ port=6432 user=db_admin_80_psql                                                │        │
-│           │      password │ JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K                                         │        │
+│           │          host │ 10.101.233.10                                                                  │        │
+│           │        master │ dbname=cli host=10.101.233.10                                                  │        │
+│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs port=6432 user=db_85_psql    │        │
+│           │      password │ jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs                                       │        │
 │           │          port │ 6432                                                                           │        │
-│           │      standbys │ dbname=cli_standby host=10.101.233.178                                         │        │
-│           │               │ password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K port=6432                      │        │
-│           │               │ user=db_admin_80_psql                                                          │        │
+│           │      standbys │ dbname=cli_standby host=10.101.233.10                                          │        │
+│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs port=6432 user=db_85_psql    │        │
 │           │         state │ master                                                                         │        │
-│           │          user │ db_admin_80_psql                                                               │        │
+│           │          user │ db_85_psql                                                                     │        │
 │           │       version │ 12                                                                             │        │
 └───────────┴───────────────┴────────────────────────────────────────────────────────────────────────────────┴────────┘
 """
 
 import logging
 
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 
 logger = logging.getLogger(__name__)
 
-RELATION_ID = "db-admin"
+RELATION_ID = "db"
 
 
-class DbAdminProvides(Object):
-    """Defines functionality for the 'requires' side of the 'db-admin' relation.
+class DbProvides(Object):
+    """Defines functionality for the 'requires' side of the 'db' relation.
 
     Hook events observed:
         - relation-changed
@@ -56,46 +55,31 @@ class DbAdminProvides(Object):
         self.charm = charm
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
-        """Handle db-admin-relation-changed event.
+        """Handle db-relation-changed event.
 
-        Takes information from the db-admin relation databag and copies it into the pgbouncer.ini
-        config.
+            Takes information from the db-admin relation
+        def __init__(self, charm: CharmBase):databag and copies it into the pgbouncer.ini
+            config.
         """
         if not self.charm.is_leader():
             return
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
-        logger.warning(
-            "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
+        logger.info(
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
-
-        event_data = change_event.relation.data
-        logger.info(event_data)
 
         unit_relation_databag = change_event.relation.data[self.unit]
         application_relation_databag = change_event.relation.data[self.app]
-        logger.info(unit_relation_databag)
-        logger.info(application_relation_databag)
 
-        # Check if the application databag is already populated.
-        already = False
+        # Check whether relation already exists
+        relation_exists = False
         if application_relation_databag.get("user"):
-            already = True
+            relation_exists = True
 
-        hostname = self._get_hostname_from_unit(self.charm.unit.name.replace("/", "-"))
-        connection = connect_to_database(
-            "postgres", "postgres", hostname, self._get_postgres_password()
-        )
-
-        user = (
-            unit_relation_databag["user"]
-            if already
-            else f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
-        )
-        password = unit_relation_databag["password"] if already else self._new_password()
         database = (
             unit_relation_databag["database"]
-            if already
+            if relation_exists
             else change_event.relation.data[change_event.app].get("database")
         )
         if not database:
@@ -103,10 +87,24 @@ class DbAdminProvides(Object):
             change_event.defer()
             return
 
+        # TODO maybe del
+        hostname = self._get_hostname_from_unit(self.unit.name.replace("/", "-"))
+        connection = connect_to_database(
+            "postgres", "postgres", hostname, self._get_postgres_password()
+        )
+        logger.info(f"Connected to PostgreSQL: {connection}")
+
+        user = (
+            unit_relation_databag["user"]
+            if relation_exists
+            else f"relation_id_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+        )
+        password = unit_relation_databag["password"] if relation_exists else self._new_password()
+
         database = database.replace("-", "_")
 
-        if not already:
-            create_user(connection, user, password, admin=relation_name == OLD_DB_ADMIN_RELATION)
+        if not relation_exists:
+            create_user(connection, user, password, admin=relation_name == RELATION_ID)
             create_database(connection, database, user)
 
         connection.close()
@@ -160,16 +158,16 @@ class DbAdminProvides(Object):
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
-        """Handle db-admin-relation-departed event.
+        """Handle db-relation-departed event.
 
         Removes relevant information from pgbouncer config when db-admin relation is removed.
         """
         if not self.charm.is_leader():
             return
 
-        logger.info("db-admin relation removed - updating config")
+        logger.info("db relation removed - updating config")
         logger.info(
-            "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
         cfg = self.charm._read_pgb_config()

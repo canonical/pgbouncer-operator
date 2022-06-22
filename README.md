@@ -66,6 +66,7 @@ The following relations are legacy, and will be deprecated in a future release.
 - `db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
   - Relates
 - `backend-db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
+  - Without a backend relation, this charm will enter BlockedStatus - if there's no Postgres backend, this charm has no purpose.
   - Provides a relation to the corresponding [postgresql-operator charm](https://github.com/canonical/postgresql-operator), as well as all charms using this legacy relation.
   - This relation expects the following data from provider charms:
     - `master` field, for the primary postgresql unit.
