@@ -31,8 +31,14 @@ Some example relation data is below. All values are examples, generated in a run
 
 import logging
 
+from charms.postgresql.v0.postgresql_helpers import (
+    connect_to_database,
+    create_database,
+    create_user,
+)
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
+from pgconnstr import ConnectionString
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +98,8 @@ class DbAdminProvides(Object):
             if already
             else f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
         )
+        cfg["pgbouncer"]["admin_users"].append(user)
+
         password = unit_relation_databag["password"] if already else self._new_password()
         database = (
             unit_relation_databag["database"]
@@ -106,12 +114,11 @@ class DbAdminProvides(Object):
         database = database.replace("-", "_")
 
         if not already:
-            create_user(connection, user, password, admin=relation_name == OLD_DB_ADMIN_RELATION)
+            create_user(connection, user, password, admin=True)
             create_database(connection, database, user)
 
         connection.close()
 
-        members = self._patroni.cluster_members
         primary = str(
             ConnectionString(
                 host=f"{self._get_hostname_from_unit(self._patroni.get_primary())}",
@@ -151,8 +158,6 @@ class DbAdminProvides(Object):
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
-
-        self.charm.unit.status = ActiveStatus()
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]

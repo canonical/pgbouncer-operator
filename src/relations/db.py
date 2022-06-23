@@ -29,9 +29,14 @@ Some example relation data is below. All values are examples, generated in a run
 
 import logging
 
-from charms.pgbouncer_operator.v0 import pgb
+from charms.postgresql.v0.postgresql_helpers import (
+    connect_to_database,
+    create_database,
+    create_user,
+)
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
+from pgconnstr import ConnectionString
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +71,12 @@ class DbProvides(Object):
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
         logger.info(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release."
         )
 
         unit_relation_databag = change_event.relation.data[self.unit]
         application_relation_databag = change_event.relation.data[self.app]
+        cfg = self.charm._read_pgb_config()
 
         # Check whether relation already exists
         relation_exists = False
@@ -87,7 +93,6 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        # TODO maybe del
         hostname = self._get_hostname_from_unit(self.unit.name.replace("/", "-"))
         connection = connect_to_database(
             "postgres", "postgres", hostname, self._get_postgres_password()
@@ -104,7 +109,7 @@ class DbProvides(Object):
         database = database.replace("-", "_")
 
         if not relation_exists:
-            create_user(connection, user, password, admin=relation_name == RELATION_ID)
+            create_user(connection, user, password, admin=False)
             create_database(connection, database, user)
 
         connection.close()
@@ -138,8 +143,8 @@ class DbProvides(Object):
         )
 
         for databag in [application_relation_databag, unit_relation_databag]:
-            databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
-            databag["allowed-units"] = self.get_allowed_units(change_event.relation)
+            databag["allowed-subnets"] = self.charm.get_allowed_subnets(change_event.relation)
+            databag["allowed-units"] = self.charm.get_allowed_units(change_event.relation)
             databag["host"] = f"http://{hostname}"
             databag["master"] = primary
             databag["port"] = "5432"
@@ -149,11 +154,6 @@ class DbProvides(Object):
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
-
-        self.charm.unit.status = ActiveStatus()
-
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -176,3 +176,6 @@ class DbProvides(Object):
         #      automatically?
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def get_(self):
+        pass
