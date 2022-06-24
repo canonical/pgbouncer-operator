@@ -20,6 +20,7 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
+from lib.charms.pgbouncer_operator.v0.pgb import PgbConfig
 from literals import INI_PATH, PG_USER, PGB, PGB_DIR, USERLIST_PATH
 from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
@@ -149,7 +150,7 @@ class PgBouncerCharm(CharmBase):
             self._cores,
         )
 
-        cfg["pgbouncer"]["listen_addr"] = self._unit_ip()
+        cfg["pgbouncer"]["listen_addr"] = str(self.unit_ip)
 
         self._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -242,6 +243,86 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
+    def add_user(
+        self,
+        user: str,
+        password: str = None,
+        admin: bool = False,
+        stats: bool = False,
+        cfg: PgbConfig = None,
+        reload_pgbouncer: bool = False,
+        render_cfg: bool = False,
+    ):
+        """Adds a user to the config files.
+
+        Args:
+            user: the username for the intended user.
+            admin: whether or not the user has admin permissions
+            stats: whether or not the user has stats permissions
+            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
+                during this method.
+            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
+                restarted for changes to take effect.
+            render_cfg: whether or not to render config
+        """
+        if not cfg:
+            cfg = self._read_pgb_config()
+        userlist = self._read_userlist()
+
+        # check if user already exists, with a password.
+        if user in userlist.keys() and userlist.get(user):
+            return
+
+        if not password:
+            password = pgb.generate_password()
+
+        userlist[user] = password
+
+        if admin:
+            cfg[PGB]["admin_users"].append(user)
+        if stats:
+            cfg[PGB]["stats_users"].append(user)
+
+        self._render_userlist(userlist)
+        if render_cfg:
+            self._render_service_configs(cfg, reload_pgbouncer)
+
+    def _remove_user(
+        self,
+        user: str,
+        cfg: PgbConfig = None,
+        reload_pgbouncer: bool = False,
+        render_cfg: bool = False,
+    ):
+        """Removes a user from config files.
+
+        Args:
+            user: the username for the intended user.
+            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
+                during this method.
+            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
+                restarted for changes to take effect.
+            render_cfg: whether or not to render config
+        """
+        if not cfg:
+            cfg = self._read_pgb_config()
+        userlist = self._read_userlist()
+
+        if user not in userlist.keys():
+            return
+
+        # remove userlist
+        del userlist[user]
+
+        if user in cfg[PGB]["admin_users"]:
+            cfg[PGB]["admin_users"].remove(user)
+        if user in cfg[PGB]["stats_users"]:
+            cfg[PGB]["stats_users"].remove(user)
+
+        self._render_userlist(userlist)
+        if render_cfg:
+            self._render_service_configs(cfg, reload_pgbouncer)
+
     def _reload_pgbouncer(self):
         """Reloads systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
@@ -300,9 +381,17 @@ class PgBouncerCharm(CharmBase):
         return legacy_backend_relation is not None
 
     @property
-    def _unit_ip(self) -> str:
+    def unit_ip(self) -> str:
         """Current unit ip."""
         return self.model.get_binding(PEER).network.bind_address
+
+    @property
+    def is_leader(self) -> bool:
+        """bool that states whether this unit is the leader
+
+        NB replication isn't implemented yet, so this just returns True all the time.
+        """
+        return True
 
 
 if __name__ == "__main__":

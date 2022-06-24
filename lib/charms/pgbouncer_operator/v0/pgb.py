@@ -345,6 +345,11 @@ def parse_dict_to_kv_string(dictionary: Dict[str, str]) -> str:
     return " ".join([f"{key}={value}" for key, value in dictionary.items()])
 
 
+def build_connstr(**kwargs) -> str:
+    """A helper function to build postgres connstrings from keyword args."""
+    return parse_dict_to_kv_string(kwargs)
+
+
 def generate_password() -> str:
     """Generates a secure password of alphanumeric characters.
 

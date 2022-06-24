@@ -31,14 +31,12 @@ Some example relation data is below. All values are examples, generated in a run
 
 import logging
 
-from charms.postgresql.v0.postgresql_helpers import (
-    connect_to_database,
-    create_database,
-    create_user,
-)
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from pgconnstr import ConnectionString
+
+from relations.backend_db_admin import RELATION_ID as BACKEND_RELATION_ID
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +65,7 @@ class DbAdminProvides(Object):
         Takes information from the db-admin relation databag and copies it into the pgbouncer.ini
         config.
         """
-        if not self.charm.is_leader():
+        if not self.charm.is_leader:
             return
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
@@ -75,92 +73,80 @@ class DbAdminProvides(Object):
             "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
-        event_data = change_event.relation.data
-        logger.info(event_data)
+        unit_relation_databag = change_event.relation.data[self.charm.unit]
+        application_relation_databag = change_event.relation.data[self.charm.app]
 
-        unit_relation_databag = change_event.relation.data[self.unit]
-        application_relation_databag = change_event.relation.data[self.app]
-        logger.info(unit_relation_databag)
-        logger.info(application_relation_databag)
+        # Check if the application databag is already populated, and store var as an explicit
+        app_databag_populated = application_relation_databag.get("user") is not None
 
-        # Check if the application databag is already populated.
-        already = False
-        if application_relation_databag.get("user"):
-            already = True
+        if app_databag_populated:
+            database = unit_relation_databag["database"]
+            user = unit_relation_databag["user"]
+            password = unit_relation_databag["password"]
+        else:
+            database = change_event.relation.data[change_event.app].get("database")
+            user = f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            password = pgb.generate_password()
 
-        hostname = self._get_hostname_from_unit(self.charm.unit.name.replace("/", "-"))
-        connection = connect_to_database(
-            "postgres", "postgres", hostname, self._get_postgres_password()
-        )
+        database = database.replace("-", "_")
 
-        user = (
-            unit_relation_databag["user"]
-            if already
-            else f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
-        )
-        cfg["pgbouncer"]["admin_users"].append(user)
-
-        password = unit_relation_databag["password"] if already else self._new_password()
-        database = (
-            unit_relation_databag["database"]
-            if already
-            else change_event.relation.data[change_event.app].get("database")
-        )
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
-
         database = database.replace("-", "_")
 
-        if not already:
-            create_user(connection, user, password, admin=True)
-            create_database(connection, database, user)
+        cfg = self.charm._read_pgb_config()
 
-        connection.close()
+        self.charm._add_user(user, password, admin=True, cfg=cfg, render_cfg=False)
+
+        pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
+        master_host = pg_master_connstr["host"]
+        master_port = pg_master_connstr["port"]
 
         primary = str(
             ConnectionString(
-                host=f"{self._get_hostname_from_unit(self._patroni.get_primary())}",
+                host=pg_master_connstr["host"],
                 dbname=database,
-                port=5432,
+                port=pg_master_connstr["port"],
                 user=user,
                 password=password,
                 fallback_application_name=change_event.app.name,
             )
         )
-        standbys = ",".join(
-            [
-                str(
-                    ConnectionString(
-                        host=f"{self._get_hostname_from_unit(member)}",
-                        dbname=database,
-                        port=5432,
-                        user=user,
-                        password=password,
-                        fallback_application_name=change_event.app.name,
-                    )
+        cfg["database"][database] = primary
+
+        standbys = []
+        for standby_name, standby_data in cfg["database"].items():
+            if standby_name[:21] is not "pgb_postgres_standby_":
+                continue
+            standby_idx = int(standby_name[21:])
+            standby = str(
+                ConnectionString(
+                    host=standby_data["host"],
+                    dbname=database,
+                    port=standby_data["port"],
+                    user=user,
+                    password=password,
+                    fallback_application_name=change_event.app.name,
                 )
-                for member in members
-                if self._get_hostname_from_unit(member) != primary
-            ]
-        )
+            )
+
+            standbys.append(standby)
+            cfg["databases"][f"{database}_standby_{standby_idx}"] = standby
 
         for databag in [application_relation_databag, unit_relation_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
             databag["allowed-units"] = self.get_allowed_units(change_event.relation)
-            databag["host"] = f"http://{hostname}"
+            databag["host"] = f"http://{master_host}"
             databag["master"] = primary
-            databag["port"] = "5432"
-            databag["standbys"] = standbys
+            databag["port"] = master_port
+            databag["standbys"] = ",".join(standbys)
             databag["state"] = "master"
             databag["version"] = "12"
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
-
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -183,3 +169,9 @@ class DbAdminProvides(Object):
         #      automatically?
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _create_users(self):
+        pass
+
+    def _populate_databag(self):
+        pass
