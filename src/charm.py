@@ -287,7 +287,7 @@ class PgBouncerCharm(CharmBase):
         if render_cfg:
             self._render_service_configs(cfg, reload_pgbouncer)
 
-    def _remove_user(
+    def remove_user(
         self,
         user: str,
         cfg: PgbConfig = None,

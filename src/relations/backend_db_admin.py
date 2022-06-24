@@ -106,6 +106,10 @@ class BackendDbAdminRequires(Object):
         event_data = change_event.relation.data
         pg_data = event_data[change_event.unit]
 
+        # TODO the legacy charm doesn't store this data in a config file, but accesses this info
+        #      through a method that we can no longer use. Instead of using the main pgbouncer
+        #      config file, perhaps it's a good idea to have a pgbouncer-postgres-replicas.ini
+        #      file to store this info.
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
