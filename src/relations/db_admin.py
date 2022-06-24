@@ -36,8 +36,6 @@ from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from pgconnstr import ConnectionString
 
-from relations.backend_db_admin import RELATION_ID as BACKEND_RELATION_ID
-
 logger = logging.getLogger(__name__)
 
 RELATION_ID = "db-admin"
@@ -101,12 +99,14 @@ class DbAdminProvides(Object):
         self.charm._add_user(user, password, admin=True, cfg=cfg, render_cfg=False)
 
         pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
+        master_host = pg_master_connstr["host"]
+        master_port = pg_master_connstr["port"],
 
         primary = str(
             ConnectionString(
-                host=pg_master_connstr["host"],
+                host=master_host,
                 dbname=database,
-                port=pg_master_connstr["port"],
+                port=master_port,
                 user=user,
                 password=password,
                 fallback_application_name=change_event.app.name,

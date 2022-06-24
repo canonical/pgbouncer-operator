@@ -28,12 +28,7 @@ Some example relation data is below. All values are examples, generated in a run
 """
 
 import logging
-
-from charms.postgresql.v0.postgresql_helpers import (
-    connect_to_database,
-    create_database,
-    create_user,
-)
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from pgconnstr import ConnectionString
@@ -62,93 +57,88 @@ class DbProvides(Object):
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
 
-            Takes information from the db-admin relation
-        def __init__(self, charm: CharmBase):databag and copies it into the pgbouncer.ini
-            config.
+        Takes information from the db relation databag and copies it into the pgbouncer.ini
+        config.
         """
-        if not self.charm.is_leader():
+        if not self.charm.is_leader:
             return
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
-        logger.info(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release."
+        logger.warning(
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
-        unit_relation_databag = change_event.relation.data[self.unit]
-        application_relation_databag = change_event.relation.data[self.app]
-        cfg = self.charm._read_pgb_config()
+        unit_databag = change_event.relation.data[self.charm.unit]
+        app_databag = change_event.relation.data[self.charm.app]
 
-        # Check whether relation already exists
-        relation_exists = False
-        if application_relation_databag.get("user"):
-            relation_exists = True
+        # Check if the application databag is already populated, and store var as an explicit
+        app_databag_populated = app_databag.get("user") is not None
 
-        database = (
-            unit_relation_databag["database"]
-            if relation_exists
-            else change_event.relation.data[change_event.app].get("database")
-        )
+        if app_databag_populated:
+            database = unit_databag["database"]
+            user = unit_databag["user"]
+            password = unit_databag["password"]
+        else:
+            database = change_event.relation.data[change_event.app].get("database")
+            user = f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            password = pgb.generate_password()
+
+        database = database.replace("-", "_")
+
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
-
-        hostname = self._get_hostname_from_unit(self.unit.name.replace("/", "-"))
-        connection = connect_to_database(
-            "postgres", "postgres", hostname, self._get_postgres_password()
-        )
-        logger.info(f"Connected to PostgreSQL: {connection}")
-
-        user = (
-            unit_relation_databag["user"]
-            if relation_exists
-            else f"relation_id_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
-        )
-        password = unit_relation_databag["password"] if relation_exists else self._new_password()
-
         database = database.replace("-", "_")
 
-        if not relation_exists:
-            create_user(connection, user, password, admin=False)
-            create_database(connection, database, user)
+        cfg = self.charm._read_pgb_config()
 
-        connection.close()
+        self.charm._add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
 
-        members = self._patroni.cluster_members
+        pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
+        master_host = pg_master_connstr["host"]
+        master_port = pg_master_connstr["port"],
+
         primary = str(
             ConnectionString(
-                host=f"{self._get_hostname_from_unit(self._patroni.get_primary())}",
+                host=master_host,
                 dbname=database,
-                port=5432,
+                port=master_port,
                 user=user,
                 password=password,
                 fallback_application_name=change_event.app.name,
             )
         )
-        standbys = ",".join(
-            [
-                str(
-                    ConnectionString(
-                        host=f"{self._get_hostname_from_unit(member)}",
-                        dbname=database,
-                        port=5432,
-                        user=user,
-                        password=password,
-                        fallback_application_name=change_event.app.name,
-                    )
-                )
-                for member in members
-                if self._get_hostname_from_unit(member) != primary
-            ]
-        )
+        cfg["database"][database] = primary
 
-        for databag in [application_relation_databag, unit_relation_databag]:
-            databag["allowed-subnets"] = self.charm.get_allowed_subnets(change_event.relation)
-            databag["allowed-units"] = self.charm.get_allowed_units(change_event.relation)
-            databag["host"] = f"http://{hostname}"
+        standbys = []
+        for standby_name, standby_data in cfg["database"].items():
+            # skip everything that's not a postgres standby.
+            if standby_name[:21] is not "pgb_postgres_standby_":
+                continue
+
+            standby_idx = int(standby_name[21:])
+            standby = str(
+                ConnectionString(
+                    host=standby_data["host"],
+                    dbname=database,
+                    port=standby_data["port"],
+                    user=user,
+                    password=password,
+                    fallback_application_name=change_event.app.name,
+                )
+            )
+
+            standbys.append(standby)
+            cfg["databases"][f"{database}_standby_{standby_idx}"] = standby
+
+        for databag in [app_databag, unit_databag]:
+            databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
+            databag["allowed-units"] = self.get_allowed_units(change_event.relation)
+            databag["host"] = f"http://{master_host}"
             databag["master"] = primary
-            databag["port"] = "5432"
-            databag["standbys"] = standbys
+            databag["port"] = master_port
+            databag["standbys"] = ",".join(standbys)
             databag["state"] = "master"
             databag["version"] = "12"
             databag["user"] = user
@@ -160,22 +150,32 @@ class DbProvides(Object):
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
 
-        Removes relevant information from pgbouncer config when db-admin relation is removed.
+        Removes relevant information from pgbouncer config when db relation is removed.
+
+        This doesn't delete users or tables, following the design of the legacy charm.
         """
         if not self.charm.is_leader():
             return
 
         logger.info("db relation removed - updating config")
-        logger.info(
+        logger.warning(
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
+        app_databag = departed_event.relation.data[self.charm.app]
+
         cfg = self.charm._read_pgb_config()
 
-        # TODO remove relevant info from cfg. Should this delete database tables? Does this happen
-        #      automatically?
+        user = app_databag["user"]
+        database = app_databag["database"]
+        self.charm.remove_user(user, cfg=cfg, render_cfg = False)
+
+        del cfg["database"][database]
+        # Delete replicas
+        # TODO find a smarter way of doing this
+        for db in list(cfg["database"].keys()):
+            if cfg["database"][db]["name"].contains(f"{database}_standby_"):
+                del cfg["database"][db]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def get_(self):
-        pass
