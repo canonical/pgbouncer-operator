@@ -7,26 +7,27 @@ The db-admin relation effectively does the same thing as db, but the user that i
 administrative permissions. This relation uses the pgsql interface.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
-┃ category  ┃          keys ┃ pgbouncer/23                                                                   ┃ psql/0 ┃
-┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
-│ metadata  │      endpoint │ 'db-admin'                                                                     │ 'db'   │
-│           │        leader │ True                                                                           │ True   │
-├───────────┼───────────────┼────────────────────────────────────────────────────────────────────────────────┼────────┤
-│ unit data │ allowed-units │ psql/0                                                                         │        │
-│           │      database │ cli                                                                            │ cli    │
-│           │          host │ 10.101.233.178                                                                 │        │
-│           │        master │ dbname=cli host=10.101.233.178 password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K │        │
-│           │               │ port=6432 user=db_admin_80_psql                                                │        │
-│           │      password │ JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K                                         │        │
-│           │          port │ 6432                                                                           │        │
-│           │      standbys │ dbname=cli_standby host=10.101.233.178                                         │        │
-│           │               │ password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K port=6432                      │        │
-│           │               │ user=db_admin_80_psql                                                          │        │
-│           │         state │ master                                                                         │        │
-│           │          user │ db_admin_80_psql                                                               │        │
-│           │       version │ 12                                                                             │        │
-└───────────┴───────────────┴────────────────────────────────────────────────────────────────────────────────┴────────┘
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ category  ┃          keys ┃ pgbouncer/23                                              ┃ psql/0 ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ metadata  │      endpoint │ 'db-admin'                                                │ 'db'   │
+│           │        leader │ True                                                      │ True   │
+├───────────┼───────────────┼───────────────────────────────────────────────────────────┼────────┤
+│ unit data │ allowed-units │ psql/0                                                    │        │
+│           │      database │ cli                                                       │ cli    │
+│           │          host │ 10.101.233.178                                            │        │
+│           │        master │ dbname=cli host=10.101.233.178                            │        │
+│           │               │ password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K           │        │
+│           │               │ port=6432 user=db_admin_80_psql                           │        │
+│           │      password │ JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K                    │        │
+│           │          port │ 6432                                                      │        │
+│           │      standbys │ dbname=cli_standby host=10.101.233.178                    │        │
+│           │               │ password=JWjVc9PbXHSTL3RrXt9tT6xf43zbJBc4HPdb7K port=6432 │        │
+│           │               │ user=db_admin_80_psql                                     │        │
+│           │         state │ master                                                    │        │
+│           │          user │ db_admin_80_psql                                          │        │
+│           │       version │ 12                                                        │        │
+└───────────┴───────────────┴───────────────────────────────────────────────────────────┴────────┘
 """
 
 import logging
@@ -100,7 +101,7 @@ class DbAdminProvides(Object):
 
         pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
         master_host = pg_master_connstr["host"]
-        master_port = pg_master_connstr["port"],
+        master_port = (pg_master_connstr["port"],)
 
         primary = str(
             ConnectionString(
@@ -117,7 +118,7 @@ class DbAdminProvides(Object):
         standbys = []
         for standby_name, standby_data in cfg["database"].items():
             # skip everything that's not a postgres standby.
-            if standby_name[:21] is not "pgb_postgres_standby_":
+            if standby_name[:21] != "pgb_postgres_standby_":
                 continue
 
             standby_idx = int(standby_name[21:])
@@ -171,7 +172,7 @@ class DbAdminProvides(Object):
 
         user = app_databag["user"]
         database = app_databag["database"]
-        self.charm.remove_user(user, cfg=cfg, render_cfg = False)
+        self.charm.remove_user(user, cfg=cfg, render_cfg=False)
 
         del cfg["database"][database]
         # Delete replicas

@@ -104,6 +104,7 @@ class BackendDbAdminRequires(Object):
         )
 
         event_data = change_event.relation.data
+        logging.info(event_data)
         pg_data = event_data[change_event.unit]
 
         # TODO the legacy charm doesn't store this data in a config file, but accesses this info

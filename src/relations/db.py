@@ -6,30 +6,36 @@
 This relation uses the pgsql interface.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
-┃ category  ┃          keys ┃ pgbouncer/25                                                                   ┃ psql/1 ┃
-┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
-│ metadata  │      endpoint │ 'db'                                                                           │ 'db'   │
-│           │        leader │ True                                                                           │ True   │
-├───────────┼───────────────┼────────────────────────────────────────────────────────────────────────────────┼────────┤
-│ unit data │ allowed-units │ psql/1                                                                         │        │
-│           │      database │ cli                                                                            │ cli    │
-│           │          host │ 10.101.233.10                                                                  │        │
-│           │        master │ dbname=cli host=10.101.233.10                                                  │        │
-│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs port=6432 user=db_85_psql    │        │
-│           │      password │ jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs                                       │        │
-│           │          port │ 6432                                                                           │        │
-│           │      standbys │ dbname=cli_standby host=10.101.233.10                                          │        │
-│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs port=6432 user=db_85_psql    │        │
-│           │         state │ master                                                                         │        │
-│           │          user │ db_85_psql                                                                     │        │
-│           │       version │ 12                                                                             │        │
-└───────────┴───────────────┴────────────────────────────────────────────────────────────────────────────────┴────────┘
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ category  ┃          keys ┃ pgbouncer/25                                      ┃ psql/1 ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ metadata  │      endpoint │ 'db'                                              │ 'db'   │
+│           │        leader │ True                                              │ True   │
+├───────────┼───────────────┼───────────────────────────────────────────────────┼────────┤
+│ unit data │ allowed-units │ psql/1                                            │        │
+│           │      database │ cli                                               │ cli    │
+│           │          host │ 10.101.233.10                                     │        │
+│           │        master │ dbname=cli host=10.101.233.10                     │        │
+│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs │        │
+│           │               │ port=6432 user=db_85_psql                         │        │
+│           │      password │ jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs          │        │
+│           │          port │ 6432                                              │        │
+│           │      standbys │ dbname=cli_standby host=10.101.233.10             │        │
+│           │               │ password=jnT4LxNPPrssscxGYmGPy4FKjRNXCn4NL2Y32jqs │        │
+│           │               │ port=6432 user=db_85_psql                         │        │
+│           │         state │ master                                            │        │
+│           │          user │ db_85_psql                                        │        │
+│           │       version │ 12                                                │        │
+└───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
 """
 
 import logging
+from typing import Iterable
+
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
+from ops.model import Relation, Unit
+
 from ops.framework import Object
 from pgconnstr import ConnectionString
 
@@ -79,25 +85,30 @@ class DbProvides(Object):
             user = unit_databag["user"]
             password = unit_databag["password"]
         else:
-            database = change_event.relation.data[change_event.app].get("database")
-            user = f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            database = change_event.relation.data[change_event.unit].get("database")
+            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')}"
             password = pgb.generate_password()
-
-        database = database.replace("-", "_")
 
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
+
         database = database.replace("-", "_")
 
         cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
 
-        self.charm._add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
+        self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
 
-        pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
-        master_host = pg_master_connstr["host"]
-        master_port = pg_master_connstr["port"],
+        if not dbs.get("pg_master"):
+            # wait for backend_db_admin relation to populate config.
+            logger.warning("waiting for backend-db-admin relation")
+            change_event.defer()
+            return
+
+        master_host = dbs["pg_master"]["host"]
+        master_port = dbs["pg_master"]["port"]
 
         primary = str(
             ConnectionString(
@@ -109,12 +120,12 @@ class DbProvides(Object):
                 fallback_application_name=change_event.app.name,
             )
         )
-        cfg["database"][database] = primary
+        dbs[database] = pgb.parse_kv_string_to_dict(primary)
 
         standbys = []
-        for standby_name, standby_data in cfg["database"].items():
+        for standby_name, standby_data in dbs.items():
             # skip everything that's not a postgres standby.
-            if standby_name[:21] is not "pgb_postgres_standby_":
+            if standby_name[:21] != "pgb_postgres_standby_":
                 continue
 
             standby_idx = int(standby_name[21:])
@@ -130,7 +141,7 @@ class DbProvides(Object):
             )
 
             standbys.append(standby)
-            cfg["databases"][f"{database}_standby_{standby_idx}"] = standby
+            dbs[f"{database}_standby_{standby_idx}"] = standby
 
         for databag in [app_databag, unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
@@ -165,17 +176,43 @@ class DbProvides(Object):
         app_databag = departed_event.relation.data[self.charm.app]
 
         cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
 
         user = app_databag["user"]
         database = app_databag["database"]
-        self.charm.remove_user(user, cfg=cfg, render_cfg = False)
+        self.charm.remove_user(user, cfg=cfg, render_cfg=False)
 
-        del cfg["database"][database]
+        del dbs[database]
         # Delete replicas
         # TODO find a smarter way of doing this
-        for db in list(cfg["database"].keys()):
-            if cfg["database"][db]["name"].contains(f"{database}_standby_"):
-                del cfg["database"][db]
+        for db in list(dbs.keys()):
+            if dbs[db]["name"].contains(f"{database}_standby_"):
+                del dbs[db]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
+    def get_allowed_subnets(self, relation: Relation) -> str:
+        def _comma_split(string) -> Iterable[str]:
+            if string:
+                for substring in string.split(","):
+                    substring = substring.strip()
+                    if substring:
+                        yield substring
+
+        subnets = set()
+        for unit, reldata in relation.data.items():
+            logger.warning(f"Checking subnets for {unit}")
+            logger.warning(reldata)
+            if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name):
+                # NB. egress-subnets is not always available.
+                subnets.update(set(_comma_split(reldata.get("egress-subnets", ""))))
+        return ",".join(sorted(subnets))
+
+    def get_allowed_units(self, relation: Relation) -> str:
+        return ",".join(
+            sorted(
+                unit.name
+                for unit in relation.data
+                if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
+            )
+        )

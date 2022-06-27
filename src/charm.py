@@ -15,12 +15,12 @@ from typing import Dict, List
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_operator.v0.pgb import PgbConfig
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from lib.charms.pgbouncer_operator.v0.pgb import PgbConfig
 from literals import INI_PATH, PG_USER, PGB, PGB_DIR, USERLIST_PATH
 from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
@@ -257,6 +257,7 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             user: the username for the intended user.
+            password: intended password for the string
             admin: whether or not the user has admin permissions
             stats: whether or not the user has stats permissions
             cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
@@ -269,10 +270,11 @@ class PgBouncerCharm(CharmBase):
             cfg = self._read_pgb_config()
         userlist = self._read_userlist()
 
-        # check if user already exists, with a password.
-        if user in userlist.keys() and userlist.get(user):
+        # Return early if userlist already contains a password value for the given user
+        if userlist.get(user):
             return
 
+        # Userlist is key-value dict of users and passwords.
         if not password:
             password = pgb.generate_password()
 
@@ -387,7 +389,7 @@ class PgBouncerCharm(CharmBase):
 
     @property
     def is_leader(self) -> bool:
-        """bool that states whether this unit is the leader
+        """Bool that states whether this unit is the leader.
 
         NB replication isn't implemented yet, so this just returns True all the time.
         """
