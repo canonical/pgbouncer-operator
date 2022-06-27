@@ -25,7 +25,6 @@ class TestBackendDbAdmin(unittest.TestCase):
         self.charm = self.harness.charm
         self.relation = self.charm.legacy_db_relation
 
-
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_on_relation_changed(self, _render, _read):

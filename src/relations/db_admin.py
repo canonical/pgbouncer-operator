@@ -31,10 +31,12 @@ Some example relation data is below. All values are examples, generated in a run
 """
 
 import logging
+from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
+from ops.model import Relation, Unit
 from pgconnstr import ConnectionString
 
 logger = logging.getLogger(__name__)
@@ -59,7 +61,7 @@ class DbAdminProvides(Object):
         self.charm = charm
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
-        """Handle db-admin-relation-changed event.
+        """Handle db-adminrelation-changed event.
 
         Takes information from the db-admin relation databag and copies it into the pgbouncer.ini
         config.
@@ -69,7 +71,7 @@ class DbAdminProvides(Object):
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
         unit_databag = change_event.relation.data[self.charm.unit]
@@ -83,66 +85,74 @@ class DbAdminProvides(Object):
             user = unit_databag["user"]
             password = unit_databag["password"]
         else:
-            database = change_event.relation.data[change_event.app].get("database")
-            user = f"{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            database = change_event.relation.data[change_event.unit].get("database")
+            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')}"
             password = pgb.generate_password()
-
-        database = database.replace("-", "_")
 
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
+
         database = database.replace("-", "_")
 
         cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
 
-        self.charm._add_user(user, password, admin=True, cfg=cfg, render_cfg=False)
+        self.charm.add_user(user, password, admin=True, cfg=cfg, render_cfg=False)
 
-        pg_master_connstr = pgb.parse_kv_string_to_dict(cfg["databases"]["pg_master"])
-        master_host = pg_master_connstr["host"]
-        master_port = (pg_master_connstr["port"],)
+        if not dbs.get("pg_master"):
+            # wait for backend_db_admin relation to populate config.
+            logger.warning("waiting for backend-db-admin relation")
+            change_event.defer()
+            return
 
-        primary = str(
-            ConnectionString(
-                host=master_host,
-                dbname=database,
-                port=master_port,
-                user=user,
-                password=password,
-                fallback_application_name=change_event.app.name,
-            )
-        )
-        cfg["database"][database] = primary
+        master_host = dbs["pg_master"]["host"]
+        master_port = dbs["pg_master"]["port"]
+
+        primary = {
+            "host": master_host,
+            "dbname": database,
+            "port": master_port,
+            "user": user,
+            "password": password,
+            "fallback_application_name": change_event.app.name,
+        }
+
+        dbs[database] = primary
 
         standbys = []
-        for standby_name, standby_data in cfg["database"].items():
+        for standby_name, standby_data in dbs.items():
             # skip everything that's not a postgres standby.
             if standby_name[:21] != "pgb_postgres_standby_":
                 continue
 
             standby_idx = int(standby_name[21:])
-            standby = str(
-                ConnectionString(
-                    host=standby_data["host"],
-                    dbname=database,
-                    port=standby_data["port"],
-                    user=user,
-                    password=password,
-                    fallback_application_name=change_event.app.name,
-                )
-            )
+            standby = {
+                "host": standby_data["host"],
+                "dbname": database,
+                "port": standby_data["port"],
+                "user": user,
+                "password": password,
+                "fallback_application_name": change_event.app.name,
+            }
 
             standbys.append(standby)
-            cfg["databases"][f"{database}_standby_{standby_idx}"] = standby
+
+        standby_str = ""
+        for standby in standbys:
+            dbs[f"{database}_standby_{standby_idx}"] = standby
+            standby_str += pgb.parse_dict_to_kv_string(standby) + ","
+
+        standby_str = standby_str[:-1]
 
         for databag in [app_databag, unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
             databag["allowed-units"] = self.get_allowed_units(change_event.relation)
             databag["host"] = f"http://{master_host}"
-            databag["master"] = primary
+            databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
-            databag["standbys"] = ",".join(standbys)
+            databag["standbys"] = standby_str
             databag["state"] = "master"
             databag["version"] = "12"
             databag["user"] = user
@@ -154,31 +164,61 @@ class DbAdminProvides(Object):
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-admin-relation-departed event.
 
-        Removes relevant information from pgbouncer config when db-admin relation is removed.
+        Removes relevant information from pgbouncer config when db-admin relation is removed. This
+        function assumes that relation databags are destroyed when the relation itself is removed.
 
         This doesn't delete users or tables, following the design of the legacy charm.
+
+        TODO remove correct units when unit is removed
+
         """
-        if not self.charm.is_leader():
+        if not self.charm.is_leader:
             return
 
-        logger.info("db-admin relation removed - updating config")
+        logger.info("db relation removed - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db-admin is a legacy relation, and will be deprecated in a future release. "
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
         app_databag = departed_event.relation.data[self.charm.app]
 
         cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
 
         user = app_databag["user"]
         database = app_databag["database"]
         self.charm.remove_user(user, cfg=cfg, render_cfg=False)
 
-        del cfg["database"][database]
+        del dbs[database]
         # Delete replicas
         # TODO find a smarter way of doing this
-        for db in list(cfg["database"].keys()):
-            if cfg["database"][db]["name"].contains(f"{database}_standby_"):
-                del cfg["database"][db]
+        for db in list(dbs.keys()):
+            if dbs[db]["name"].contains(f"{database}_standby_"):
+                del dbs[db]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def get_allowed_subnets(self, relation: Relation) -> str:
+        def _comma_split(string) -> Iterable[str]:
+            if string:
+                for substring in string.split(","):
+                    substring = substring.strip()
+                    if substring:
+                        yield substring
+
+        subnets = set()
+        for unit, reldata in relation.data.items():
+            logger.warning(f"Checking subnets for {unit}")
+            if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name):
+                # NB. egress-subnets is not always available.
+                subnets.update(set(_comma_split(reldata.get("egress-subnets", ""))))
+        return ",".join(sorted(subnets))
+
+    def get_allowed_units(self, relation: Relation) -> str:
+        return ",".join(
+            sorted(
+                unit.name
+                for unit in relation.data
+                if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
+            )
+        )

@@ -27,6 +27,8 @@ Some example relation data is below. All values are examples, generated in a run
 │           │          user │ db_85_psql                                        │        │
 │           │       version │ 12                                                │        │
 └───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
+
+TODO this relation is almost identical to db-admin - unify code.
 """
 
 import logging
@@ -34,10 +36,8 @@ from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
-from ops.model import Relation, Unit
-
 from ops.framework import Object
-from pgconnstr import ConnectionString
+from ops.model import Relation, Unit
 
 logger = logging.getLogger(__name__)
 
@@ -110,17 +110,16 @@ class DbProvides(Object):
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
 
-        primary = str(
-            ConnectionString(
-                host=master_host,
-                dbname=database,
-                port=master_port,
-                user=user,
-                password=password,
-                fallback_application_name=change_event.app.name,
-            )
-        )
-        dbs[database] = pgb.parse_kv_string_to_dict(primary)
+        primary = {
+            "host": master_host,
+            "dbname": database,
+            "port": master_port,
+            "user": user,
+            "password": password,
+            "fallback_application_name": change_event.app.name,
+        }
+
+        dbs[database] = primary
 
         standbys = []
         for standby_name, standby_data in dbs.items():
@@ -129,27 +128,31 @@ class DbProvides(Object):
                 continue
 
             standby_idx = int(standby_name[21:])
-            standby = str(
-                ConnectionString(
-                    host=standby_data["host"],
-                    dbname=database,
-                    port=standby_data["port"],
-                    user=user,
-                    password=password,
-                    fallback_application_name=change_event.app.name,
-                )
-            )
+            standby = {
+                "host": standby_data["host"],
+                "dbname": database,
+                "port": standby_data["port"],
+                "user": user,
+                "password": password,
+                "fallback_application_name": change_event.app.name,
+            }
 
             standbys.append(standby)
+
+        standby_str = ""
+        for standby in standbys:
             dbs[f"{database}_standby_{standby_idx}"] = standby
+            standby_str += pgb.parse_dict_to_kv_string(standby) + ","
+
+        standby_str = standby_str[:-1]
 
         for databag in [app_databag, unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
             databag["allowed-units"] = self.get_allowed_units(change_event.relation)
             databag["host"] = f"http://{master_host}"
-            databag["master"] = primary
+            databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
-            databag["standbys"] = ",".join(standbys)
+            databag["standbys"] = standby_str
             databag["state"] = "master"
             databag["version"] = "12"
             databag["user"] = user
@@ -161,11 +164,15 @@ class DbProvides(Object):
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
 
-        Removes relevant information from pgbouncer config when db relation is removed.
+        Removes relevant information from pgbouncer config when db relation is removed. This
+        function assumes that relation databags are destroyed when the relation itself is removed.
 
         This doesn't delete users or tables, following the design of the legacy charm.
+
+        TODO remove correct units when unit is removed
+
         """
-        if not self.charm.is_leader():
+        if not self.charm.is_leader:
             return
 
         logger.info("db relation removed - updating config")
@@ -202,7 +209,6 @@ class DbProvides(Object):
         subnets = set()
         for unit, reldata in relation.data.items():
             logger.warning(f"Checking subnets for {unit}")
-            logger.warning(reldata)
             if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name):
                 # NB. egress-subnets is not always available.
                 subnets.update(set(_comma_split(reldata.get("egress-subnets", ""))))
