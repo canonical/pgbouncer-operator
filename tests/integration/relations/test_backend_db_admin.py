@@ -17,10 +17,11 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 PG = "postgresql"
 
+
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
 async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
-    """Test that the pgbouncer and postgres charms can relate to one another. """
+    """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
     charm = await ops_test.build_charm(".")
     await asyncio.gather(
@@ -62,6 +63,7 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
         "pgb_postgres_standby_1",
     ]
 
+
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -79,6 +81,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     # index, and isn't linked to the unit name.
     assert list(cfg["databases"].keys()) == ["pg_master", "pgb_postgres_standby_0"]
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
+
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):

@@ -67,6 +67,7 @@ import logging
 from typing import List
 
 from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_operator.v0.pgb import PgbConfig
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,
@@ -75,8 +76,6 @@ from ops.charm import (
 )
 from ops.framework import Object
 from ops.model import Unit
-
-from charms.pgbouncer_operator.v0.pgb import PgbConfig
 
 logger = logging.getLogger(__name__)
 
