@@ -140,7 +140,8 @@ class PgBouncerCharm(CharmBase):
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
 
-        Reads config values and parses them to pgbouncer config, restarting if necessary.
+        Reads charm config values, generates derivative values, writes new pgbouncer config, and
+        restarts pgbouncer to apply changes.
         """
         cfg = self._read_pgb_config()
         cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]

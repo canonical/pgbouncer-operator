@@ -79,9 +79,7 @@ class PgbConfig(MutableMapping):
 
         if isinstance(config, str):
             self.read_string(config)
-        elif isinstance(config, dict):
-            self.read_dict(config)
-        elif isinstance(config, PgbConfig):
+        elif isinstance(config, (dict, PgbConfig)):
             self.read_dict(config)
 
     def __delitem__(self, key: str):

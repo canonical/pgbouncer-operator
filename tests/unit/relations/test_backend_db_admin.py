@@ -56,6 +56,7 @@ class TestBackendDbAdmin(unittest.TestCase):
         expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
+        # Assert there's no standby information in the rendered config.
         self.assertNotIn(f"{STANDBY_PREFIX}0", rendered_cfg.keys())
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
