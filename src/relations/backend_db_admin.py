@@ -90,6 +90,7 @@ class BackendDbAdminRequires(Object):
     Hook events observed:
         - relation-changed
         - relation-departed
+        - relation-broken
     """
 
     def __init__(self, charm: CharmBase):
@@ -117,7 +118,12 @@ class BackendDbAdminRequires(Object):
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
-        dbs["pg_master"] = pgb.parse_kv_string_to_dict(postgres_data.get("master"))
+        if postgres_data.get("master"):
+            dbs["pg_master"] = pgb.parse_kv_string_to_dict(postgres_data.get("master"))
+        else:
+            logger.info("waiting for postgres charm to correctly populate relation data")
+            change_event.defer()
+            return
 
         standbys_str = postgres_data.get("standbys")
         standbys = standbys_str.split("\n") if standbys_str else []
