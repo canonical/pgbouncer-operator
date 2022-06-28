@@ -180,6 +180,8 @@ class DbAdminProvides(Object):
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
+
+
         app_databag = departed_event.relation.data[self.charm.app]
 
         cfg = self.charm._read_pgb_config()

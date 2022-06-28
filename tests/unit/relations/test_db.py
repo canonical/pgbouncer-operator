@@ -35,6 +35,7 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         # TODO test if databag is and isn't populated
         # TODO test with and without replicas
+        # TODO test scaling on both sides of relation, and how it should change config
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")

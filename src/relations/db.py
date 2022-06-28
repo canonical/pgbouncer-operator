@@ -179,8 +179,14 @@ class DbProvides(Object):
         logger.warning(
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
+        logger.info(departed_event.relation.data)
 
         app_databag = departed_event.relation.data[self.charm.app]
+        departing_unit_databag = departed_event.relation.data[departed_event.unit]
+        departing_unit = departed_event.unit
+        logger.info(departing_unit)
+        logger.info(departing_unit_databag)
+        logger.info(app_databag)
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
@@ -189,11 +195,13 @@ class DbProvides(Object):
         database = app_databag["database"]
         self.charm.remove_user(user, cfg=cfg, render_cfg=False)
 
+        # TODO check that
         del dbs[database]
         # Delete replicas
         # TODO find a smarter way of doing this
+        # TODO delete specific departing_unit replica
         for db in list(dbs.keys()):
-            if dbs[db]["name"].contains(f"{database}_standby_"):
+            if f"{database}_standby_" in dbs[db]["dbname"]:
                 del dbs[db]
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)

@@ -318,7 +318,7 @@ class PgBouncerCharm(CharmBase):
 
         if user in cfg[PGB]["admin_users"]:
             cfg[PGB]["admin_users"].remove(user)
-        if user in cfg[PGB]["stats_users"]:
+        if user in cfg[PGB].get("stats_users", []):
             cfg[PGB]["stats_users"].remove(user)
 
         self._render_userlist(userlist)
