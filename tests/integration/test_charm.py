@@ -24,6 +24,7 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
 @pytest.mark.abort_on_fail
+@pytest.mark.smoke
 async def test_build_and_deploy_current(ops_test: OpsTest):
     """Build the charm-under-test and deploy it together with related charms.
 

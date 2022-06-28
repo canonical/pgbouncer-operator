@@ -18,6 +18,7 @@ APP_NAME = METADATA["name"]
 
 
 @pytest.mark.abort_on_fail
+@pytest.mark.legacy_relation
 async def test_create_backend_db_admin_legacy_relation_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another.
 
@@ -46,6 +47,7 @@ async def test_create_backend_db_admin_legacy_relation_slowtest(ops_test: OpsTes
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
 
+@pytest.mark.legacy_relation
 async def test_backend_db_admin_legacy_relation_scaling_slowtest(ops_test: OpsTest):
     """Test that the pgbouncer config accurately reflects postgres replication changes.
 
