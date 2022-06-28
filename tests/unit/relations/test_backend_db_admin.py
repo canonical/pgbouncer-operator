@@ -56,6 +56,7 @@ class TestBackendDbAdmin(unittest.TestCase):
         expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
+        # Assert there's no standby information in the rendered config.
         self.assertNotIn(f"{STANDBY_PREFIX}0", rendered_cfg.keys())
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
@@ -65,14 +66,6 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         The integration tests for this relation are a more extensive test of this functionality.
         """
-        import logging
-
-        logging.error(dir(self.harness.charm.unit))
-        logging.error(self.harness.charm.unit.name)
-        logging.error(dir(self.harness.charm.unit.app))
-        logging.error(dir(self.harness.charm))
-        logging.error(dir(self.harness.charm.model))
-        logging.error(dir(self.harness.charm.model.relations))
         mock_event = MagicMock()
         self.relation._on_relation_departed(mock_event)
 
