@@ -35,14 +35,15 @@ import logging
 from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
-from ops.charm import CharmBase, RelationChangedEvent, RelationDepartedEvent
+from relations.backend_db_admin import STANDBY_PREFIX
+from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
 logger = logging.getLogger(__name__)
 
 RELATION_ID = "db"
-
+STANDBY_PREFIX_LEN = len(STANDBY_PREFIX)
 
 class DbProvides(Object):
     """Defines functionality for the 'requires' side of the 'db' relation.
@@ -50,6 +51,7 @@ class DbProvides(Object):
     Hook events observed:
         - relation-changed
         - relation-departed
+        - relation-broken
     """
 
     def __init__(self, charm: CharmBase):
@@ -57,6 +59,7 @@ class DbProvides(Object):
 
         self.framework.observe(charm.on[RELATION_ID].relation_changed, self._on_relation_changed)
         self.framework.observe(charm.on[RELATION_ID].relation_departed, self._on_relation_departed)
+        self.framework.observe(charm.on[RELATION_ID].relation_broken, self._on_relation_broken)
 
         self.charm = charm
 
@@ -74,13 +77,20 @@ class DbProvides(Object):
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
+        cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
+
+        if not dbs.get("pg_master"):
+            # wait for backend_db_admin relation to populate config before we use it.
+            logger.warning("waiting for backend-db-admin relation")
+            change_event.defer()
+            return
+
         unit_databag = change_event.relation.data[self.charm.unit]
         app_databag = change_event.relation.data[self.charm.app]
 
-        # Check if the application databag is already populated, and store var as an explicit
-        app_databag_populated = app_databag.get("user") is not None
-
-        if app_databag_populated:
+        # Check if app_databag is populated with relation data.
+        if app_databag.get("user") is not None:
             database = unit_databag["database"]
             user = unit_databag["user"]
             password = unit_databag["password"]
@@ -94,16 +104,8 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        if not dbs.get("pg_master"):
-            # wait for backend_db_admin relation to populate config.
-            logger.warning("waiting for backend-db-admin relation")
-            change_event.defer()
-            return
-
         database = database.replace("-", "_")
 
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
 
@@ -115,16 +117,16 @@ class DbProvides(Object):
             "password": password,
             "fallback_application_name": change_event.app.name,
         }
-
         dbs[database] = primary
 
-        standbys = []
-        for standby_name, standby_data in dbs.items():
-            # skip everything that's not a postgres standby.
-            if standby_name[:21] != "pgb_postgres_standby_":
+        standbys = ""
+        for standby_name, standby_data in dict(dbs.items()):
+            # skip everything that's not a postgres standby, as defined by the backend-db-admin
+            # relation
+            if standby_name[:STANDBY_PREFIX_LEN] != STANDBY_PREFIX:
                 continue
 
-            standby_idx = int(standby_name[21:])
+            standby_idx = standby_name[STANDBY_PREFIX_LEN:]
             standby = {
                 "host": standby_data["host"],
                 "dbname": database,
@@ -133,14 +135,11 @@ class DbProvides(Object):
                 "password": password,
                 "fallback_application_name": change_event.app.name,
             }
-
-            standbys.append(standby)
-
-        standby_str = ""
-        for standby in standbys:
             dbs[f"{database}_standby_{standby_idx}"] = standby
-            standby_str += pgb.parse_dict_to_kv_string(standby) + ","
 
+            standbys += pgb.parse_dict_to_kv_string(standby) + ","
+
+        # Strip final comma off standby string
         standby_str = standby_str[:-1]
 
         for databag in [app_databag, unit_databag]:
@@ -150,7 +149,7 @@ class DbProvides(Object):
             databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
             databag["standbys"] = standby_str
-            databag["state"] = "master"
+            databag["state"] = self._get_state(standby_str)
             databag["version"] = "12"
             databag["user"] = user
             databag["password"] = password
@@ -158,6 +157,10 @@ class DbProvides(Object):
 
         self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _get_state(self, standby_str):
+        # TODO update to provide "replica" status (or whatever it's called)
+        return "standalone" if standby_str is "" else "master"
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
@@ -177,31 +180,42 @@ class DbProvides(Object):
         logger.warning(
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
-        logger.info(departed_event.relation.data)
 
+        logger.info(departed_event.relation.data)
         app_databag = departed_event.relation.data[self.charm.app]
-        departing_unit_databag = departed_event.relation.data[departed_event.unit]
+        logger.info(app_databag)
         departing_unit = departed_event.unit
         logger.info(departing_unit)
+        departing_unit_databag = departed_event.relation.data[departed_event.unit]
         logger.info(departing_unit_databag)
-        logger.info(app_databag)
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
+        database = app_databag["database"]
+
+        # TODO delete specific departing_unit replica
+
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _on_relation_broken(self, broken_event: RelationBrokenEvent):
+        """Handle db-relation-broken event.
+
+        Removes all traces of the given application from the pgbouncer config.
+        """
+        app_databag = broken_event.relation.data[self.charm.app]
+
+        cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
         user = app_databag["user"]
         database = app_databag["database"]
-        self.charm.remove_user(user, cfg=cfg, render_cfg=False)
 
-        # TODO check that
         del dbs[database]
-        # Delete replicas
-        # TODO find a smarter way of doing this
-        # TODO delete specific departing_unit replica
         for db in list(dbs.keys()):
             if f"{database}_standby_" in dbs[db]["dbname"]:
                 del dbs[db]
 
+        self.charm.remove_user(user, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def get_allowed_subnets(self, relation: Relation) -> str:
