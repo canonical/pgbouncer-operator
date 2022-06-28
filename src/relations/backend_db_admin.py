@@ -112,7 +112,10 @@ class BackendDbAdminRequires(Object):
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
-        postgres_data = change_event.relation.data[change_event.unit]
+        postgres_data = change_event.relation.data.get(change_event.unit)
+        # if not postgres_data:
+        #     # if change_event.unit doesn't exist,
+        #     return
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]

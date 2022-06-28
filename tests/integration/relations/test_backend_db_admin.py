@@ -90,9 +90,16 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/2"]
+    unit = ops_test.model.units["pgbouncer-operator/0"]
     await ops_test.model.destroy_unit("postgresql/0")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, PG], status="active", timeout=1000)
+    await asyncio.gather(
+        ops_test.model.wait_for_idle(
+            apps=[PG], status="active", timeout=1000, wait_for_exact_units=1
+        ),
+        ops_test.model.wait_for_idle(
+            apps=[APP_NAME], status="active", timeout=1000, wait_for_exact_units=1
+        ),
+    )
     cfg = await helpers.get_cfg(unit)
     # Now there is only one config, with no replicas, and the config reflects this.
     assert list(cfg["databases"].keys()) == ["pg_master"]
@@ -101,7 +108,7 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/2"]
+    unit = ops_test.model.units["pgbouncer-operator/0"]
     # Remove relation but keep pg application because we're going to need it for future tests.
     await ops_test.model.applications[PG].remove_relation(
         f"{APP_NAME}:backend-db-admin", f"{PG}:db-admin"
