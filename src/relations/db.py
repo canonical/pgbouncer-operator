@@ -94,19 +94,16 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        database = database.replace("-", "_")
-
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
-
-        self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
-
         if not dbs.get("pg_master"):
             # wait for backend_db_admin relation to populate config.
             logger.warning("waiting for backend-db-admin relation")
             change_event.defer()
             return
 
+        database = database.replace("-", "_")
+
+        cfg = self.charm._read_pgb_config()
+        dbs = cfg["databases"]
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
 
@@ -159,6 +156,7 @@ class DbProvides(Object):
             databag["password"] = password
             databag["database"] = database
 
+        self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
