@@ -66,7 +66,7 @@ class DbAdminProvides(Object):
         Takes information from the db-admin relation databag and copies it into the pgbouncer.ini
         config.
         """
-        if not self.charm.is_leader:
+        if not self.charm.unit.is_leader():
             return
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
@@ -172,7 +172,7 @@ class DbAdminProvides(Object):
         TODO remove correct units when unit is removed
 
         """
-        if not self.charm.is_leader:
+        if not self.charm.unit.is_leader():
             return
 
         logger.info("db relation removed - updating config")

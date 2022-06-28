@@ -388,14 +388,5 @@ class PgBouncerCharm(CharmBase):
         """Current unit ip."""
         return self.model.get_binding(PEER).network.bind_address
 
-    @property
-    def is_leader(self) -> bool:
-        """Bool that states whether this unit is the leader.
-
-        NB replication isn't implemented yet, so this just returns True all the time.
-        """
-        return True
-
-
 if __name__ == "__main__":
     main(PgBouncerCharm)

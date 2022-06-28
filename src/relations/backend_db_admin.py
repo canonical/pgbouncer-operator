@@ -166,7 +166,11 @@ class BackendDbAdminRequires(Object):
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]):
-        """Updates standby list to match new relation data."""
+        """Updates standby list to match new relation data.
+        Args:
+            cfg: PgbConfig object that will be modified and returned.
+            standbys: a list of postgres key=value strings, each describing one postgres standby.
+        """
         dbs = cfg["databases"]
 
         standby_names = []
@@ -176,9 +180,9 @@ class BackendDbAdminRequires(Object):
             dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
 
         # Remove old standby information
-        for db in list(dbs.keys()):
-            if db[:21] == STANDBY_PREFIX and db not in standby_names:
-                del dbs[db]
+        for db_name in list(dbs.keys()):
+            if db_name[:21] == STANDBY_PREFIX and db_name not in standby_names:
+                del dbs[db_name]
 
         return cfg
 

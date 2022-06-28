@@ -69,13 +69,8 @@ class DbProvides(Object):
         Takes information from the db relation databag and copies it into the pgbouncer.ini
         config.
         """
-        if not self.charm.is_leader:
+        if not self.charm.unit.is_leader():
             return
-
-        logger.info(f"Setting up {change_event.relation.name} relation - updating config")
-        logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
-        )
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
@@ -85,6 +80,11 @@ class DbProvides(Object):
             logger.warning("waiting for backend-db-admin relation")
             change_event.defer()
             return
+
+        logger.info(f"Setting up {change_event.relation.name} relation - updating config")
+        logger.warning(
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+        )
 
         unit_databag = change_event.relation.data[self.charm.unit]
         app_databag = change_event.relation.data[self.charm.app]
@@ -120,7 +120,7 @@ class DbProvides(Object):
         dbs[database] = primary
 
         standbys = ""
-        for standby_name, standby_data in dict(dbs.items()):
+        for standby_name, standby_data in dict(dbs).items():
             # skip everything that's not a postgres standby, as defined by the backend-db-admin
             # relation
             if standby_name[:STANDBY_PREFIX_LEN] != STANDBY_PREFIX:
@@ -140,7 +140,7 @@ class DbProvides(Object):
             standbys += pgb.parse_dict_to_kv_string(standby) + ","
 
         # Strip final comma off standby string
-        standby_str = standby_str[:-1]
+        standbys = standbys[:-1]
 
         for databag in [app_databag, unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
@@ -148,8 +148,8 @@ class DbProvides(Object):
             databag["host"] = f"http://{master_host}"
             databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
-            databag["standbys"] = standby_str
-            databag["state"] = self._get_state(standby_str)
+            databag["standbys"] = standbys
+            databag["state"] = self._get_state(standbys)
             databag["version"] = "12"
             databag["user"] = user
             databag["password"] = password
@@ -158,9 +158,9 @@ class DbProvides(Object):
         self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def _get_state(self, standby_str):
+    def _get_state(self, standbys):
         # TODO update to provide "replica" status (or whatever it's called)
-        return "standalone" if standby_str is "" else "master"
+        return "standalone" if standbys is "" else "master"
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
@@ -169,11 +169,8 @@ class DbProvides(Object):
         function assumes that relation databags are destroyed when the relation itself is removed.
 
         This doesn't delete users or tables, following the design of the legacy charm.
-
-        TODO remove correct units when unit is removed
-
         """
-        if not self.charm.is_leader:
+        if not self.charm.unit.is_leader():
             return
 
         logger.info("db relation removed - updating config")
@@ -186,8 +183,8 @@ class DbProvides(Object):
         logger.info(app_databag)
         departing_unit = departed_event.unit
         logger.info(departing_unit)
-        departing_unit_databag = departed_event.relation.data[departed_event.unit]
-        logger.info(departing_unit_databag)
+        self_unit_databag = departed_event.relation.data[self.charm.unit]
+        logger.info(self_unit_databag)
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
@@ -203,6 +200,7 @@ class DbProvides(Object):
 
         Removes all traces of the given application from the pgbouncer config.
         """
+        logging.info(broken_event.relation.data)
         app_databag = broken_event.relation.data[self.charm.app]
 
         cfg = self.charm._read_pgb_config()
