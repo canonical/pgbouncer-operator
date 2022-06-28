@@ -76,7 +76,7 @@ from ops.charm import (
 from ops.framework import Object
 from ops.model import Unit
 
-from lib.charms.pgbouncer_operator.v0.pgb import PgbConfig
+from charms.pgbouncer_operator.v0.pgb import PgbConfig
 
 logger = logging.getLogger(__name__)
 
