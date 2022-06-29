@@ -80,6 +80,7 @@ from ops.model import Unit
 logger = logging.getLogger(__name__)
 
 RELATION_ID = "backend-db-admin"
+RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 STANDBY_PREFIX = "pgb_postgres_standby_"
 
 
@@ -136,9 +137,10 @@ class BackendDbAdminRequires(Object):
 
         self._update_standbys(cfg, standbys)
 
-        # TODO add dedicated relation user?
+        self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
-        # TODO trigger relation-changed hooks for db and db-admin if they exist
+
+        self._trigger_db_relations()
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle backend-db-admin-relation-departed event.
@@ -164,9 +166,10 @@ class BackendDbAdminRequires(Object):
         standbys = standbys.split("\n") if standbys else []
 
         self._update_standbys(cfg, standbys)
-        # TODO trigger relation-changed hooks for db and db-admin if they exist
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+        self._trigger_db_relations()
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
         """Updates standby list to match new relation data.
@@ -213,6 +216,14 @@ class BackendDbAdminRequires(Object):
             if db[:21] == STANDBY_PREFIX:
                 del dbs[db]
 
-        # TODO remove user
+        self.charm.remove_user(RELATION_ADMIN)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
-        # TODO trigger relation-changed hooks for db and db-admin if they exist
+        self._trigger_db_relations()
+
+    def _trigger_db_relations(self):
+        """Triggers the other legacy relations if they exist. """
+        if self.charm.model.get_relation("db") is not None:
+            self.charm.on.db_relation_changed.emit()
+
+        if self.charm.model.get_relation("db-admin") is not None:
+            self.charm.on.db_admin_relation_changed.emit()

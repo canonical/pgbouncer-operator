@@ -105,7 +105,7 @@ class DbProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{RELATION_ID}_{change_event.relation.id}_{database}"
+            user = f"{RELATION_ID}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
             password = pgb.generate_password()
 
         if not database:
@@ -129,28 +129,7 @@ class DbProvides(Object):
         dbs[database] = primary
 
         # Get data about standby units for databags and charm config.
-        standbys = ""
-        for standby_name, standby_data in dict(dbs).items():
-            # skip everything that's not a postgres standby, as defined by the backend-db-admin
-            # relation
-            if standby_name[:STANDBY_PREFIX_LEN] != STANDBY_PREFIX:
-                continue
-
-            standby_idx = standby_name[STANDBY_PREFIX_LEN:]
-            standby = {
-                "host": standby_data["host"],
-                "dbname": database,
-                "port": standby_data["port"],
-                "user": user,
-                "password": password,
-                "fallback_application_name": change_event.app.name,
-            }
-            dbs[f"{database}_standby_{standby_idx}"] = standby
-
-            standbys += pgb.parse_dict_to_kv_string(standby) + ","
-
-        # Strip final comma off standby string
-        standbys = standbys[:-1]
+        standbys = self._get_standbys(cfg, change_event, database, user, password)
 
         # Populate databags
         for databag in [app_databag, unit_databag]:
@@ -170,6 +149,33 @@ class DbProvides(Object):
         # Write config data to charm filesystem
         self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _get_postgres_standbys(self, cfg, event, database, user, password):
+        dbs = cfg["databases"]
+
+        standbys = ""
+        for standby_name, standby_data in dict(dbs).items():
+            # skip everything that's not a postgres standby, as defined by the backend-db-admin
+            # relation
+            if standby_name[:STANDBY_PREFIX_LEN] != STANDBY_PREFIX:
+                continue
+
+            standby_idx = standby_name[STANDBY_PREFIX_LEN:]
+            standby = {
+                "host": standby_data["host"],
+                "dbname": database,
+                "port": standby_data["port"],
+                "user": user,
+                "password": password,
+                "fallback_application_name": event.app.name,
+            }
+            dbs[f"{database}_standby_{standby_idx}"] = standby
+
+            standbys += pgb.parse_dict_to_kv_string(standby) + ","
+
+        # Strip final comma off standby string
+        standbys = standbys[:-1]
+        return standbys
 
     def _get_state(self, standbys: str) -> str:
         """Gets the given state for this unit.
@@ -193,41 +199,24 @@ class DbProvides(Object):
 
         This doesn't delete users or tables, following the design of the legacy charm.
         """
-        if not self.charm.unit.is_leader():
-            return
-
         logger.info("db relation removed - updating config")
         logger.warning(
             "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
         )
 
-        logger.info(departed_event.relation.data)
         app_databag = departed_event.relation.data[self.charm.app]
-        logger.info(app_databag)
-        departing_unit = departed_event.unit
-        logger.info(departing_unit)
-        self_unit_databag = departed_event.relation.data[self.charm.unit]
-        logger.info(self_unit_databag)
+        unit_databag = departed_event.relation.data[self.charm.unit]
 
-        cfg = self.charm._read_pgb_config()
-        dbs = cfg["databases"]
-
-        database = app_databag["database"]
-
-        # TODO delete specific departing_unit replica
-        # Read standby info
-        # write new standby info
-        # remove old standbys
-        # update master if necessary
-
-        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        # All other changes are backend, and should be handled by the relation_changed handler that
+        # fires after backend_relation_changed.
+        for databag in [app_databag, unit_databag]:
+            databag["allowed-subnets"] = self.get_allowed_subnets(departed_event.relation)
 
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
 
         Removes all traces of the given application from the pgbouncer config.
         """
-        logging.info(broken_event.relation.data)
         app_databag = broken_event.relation.data[self.charm.app]
 
         cfg = self.charm._read_pgb_config()
