@@ -136,7 +136,9 @@ class BackendDbAdminRequires(Object):
 
         self._update_standbys(cfg, standbys)
 
+        # TODO add dedicated relation user?
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        # TODO trigger relation-changed hooks for db and db-admin if they exist
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle backend-db-admin-relation-departed event.
@@ -162,6 +164,7 @@ class BackendDbAdminRequires(Object):
         standbys = standbys.split("\n") if standbys else []
 
         self._update_standbys(cfg, standbys)
+        # TODO trigger relation-changed hooks for db and db-admin if they exist
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -206,4 +209,6 @@ class BackendDbAdminRequires(Object):
             if db[:21] == STANDBY_PREFIX:
                 del dbs[db]
 
+        # TODO remove user
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        # TODO trigger relation-changed hooks for db and db-admin if they exist

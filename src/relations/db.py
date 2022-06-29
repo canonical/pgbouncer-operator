@@ -105,8 +105,7 @@ class DbProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            # replace invalid characters, and remove the unit index from unit.name.
-            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')[:-2]}"
+            user = f"{RELATION_ID}_{change_event.relation.id}_{database}"
             password = pgb.generate_password()
 
         if not database:
@@ -116,9 +115,9 @@ class DbProvides(Object):
 
         database = database.replace("-", "_")
 
+        # Get data about primary unit for databags and charm config.
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
-
         primary = {
             "host": master_host,
             "dbname": database,
@@ -129,6 +128,7 @@ class DbProvides(Object):
         }
         dbs[database] = primary
 
+        # Get data about standby units for databags and charm config.
         standbys = ""
         for standby_name, standby_data in dict(dbs).items():
             # skip everything that's not a postgres standby, as defined by the backend-db-admin
@@ -152,6 +152,7 @@ class DbProvides(Object):
         # Strip final comma off standby string
         standbys = standbys[:-1]
 
+        # Populate databags
         for databag in [app_databag, unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
             databag["allowed-units"] = self.get_allowed_units(change_event.relation)
@@ -166,6 +167,7 @@ class DbProvides(Object):
 
         unit_databag["state"] = self._get_state(standbys)
 
+        # Write config data to charm filesystem
         self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -213,6 +215,10 @@ class DbProvides(Object):
         database = app_databag["database"]
 
         # TODO delete specific departing_unit replica
+        # Read standby info
+        # write new standby info
+        # remove old standbys
+        # update master if necessary
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 

@@ -86,7 +86,7 @@ class DbAdminProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')}"
+            user = f"{RELATION_ID}_{change_event.relation.id}_{database}"
             password = pgb.generate_password()
 
         if not database:
