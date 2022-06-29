@@ -19,12 +19,13 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
+PGB_DIR = pgb.PGB_DIR
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
+@pytest.mark.smoke
+async def test_build_and_deploy_current(ops_test: OpsTest):
     """Build the charm-under-test and deploy it together with related charms.
 
     Assert on the unit status before any relations/configurations take place.
@@ -34,21 +35,28 @@ async def test_build_and_deploy(ops_test: OpsTest):
         charm,
         application_name=APP_NAME,
     )
-    # pgbouncer start command has to be successful for status to be active, and it fails if config
-    # is invalid. However, this will be tested further once health monitoring is implemented.
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    # Pgbouncer enters a blocked status without a postgres backend database relation
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+    assert (
+        ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
+        == "waiting for backend database relation"
+    )
 
 
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    await ops_test.model.applications["pgbouncer-operator"].set_config(
+    await ops_test.model.applications[APP_NAME].set_config(
         {
             "pool_mode": "transaction",
             "max_db_connections": "44",
         }
     )
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+    assert (
+        ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
+        == "waiting for backend database relation"
+    )
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await helpers.get_unit_cores(unit)
@@ -57,7 +65,7 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
 
-    primary_cfg = await helpers.cat_from(unit, INI_PATH)
+    primary_cfg = await helpers.get_cfg(unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
@@ -79,7 +87,11 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=300)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=300)
+    assert (
+        ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
+        == "waiting for backend database relation"
+    )
 
     # verify all processes start again
     assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes

@@ -58,7 +58,12 @@ The following config values are set as constants in the charm:
 - `db:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
 - `db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
 - `backend-db-admin:[pgsql](https://github.com/canonical/ops-lib-pgsql/)`
-  - Provides a relaton to the corresponding [postgresql-operator charm](https://github.com/canonical/postgresql-operator).
+  - Provides a relaton to the corresponding [postgresql-operator charm](https://github.com/canonical/postgresql-operator), as well as all charms using this legacy relation.
+  - This relation expects the following data from provider charms:
+    - `master` field, for the primary postgresql unit.
+    - `standbys` field, a \n-delimited list of standby data.
+  - This legacy relation uses the unfortunate `master` term for postgresql primaries.
+  - This relation is to be deprecated in future.
 
 The following relations provide support for the [LMA charm bundle](https://juju.is/docs/lma2), our expected observability stack.
 

@@ -5,7 +5,12 @@
 
 import logging
 
+from charms.pgbouncer_operator.v0 import pgb
+from pytest_operator.plugin import OpsTest
+
 logger = logging.getLogger(__name__)
+
+INI_PATH = f"{pgb.PGB_DIR}/pgbouncer.ini"
 
 
 async def cat_from(unit, path: str) -> str:
@@ -20,6 +25,31 @@ async def cat_from(unit, path: str) -> str:
     """
     action = await unit.run(f"cat {path}")
     return action.results.get("Stdout", None)
+
+
+async def get_cfg(unit) -> pgb.PgbConfig:
+    """Get primary config file from a unit.
+
+    Returns:
+        pgb.PgbConfig: primary config object from the given unit
+    """
+    cfg_str = await cat_from(unit, INI_PATH)
+    return pgb.PgbConfig(cfg_str)
+
+
+async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
+    """Get unit IP address.
+
+    Args:
+        ops_test: The ops test framework instance
+        application_name: The name of the application
+        unit_name: The name of the unit
+
+    Returns:
+        IP address of the unit
+    """
+    status = await ops_test.model.get_status()
+    return status["applications"][application_name].units[unit_name]["address"]
 
 
 async def get_unit_cores(unit: str) -> int:

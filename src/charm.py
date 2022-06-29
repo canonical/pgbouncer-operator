@@ -9,6 +9,7 @@ import os
 import pwd
 import shutil
 import subprocess
+from copy import deepcopy
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
@@ -18,6 +19,9 @@ from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+
+from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
+from relations.backend_db_admin import BackendDbAdminRequires
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
+
+        self.legacy_backend_relation = BackendDbAdminRequires(self)
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
@@ -96,7 +102,11 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(f"{service}")
 
-            self.unit.status = ActiveStatus("pgbouncer started")
+            if self._has_backend_relation():
+                self.unit.status = ActiveStatus("pgbouncer started")
+            else:
+                # Wait for backend relation relation if it doesn't exist
+                self.unit.status = BlockedStatus("waiting for backend database relation")
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
@@ -113,7 +123,14 @@ class PgBouncerCharm(CharmBase):
                         f"{service} is not running - try restarting using `juju actions pgbouncer restart`"
                     )
                     return
-            self.unit.status = ActiveStatus()
+
+            if self._has_backend_relation():
+                # All is well, set ActiveStatus
+                self.unit.status = ActiveStatus()
+            else:
+                # If we don't have any backend, this charm doesn't serve a purpose, and therefore
+                # should be related to one or removed.
+                self.unit.status = BlockedStatus("waiting for backend database relation")
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to get pgbouncer status")
@@ -121,7 +138,8 @@ class PgBouncerCharm(CharmBase):
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
 
-        Reads config values and parses them to pgbouncer config, restarting if necessary.
+        Reads charm config values, generates derivative values, writes new pgbouncer config, and
+        restarts pgbouncer to apply changes.
         """
         config = self._read_pgb_config()
         config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
@@ -147,16 +165,20 @@ class PgBouncerCharm(CharmBase):
             config = pgb.PgbConfig(file.read())
         return config
 
-    def _render_service_configs(self, primary_config: pgb.PgbConfig, reload_pgbouncer=False):
+    def _render_service_configs(self, config: pgb.PgbConfig, reload_pgbouncer=False):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
         instance of pgbouncer, implemented as a templated systemd service.
 
         TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
-        TODO https://warthogs.atlassian.net/browse/DPE-218
+             https://warthogs.atlassian.net/browse/DPE-218. This is available in Ubuntu 22.04, but
+             not 20.04.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        # create a copy of the config so the original reference is unchanged.
+        primary_config = deepcopy(config)
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
@@ -228,6 +250,14 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
+
+    def _has_backend_relation(self) -> bool:
+        """Returns whether or not this charm is related to a postgresql backend.
+
+        TODO this will be updated to include the new backend relation once it is written.
+        """
+        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        return legacy_backend_relation is not None
 
     # =================
     #  Charm Utilities
