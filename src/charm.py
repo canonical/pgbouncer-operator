@@ -337,6 +337,14 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
+    def _has_backend_relation(self) -> bool:
+        """Returns whether or not this charm is related to a postgresql backend.
+
+        TODO this will be updated to include the new backend relation once it is written.
+        """
+        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        return legacy_backend_relation is not None
+
     # =================
     #  Charm Utilities
     # =================

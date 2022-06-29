@@ -168,11 +168,15 @@ class BackendDbAdminRequires(Object):
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def _update_standbys(self, cfg: PgbConfig, standbys: List[str]):
+    def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
         """Updates standby list to match new relation data.
+
         Args:
             cfg: PgbConfig object that will be modified and returned.
             standbys: a list of postgres key=value strings, each describing one postgres standby.
+
+        Returns
+            cfg, modified to include the correct standbys.
         """
         dbs = cfg["databases"]
 
