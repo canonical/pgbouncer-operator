@@ -388,5 +388,6 @@ class PgBouncerCharm(CharmBase):
         """Current unit ip."""
         return self.model.get_binding(PEER).network.bind_address
 
+
 if __name__ == "__main__":
     main(PgBouncerCharm)

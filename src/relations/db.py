@@ -35,15 +35,22 @@ import logging
 from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
-from relations.backend_db_admin import STANDBY_PREFIX
-from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
+from ops.charm import (
+    CharmBase,
+    RelationBrokenEvent,
+    RelationChangedEvent,
+    RelationDepartedEvent,
+)
 from ops.framework import Object
 from ops.model import Relation, Unit
+
+from relations.backend_db_admin import STANDBY_PREFIX
 
 logger = logging.getLogger(__name__)
 
 RELATION_ID = "db"
 STANDBY_PREFIX_LEN = len(STANDBY_PREFIX)
+
 
 class DbProvides(Object):
     """Defines functionality for the 'requires' side of the 'db' relation.
@@ -62,6 +69,8 @@ class DbProvides(Object):
         self.framework.observe(charm.on[RELATION_ID].relation_broken, self._on_relation_broken)
 
         self.charm = charm
+
+        # TODO consider making all the databag variables member variables of this object so they can be accessed outside of method scope.
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
@@ -96,7 +105,8 @@ class DbProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')}"
+            # replace invalid characters, and remove the unit index from unit.name.
+            user = f"{change_event.relation.id}_{change_event.unit.name.replace('-', '_')[:-2]}"
             password = pgb.generate_password()
 
         if not database:
@@ -149,18 +159,29 @@ class DbProvides(Object):
             databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
             databag["standbys"] = standbys
-            databag["state"] = self._get_state(standbys)
             databag["version"] = "12"
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
 
+        unit_databag["state"] = self._get_state(standbys)
+
         self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def _get_state(self, standbys):
-        # TODO update to provide "replica" status (or whatever it's called)
-        return "standalone" if standbys is "" else "master"
+    def _get_state(self, standbys: str) -> str:
+        """Gets the given state for this unit.
+        Args:
+            standbys: the comma-separated list of postgres standbys
+        Returns:
+            The described state of this unit. Can be 'standalone', 'master', or 'standby'.
+        """
+        if standbys is "":
+            return "standalone"
+        if self.charm.unit.is_leader:
+            return "master"
+        else:
+            return "standby"
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
