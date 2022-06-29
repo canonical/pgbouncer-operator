@@ -163,9 +163,11 @@ class BackendDbAdminRequires(Object):
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
         """Updates standby list to match new relation data.
+
         Args:
             cfg: PgbConfig object that will be modified and returned.
             standbys: a list of postgres key=value strings, each describing one postgres standby.
+
         Returns
             cfg, modified to include the correct standbys.
         """
