@@ -3,11 +3,12 @@
 
 import unittest
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, call, patch
 
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
+from constants import PGB
 from lib.charms.pgbouncer_operator.v0 import pgb
 from relations.backend_db_admin import STANDBY_PREFIX
 
@@ -28,7 +29,8 @@ class TestBackendDbAdmin(unittest.TestCase):
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_changed(self, _render, _add_user, _read):
+    @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")
+    def test_on_relation_changed(self, _trigger_relations, _render, _add_user, _read):
         """This test exists to check the basics for how the config is expected to change.
 
         The integration tests for this relation are a more extensive test of this functionality.
@@ -49,6 +51,9 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
 
+        _trigger_relations.assert_called()
+        _trigger_relations.reset_mock()
+
         del mock_event.relation.data["mock_unit"]["standbys"]
 
         self.relation._on_relation_changed(mock_event)
@@ -60,23 +65,67 @@ class TestBackendDbAdmin(unittest.TestCase):
         # Assert there's no standby information in the rendered config.
         self.assertNotIn(f"{STANDBY_PREFIX}0", rendered_cfg.keys())
 
+        _trigger_relations.assert_called()
+
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_departed(self, _render, _read):
+    @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")
+    def test_on_relation_departed(self, _trigger_relations, _render, _add_user, _read):
         """This test exists to check the basics for how the config is expected to change.
 
         The integration tests for this relation are a more extensive test of this functionality.
         """
-        mock_event = MagicMock()
-        self.relation._on_relation_departed(mock_event)
+        setup_mock_event = MagicMock()
+        setup_mock_event.unit = "mock_unit"
+        setup_mock_event.relation.data = {"mock_unit": deepcopy(TEST_UNIT)}
+        self.relation._on_relation_changed(setup_mock_event)
+        setup_cfg = pgb.PgbConfig(_render.call_args[0][0])
+        _trigger_relations.reset_mock()
 
-        expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        rendered_cfg = _render.call_args[0][0]
-        self.assertEqual(expected_cfg.render(), rendered_cfg.render())
-        self.assertNotIn("pg_master", rendered_cfg.keys())
-        assert "TODO reevaluate this test" == False
+        depart_mock_event = MagicMock()
+        depart_mock_event.unit = "mock_unit"
+        depart_mock_event.relation.data = {
+            "mock_unit": {
+                "master": "host=master port=1 dbname=testdatabase",
+            }
+        }
+        self.relation._on_relation_departed(depart_mock_event)
+        departed_cfg = pgb.PgbConfig(_render.call_args[0][0])
+        self.assertNotEqual(departed_cfg.render(), setup_cfg.render())
+        assert list(departed_cfg["databases"].keys()) == ["pg_master"]
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+        _trigger_relations.assert_called_once()
+
+    @patch("charm.PgBouncerCharm._read_pgb_config")
+    @patch("charm.PgBouncerCharm.remove_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_broken(self, _render, _read):
-        assert False
+    @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")
+    def test_on_relation_broken(self, _trigger_relations, _render, _remove_user, _read):
+        input_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        input_cfg["databases"]["pg_master"] = {"test": "value"}
+        input_cfg["databases"]["pgb_postgres_standby_0"] = {"test": "value"}
+        input_cfg["databases"]["pgb_postgres_standby_555"] = {"test": "value"}
+        input_cfg["databases"]["other_database"] = {"test": "value"}
+        _read.return_value = input_cfg
+
+        self.relation._on_relation_broken(MagicMock())
+
+        broken_cfg = pgb.PgbConfig(_render.call_args[0][0])
+        for dbname in ["pg_master", "pgb_postgres_standby_0", "pgb_postgres_standby_555"]:
+            assert dbname not in broken_cfg["databases"].keys()
+        assert "other_database" in broken_cfg["databases"].keys()
+
+        _remove_user.assert_called_with("jujuadmin_pgbouncer-operator")
+        _trigger_relations.assert_called_once()
+
+    @patch("ops.framework.BoundEvent.emit")
+    @patch("ops.model.Model.get_relation")
+    def test_trigger_db_relations(self, _get_relation, _emit_relation_changed):
+        _get_relation.return_value = None
+        self.relation._trigger_db_relations()
+        _emit_relation_changed.assert_not_called()
+
+        _get_relation.return_value = "Not None"
+        self.relation._trigger_db_relations()
+        _emit_relation_changed.assert_has_calls([call(), call()])

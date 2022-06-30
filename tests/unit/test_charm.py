@@ -365,7 +365,7 @@ class TestCharm(unittest.TestCase):
         stats_users = list(cfg[PGB]["stats_users"])
 
         # try to remove user that doesn't exist
-        self.charm.remove_user("nonexistent-user", cfg = cfg)
+        self.charm.remove_user("nonexistent-user", cfg=cfg)
         _render_userlist.assert_not_called()
         assert cfg[PGB]["admin_users"] == admin_users
         assert cfg[PGB]["stats_users"] == stats_users
@@ -376,4 +376,3 @@ class TestCharm(unittest.TestCase):
         assert user not in cfg[PGB]["stats_users"]
         _render_userlist.assert_called_with({})
         _render_cfg.assert_called_with(cfg, True)
-
