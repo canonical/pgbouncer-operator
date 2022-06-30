@@ -221,7 +221,7 @@ class BackendDbAdminRequires(Object):
         self._trigger_db_relations()
 
     def _trigger_db_relations(self):
-        """Triggers the other legacy relations if they exist. """
+        """Triggers the other legacy relations if they exist."""
         if self.charm.model.get_relation("db") is not None:
             self.charm.on.db_relation_changed.emit()
 
