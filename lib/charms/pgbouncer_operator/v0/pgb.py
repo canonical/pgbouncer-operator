@@ -32,7 +32,6 @@ from typing import Dict, Union
 logger = logging.getLogger(__name__)
 
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
-PORT_MAX = 49151  # Maximum valid port number before we get into ephemeral ports
 
 DEFAULT_CONFIG = {
     "databases": {},

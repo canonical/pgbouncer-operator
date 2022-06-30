@@ -270,13 +270,13 @@ class PgBouncerCharm(CharmBase):
             cfg = self._read_pgb_config()
         userlist = self._read_userlist()
 
-        # Return early if userlist already contains a password value for the given user
-        if userlist.get(user, "no_password") == password:
-            return
-
         # Userlist is key-value dict of users and passwords.
         if not password:
             password = pgb.generate_password()
+
+        # Return early if userlist already contains a password value for the given user
+        if userlist.get(user) == password:
+            return
 
         userlist[user] = password
 

@@ -305,7 +305,7 @@ class TestCharm(unittest.TestCase):
         _reload.assert_called()
 
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="testpass")
-    @patch("charm.PgBouncerCharm._read_userlist", return_value = {})
+    @patch("charm.PgBouncerCharm._read_userlist", return_value={})
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
