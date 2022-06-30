@@ -48,7 +48,6 @@ from relations.backend_db_admin import STANDBY_PREFIX
 
 logger = logging.getLogger(__name__)
 
-RELATION_ID = "db"
 STANDBY_PREFIX_LEN = len(STANDBY_PREFIX)
 
 
@@ -61,14 +60,33 @@ class DbProvides(Object):
         - relation-broken
     """
 
-    def __init__(self, charm: CharmBase):
-        super().__init__(charm, RELATION_ID)
+    def __init__(self, charm: CharmBase, admin: bool = False):
+        """Constructor for DbProvides object.
 
-        self.framework.observe(charm.on[RELATION_ID].relation_changed, self._on_relation_changed)
-        self.framework.observe(charm.on[RELATION_ID].relation_departed, self._on_relation_departed)
-        self.framework.observe(charm.on[RELATION_ID].relation_broken, self._on_relation_broken)
+        args:
+            charm: the charm for which this relation is provided
+            admin: a boolean defining whether or not this relation has admin permissions, switching
+                between "db" and "db-admin" relations.
+        """
+        if admin:
+            self.RELATION_ID = "db-admin"
+        else:
+            self.RELATION_ID = "db"
+
+        super().__init__(charm, self.RELATION_ID)
+
+        self.framework.observe(
+            charm.on[self.RELATION_ID].relation_changed, self._on_relation_changed
+        )
+        self.framework.observe(
+            charm.on[self.RELATION_ID].relation_departed, self._on_relation_departed
+        )
+        self.framework.observe(
+            charm.on[self.RELATION_ID].relation_broken, self._on_relation_broken
+        )
 
         self.charm = charm
+        self.admin = admin
 
         # TODO consider making all the databag variables member variables of this object so they can be accessed outside of method scope.
 
@@ -105,7 +123,7 @@ class DbProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{RELATION_ID}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            user = f"{self.RELATION_ID}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
             password = pgb.generate_password()
 
         if not database:
@@ -147,7 +165,7 @@ class DbProvides(Object):
         unit_databag["state"] = self._get_state(standbys)
 
         # Write config data to charm filesystem
-        self.charm.add_user(user, password, admin=False, cfg=cfg, render_cfg=False)
+        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _get_postgres_standbys(self, cfg, event, database, user, password):
@@ -184,7 +202,7 @@ class DbProvides(Object):
         Returns:
             The described state of this unit. Can be 'standalone', 'master', or 'standby'.
         """
-        if standbys is "":
+        if standbys == "":
             return "standalone"
         if self.charm.unit.is_leader:
             return "master"
@@ -207,10 +225,8 @@ class DbProvides(Object):
         app_databag = departed_event.relation.data[self.charm.app]
         unit_databag = departed_event.relation.data[self.charm.unit]
 
-        # All other changes are backend, and should be handled by the relation_changed handler that
-        # fires after backend_relation_changed.
         for databag in [app_databag, unit_databag]:
-            databag["allowed-subnets"] = self.get_allowed_subnets(departed_event.relation)
+            databag["allowed-units"] = self.get_allowed_units(departed_event.relation)
 
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.

@@ -16,7 +16,7 @@ TEST_UNIT = {
 }
 
 
-class TestBackendDbAdmin(unittest.TestCase):
+class TestDb(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -37,7 +37,14 @@ class TestBackendDbAdmin(unittest.TestCase):
         # TODO test with and without replicas
         # TODO test scaling on both sides of relation, and how it should change config
 
+        assert False
+
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_on_relation_departed(self, _render, _read):
-        pass
+        assert False
+
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._render_service_configs")
+    def test_on_relation_broken(self, _render, _read):
+        assert False

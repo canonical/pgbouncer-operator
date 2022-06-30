@@ -26,8 +26,9 @@ class TestBackendDbAdmin(unittest.TestCase):
         self.relation = self.harness.charm.legacy_backend_relation
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_changed(self, _render, _read):
+    def test_on_relation_changed(self, _render, _add_user, _read):
         """This test exists to check the basics for how the config is expected to change.
 
         The integration tests for this relation are a more extensive test of this functionality.
@@ -73,3 +74,9 @@ class TestBackendDbAdmin(unittest.TestCase):
         rendered_cfg = _render.call_args[0][0]
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
         self.assertNotIn("pg_master", rendered_cfg.keys())
+        assert "TODO reevaluate this test" == False
+
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._render_service_configs")
+    def test_on_relation_broken(self, _render, _read):
+        assert False

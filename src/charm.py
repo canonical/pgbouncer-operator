@@ -46,8 +46,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.legacy_db_relation = DbProvides(self)
-        self.legacy_db_admin_relation = DbAdminProvides(self)
+        self.legacy_db_relation = DbProvides(self, admin=False)
+        self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.legacy_backend_relation = BackendDbAdminRequires(self)
 
         self._cores = os.cpu_count()
@@ -272,7 +272,7 @@ class PgBouncerCharm(CharmBase):
         userlist = self._read_userlist()
 
         # Return early if userlist already contains a password value for the given user
-        if userlist.get(user):
+        if userlist.get(user, "no_password") == password:
             return
 
         # Userlist is key-value dict of users and passwords.
@@ -336,14 +336,6 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
-
-    def _has_backend_relation(self) -> bool:
-        """Returns whether or not this charm is related to a postgresql backend.
-
-        TODO this will be updated to include the new backend relation once it is written.
-        """
-        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
-        return legacy_backend_relation is not None
 
     # =================
     #  Charm Utilities
