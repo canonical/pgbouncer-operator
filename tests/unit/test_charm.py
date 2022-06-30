@@ -15,10 +15,9 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
+from constants import INI_PATH, PGB, PGB_DIR, USERLIST_PATH
 
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
+DEFAULT_CFG = pgb.DEFAULT_CONFIG
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -70,7 +69,7 @@ class TestCharm(unittest.TestCase):
             _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
-        initial_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
         _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o777)
@@ -151,7 +150,7 @@ class TestCharm(unittest.TestCase):
         self.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("charm.PgBouncerCharm.unit_ip")
     def test_on_config_changed(self, _unit_ip, _render, _read):
@@ -256,11 +255,11 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm._render_file")
     def test_render_service_configs(self, _render, _reload):
         self.charm.service_ids = [0, 1]
-        default_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        default_cfg = pgb.PgbConfig(DEFAULT_CFG)
         cfg_list = [default_cfg.render()]
 
         for service_id in self.charm.service_ids:
-            cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+            cfg = pgb.PgbConfig(DEFAULT_CFG)
             instance_dir = f"{PGB_DIR}/instance_{service_id}"
 
             cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
@@ -304,21 +303,77 @@ class TestCharm(unittest.TestCase):
         _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o777)
         _reload.assert_called()
 
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="testpass")
+    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
     @patch("charm.PgBouncerCharm._read_userlist", return_value={})
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_add_user(self, _render_cfg, _render_userlist, _reload, _read_userlist, _gen_pw):
+    def test_add_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _gen_pw):
+        default_admins = DEFAULT_CFG[PGB]["admin_users"]
+        default_stats = DEFAULT_CFG[PGB]["stats_users"]
+
         # If user already exists, assert we aren't recreating them.
         _read_userlist.return_value = {"test-user": "test-pass"}
-        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        self.charm.add_user(user="test-user", cfg=cfg)
+        self.charm.add_user(user="test-user", password="test-pass")
         _render_userlist.assert_not_called()
+        _read_userlist.reset_mock()
 
-        assert False
+        # Test defaults
+        cfg = pgb.PgbConfig(DEFAULT_CFG)
+        self.charm.add_user(user="test-user", cfg=cfg)
+        _render_userlist.assert_called_with({"test-user": "default-pass"})
+        _render_cfg.assert_not_called()
+        assert cfg[PGB].get("admin_users") == default_admins
+        # No stats_users by default
+        assert cfg[PGB].get("stats_users") == default_stats
+        _read_userlist.reset_mock()
+        _render_userlist.reset_mock()
 
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm._render_file")
-    def test_remove_user(self):
-        assert False
+        # Test everything else
+        max_cfg = pgb.PgbConfig(DEFAULT_CFG)
+        self.charm.add_user(
+            user="max-test",
+            password="max-pw",
+            cfg=max_cfg,
+            admin=True,
+            stats=True,
+            reload_pgbouncer=True,
+            render_cfg=True,
+        )
+        _render_userlist.assert_called_with({"test-user": "default-pass", "max-test": "max-pw"})
+        assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
+        assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
+        _render_cfg.assert_called_with(max_cfg, True)
+
+        # Test we can't duplicate stats or admin users
+        self.charm.add_user(
+            user="max-test", password="max-pw", cfg=max_cfg, admin=True, stats=True
+        )
+        assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
+        assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
+
+    @patch("charm.PgBouncerCharm._read_userlist", return_value={"test_user": ""})
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm._render_userlist")
+    @patch("charm.PgBouncerCharm._render_service_configs")
+    def test_remove_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist):
+        user = "test_user"
+        cfg = pgb.PgbConfig(DEFAULT_CFG)
+        cfg[PGB]["admin_users"].append(user)
+        cfg[PGB]["stats_users"].append(user)
+        admin_users = list(cfg[PGB]["admin_users"])
+        stats_users = list(cfg[PGB]["stats_users"])
+
+        # try to remove user that doesn't exist
+        self.charm.remove_user("nonexistent-user", cfg = cfg)
+        _render_userlist.assert_not_called()
+        assert cfg[PGB]["admin_users"] == admin_users
+        assert cfg[PGB]["stats_users"] == stats_users
+
+        # remove user that does exist
+        self.charm.remove_user(user, cfg=cfg, render_cfg=True, reload_pgbouncer=True)
+        assert user not in cfg[PGB]["admin_users"]
+        assert user not in cfg[PGB]["stats_users"]
+        _render_userlist.assert_called_with({})
+        _render_cfg.assert_called_with(cfg, True)
+

@@ -274,15 +274,15 @@ class PgBouncerCharm(CharmBase):
         if not password:
             password = pgb.generate_password()
 
-        # Return early if userlist already contains a password value for the given user
+        # Return early if user and password are already set to the correct values
         if userlist.get(user) == password:
             return
 
         userlist[user] = password
 
-        if admin:
+        if admin and user not in cfg[PGB]["admin_users"]:
             cfg[PGB]["admin_users"].append(user)
-        if stats:
+        if stats and user not in cfg[PGB]["stats_users"]:
             cfg[PGB]["stats_users"].append(user)
 
         self._render_userlist(userlist)
@@ -318,7 +318,7 @@ class PgBouncerCharm(CharmBase):
 
         if user in cfg[PGB]["admin_users"]:
             cfg[PGB]["admin_users"].remove(user)
-        if user in cfg[PGB].get("stats_users", []):
+        if user in cfg[PGB]["stats_users"]:
             cfg[PGB]["stats_users"].remove(user)
 
         self._render_userlist(userlist)
