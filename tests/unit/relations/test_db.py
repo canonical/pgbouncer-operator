@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 from ops.testing import Harness

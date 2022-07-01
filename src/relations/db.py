@@ -44,11 +44,11 @@ from ops.charm import (
 from ops.framework import Object
 from ops.model import Relation, Unit
 
-from relations.backend_db_admin import STANDBY_PREFIX
+from constants import BACKEND_STANDBY_PREFIX
 
 logger = logging.getLogger(__name__)
 
-STANDBY_PREFIX_LEN = len(STANDBY_PREFIX)
+STANDBY_PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 
 
 class DbProvides(Object):
@@ -115,6 +115,10 @@ class DbProvides(Object):
 
         unit_databag = change_event.relation.data[self.charm.unit]
         app_databag = change_event.relation.data[self.charm.app]
+        logger.info(change_event.relation.data)
+        logger.info(change_event.unit)
+        external_unit = self.get_external_units(change_event.relation)[0]
+        external_app_name = external_unit.app.name
 
         # Check if app_databag is populated with relation data.
         if app_databag.get("user") is not None:
@@ -122,8 +126,8 @@ class DbProvides(Object):
             user = unit_databag["user"]
             password = unit_databag["password"]
         else:
-            database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{self.relation_name}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            database = change_event.relation.data[external_unit].get("database")
+            user = f"{self.relation_name}_{change_event.relation.id}_{external_app_name.replace('-', '_')}"
             password = pgb.generate_password()
 
         if not database:
@@ -142,12 +146,12 @@ class DbProvides(Object):
             "port": master_port,
             "user": user,
             "password": password,
-            "fallback_application_name": change_event.app.name,
+            "fallback_application_name": external_app_name,
         }
         dbs[database] = primary
 
         # Get data about standby units for databags and charm config.
-        standbys = self._get_standbys(cfg, change_event, database, user, password)
+        standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
 
         # Populate databags
         for databag in [app_databag, unit_databag]:
@@ -168,14 +172,14 @@ class DbProvides(Object):
         self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-    def _get_postgres_standbys(self, cfg, event, database, user, password):
+    def _get_postgres_standbys(self, cfg, app_name, database, user, password):
         dbs = cfg["databases"]
 
         standbys = ""
         for standby_name, standby_data in dict(dbs).items():
             # skip everything that's not a postgres standby, as defined by the backend-db-admin
             # relation
-            if standby_name[:STANDBY_PREFIX_LEN] != STANDBY_PREFIX:
+            if standby_name[:STANDBY_PREFIX_LEN] != BACKEND_STANDBY_PREFIX:
                 continue
 
             standby_idx = standby_name[STANDBY_PREFIX_LEN:]
@@ -185,7 +189,7 @@ class DbProvides(Object):
                 "port": standby_data["port"],
                 "user": user,
                 "password": password,
-                "fallback_application_name": event.app.name,
+                "fallback_application_name": app_name,
             }
             dbs[f"{database}_standby_{standby_idx}"] = standby
 
@@ -267,8 +271,13 @@ class DbProvides(Object):
     def get_allowed_units(self, relation: Relation) -> str:
         return ",".join(
             sorted(
-                unit.name
-                for unit in relation.data
-                if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
+                [unit.name for unit in self.get_external_units(relation)]
             )
         )
+
+    def get_external_units(self, relation: Relation) -> Unit:
+        return [
+                unit
+                for unit in relation.data
+                if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
+        ]

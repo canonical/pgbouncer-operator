@@ -9,8 +9,8 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
 from constants import PG
+from tests.integration import helpers
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ APPS = [PG, PGB, PSQL]
 
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
-async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
+async def test_create_db_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
     charm = await ops_test.build_charm(".")
@@ -37,8 +37,8 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
 
     # Pgbouncer enters a blocked state without backend postgres relation
     await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
+    await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -72,3 +72,14 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
     #     )
     #     records = cursor.fetchall()
     #     assert "pgbouncer-operator" in records
+
+async def test_remove_db_legacy_relation(ops_test: OpsTest):
+    """Test that removing relations still works ok"""
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:db", f"{PSQL}:db"
+    )
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, PG], status="active", timeout=1000)
+    unit = ops_test.model.units["pgbouncer-operator/0"]
+    cfg = await helpers.get_cfg(unit)
+    # assert pgbouncer and postgres are completely disconnected.
+    assert "pg_master" not in cfg["databases"].keys()

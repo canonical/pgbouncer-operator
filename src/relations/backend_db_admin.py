@@ -77,11 +77,11 @@ from ops.charm import (
 from ops.framework import Object
 from ops.model import Unit
 
+from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
+
 logger = logging.getLogger(__name__)
 
-RELATION_ID = "backend-db-admin"
 RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
-STANDBY_PREFIX = "pgb_postgres_standby_"
 
 
 class BackendDbAdminRequires(Object):
@@ -94,11 +94,17 @@ class BackendDbAdminRequires(Object):
     """
 
     def __init__(self, charm: CharmBase):
-        super().__init__(charm, RELATION_ID)
+        super().__init__(charm, BACKEND_DB_ADMIN)
 
-        self.framework.observe(charm.on[RELATION_ID].relation_changed, self._on_relation_changed)
-        self.framework.observe(charm.on[RELATION_ID].relation_departed, self._on_relation_departed)
-        self.framework.observe(charm.on[RELATION_ID].relation_broken, self._on_relation_broken)
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_changed, self._on_relation_changed
+        )
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_departed, self._on_relation_departed
+        )
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_broken, self._on_relation_broken
+        )
 
         self.charm = charm
 
@@ -185,13 +191,13 @@ class BackendDbAdminRequires(Object):
 
         standby_names = []
         for idx, standby in enumerate(standbys):
-            standby_name = f"{STANDBY_PREFIX}{idx}"
+            standby_name = f"{BACKEND_STANDBY_PREFIX}{idx}"
             standby_names.append(standby_name)
             dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
 
         # Remove old standby information
         for db_name in list(dbs.keys()):
-            if db_name[:21] == STANDBY_PREFIX and db_name not in standby_names:
+            if db_name[:21] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
                 del dbs[db_name]
 
         return cfg
@@ -213,7 +219,7 @@ class BackendDbAdminRequires(Object):
 
         for db in list(dbs.keys()):
             # Remove all standbys
-            if db[:21] == STANDBY_PREFIX:
+            if db[:21] == BACKEND_STANDBY_PREFIX:
                 del dbs[db]
 
         self.charm.remove_user(RELATION_ADMIN)
@@ -222,8 +228,10 @@ class BackendDbAdminRequires(Object):
 
     def _trigger_db_relations(self):
         """Triggers the other legacy relations if they exist."""
-        if self.charm.model.get_relation("db") is not None:
-            self.charm.on.db_relation_changed.emit()
+        db_relation = self.charm.model.get_relation("db", None)
+        if db_relation is not None:
+            self.charm.on.db_relation_changed.emit(db_relation)
 
-        if self.charm.model.get_relation("db-admin") is not None:
-            self.charm.on.db_admin_relation_changed.emit()
+        db_admin_relation = self.charm.model.get_relation("db-admin", None)
+        if db_admin_relation is not None:
+            self.charm.on.db_admin_relation_changed.emit(db_admin_relation)

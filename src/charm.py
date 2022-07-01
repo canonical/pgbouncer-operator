@@ -21,10 +21,9 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import INI_PATH
+from constants import BACKEND_DB_ADMIN, INI_PATH
 from constants import PG as PG_USER
 from constants import PGB, PGB_DIR, USERLIST_PATH
-from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
 from relations.db import DbProvides
 
@@ -381,7 +380,7 @@ class PgBouncerCharm(CharmBase):
 
         TODO this will be updated to include the new backend relation once it is written.
         """
-        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        legacy_backend_relation = self.model.get_relation(BACKEND_DB_ADMIN)
         return legacy_backend_relation is not None
 
     @property

@@ -140,7 +140,11 @@ async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTes
     await ops_test.model.applications[PG].remove_relation(
         f"{APP_NAME}:backend-db-admin", f"{PG}:db-admin"
     )
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, PG], status="active", timeout=1000)
+    await asyncio.gather(
+        ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
+        ops_test.model.wait_for_idle(apps=[APP_NAME], status="BLOCKED", timeout=1000)
+    )
     cfg = await helpers.get_cfg(unit)
     # assert pgbouncer and postgres are completely disconnected.
     assert "pg_master" not in cfg["databases"].keys()
+
