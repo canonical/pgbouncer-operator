@@ -9,7 +9,7 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from lib.charms.pgbouncer_operator.v0 import pgb
-from relations.backend_db_admin import STANDBY_PREFIX
+from relations.backend_db_admin import BACKEND_STANDBY_PREFIX
 
 TEST_UNIT = {
     "master": "host=master port=1 dbname=testdatabase",
@@ -42,7 +42,7 @@ class TestBackendDbAdmin(unittest.TestCase):
         rendered_cfg = _render.call_args[0][0]
         expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
-        expected_cfg["databases"][f"{STANDBY_PREFIX}0"] = pgb.parse_kv_string_to_dict(
+        expected_cfg["databases"][f"{BACKEND_STANDBY_PREFIX}0"] = pgb.parse_kv_string_to_dict(
             TEST_UNIT["standbys"]
         )
 
@@ -57,7 +57,7 @@ class TestBackendDbAdmin(unittest.TestCase):
         expected_cfg["databases"]["pg_master"] = pgb.parse_kv_string_to_dict(TEST_UNIT["master"])
         self.assertEqual(expected_cfg.render(), rendered_cfg.render())
         # Assert there's no standby information in the rendered config.
-        self.assertNotIn(f"{STANDBY_PREFIX}0", rendered_cfg.keys())
+        self.assertNotIn(f"{BACKEND_STANDBY_PREFIX}0", rendered_cfg.keys())
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
