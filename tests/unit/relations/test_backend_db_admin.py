@@ -127,4 +127,4 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         _get_relation.return_value = "Not None"
         self.relation._trigger_db_relations()
-        _emit_relation_changed.assert_has_calls([call(), call()])
+        _emit_relation_changed.assert_has_calls([call("Not None"), call("Not None")])
