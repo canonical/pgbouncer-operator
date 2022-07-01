@@ -16,12 +16,14 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 
+PGB = "pgbouncer"
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
+DEFAULT_CFG = pgb.DEFAULT_CONFIG
 
 ops.testing.SIMULATE_CAN_CONNECT = True
 
@@ -31,6 +33,8 @@ class TestCharm(unittest.TestCase):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
+
+        self.charm = self.harness.charm
 
     @patch("charm.PgBouncerCharm._install_apt_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
@@ -57,18 +61,18 @@ class TestCharm(unittest.TestCase):
     ):
         _userlist.return_value = {"juju-admin": "test"}
 
-        self.harness.charm.on.install.emit()
+        self.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])
         _mkdir.assert_any_call(PGB_DIR, 0o777)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
 
-        for service_id in self.harness.charm.service_ids:
+        for service_id in self.charm.service_ids:
             _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o777)
             _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
-        initial_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
         _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o777)
@@ -80,7 +84,7 @@ class TestCharm(unittest.TestCase):
     def test_on_start(self, _has_relation, _start):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
-        self.harness.charm.on.start.emit()
+        self.charm.on.start.emit()
         # Charm should fail out after calling _start once
         _start.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -88,7 +92,7 @@ class TestCharm(unittest.TestCase):
         # Testing charm starts the correct amount of pgbouncer instances but enters BlockedStatus
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
-        self.harness.charm.on.start.emit()
+        self.charm.on.start.emit()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -98,7 +102,7 @@ class TestCharm(unittest.TestCase):
         _start.reset_mock()
         _start.side_effect = None
         _has_relation.return_value = True
-        self.harness.charm.on.start.emit()
+        self.charm.on.start.emit()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
@@ -106,7 +110,7 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v1.systemd.service_reload")
     def test_reload_pgbouncer(self, _reload):
         intended_instances = self._cores = os.cpu_count()
-        self.harness.charm._reload_pgbouncer()
+        self.charm._reload_pgbouncer()
         calls = [
             call(f"pgbouncer@{instance}", restart_on_failure=True)
             for instance in range(intended_instances)
@@ -116,7 +120,7 @@ class TestCharm(unittest.TestCase):
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _reload.side_effect = systemd.SystemdError()
-        self.harness.charm._reload_pgbouncer()
+        self.charm._reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
@@ -124,7 +128,7 @@ class TestCharm(unittest.TestCase):
     def test_on_update_status(self, _has_relation, _running):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
-        self.harness.charm.on.update_status.emit()
+        self.charm.on.update_status.emit()
         # Verify we immediately block once we know we have services that aren't running.
         _running.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -132,7 +136,7 @@ class TestCharm(unittest.TestCase):
         # If all pgbouncer services are running but we have no backend relation, verify we block &
         # wait for the backend relation.
         _running.return_value = True
-        self.harness.charm.on.update_status.emit()
+        self.charm.on.update_status.emit()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
@@ -141,24 +145,28 @@ class TestCharm(unittest.TestCase):
         _running.reset_mock()
         _running.return_value = True
         _has_relation.return_value = True
-        self.harness.charm.on.update_status.emit()
+        self.charm.on.update_status.emit()
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
         _running.side_effect = systemd.SystemdError()
-        self.harness.charm.on.update_status.emit()
+        self.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_config_changed(self, _render, _read):
+    @patch("charm.PgBouncerCharm.unit_ip")
+    def test_on_config_changed(self, _unit_ip, _render, _read):
         mock_cores = 1
-        self.harness.charm._cores = mock_cores
+        self.charm._cores = mock_cores
+        ip = "1.1.1.1"
+        self.charm.unit_ip = ip
         max_db_connections = 44
 
         # Copy config object and modify it as we expect in the hook.
         config = deepcopy(_read.return_value)
         config["pgbouncer"]["pool_mode"] = "transaction"
+        config["pgbouncer"]["listen_addr"] = ip
         config.set_max_db_connection_derivatives(
             max_db_connections=max_db_connections,
             pgb_instances=mock_cores,
@@ -181,18 +189,18 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
     def test_install_apt_packages(self, _update, _add_package):
-        self.harness.charm._install_apt_packages(["test_package"])
+        self.charm._install_apt_packages(["test_package"])
         _update.assert_called_once()
         _add_package.assert_called_with(["test_package"])
 
         _add_package.side_effect = apt.PackageNotFoundError()
-        self.harness.charm._install_apt_packages(["fail_to_install"])
+        self.charm._install_apt_packages(["fail_to_install"])
         self.assertEqual(
             self.harness.model.unit.status, BlockedStatus("failed to install packages")
         )
 
         _update.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail to update")
-        self.harness.charm._install_apt_packages(["fail_to_update_apt_cache"])
+        self.charm._install_apt_packages(["fail_to_update_apt_cache"])
         self.assertEqual(
             self.harness.model.unit.status, BlockedStatus("failed to update apt cache")
         )
@@ -205,7 +213,7 @@ class TestCharm(unittest.TestCase):
         content = "this text file should never be written"
         mode = 0o777
         with patch("builtins.open", unittest.mock.mock_open()) as _:
-            self.harness.charm._render_file(path, content, mode)
+            self.charm._render_file(path, content, mode)
 
         _chmod.assert_called_with(path, mode)
         _getpwnam.assert_called_with("postgres")
@@ -217,7 +225,7 @@ class TestCharm(unittest.TestCase):
             existing_config = pgb.PgbConfig(test_ini)
 
         with patch("builtins.open", unittest.mock.mock_open(read_data=test_ini)):
-            test_config = self.harness.charm._read_pgb_config()
+            test_config = self.charm._read_pgb_config()
 
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
@@ -228,7 +236,7 @@ class TestCharm(unittest.TestCase):
         with open(TEST_VALID_INI, "r") as ini:
             test_config = pgb.PgbConfig(ini.read())
 
-        self.harness.charm._render_pgb_config(test_config, reload_pgbouncer=False)
+        self.charm._render_pgb_config(test_config, reload_pgbouncer=False)
         _render.assert_called_with(INI_PATH, test_config.render(), 0o777)
         _reload.assert_not_called()
 
@@ -236,22 +244,22 @@ class TestCharm(unittest.TestCase):
         reload_config = pgb.PgbConfig(deepcopy(test_config.__dict__))
         reload_config["pgbouncer"]["admin_users"] = ["test_admin"]
 
-        self.harness.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
+        self.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
         _render.assert_called_with(INI_PATH, reload_config.render(), 0o777)
         _reload.assert_called()
 
-        self.harness.charm._render_pgb_config(reload_config, config_path="/test/path")
+        self.charm._render_pgb_config(reload_config, config_path="/test/path")
         _render.assert_called_with("/test/path", reload_config.render(), 0o777)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm._render_file")
     def test_render_service_configs(self, _render, _reload):
-        self.harness.charm.service_ids = [0, 1]
-        default_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        self.charm.service_ids = [0, 1]
+        default_cfg = pgb.PgbConfig(DEFAULT_CFG)
         cfg_list = [default_cfg.render()]
 
-        for service_id in self.harness.charm.service_ids:
-            cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        for service_id in self.charm.service_ids:
+            cfg = pgb.PgbConfig(DEFAULT_CFG)
             instance_dir = f"{PGB_DIR}/instance_{service_id}"
 
             cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
@@ -260,7 +268,7 @@ class TestCharm(unittest.TestCase):
 
             cfg_list.append(cfg.render())
 
-        self.harness.charm._render_service_configs(default_cfg, reload_pgbouncer=False)
+        self.charm._render_service_configs(default_cfg, reload_pgbouncer=False)
 
         _render.assert_any_call(INI_PATH, cfg_list[0], 0o777)
         _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o777)
@@ -270,7 +278,7 @@ class TestCharm(unittest.TestCase):
         # MaintenanceStatus will exit once pgbouncer reloads.
         self.assertIsInstance(self.harness.model.unit.status, MaintenanceStatus)
 
-        self.harness.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         _reload.assert_called_once()
 
     def test_read_userlist(self):
@@ -278,7 +286,7 @@ class TestCharm(unittest.TestCase):
         test_userlist = '"test_user" "test_pass"'
 
         with patch("builtins.open", unittest.mock.mock_open(read_data=test_userlist)):
-            output = self.harness.charm._read_userlist()
+            output = self.charm._read_userlist()
         self.assertEqual(test_users, output)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
@@ -286,11 +294,85 @@ class TestCharm(unittest.TestCase):
     def test_render_userlist(self, _render, _reload):
         test_users = {"test_user": "test_pass"}
 
-        self.harness.charm._render_userlist(test_users, reload_pgbouncer=False)
+        self.charm._render_userlist(test_users, reload_pgbouncer=False)
         _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o777)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
-        self.harness.charm._render_userlist(reload_users, reload_pgbouncer=True)
+        self.charm._render_userlist(reload_users, reload_pgbouncer=True)
         _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o777)
         _reload.assert_called()
+
+    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
+    @patch("charm.PgBouncerCharm._read_userlist", return_value={})
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm._render_userlist")
+    @patch("charm.PgBouncerCharm._render_service_configs")
+    def test_add_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _gen_pw):
+        default_admins = DEFAULT_CFG[PGB]["admin_users"]
+        default_stats = DEFAULT_CFG[PGB]["stats_users"]
+
+        # If user already exists, assert we aren't recreating them.
+        _read_userlist.return_value = {"test-user": "test-pass"}
+        self.charm.add_user(user="test-user", password="test-pass")
+        _render_userlist.assert_not_called()
+        _read_userlist.reset_mock()
+
+        # Test defaults
+        cfg = pgb.PgbConfig(DEFAULT_CFG)
+        self.charm.add_user(user="test-user", cfg=cfg)
+        _render_userlist.assert_called_with({"test-user": "default-pass"})
+        _render_cfg.assert_not_called()
+        assert cfg[PGB].get("admin_users") == default_admins
+        # No stats_users by default
+        assert cfg[PGB].get("stats_users") == default_stats
+        _read_userlist.reset_mock()
+        _render_userlist.reset_mock()
+
+        # Test everything else
+        max_cfg = pgb.PgbConfig(DEFAULT_CFG)
+        self.charm.add_user(
+            user="max-test",
+            password="max-pw",
+            cfg=max_cfg,
+            admin=True,
+            stats=True,
+            reload_pgbouncer=True,
+            render_cfg=True,
+        )
+        _render_userlist.assert_called_with({"test-user": "default-pass", "max-test": "max-pw"})
+        assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
+        assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
+        _render_cfg.assert_called_with(max_cfg, True)
+
+        # Test we can't duplicate stats or admin users
+        self.charm.add_user(
+            user="max-test", password="max-pw", cfg=max_cfg, admin=True, stats=True
+        )
+        assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
+        assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
+
+    @patch("charm.PgBouncerCharm._read_userlist", return_value={"test_user": ""})
+    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm._render_userlist")
+    @patch("charm.PgBouncerCharm._render_service_configs")
+    def test_remove_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist):
+        user = "test_user"
+        cfg = pgb.PgbConfig(DEFAULT_CFG)
+        cfg[PGB]["admin_users"].append(user)
+        cfg[PGB]["stats_users"].append(user)
+        admin_users = list(cfg[PGB]["admin_users"])
+        stats_users = list(cfg[PGB]["stats_users"])
+
+        # try to remove user that doesn't exist
+        self.charm.remove_user("nonexistent-user", cfg=cfg)
+        _render_userlist.assert_not_called()
+        assert cfg[PGB]["admin_users"] == admin_users
+        assert cfg[PGB]["stats_users"] == stats_users
+
+        # remove user that does exist
+        self.charm.remove_user(user, cfg=cfg, render_cfg=True, reload_pgbouncer=True)
+        assert user not in cfg[PGB]["admin_users"]
+        assert user not in cfg[PGB]["stats_users"]
+        _render_userlist.assert_called_with({})
+        _render_cfg.assert_called_with(cfg, True)

@@ -100,7 +100,7 @@ class TestPgb(unittest.TestCase):
             with pytest.raises(pgb.PgbConfig.ConfigParsingError):
                 pgb.PgbConfig(reserved_db.read())
 
-    def test_pgb_config__validate_dbname(self):
+    def test_pgb_config_validate_dbname(self):
         config = pgb.PgbConfig()
         # Valid dbnames include alphanumeric characters and -_ characters. Everything else must
         # be wrapped in double quotes.

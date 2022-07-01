@@ -255,6 +255,7 @@ class PgBouncerCharm(CharmBase):
         render_cfg: bool = False,
     ):
         """Adds a user to the config files.
+
         Args:
             user: the username for the intended user.
             password: intended password for the string
@@ -297,6 +298,7 @@ class PgBouncerCharm(CharmBase):
         render_cfg: bool = False,
     ):
         """Removes a user from config files.
+
         Args:
             user: the username for the intended user.
             cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
@@ -384,6 +386,7 @@ class PgBouncerCharm(CharmBase):
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
+
 
 if __name__ == "__main__":
     main(PgBouncerCharm)
