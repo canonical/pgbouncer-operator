@@ -9,13 +9,13 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
 from tests.integration import helpers
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
+PG = "postgresql"
 PSQL = "psql"
 APPS = [PG, PGB, PSQL]
 
@@ -157,6 +157,6 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 
 @pytest.mark.legacy_relations
 async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
-    """Test that removing relations still works ok"""
+    """Test that removing relations still works ok."""
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db-admin")
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)

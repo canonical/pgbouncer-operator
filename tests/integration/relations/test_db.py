@@ -157,6 +157,6 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 
 @pytest.mark.legacy_relations
 async def test_remove_db_legacy_relation(ops_test: OpsTest):
-    """Test that removing relations still works ok"""
+    """Test that removing relations still works ok."""
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{PSQL}:db")
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)

@@ -3,7 +3,7 @@
 
 import unittest
 from copy import deepcopy
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from ops.testing import Harness
 

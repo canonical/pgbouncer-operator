@@ -29,8 +29,8 @@ class TestDb(unittest.TestCase):
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_on_relation_changed(self, _render, _read):
         mock_event = MagicMock()
-        mock_unit_db = mock_event.relation.data[self.charm.unit]
-        mock_app_db = mock_event.relation.data[self.charm.app]
+        # mock_unit_db = mock_event.relation.data[self.charm.unit]
+        # mock_app_db = mock_event.relation.data[self.charm.app]
         self.db_relation._on_relation_changed(mock_event)
 
         # TODO test if databag is and isn't populated

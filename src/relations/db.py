@@ -63,7 +63,7 @@ class DbProvides(Object):
     def __init__(self, charm: CharmBase, admin: bool = False):
         """Constructor for DbProvides object.
 
-        args:
+        Args:
             charm: the charm for which this relation is provided
             admin: a boolean defining whether or not this relation has admin permissions, switching
                 between "db" and "db-admin" relations.
@@ -87,8 +87,6 @@ class DbProvides(Object):
 
         self.charm = charm
         self.admin = admin
-
-        # TODO consider making all the databag variables member variables of this object so they can be accessed outside of method scope.
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
@@ -201,8 +199,10 @@ class DbProvides(Object):
 
     def _get_state(self, standbys: str) -> str:
         """Gets the given state for this unit.
+
         Args:
             standbys: the comma-separated list of postgres standbys
+
         Returns:
             The described state of this unit. Can be 'standalone', 'master', or 'standby'.
         """
@@ -253,6 +253,8 @@ class DbProvides(Object):
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def get_allowed_subnets(self, relation: Relation) -> str:
+        """Gets the allowed subnets from this relation."""
+
         def _comma_split(string) -> Iterable[str]:
             if string:
                 for substring in string.split(","):
@@ -269,9 +271,11 @@ class DbProvides(Object):
         return ",".join(sorted(subnets))
 
     def get_allowed_units(self, relation: Relation) -> str:
+        """Gets the external units from this relation that can be allowed into the network."""
         return ",".join(sorted([unit.name for unit in self.get_external_units(relation)]))
 
     def get_external_units(self, relation: Relation) -> Unit:
+        """Gets all units from this relation that aren't owned by this charm."""
         return [
             unit
             for unit in relation.data
