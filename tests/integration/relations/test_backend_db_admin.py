@@ -9,14 +9,13 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
 from tests.integration import helpers
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
-
+POSTGRESQL = "postgresql"
 
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
@@ -29,13 +28,13 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
             charm,
             application_name=APP_NAME,
         ),
-        ops_test.model.deploy(PG),
+        ops_test.model.deploy(POSTGRESQL),
     )
 
     # Pgbouncer enters a blocked state without backend postgres relation
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{PG}:db-admin")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, PG], status="active", timeout=1000)
+    await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{POSTGRESQL}:db-admin")
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, POSTGRESQL], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
@@ -78,10 +77,10 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
     backend-db-admin relation
     """
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    await ops_test.model.applications[PG].add_units(count=2)
+    await ops_test.model.applications[POSTGRESQL].add_units(count=2)
     await asyncio.gather(
         ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+            apps=[POSTGRESQL], status="active", timeout=1000, wait_for_exact_units=3
         ),
         ops_test.model.wait_for_idle(
             apps=[APP_NAME], status="active", timeout=1000, wait_for_exact_units=1
@@ -102,7 +101,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/1")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=1000, wait_for_exact_units=2
+            apps=[POSTGRESQL], status="active", timeout=1000, wait_for_exact_units=2
         ),
         ops_test.model.wait_for_idle(
             apps=[APP_NAME], status="active", timeout=1000, wait_for_exact_units=1
@@ -121,7 +120,7 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
     await ops_test.model.destroy_unit("postgresql/0")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=1000, wait_for_exact_units=1
+            apps=[POSTGRESQL], status="active", timeout=1000, wait_for_exact_units=1
         ),
         ops_test.model.wait_for_idle(
             apps=[APP_NAME], status="active", timeout=1000, wait_for_exact_units=1
@@ -137,11 +136,11 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
 async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
     # Remove relation but keep pg application because we're going to need it for future tests.
-    await ops_test.model.applications[PG].remove_relation(
-        f"{APP_NAME}:backend-db-admin", f"{PG}:db-admin"
+    await ops_test.model.applications[POSTGRESQL].remove_relation(
+        f"{APP_NAME}:backend-db-admin", f"{POSTGRESQL}:db-admin"
     )
     await asyncio.gather(
-        ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
+        ops_test.model.wait_for_idle(apps=[POSTGRESQL], status="active", timeout=1000),
         ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000),
     )
     cfg = await helpers.get_cfg(unit)

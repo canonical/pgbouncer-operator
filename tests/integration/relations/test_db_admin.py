@@ -38,7 +38,7 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
 
     # Pgbouncer enters a blocked state without backend postgres relation
     await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db-admin")
+    await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db")
     await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
