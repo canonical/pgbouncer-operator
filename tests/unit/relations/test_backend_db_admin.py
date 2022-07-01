@@ -3,7 +3,7 @@
 
 import unittest
 from copy import deepcopy
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 from ops.testing import Harness
 
@@ -105,4 +105,3 @@ class TestBackendDbAdmin(unittest.TestCase):
         assert "other_database" in broken_cfg["databases"].keys()
 
         _remove_user.assert_called_with("jujuadmin_pgbouncer-operator")
-
