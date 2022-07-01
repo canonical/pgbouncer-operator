@@ -20,6 +20,10 @@ maintainers:
 series:
   - focal
 
+peers:
+  pgbouncer-replicas:
+    interface: pgbouncer-replicas
+
 provides:
   # Legacy relations - these will be deprecated in a future release
   db:
