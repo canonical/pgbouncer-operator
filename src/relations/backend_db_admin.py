@@ -137,7 +137,6 @@ class BackendDbAdminRequires(Object):
         self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-        self._trigger_db_relations()
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle backend-db-admin-relation-departed event.
@@ -166,7 +165,6 @@ class BackendDbAdminRequires(Object):
 
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-        self._trigger_db_relations()
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
         """Updates standby list to match new relation data.
@@ -216,14 +214,3 @@ class BackendDbAdminRequires(Object):
         self.charm.remove_user(RELATION_ADMIN)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
-        self._trigger_db_relations()
-
-    def _trigger_db_relations(self):
-        """Triggers the other legacy relations if they exist."""
-        db_relation = self.charm.model.get_relation("db", None)
-        if db_relation is not None:
-            self.charm.on.db_relation_changed.emit(db_relation)
-
-        db_admin_relation = self.charm.model.get_relation("db-admin", None)
-        if db_admin_relation is not None:
-            self.charm.on.db_admin_relation_changed.emit(db_admin_relation)
