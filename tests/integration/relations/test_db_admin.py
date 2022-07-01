@@ -22,7 +22,7 @@ APPS = [PG, PGB, PSQL]
 
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
-async def test_create_db_legacy_relation(ops_test: OpsTest):
+async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
     charm = await ops_test.build_charm(".")
@@ -38,7 +38,7 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
 
     # Pgbouncer enters a blocked state without backend postgres relation
     await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
+    await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db-admin")
     await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
@@ -89,7 +89,7 @@ async def test_add_backend_replicas(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relations
-async def test_add_db_replicas(ops_test: OpsTest):
+async def test_add_db_admin_replicas(ops_test: OpsTest):
     await ops_test.model.applications[PSQL].add_units(count=2)
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -104,7 +104,7 @@ async def test_add_db_replicas(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relations
-async def test_remove_db_unit(ops_test: OpsTest):
+async def test_remove_db_admin_unit(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/1")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -130,7 +130,7 @@ async def test_remove_backend_unit(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relations
-async def test_remove_db_leader(ops_test: OpsTest):
+async def test_remove_db_admin_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -156,7 +156,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relations
-async def test_remove_db_legacy_relation(ops_test: OpsTest):
+async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok"""
-    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{PSQL}:db")
+    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db-admin")
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)

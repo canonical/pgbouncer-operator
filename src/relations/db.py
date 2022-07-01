@@ -269,15 +269,11 @@ class DbProvides(Object):
         return ",".join(sorted(subnets))
 
     def get_allowed_units(self, relation: Relation) -> str:
-        return ",".join(
-            sorted(
-                [unit.name for unit in self.get_external_units(relation)]
-            )
-        )
+        return ",".join(sorted([unit.name for unit in self.get_external_units(relation)]))
 
     def get_external_units(self, relation: Relation) -> Unit:
         return [
-                unit
-                for unit in relation.data
-                if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
+            unit
+            for unit in relation.data
+            if isinstance(unit, Unit) and not unit.name.startswith(self.model.app.name)
         ]
