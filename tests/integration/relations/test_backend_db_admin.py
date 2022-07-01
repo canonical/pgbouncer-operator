@@ -9,13 +9,13 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from constants import PG
 from tests.integration import helpers
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
-PG = "postgresql"
 
 
 @pytest.mark.abort_on_fail

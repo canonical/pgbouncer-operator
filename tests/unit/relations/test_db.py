@@ -23,7 +23,8 @@ class TestDb(unittest.TestCase):
         self.harness.begin()
 
         self.charm = self.harness.charm
-        self.relation = self.charm.legacy_db_relation
+        self.db_relation = self.charm.legacy_db_relation
+        self.db_admin_relation = self.charm.legacy_db_admin_relation
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm._render_service_configs")
@@ -31,7 +32,7 @@ class TestDb(unittest.TestCase):
         mock_event = MagicMock()
         mock_unit_db = mock_event.relation.data[self.charm.unit]
         mock_app_db = mock_event.relation.data[self.charm.app]
-        self.relation._on_relation_changed(mock_event)
+        self.db_relation._on_relation_changed(mock_event)
 
         # TODO test if databag is and isn't populated
         # TODO test with and without replicas

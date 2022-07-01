@@ -69,20 +69,20 @@ class DbProvides(Object):
                 between "db" and "db-admin" relations.
         """
         if admin:
-            self.RELATION_ID = "db-admin"
+            self.relation_name = "db-admin"
         else:
-            self.RELATION_ID = "db"
+            self.relation_name = "db"
 
-        super().__init__(charm, self.RELATION_ID)
+        super().__init__(charm, self.relation_name)
 
         self.framework.observe(
-            charm.on[self.RELATION_ID].relation_changed, self._on_relation_changed
+            charm.on[self.relation_name].relation_changed, self._on_relation_changed
         )
         self.framework.observe(
-            charm.on[self.RELATION_ID].relation_departed, self._on_relation_departed
+            charm.on[self.relation_name].relation_departed, self._on_relation_departed
         )
         self.framework.observe(
-            charm.on[self.RELATION_ID].relation_broken, self._on_relation_broken
+            charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
 
         self.charm = charm
@@ -123,7 +123,7 @@ class DbProvides(Object):
             password = unit_databag["password"]
         else:
             database = change_event.relation.data[change_event.unit].get("database")
-            user = f"{self.RELATION_ID}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
+            user = f"{self.relation_name}_{change_event.relation.id}_{change_event.app.name.replace('-', '_')}"
             password = pgb.generate_password()
 
         if not database:

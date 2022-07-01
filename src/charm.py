@@ -21,7 +21,9 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import INI_PATH, PG_USER, PGB, PGB_DIR, USERLIST_PATH
+from constants import INI_PATH
+from constants import PG as PG_USER
+from constants import PGB, PGB_DIR, USERLIST_PATH
 from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
 from relations.backend_db_admin import BackendDbAdminRequires
 from relations.db import DbProvides
