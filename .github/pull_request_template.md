@@ -1,8 +1,5 @@
-## Issue
-<!-- What does this PR solve? Include a Jira ticket.  -->
-
-## Solution
-<!-- A summary of the proposed solution to the above issue. -->
+## Proposal
+<!-- What does this PR do? -->
 
 ## Context
 <!-- Necessary details to understand the proposed changes. -->
