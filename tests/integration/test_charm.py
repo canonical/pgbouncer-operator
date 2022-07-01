@@ -42,7 +42,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
         == "waiting for backend database relation"
     )
 
-
+@pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -64,10 +64,13 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
+    expected_cfg["pgbouncer"]["listen_address"] = unit.public_address
 
     primary_cfg = await helpers.get_cfg(unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
+    logging.info(existing_cfg.render())
+    logging.info(expected_cfg.render())
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
     # Validating service config files are correctly written is handled by _render_service_config

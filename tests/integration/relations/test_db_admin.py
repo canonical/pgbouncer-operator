@@ -33,7 +33,7 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
         ),
         ops_test.model.deploy(PG),
         # Deploy a psql client shell charm
-        ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name="psql"),
+        ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
     )
 
     # Pgbouncer enters a blocked state without backend postgres relation

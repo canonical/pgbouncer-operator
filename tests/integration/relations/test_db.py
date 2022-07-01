@@ -9,13 +9,13 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
 from tests.integration import helpers
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
+PG = "postgresql"
 PSQL = "psql"
 APPS = [PG, PGB, PSQL]
 
@@ -33,7 +33,7 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         ),
         ops_test.model.deploy(PG),
         # Deploy a psql client shell charm
-        ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name="psql"),
+        ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
     )
 
     # Pgbouncer enters a blocked state without backend postgres relation
