@@ -21,6 +21,7 @@ APPS = [PG, PGB, PSQL]
 BUILT_CHARM = None
 
 
+@pytest.mark.smoke
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
 async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
@@ -159,24 +160,6 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 @pytest.mark.legacy_relations
 async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
-    await asyncio.gather(
-        ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db"),
-        ops_test.model.applications[PSQL].remove(),
-    )
+    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
+    await ops_test.model.applications[PSQL].remove()
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
-
-
-@pytest.mark.legacy_relations
-async def test_self_relation(ops_test: OpsTest):
-    """Test pgbouncer db-admin and backend-db-admin can relate to one another.
-
-    Since pgbouncer provides the db-admin and backend-db-admin relations, why not test that
-    pgbouncer can consume its own relation?
-    """
-    frontend_pgb = f"{PGB}-frontend"
-    await ops_test.model.deploy(
-        BUILT_CHARM,
-        application_name=f"{PGB}-frontend",
-    ),
-    await ops_test.model.add_relation(f"{frontend_pgb}:backend-db-admin", f"{PGB}:db-admin")
-    await ops_test.model.wait_for_idle(apps=[PG, PGB, frontend_pgb], status="active", timeout=1000)
