@@ -34,6 +34,9 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         ops_test.model.deploy(PG),
         # Deploy a psql client shell charm
         ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
+    )
+    await asyncio.gather(
+        # Add relations
         ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db"),
         ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
     )
