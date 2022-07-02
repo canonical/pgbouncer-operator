@@ -160,7 +160,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
     await asyncio.gather(
-        ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db-admin"),
+        ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db"),
         ops_test.model.applications[PSQL].remove(),
     )
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
