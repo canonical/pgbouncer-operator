@@ -97,6 +97,11 @@ class DbProvides(Object):
         if not self.charm.unit.is_leader():
             return
 
+        logger.info(f"Setting up {change_event.relation.name} relation - updating config")
+        logger.warning(
+            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+        )
+
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
@@ -106,38 +111,26 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        logger.info(f"Setting up {change_event.relation.name} relation - updating config")
-        logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
-        )
-
-        unit_databag = change_event.relation.data[self.charm.unit]
-        app_databag = change_event.relation.data[self.charm.app]
-        logger.info(change_event.relation.data)
-        logger.info(change_event.unit)
+        relation_data = change_event.relation.data
+        pgb_unit_databag = relation_data[self.charm.unit]
+        pgb_app_databag = relation_data[self.charm.app]
         external_unit = self.get_external_units(change_event.relation)[0]
         external_app_name = external_unit.app.name
 
-        # Check if app_databag is populated with relation data.
-        if app_databag.get("user") is not None:
-            database = unit_databag["database"]
-            user = unit_databag["user"]
-            password = unit_databag["password"]
-        else:
-            database = change_event.relation.data[external_unit].get("database")
-            user = f"{self.relation_name}_{change_event.relation.id}_{external_app_name.replace('-', '_')}"
-            password = pgb.generate_password()
+        database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
+        database = database.replace("-", "_")
+        user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
+        password = pgb_app_databag.get("password", pgb.generate_password())
 
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
 
-        database = database.replace("-", "_")
-
         # Get data about primary unit for databags and charm config.
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
+
         primary = {
             "host": master_host,
             "dbname": database,
@@ -146,13 +139,14 @@ class DbProvides(Object):
             "password": password,
             "fallback_application_name": external_app_name,
         }
+
         dbs[database] = primary
 
         # Get data about standby units for databags and charm config.
         standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
 
         # Populate databags
-        for databag in [app_databag, unit_databag]:
+        for databag in [pgb_app_databag, pgb_unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
             databag["allowed-units"] = self.get_allowed_units(change_event.relation)
             databag["host"] = f"http://{master_host}"
@@ -164,11 +158,15 @@ class DbProvides(Object):
             databag["password"] = password
             databag["database"] = database
 
-        unit_databag["state"] = self._get_state(standbys)
+        pgb_unit_databag["state"] = self._get_state(standbys)
 
         # Write config data to charm filesystem
         self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def generate_username(self, event, app_name):
+        """Generates a username for this relation."""
+        return f"{self.relation_name}_{event.relation.id}_{app_name.replace('-', '_')}"
 
     def _get_postgres_standbys(self, cfg, app_name, database, user, password):
         dbs = cfg["databases"]
@@ -208,7 +206,7 @@ class DbProvides(Object):
         """
         if standbys == "":
             return "standalone"
-        if self.charm.unit.is_leader:
+        if self.charm.unit.is_leader():
             return "master"
         else:
             return "standby"
