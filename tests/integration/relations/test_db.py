@@ -34,12 +34,9 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         ops_test.model.deploy(PG),
         # Deploy a psql client shell charm
         ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
+        ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db"),
+        ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
     )
-
-    # Pgbouncer enters a blocked state without backend postgres relation
-    await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
-    await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]

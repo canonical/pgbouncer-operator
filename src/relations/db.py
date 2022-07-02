@@ -104,7 +104,6 @@ class DbProvides(Object):
 
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
-
         if not dbs.get("pg_master"):
             # wait for backend_db_admin relation to populate config before we use it.
             logger.warning("waiting for backend-db-admin relation")
@@ -118,16 +117,12 @@ class DbProvides(Object):
         external_app_name = external_unit.app.name
 
         database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
-        database = pgb_app_databag.get("database", None)
-
-        logging.error(self.charm.app)
-        logging.error(database)
+        database = database.replace("-", "_")
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
 
-        database = database.replace("-", "_")
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
         password = pgb_app_databag.get("password", pgb.generate_password())
 

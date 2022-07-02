@@ -144,8 +144,8 @@ class BackendDbAdminRequires(Object):
         self._update_standbys(cfg, standbys)
 
         self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
+        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
-
         self._trigger_db_relations()
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
@@ -173,8 +173,8 @@ class BackendDbAdminRequires(Object):
 
         self._update_standbys(cfg, standbys)
 
+        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
-
         self._trigger_db_relations()
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
@@ -223,6 +223,7 @@ class BackendDbAdminRequires(Object):
                 del dbs[db]
 
         self.charm.remove_user(RELATION_ADMIN)
+        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
 

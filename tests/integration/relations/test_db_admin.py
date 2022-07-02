@@ -26,21 +26,18 @@ BUILT_CHARM = None
 async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    BUILT_CHARM = await ops_test.build_charm(".")
+    charm = await ops_test.build_charm(".")
     await asyncio.gather(
         ops_test.model.deploy(
-            BUILT_CHARM,
+            charm,
             application_name=PGB,
         ),
         ops_test.model.deploy(PG),
         # Deploy a psql client shell charm
         ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
+        ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db"),
+        ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
     )
-
-    # Pgbouncer enters a blocked state without backend postgres relation
-    await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db")
-    await ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
