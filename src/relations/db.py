@@ -118,10 +118,15 @@ class DbProvides(Object):
         external_app_name = external_unit.app.name
 
         database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
+        database = pgb_app_databag.get("database", None)
+
+        logging.error(self.charm.app)
+        logging.error(database)
         if not database:
             logger.warning("No database name provided")
             change_event.defer()
             return
+
         database = database.replace("-", "_")
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
         password = pgb_app_databag.get("password", pgb.generate_password())
@@ -129,7 +134,6 @@ class DbProvides(Object):
         # Get data about primary unit for databags and charm config.
         master_host = dbs["pg_master"]["host"]
         master_port = dbs["pg_master"]["port"]
-
         primary = {
             "host": master_host,
             "dbname": database,
@@ -138,7 +142,6 @@ class DbProvides(Object):
             "password": password,
             "fallback_application_name": external_app_name,
         }
-
         dbs[database] = primary
 
         # Get data about standby units for databags and charm config.
