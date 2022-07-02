@@ -80,7 +80,7 @@ class TestDb(unittest.TestCase):
         # TODO test scaling on both sides of relation, and how it should change config
         # TODO Assert user creation perms change based on self.db_relation.admin
 
-        assert True  # False
+        assert False
 
     def test_get_postgres_standbys(self):
         cfg = PgbConfig(DEFAULT_CONFIG)
