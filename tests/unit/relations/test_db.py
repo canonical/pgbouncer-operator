@@ -6,9 +6,13 @@ from unittest.mock import MagicMock, patch
 
 from ops.testing import Harness
 
-from constants import BACKEND_STANDBY_PREFIX
 from charm import PgBouncerCharm
-from lib.charms.pgbouncer_operator.v0.pgb import DEFAULT_CONFIG, PgbConfig, parse_kv_string_to_dict
+from constants import BACKEND_STANDBY_PREFIX
+from lib.charms.pgbouncer_operator.v0.pgb import (
+    DEFAULT_CONFIG,
+    PgbConfig,
+    parse_kv_string_to_dict,
+)
 
 TEST_UNIT = {
     "master": "host=master port=1 dbname=testdatabase",
@@ -74,6 +78,7 @@ class TestDb(unittest.TestCase):
         # TODO test if databag is and isn't populated
         # TODO test with and without replicas
         # TODO test scaling on both sides of relation, and how it should change config
+        # TODO Assert user creation perms change based on self.db_relation.admin
 
         assert False
 
@@ -81,9 +86,21 @@ class TestDb(unittest.TestCase):
         cfg = PgbConfig(DEFAULT_CONFIG)
         cfg["databases"]["not_a_standby"] = {"dbname": "not_a_standby"}
         cfg["databases"]["pg_master"] = {"dbname": "pg_master", "host": "test"}
-        cfg["databases"][BACKEND_STANDBY_PREFIX] = {"dbname": BACKEND_STANDBY_PREFIX, "host": "standby_host", "port": "standby_port"}
-        cfg["databases"][f"{BACKEND_STANDBY_PREFIX}0"] = {"dbname": f"{BACKEND_STANDBY_PREFIX}0", "host": "standby_host", "port": "standby_port"}
-        cfg["databases"][f"not_a_standby{BACKEND_STANDBY_PREFIX}"] = {"dbname": f"not_a_standby{BACKEND_STANDBY_PREFIX}", "host": "test", "port": "port_test"}
+        cfg["databases"][BACKEND_STANDBY_PREFIX] = {
+            "dbname": BACKEND_STANDBY_PREFIX,
+            "host": "standby_host",
+            "port": "standby_port",
+        }
+        cfg["databases"][f"{BACKEND_STANDBY_PREFIX}0"] = {
+            "dbname": f"{BACKEND_STANDBY_PREFIX}0",
+            "host": "standby_host",
+            "port": "standby_port",
+        }
+        cfg["databases"][f"not_a_standby{BACKEND_STANDBY_PREFIX}"] = {
+            "dbname": f"not_a_standby{BACKEND_STANDBY_PREFIX}",
+            "host": "test",
+            "port": "port_test",
+        }
 
         app = "app_name"
         db_name = "db_name"
@@ -106,11 +123,27 @@ class TestDb(unittest.TestCase):
             assert standby_dict.get("password") == pw
             assert standby_dict.get("fallback_application_name") == app
 
+    @patch("relations.db.DbProvides.get_allowed_units", return_value="test_string")
+    def test_on_relation_departed(self, _get_units):
+        mock_event = MagicMock()
+        mock_event.relation.data = {
+            self.charm.app:{
+                "allowed-units": "blah"
+            },
+            self.charm.unit:{
+                "allowed-units":"blahh"
+            }
+        }
+        self.db_relation._on_relation_departed(mock_event)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_departed(self, _render, _read):
-        assert False
+        app_databag = mock_event.relation.data[self.charm.app]
+        unit_databag = mock_event.relation.data[self.charm.unit]
+
+        expected_app_databag = {"allowed-units":"test_string"}
+        expected_unit_databag = {"allowed-units":"test_string"}
+
+        self.assertDictEqual(app_databag, expected_app_databag)
+        self.assertDictEqual(unit_databag, expected_unit_databag)
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.remove_user")
