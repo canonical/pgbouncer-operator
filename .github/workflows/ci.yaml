@@ -28,7 +28,6 @@ jobs:
         run: tox -e unit
   integration-test:
     name: Integration tests
-    # TODO experiment with prebuilding a runner that already has charmed k8s set up.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,7 +47,3 @@ jobs:
       #   with:
       #     app: pgbouncer-operator
       #     model: testing
-
-# TODO experiment with on-commit and on-push runs:
-# - On-commit, run smoke tests (in series?)
-# - On-final-commit-to-pr, run all tests, ideally with some parallelisation.

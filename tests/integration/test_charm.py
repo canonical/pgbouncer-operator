@@ -70,8 +70,6 @@ async def test_change_config(ops_test: OpsTest):
     primary_cfg = await helpers.get_cfg(unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
-    logging.info(existing_cfg.render())
-    logging.info(expected_cfg.render())
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
 
     # Validating service config files are correctly written is handled by _render_service_config
