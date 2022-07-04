@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from doctest import master
 from unittest.mock import MagicMock, patch
 
 from ops.testing import Harness
@@ -92,7 +91,7 @@ class TestDb(unittest.TestCase):
         _external_units,
         _read_cfg,
     ):
-        """test we can access database, user, and password data from the same relation easily."""
+        """Test we can access database, user, and password data from the same relation easily."""
         # Ensure event doesn't defer too early
         self.harness.set_leader(True)
 
@@ -173,7 +172,6 @@ class TestDb(unittest.TestCase):
         _external_units,
         _read_cfg,
     ):
-        """test we can access database, user, and password data from the same relation easily."""
         # Ensure event doesn't defer too early
         self.harness.set_leader(True)
 
@@ -273,8 +271,8 @@ class TestDb(unittest.TestCase):
         user = "test-user"
         password = "test-pw"
 
-        pgb_unit_databag = relation_data[self.db_relation.charm.unit] = {}
-        pgb_app_databag = relation_data[self.charm.app] = {
+        relation_data[self.db_relation.charm.unit] = {}
+        relation_data[self.charm.app] = {
             "database": database,
             "user": user,
             "password": password,
