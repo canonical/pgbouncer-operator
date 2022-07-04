@@ -58,7 +58,7 @@ The following config values are set as constants in the charm:
 - `backend-database-admin`
   - Relates to backend postgresql database charm.
 
-### Legacy Relation
+### Legacy Relations
 
 The following relations are legacy, and will be deprecated in a future release.
 
