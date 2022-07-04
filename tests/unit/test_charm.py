@@ -17,10 +17,9 @@ from ops.testing import Harness
 from charm import PgBouncerCharm
 from constants import INI_PATH, PGB, PGB_DIR, USERLIST_PATH
 
-DEFAULT_CFG = pgb.DEFAULT_CONFIG
-
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
+DEFAULT_CFG = pgb.DEFAULT_CONFIG
 
 ops.testing.SIMULATE_CAN_CONNECT = True
 

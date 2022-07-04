@@ -81,6 +81,7 @@ from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
 
 logger = logging.getLogger(__name__)
 
+PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 
 
@@ -197,7 +198,7 @@ class BackendDbAdminRequires(Object):
 
         # Remove old standby information
         for db_name in list(dbs.keys()):
-            if db_name[:21] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
                 del dbs[db_name]
 
         return cfg
@@ -217,13 +218,12 @@ class BackendDbAdminRequires(Object):
 
         dbs.pop("pg_master", None)
 
-        for db in list(dbs.keys()):
+        for db_name in list(dbs.keys()):
             # Remove all standbys
-            if db[:21] == BACKEND_STANDBY_PREFIX:
-                del dbs[db]
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX:
+                del dbs[db_name]
 
         self.charm.remove_user(RELATION_ADMIN)
-        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
 

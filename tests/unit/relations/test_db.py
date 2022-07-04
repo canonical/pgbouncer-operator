@@ -66,21 +66,31 @@ class TestDb(unittest.TestCase):
         _defer.assert_called_once()
 
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
-    @patch("ops.framework.EventBase.defer")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_on_relation_changed(self, _render, _defer_event, _read):
+    def test_on_relation_changed(self, _render, _read):
         mock_event = MagicMock()
         self.db_relation._on_relation_changed(mock_event)
 
-        # mock_unit_db = mock_event.relation.data[self.charm.unit]
-        # mock_app_db = mock_event.relation.data[self.charm.app]
+        mock_unit_db = mock_event.relation.data[self.charm.unit]
+        mock_app_db = mock_event.relation.data[self.charm.app]
 
-        # TODO test if databag is and isn't populated
         # TODO test with and without replicas
         # TODO test scaling on both sides of relation, and how it should change config
         # TODO Assert user creation perms change based on self.db_relation.admin
 
-        assert False
+        for databag in [mock_app_db, mock_unit_db]:
+            databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
+            databag["allowed-units"] = self.get_allowed_units(change_event.relation)
+            databag["host"] = f"http://{master_host}"
+            databag["master"] = pgb.parse_dict_to_kv_string(primary)
+            databag["port"] = master_port
+            databag["standbys"] = standbys
+            databag["version"] = "12"
+            databag["user"] = user
+            databag["password"] = password
+            databag["database"] = database
+
+        mock_unit_db["state"] = self._get_state(standbys)
 
     def test_get_postgres_standbys(self):
         cfg = PgbConfig(DEFAULT_CONFIG)

@@ -257,8 +257,8 @@ class PgBouncerCharm(CharmBase):
         """Adds a user to the config files.
 
         Args:
-            user: the username for the intended user.
-            password: intended password for the string
+            user: the username for the intended user
+            password: intended password for the user
             admin: whether or not the user has admin permissions
             stats: whether or not the user has stats permissions
             cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
@@ -385,7 +385,7 @@ class PgBouncerCharm(CharmBase):
 
     @property
     def unit_ip(self) -> str:
-        """Current unit ip."""
+        """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
 
 
