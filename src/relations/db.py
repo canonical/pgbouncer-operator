@@ -116,9 +116,7 @@ class DbProvides(Object):
         external_unit = self.get_external_units(change_event.relation)[0]
         external_app_name = external_unit.app.name
 
-        database = pgb_app_databag.get(
-            "database", relation_data[external_unit].get("database", external_app_name)
-        )
+        database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
         if database is None:
             logger.warning("No database name provided")
             change_event.defer()

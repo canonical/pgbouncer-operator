@@ -67,7 +67,14 @@ async def test_add_replicas(ops_test: OpsTest):
     )
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
-    expected_databases = ["pg_master", "pgb_postgres_standby_0", "pgb_postgres_standby_1", "cli", "cli_standby_0", "cli_standby_1"]
+    expected_databases = [
+        "pg_master",
+        "pgb_postgres_standby_0",
+        "pgb_postgres_standby_1",
+        "cli",
+        "cli_standby_0",
+        "cli_standby_1",
+    ]
     for database in expected_databases:
         assert database in cfg["databases"].keys()
 
