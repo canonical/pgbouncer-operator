@@ -81,6 +81,7 @@ logger = logging.getLogger(__name__)
 
 RELATION_ID = "backend-db-admin"
 BACKEND_STANDBY_PREFIX = "pgb_postgres_standby_"
+PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 
 
@@ -184,7 +185,7 @@ class BackendDbAdminRequires(Object):
 
         # Remove old standby information
         for db_name in list(dbs.keys()):
-            if db_name[:21] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
                 del dbs[db_name]
 
         return cfg
@@ -206,7 +207,7 @@ class BackendDbAdminRequires(Object):
 
         for db_name in list(dbs.keys()):
             # Remove all standbys
-            if db_name[:21] == BACKEND_STANDBY_PREFIX:
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX:
                 del dbs[db_name]
 
         self.charm.remove_user(RELATION_ADMIN)
