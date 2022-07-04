@@ -179,10 +179,6 @@ class TestCharm(unittest.TestCase):
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-        import logging
-
-        logging.error(_read.return_value.render())
-        logging.error(config.render())
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")

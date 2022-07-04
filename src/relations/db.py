@@ -119,12 +119,11 @@ class DbProvides(Object):
         database = pgb_app_databag.get(
             "database", relation_data[external_unit].get("database", external_app_name)
         )
-        if not database:
+        if database is None:
             logger.warning("No database name provided")
             change_event.defer()
             return
         database = database.replace("-", "_")
-
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
         password = pgb_app_databag.get("password", pgb.generate_password())
 

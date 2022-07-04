@@ -79,6 +79,8 @@ from ops.model import Unit
 
 from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
 
+# TODO append relation id to backend id, so each backend is unique
+
 logger = logging.getLogger(__name__)
 
 PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
