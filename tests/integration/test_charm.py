@@ -43,6 +43,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
     )
 
 
+@pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -64,6 +65,7 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
+    expected_cfg["pgbouncer"]["listen_addr"] = unit.public_address
 
     primary_cfg = await helpers.get_cfg(unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)

@@ -41,6 +41,7 @@ DEFAULT_CONFIG = {
         "logfile": f"{PGB_DIR}/pgbouncer.log",
         "pidfile": f"{PGB_DIR}/pgbouncer.pid",
         "admin_users": ["juju-admin"],
+        "stats_users": ["juju-admin"],
         "auth_file": f"{PGB_DIR}/userlist.txt",
         "user": "postgres",
         "max_client_conn": "10000",
@@ -341,6 +342,11 @@ def parse_dict_to_kv_string(dictionary: Dict[str, str]) -> str:
             separated with spaces
     """
     return " ".join([f"{key}={value}" for key, value in dictionary.items()])
+
+
+def build_connstr(**kwargs) -> str:
+    """A helper function to build postgres connstrings from keyword args."""
+    return parse_dict_to_kv_string(kwargs)
 
 
 def generate_password() -> str:

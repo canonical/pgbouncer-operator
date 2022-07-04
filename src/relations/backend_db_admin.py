@@ -80,7 +80,9 @@ from ops.model import Unit
 logger = logging.getLogger(__name__)
 
 RELATION_ID = "backend-db-admin"
-STANDBY_PREFIX = "pgb_postgres_standby_"
+BACKEND_STANDBY_PREFIX = "pgb_postgres_standby_"
+PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
+RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 
 
 class BackendDbAdminRequires(Object):
@@ -114,6 +116,10 @@ class BackendDbAdminRequires(Object):
 
         postgres_data = change_event.relation.data.get(change_event.unit)
 
+        # TODO the legacy charm doesn't store this data in a config file, but accesses this info
+        #      through a method that we can no longer use. Instead of using the main pgbouncer
+        #      config file, perhaps it's a good idea to have a pgbouncer-postgres-replicas.ini
+        #      file to store this info.
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
@@ -129,6 +135,7 @@ class BackendDbAdminRequires(Object):
 
         self._update_standbys(cfg, standbys)
 
+        self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
@@ -172,14 +179,14 @@ class BackendDbAdminRequires(Object):
 
         standby_names = []
         for idx, standby in enumerate(standbys):
-            standby_name = f"{STANDBY_PREFIX}{idx}"
+            standby_name = f"{BACKEND_STANDBY_PREFIX}{idx}"
             standby_names.append(standby_name)
             dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
 
         # Remove old standby information
-        for db in list(dbs.keys()):
-            if db[:21] == STANDBY_PREFIX and db not in standby_names:
-                del dbs[db]
+        for db_name in list(dbs.keys()):
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX and db_name not in standby_names:
+                del dbs[db_name]
 
         return cfg
 
@@ -198,9 +205,10 @@ class BackendDbAdminRequires(Object):
 
         dbs.pop("pg_master", None)
 
-        for db in list(dbs.keys()):
+        for db_name in list(dbs.keys()):
             # Remove all standbys
-            if db[:21] == STANDBY_PREFIX:
-                del dbs[db]
+            if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX:
+                del dbs[db_name]
 
+        self.charm.remove_user(RELATION_ADMIN)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)

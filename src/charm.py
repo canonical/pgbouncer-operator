@@ -15,6 +15,7 @@ from typing import Dict, List
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_operator.v0.pgb import PgbConfig
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -31,6 +32,7 @@ PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
+PEER = "pgbouncer-replicas"
 
 
 class PgBouncerCharm(CharmBase):
@@ -149,6 +151,8 @@ class PgBouncerCharm(CharmBase):
             self._cores,
         )
 
+        config["pgbouncer"]["listen_addr"] = str(self.unit_ip)
+
         self._render_service_configs(config, reload_pgbouncer=True)
 
     # ==============================
@@ -240,6 +244,88 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
+    def add_user(
+        self,
+        user: str,
+        password: str = None,
+        admin: bool = False,
+        stats: bool = False,
+        cfg: PgbConfig = None,
+        reload_pgbouncer: bool = False,
+        render_cfg: bool = False,
+    ):
+        """Adds a user to the config files.
+
+        Args:
+            user: the username for the intended user
+            password: intended password for the user
+            admin: whether or not the user has admin permissions
+            stats: whether or not the user has stats permissions
+            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
+                during this method.
+            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
+                restarted for changes to take effect.
+            render_cfg: whether or not to render config
+        """
+        if not cfg:
+            cfg = self._read_pgb_config()
+        userlist = self._read_userlist()
+
+        # Userlist is key-value dict of users and passwords.
+        if not password:
+            password = pgb.generate_password()
+
+        # Return early if user and password are already set to the correct values
+        if userlist.get(user) == password:
+            return
+
+        userlist[user] = password
+
+        if admin and user not in cfg[PGB]["admin_users"]:
+            cfg[PGB]["admin_users"].append(user)
+        if stats and user not in cfg[PGB]["stats_users"]:
+            cfg[PGB]["stats_users"].append(user)
+
+        self._render_userlist(userlist)
+        if render_cfg:
+            self._render_service_configs(cfg, reload_pgbouncer)
+
+    def remove_user(
+        self,
+        user: str,
+        cfg: PgbConfig = None,
+        reload_pgbouncer: bool = False,
+        render_cfg: bool = False,
+    ):
+        """Removes a user from config files.
+
+        Args:
+            user: the username for the intended user.
+            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
+                during this method.
+            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
+                restarted for changes to take effect.
+            render_cfg: whether or not to render config
+        """
+        if not cfg:
+            cfg = self._read_pgb_config()
+        userlist = self._read_userlist()
+
+        if user not in userlist.keys():
+            return
+
+        # remove userlist
+        del userlist[user]
+
+        if user in cfg[PGB]["admin_users"]:
+            cfg[PGB]["admin_users"].remove(user)
+        if user in cfg[PGB]["stats_users"]:
+            cfg[PGB]["stats_users"].remove(user)
+
+        self._render_userlist(userlist)
+        if render_cfg:
+            self._render_service_configs(cfg, reload_pgbouncer)
+
     def _reload_pgbouncer(self):
         """Reloads systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
@@ -250,14 +336,6 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
-
-    def _has_backend_relation(self) -> bool:
-        """Returns whether or not this charm is related to a postgresql backend.
-
-        TODO this will be updated to include the new backend relation once it is written.
-        """
-        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
-        return legacy_backend_relation is not None
 
     # =================
     #  Charm Utilities
@@ -296,6 +374,19 @@ class PgBouncerCharm(CharmBase):
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
+
+    def _has_backend_relation(self) -> bool:
+        """Returns whether or not this charm is related to a postgresql backend.
+
+        TODO this will be updated to include the new backend relation once it is written.
+        """
+        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        return legacy_backend_relation is not None
+
+    @property
+    def unit_ip(self) -> str:
+        """Current unit IP."""
+        return self.model.get_binding(PEER).network.bind_address
 
 
 if __name__ == "__main__":
