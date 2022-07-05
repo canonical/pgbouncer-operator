@@ -75,12 +75,14 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides.generate_username", return_value="test-user")
     @patch("ops.charm.EventBase.defer")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
+    @patch("relations.db.DbProvides._generate_remote_data", return_value = True)
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_instantiate_new_relation_on_relation_changed(
         self,
         _render_cfg,
         _add_user,
+        _generate_data,
         _state,
         _defer,
         _username,
@@ -160,12 +162,14 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
     @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
+    @patch("relations.db.DbProvides._generate_remote_data", return_value = True)
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_update_existing_relation_on_relation_changed(
         self,
         _render_cfg,
         _add_user,
+        _generate_data,
         _state,
         _standbys,
         _allowed_subnets,
@@ -247,12 +251,14 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
     @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
+    @patch("relations.db.DbProvides._generate_remote_data", return_value = True)
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_admin_user_generated_with_correct_admin_permissions(
         self,
         _render_cfg,
         _add_user,
+        _generate_data,
         _state,
         _standbys,
         _allowed_subnets,

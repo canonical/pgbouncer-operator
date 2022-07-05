@@ -160,7 +160,7 @@ class DbProvides(Object):
         )
 
         # Generate users and databases
-        if not self.generate_remote_utilities(cfg, user, password, database, extensions, roles):
+        if not self._generate_remote_data(cfg, user, password, database, extensions, roles):
             logger.error(f"unable to generate backend data for {self.relation_name} relation.")
             change_event.defer()
             return
@@ -307,7 +307,7 @@ class DbProvides(Object):
     #  Postgres Utilities
     # ====================
 
-    def _generate_remote_utilities(self, cfg, user, password, database, extensions, roles):
+    def _generate_remote_data(self, cfg, user, password, database, extensions, roles):
         try:
             con = self.get_backend_connection(cfg)
             self.ensure_user(con, user, password, roles, self.admin)
