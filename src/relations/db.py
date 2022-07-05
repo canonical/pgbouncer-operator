@@ -31,7 +31,6 @@ Some example relation data is below. All values are examples, generated in a run
 TODO this relation is almost identical to db-admin - unify code.
 """
 
-from psycopg2 import sql
 import logging
 from typing import Iterable
 
@@ -44,6 +43,7 @@ from ops.charm import (
 )
 from ops.framework import Object
 from ops.model import Relation, Unit
+from psycopg2 import sql
 
 from constants import BACKEND_STANDBY_PREFIX
 
