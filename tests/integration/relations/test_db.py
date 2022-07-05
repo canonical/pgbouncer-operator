@@ -20,6 +20,7 @@ PSQL = "psql"
 APPS = [PG, PGB, PSQL]
 
 
+@pytest.mark.smoke
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
 async def test_create_db_legacy_relation(ops_test: OpsTest):
@@ -143,10 +144,19 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 async def test_remove_db_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{PSQL}:db")
-    await ops_test.model.applications[PSQL].remove()
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
+
+#
+@pytest.mark.legacy_relations
+async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
+    """Test that the pgbouncer charm stays online when the db disconnects for some reason"""
+    await  ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
+    await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
+
+    await ops_test.model.remove_application(PSQL)
+    await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)

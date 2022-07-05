@@ -21,7 +21,6 @@ APPS = [PG, PGB, PSQL]
 BUILT_CHARM = None
 
 
-@pytest.mark.smoke
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relations
 async def test_create_db_admin_legacy_relation(ops_test: OpsTest):

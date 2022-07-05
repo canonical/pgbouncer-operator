@@ -117,11 +117,12 @@ class TestDb(unittest.TestCase):
         _defer.reset_mock()
 
         external_unit.app.name = "external_test_unit"
+        relation_data[external_unit] = {"database": "test_database_name"}
 
         self.db_relation._on_relation_changed(mock_event)
         _defer.assert_not_called()
 
-        database = external_unit.app.name
+        database = "test_database_name"
         user = _username.return_value
         password = _pass.return_value
 
@@ -131,7 +132,7 @@ class TestDb(unittest.TestCase):
             "port": master_port,
             "user": user,
             "password": password,
-            "fallback_application_name": database,
+            "fallback_application_name": external_unit.app.name,
         }
 
         for databag in [pgb_app_databag, pgb_unit_databag]:
