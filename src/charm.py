@@ -388,6 +388,21 @@ class PgBouncerCharm(CharmBase):
         """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
 
+    # ====================
+    #  Postgres Utilities
+    # ====================
+
+    def get_backend_connection(self):
+        pass
+
+    def ensure_user(connection, user, roles, admin = False):
+        pass
+
+    def ensure_database(connection, user, database):
+        pass
+
+    def ensure_extensions(connection, database, extensions):
+        pass
 
 if __name__ == "__main__":
     main(PgBouncerCharm)

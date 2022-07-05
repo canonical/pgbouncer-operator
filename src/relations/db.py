@@ -32,6 +32,7 @@ TODO this relation is almost identical to db-admin - unify code.
 """
 
 import logging
+import psycopg2
 from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
@@ -113,7 +114,16 @@ class DbProvides(Object):
         relation_data = change_event.relation.data
         pgb_unit_databag = relation_data[self.charm.unit]
         pgb_app_databag = relation_data[self.charm.app]
-        external_unit = self.get_external_units(change_event.relation)[0]
+        try:
+            external_unit = self.get_external_units(change_event.relation)[0]
+        except:
+            # In cases where pgbouncer changes the relation, we have no new information to add to
+            # the config. Scaling is not yet implemented, and calling this hook from the
+            # backend-db-admin relation occurs after the config updates are added.
+            logger.info(
+                f"no external unit found in {self.relation_name} relation - nothing to change in config, exiting relation hook"
+            )
+            return
         external_app_name = external_unit.app.name
 
         database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
@@ -141,6 +151,26 @@ class DbProvides(Object):
         # Get data about standby units for databags and charm config.
         standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
 
+        # Get postgres roles and extensions if they exist
+        roles = set(
+            role.strip() for role in relation_data[external_unit].get("roles", "").split(",")
+        )
+        extensions = set(
+            ext.strip() for ext in relation_data[external_unit].get("extensions", "").split(",")
+        )
+
+        # Generate users and databases
+        try:
+            with self.charm.get_backend_connection() as con:
+                con.autocommit = True
+                self.charm.ensure_user(con, user, roles, self.admin)
+                self.charm.ensure_database(con, user, database)
+                self.charm.ensure_extensions(database, extensions)
+        except psycopg2.OperationalError:
+            logger.warning("unable to intialise databases/users/extensions")
+            change_event.defer()
+            return
+
         # Populate databags
         for databag in [pgb_app_databag, pgb_unit_databag]:
             databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
@@ -153,12 +183,13 @@ class DbProvides(Object):
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
-
+            if len(roles) > 0:
+                databag["roles"] = ",".join(roles)
+            if len(extensions) > 0:
+                databag["extensions"] = ",".join(extensions)
         pgb_unit_databag["state"] = self._get_state(standbys)
 
         # Write config data to charm filesystem
-        # TODO revisit adding user - accessing dbs through psql config doesn't seem to work, though
-        # my test environment is a bit old.
         self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 

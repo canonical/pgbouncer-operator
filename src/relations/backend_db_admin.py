@@ -134,6 +134,7 @@ class BackendDbAdminRequires(Object):
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
+        # TODO consider removing username and password from connection strings
         if postgres_data.get("master"):
             dbs["pg_master"] = pgb.parse_kv_string_to_dict(postgres_data.get("master"))
         else:

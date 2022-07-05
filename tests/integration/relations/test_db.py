@@ -48,6 +48,8 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
+    # TODO verify that databases are created in postgres
+
 
 @pytest.mark.legacy_relations
 async def test_add_replicas(ops_test: OpsTest):
@@ -119,6 +121,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
             timeout=1000,
         ),
     )
+    # TODO verify that config switches cli over to new leader
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
@@ -152,7 +155,6 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
     assert "cli" not in cfg["databases"].keys()
 
 
-#
 @pytest.mark.legacy_relations
 async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer charm stays online when the db disconnects for some reason."""
