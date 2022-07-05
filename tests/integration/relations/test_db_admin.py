@@ -153,7 +153,7 @@ async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relations
-async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
+async def test_delete_db_admin_application_while_in_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer charm stays online when the db-admin disconnects for some reason."""
     await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db")
     await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)

@@ -27,14 +27,12 @@ Some example relation data is below. All values are examples, generated in a run
 │           │          user │ db_85_psql                                        │        │
 │           │       version │ 12                                                │        │
 └───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
-
-TODO this relation is almost identical to db-admin - unify code.
 """
 
 import logging
-import psycopg2
 from typing import Iterable
 
+import psycopg2
 from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import (
     CharmBase,

@@ -48,7 +48,7 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
-    # TODO verify that databases are created in postgres
+    # TODO verify that databases and users are created in postgres charm
 
 
 @pytest.mark.legacy_relations
@@ -153,6 +153,7 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
+    # NB databases and users are left in the postgres charm
 
 
 @pytest.mark.legacy_relations
