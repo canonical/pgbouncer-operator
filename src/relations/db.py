@@ -43,6 +43,7 @@ from ops.charm import (
 )
 from ops.framework import Object
 from ops.model import Relation, Unit
+from psycopg2.sql import Identifier
 
 from constants import BACKEND_STANDBY_PREFIX
 
@@ -115,7 +116,7 @@ class DbProvides(Object):
         pgb_app_databag = relation_data[self.charm.app]
         try:
             external_unit = self.get_external_units(change_event.relation)[0]
-        except:
+        except IndexError:
             # In cases where pgbouncer changes the relation, we have no new information to add to
             # the config. Scaling is not yet implemented, and calling this hook from the
             # backend-db-admin relation occurs after the config updates are added.
@@ -159,17 +160,8 @@ class DbProvides(Object):
         )
 
         # Generate users and databases
-        try:
-            with self.get_backend_connection(cfg) as con:
-                if con is None:
-                    change_event.defer()
-                    return
-
-                self.ensure_user(con, user, roles, self.admin)
-                self.ensure_database(con, user, database)
-                self.ensure_extensions(database, extensions)
-        except psycopg2.OperationalError:
-            logger.warning("unable to intialise databases/users/extensions")
+        if not self.generate_remote_utilities(cfg, user, password, database, extensions, roles):
+            logger.error(f"unable to generate backend data for {self.relation_name} relation.")
             change_event.defer()
             return
 
@@ -185,9 +177,9 @@ class DbProvides(Object):
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
-            if len(roles) > 0:
+            if roles:
                 databag["roles"] = ",".join(roles)
-            if len(extensions) > 0:
+            if extensions:
                 databag["extensions"] = ",".join(extensions)
         pgb_unit_databag["state"] = self._get_state(standbys)
 
@@ -315,6 +307,22 @@ class DbProvides(Object):
     #  Postgres Utilities
     # ====================
 
+    def _generate_remote_utilities(self, cfg, user, password, database, extensions, roles):
+        try:
+            con = self.get_backend_connection(cfg)
+            self.ensure_user(con, user, password, roles, self.admin)
+            self.ensure_database(con, user, database)
+            self.ensure_extensions(database, extensions)
+        except psycopg2.OperationalError:
+            logger.warning("unable to initialise databases/users/extensions")
+            return False
+        finally:
+            if con is None:
+                return False
+            else:
+                con.close()
+        return True
+
     def get_backend_connection(self, cfg: PgbConfig) -> psycopg2.extensions.connection:
         """Gets a psycopg2.Connection object to the backend database.
 
@@ -322,23 +330,23 @@ class DbProvides(Object):
             psycopg2.Connection object, linked to backend database
         """
         if not self.charm._has_backend_relation():
-            logger.info("unable to connect to backend database - backend-db-admin relation not connected")
+            logger.info(
+                "unable to connect to backend database - backend-db-admin relation not connected"
+            )
             return None
 
         backend = cfg["databases"].get("pg_master")
         if backend is None:
             return None
 
-        try:
-            connection = psycopg2.connect(pgb.parse_dict_to_kv_string(backend))
-        except:
-            logger.info("unable to connect to backend database")
-            return None
-
+        logger.error(pgb.parse_dict_to_kv_string(backend))
+        connection = psycopg2.connect(pgb.parse_dict_to_kv_string(backend))
         connection.autocommit = True
         return connection
 
-    def ensure_user(connection, user: str, roles: List[str], admin: bool = False) -> None:
+    def ensure_user(
+        self, connection, user: str, password: str, roles: List[str], admin: bool = False
+    ) -> None:
         """Ensure the given extensions exist for the database to which we are connected.
 
         Args:
@@ -351,47 +359,53 @@ class DbProvides(Object):
             psycopg2.OperationalError
         """
         cur = connection.cursor()
-        if not role_exists(connection, user):
+        if not self._role_exists(connection, user):
             if admin:
                 logger.info("Creating superuser {}".format(user))
-                cur.execute("CREATE ROLE %s WITH SUPERUSER LOGIN PASSWORD %s",
-                            (pgidentifier(user), get_password(user)))
+                cur.execute(
+                    "CREATE ROLE %s WITH SUPERUSER LOGIN PASSWORD %s",
+                    (Identifier(user).string, password),
+                )
             else:
                 logger.info("Creating user {}".format(user))
-                cur.execute("CREATE ROLE %s WITH LOGIN PASSWORD %s",
-                            (pgidentifier(user), get_password(user)))
+                cur.execute(
+                    "CREATE ROLE %s WITH LOGIN PASSWORD %s", (Identifier(user).string, password)
+                )
 
         # Reset the user's roles.
         wanted_roles = set(roles)
-        cur.execute("""
+        cur.execute(
+            """
             SELECT role.rolname
             FROM pg_roles AS role, pg_roles AS member, pg_auth_members
             WHERE
                 member.oid = pg_auth_members.member
                 AND role.oid = pg_auth_members.roleid
                 AND member.rolname = %s
-            """, (user,))
+            """,
+            (user,),
+        )
         existing_roles = set(r[0] for r in cur.fetchall())
         roles_to_grant = wanted_roles.difference(existing_roles)
         roles_to_revoke = existing_roles.difference(wanted_roles)
 
         for role in roles_to_grant:
-            if not role_exists(con, role):
+            if not self._role_exists(connection, role):
                 logger.info("Creating role {}".format(role))
-                cur.execute("CREATE ROLE %s INHERIT NOLOGIN",
-                            (pgidentifier(role),))
+                cur.execute("CREATE ROLE %s INHERIT NOLOGIN", (Identifier(role).string,))
             logger.info("Granting {} to {}".format(role, user))
-            cur.execute(
-                "GRANT %s TO %s",
-                (pgidentifier(role), pgidentifier(user)))
+            cur.execute("GRANT %s TO %s", (Identifier(role).string, Identifier(user)))
 
         for role in roles_to_revoke:
             logger.info("Revoking {} from {}".format(role, user))
-            cur.execute(
-                "REVOKE %s FROM %s",
-                (pgidentifier(role), pgidentifier(user)))
+            cur.execute("REVOKE %s FROM %s", (Identifier(role).string, Identifier(user)))
 
-    def ensure_database(connection, user: str, database: str) -> None:
+    def _role_exists(self, con, role):
+        cur = con.cursor()
+        cur.execute("SELECT rolname FROM pg_roles WHERE rolname = %s", (role,))
+        return cur.fetchone() is not None
+
+    def ensure_database(self, connection, user: str, database: str) -> None:
         """Ensure the given extensions exist for the database to which we are connected.
 
         Args:
@@ -404,19 +418,19 @@ class DbProvides(Object):
         """
         cur = connection.cursor()
         try:
-            cur.execute(
-                "SELECT datname FROM pg_database WHERE datname = %s", (database,))
+            cur.execute("SELECT datname FROM pg_database WHERE datname = %s", (database,))
             if not cur.fetchone():
                 logger.info("Creating database {}".format(database))
-                cur.execute("CREATE DATABASE %s", (pgidentifier(database),))
+                cur.execute("CREATE DATABASE %s", (Identifier(database).string,))
             cur.execute(
                 "GRANT CONNECT ON DATABASE %s TO %s",
-                (pgidentifier(database), pgidentifier(user)))
+                (Identifier(database).string, Identifier(user).string),
+            )
         except psycopg2.IntegrityError:
             # Race with another unit. DB already created.
             pass
 
-    def ensure_extensions(connection, extensions: List[str]) -> None:
+    def ensure_extensions(self, connection, extensions: List[str]) -> None:
         """Ensure the given extensions exist for the database to which we are connected.
 
         Args:
@@ -428,4 +442,4 @@ class DbProvides(Object):
         """
         with connection.cursor() as cur:
             for ext in extensions:
-                cur.execute("CREATE EXTENSION IF NOT EXISTS %s", (pgidentifier(ext),))
+                cur.execute("CREATE EXTENSION IF NOT EXISTS %s", (Identifier(ext).string,))
