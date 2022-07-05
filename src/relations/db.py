@@ -31,6 +31,7 @@ Some example relation data is below. All values are examples, generated in a run
 TODO this relation is almost identical to db-admin - unify code.
 """
 
+from psycopg2 import sql
 import logging
 from typing import Iterable
 
@@ -52,7 +53,7 @@ STANDBY_PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 
 
 class DbProvides(Object):
-    """Defines functionality for the 'requires' side of the 'db' relation.
+    """Defines functionality for the 'provides' side of the 'db' relation.
 
     Hook events observed:
         - relation-changed
@@ -99,7 +100,7 @@ class DbProvides(Object):
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+            f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
         cfg = self.charm._read_pgb_config()
@@ -121,7 +122,7 @@ class DbProvides(Object):
             logger.warning("No database name provided")
             change_event.defer()
             return
-        database = database.replace("-", "_")
+        database = sql.Identifier(database).string
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
         password = pgb_app_databag.get("password", pgb.generate_password())
 
@@ -219,7 +220,7 @@ class DbProvides(Object):
         """
         logger.info("db relation removed - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+            f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
         app_databag = departed_event.relation.data[self.charm.app]
