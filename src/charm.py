@@ -10,6 +10,7 @@ import pwd
 import shutil
 import subprocess
 from copy import deepcopy
+import psycopg2
 from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
@@ -392,7 +393,12 @@ class PgBouncerCharm(CharmBase):
     #  Postgres Utilities
     # ====================
 
-    def get_backend_connection(self):
+    def get_backend_connection(self) -> Connection:
+        """Gets a psycopg2.Connection object to the backend database.
+
+        Returns:
+            psycopg2.Connection object, linked to backend database
+        """
         pass
 
     def ensure_user(connection, user, roles, admin = False):
