@@ -12,7 +12,6 @@ import subprocess
 from copy import deepcopy
 from typing import Dict, List
 
-import psycopg2
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
@@ -388,56 +387,6 @@ class PgBouncerCharm(CharmBase):
     def unit_ip(self) -> str:
         """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
-
-    # ====================
-    #  Postgres Utilities
-    # ====================
-
-    def get_backend_connection(self) -> psycopg2.extensions.connection:
-        """Gets a psycopg2.Connection object to the backend database.
-
-        Returns:
-            psycopg2.Connection object, linked to backend database
-        """
-
-    def ensure_user(connection, user: str, roles: List[str], admin: bool = False) -> None:
-        """Ensure the given extensions exist for the database to which we are connected.
-
-        Args:
-            connection: psycopg2.extensions.connection object, connected to the expected database.
-            user: the user to be created.
-            roles: a list of strings, representing the roles the user has.
-            admin: a boolean signifying whether this user has admin permissions.
-
-        Raises:
-            psycopg2.OperationalError
-        """
-
-    def ensure_database(connection, user: str, database: str) -> None:
-        """Ensure the given extensions exist for the database to which we are connected.
-
-        Args:
-            connection: psycopg2.extensions.connection object, connected to the expected database.
-            user: the intended owner of the database.
-            database: the database whose existence should be ensured.
-
-        Raises:
-            psycopg2.OperationalError
-        """
-
-    def ensure_extensions(connection, extensions: List[str]) -> None:
-        """Ensure the given extensions exist for the database to which we are connected.
-
-        Args:
-            connection: psycopg2.extensions.connection object, connected to the expected database.
-            extensions: a list of extensions to be created, each represented as a string.
-
-        Raises:
-            psycopg2.OperationalError
-        """
-        with connection.cursor() as cur:
-            for ext in extensions:
-                cur.execute("CREATE EXTENSION IF NOT EXISTS %s", (pgidentifier(ext),))
 
 
 if __name__ == "__main__":
