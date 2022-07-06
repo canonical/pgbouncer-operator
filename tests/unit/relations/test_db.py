@@ -322,6 +322,7 @@ class TestDb(unittest.TestCase):
 
         for standby in standby_list:
             import logging
+
             logging.error(standby)
             standby_dict = parse_kv_string_to_dict(standby)
             assert standby_dict.get("dbname") == db_name
