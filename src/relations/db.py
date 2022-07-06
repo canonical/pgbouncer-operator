@@ -237,7 +237,7 @@ class DbProvides(Object):
         """
         if standbys == "":
             return "standalone"
-        if self.charm.unit.is_leader():
+        elif self.charm.unit.is_leader():
             return "master"
         else:
             return "standby"
@@ -410,7 +410,7 @@ class DbProvides(Object):
     def _role_exists(self, con, role):
         cur = con.cursor()
         try:
-            cur.execute(f"SELECT rolname FROM pg_roles WHERE rolname = {role}")
+            cur.execute(f"SELECT rolname FROM pg_roles WHERE rolname = '{role}'")
             return cur.fetchone() is not None
         except psycopg2.errors.UndefinedColumn:
             return False
