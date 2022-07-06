@@ -16,10 +16,21 @@ from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from charms.pgbouncer_operator.v0.pgb import PgbConfig
+from charms.postgresql.v0.postgresql_helpers import (
+    PostgreSQL,
+    PostgreSQLCreateUserError,
+    PostgreSQLDeleteUserError,
+)
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import (
+    ActiveStatus,
+    BlockedStatus,
+    MaintenanceStatus,
+    Relation,
+    WaitingStatus,
+)
 
 from constants import BACKEND_DB_ADMIN, INI_PATH
 from constants import PG as PG_USER
@@ -104,7 +115,7 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(f"{service}")
 
-            if self._has_backend_relation():
+            if self.backend_relation():
                 self.unit.status = ActiveStatus("pgbouncer started")
             else:
                 # Wait for backend relation relation if it doesn't exist
@@ -126,7 +137,7 @@ class PgBouncerCharm(CharmBase):
                     )
                     return
 
-            if self._has_backend_relation():
+            if self.backend_relation():
                 # All is well, set ActiveStatus
                 self.unit.status = ActiveStatus()
             else:
@@ -254,7 +265,10 @@ class PgBouncerCharm(CharmBase):
         reload_pgbouncer: bool = False,
         render_cfg: bool = False,
     ):
-        """Adds a user to the config files.
+        """Adds a user.
+
+        Users are added to userlist.txt and pgbouncer.ini config files, and to the backend postgres
+        database if it exists.
 
         Args:
             user: the username for the intended user
@@ -277,6 +291,13 @@ class PgBouncerCharm(CharmBase):
 
         # Return early if user and password are already set to the correct values
         if userlist.get(user) == password:
+            return
+
+        try:
+            self.backend_postgres.create_user(user, password, admin)
+        except PostgreSQLCreateUserError:
+            logger.error(f"failed to create postgres user {user} - exiting")
+            self.unit.status = BlockedStatus(f"failed to create user {user}")
             return
 
         userlist[user] = password
@@ -309,20 +330,23 @@ class PgBouncerCharm(CharmBase):
         """
         if not cfg:
             cfg = self._read_pgb_config()
-        userlist = self._read_userlist()
 
-        if user not in userlist.keys():
+        try:
+            self.backend_postgres.delete_user(user)
+        except PostgreSQLDeleteUserError:
+            logger.error(f"failed to delete postgres user {user} - exiting")
+            self.unit.status = BlockedStatus(f"failed to delete user {user}")
             return
 
-        # remove userlist
-        del userlist[user]
+        userlist = self._read_userlist()
+        if user in userlist.keys():
+            del userlist[user]
+            self._render_userlist(userlist)
 
         if user in cfg[PGB]["admin_users"]:
             cfg[PGB]["admin_users"].remove(user)
         if user in cfg[PGB]["stats_users"]:
             cfg[PGB]["stats_users"].remove(user)
-
-        self._render_userlist(userlist)
         if render_cfg:
             self._render_service_configs(cfg, reload_pgbouncer)
 
@@ -375,18 +399,40 @@ class PgBouncerCharm(CharmBase):
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
-    def _has_backend_relation(self) -> bool:
-        """Returns whether or not this charm is related to a postgresql backend.
-
-        TODO this will be updated to include the new backend relation once it is written.
-        """
-        legacy_backend_relation = self.model.get_relation(BACKEND_DB_ADMIN)
-        return legacy_backend_relation is not None
-
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
+
+    @property
+    def backend_relation(self) -> Relation:
+        """Returns the relation to a postgresql backend.
+
+        TODO this will be updated to include the new backend relation once it is written.
+
+        Returns:
+            Relation object for the backend relation.
+        """
+        legacy_backend_relation = self.model.get_relation(BACKEND_DB_ADMIN)
+        if not legacy_backend_relation:
+            return None
+        else:
+            return legacy_backend_relation
+
+    @property
+    def backend_postgres(self) -> PostgreSQL:
+        """Returns PostgreSQL representation of backend database, as defined in relation."""
+        backend_relation = self.backend_relation()
+        if not backend_relation:
+            return None
+
+        backend_data = backend_relation.data[self.app]
+        host = backend_data.get("host")
+        user = backend_data.get("user")
+        password = backend_data.get("password")
+        database = backend_data.get("database")
+
+        return PostgreSQL(host=host, user=user, password=password, database=database)
 
 
 if __name__ == "__main__":
