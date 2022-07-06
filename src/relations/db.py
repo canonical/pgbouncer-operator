@@ -153,10 +153,14 @@ class DbProvides(Object):
 
         # Get postgres roles and extensions if they exist
         roles = set(
-            role.strip() for role in relation_data[external_unit].get("roles", "").split(",")
+            role.strip()
+            for role in relation_data[external_unit].get("roles", "").split(",")
+            if role.strip()
         )
         extensions = set(
-            ext.strip() for ext in relation_data[external_unit].get("extensions", "").split(",")
+            ext.strip()
+            for ext in relation_data[external_unit].get("extensions", "").split(",")
+            if ext.strip()
         )
 
         # Generate users and databases
@@ -186,6 +190,10 @@ class DbProvides(Object):
         # Write config data to charm filesystem
         self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+    def _generate_databags(self):
+        """Generates and populates databags for relation."""
+        pass
 
     def generate_username(self, event, app_name):
         """Generates a username for this relation."""
@@ -308,11 +316,12 @@ class DbProvides(Object):
     # ====================
 
     def _generate_remote_data(self, cfg, user, password, database, extensions, roles):
+        con = None
         try:
             con = self.get_backend_connection(cfg)
             self.ensure_user(con, user, password, roles, self.admin)
             self.ensure_database(con, user, database)
-            self.ensure_extensions(database, extensions)
+            self.ensure_extensions(con, extensions)
         except psycopg2.OperationalError:
             logger.warning("unable to initialise databases/users/extensions")
             return False
@@ -361,29 +370,27 @@ class DbProvides(Object):
         cur = connection.cursor()
         if not self._role_exists(connection, user):
             if admin:
-                logger.info("Creating superuser {}".format(user))
+                logger.info(f"Creating superuser {user}")
                 cur.execute(
-                    "CREATE ROLE %s WITH SUPERUSER LOGIN PASSWORD %s",
-                    (Identifier(user).string, password),
+                    f"CREATE ROLE {Identifier(user).string} WITH SUPERUSER LOGIN PASSWORD '{Identifier(password).string}'"
                 )
             else:
-                logger.info("Creating user {}".format(user))
+                logger.info(f"Creating user {user}")
                 cur.execute(
-                    "CREATE ROLE %s WITH LOGIN PASSWORD %s", (Identifier(user).string, password)
+                    f"CREATE ROLE {Identifier(user).string} WITH LOGIN PASSWORD '{Identifier(password).string}'"
                 )
 
         # Reset the user's roles.
         wanted_roles = set(roles)
         cur.execute(
-            """
+            f"""
             SELECT role.rolname
             FROM pg_roles AS role, pg_roles AS member, pg_auth_members
             WHERE
                 member.oid = pg_auth_members.member
                 AND role.oid = pg_auth_members.roleid
-                AND member.rolname = %s
+                AND member.rolname = '{user}';
             """,
-            (user,),
         )
         existing_roles = set(r[0] for r in cur.fetchall())
         roles_to_grant = wanted_roles.difference(existing_roles)
@@ -391,19 +398,22 @@ class DbProvides(Object):
 
         for role in roles_to_grant:
             if not self._role_exists(connection, role):
-                logger.info("Creating role {}".format(role))
-                cur.execute("CREATE ROLE %s INHERIT NOLOGIN", (Identifier(role).string,))
-            logger.info("Granting {} to {}".format(role, user))
-            cur.execute("GRANT %s TO %s", (Identifier(role).string, Identifier(user)))
+                logger.info(f"Creating role {role}")
+                cur.execute(f"CREATE ROLE {Identifier(role).string} INHERIT NOLOGIN")
+            logger.info(f"Granting {role} to {user}")
+            cur.execute(f"GRANT {Identifier(role).string} TO {Identifier(user).string}")
 
         for role in roles_to_revoke:
-            logger.info("Revoking {} from {}".format(role, user))
-            cur.execute("REVOKE %s FROM %s", (Identifier(role).string, Identifier(user)))
+            logger.info(f"Revoking {role} from {user}")
+            cur.execute(f"REVOKE {Identifier(role).string} FROM {Identifier(user).string};")
 
     def _role_exists(self, con, role):
         cur = con.cursor()
-        cur.execute("SELECT rolname FROM pg_roles WHERE rolname = %s", (role,))
-        return cur.fetchone() is not None
+        try:
+            cur.execute(f"SELECT rolname FROM pg_roles WHERE rolname = {role}")
+            return cur.fetchone() is not None
+        except psycopg2.errors.UndefinedColumn:
+            return False
 
     def ensure_database(self, connection, user: str, database: str) -> None:
         """Ensure the given extensions exist for the database to which we are connected.
@@ -418,13 +428,14 @@ class DbProvides(Object):
         """
         cur = connection.cursor()
         try:
-            cur.execute("SELECT datname FROM pg_database WHERE datname = %s", (database,))
-            if not cur.fetchone():
-                logger.info("Creating database {}".format(database))
-                cur.execute("CREATE DATABASE %s", (Identifier(database).string,))
             cur.execute(
-                "GRANT CONNECT ON DATABASE %s TO %s",
-                (Identifier(database).string, Identifier(user).string),
+                f"SELECT datname FROM pg_database WHERE datname = '{Identifier(database).string}'"
+            )
+            if not cur.fetchone():
+                logger.info(f"Creating database {database}")
+                cur.execute(f"CREATE DATABASE {Identifier(database).string}")
+            cur.execute(
+                f"GRANT CONNECT ON DATABASE {Identifier(database).string} TO {Identifier(user).string}"
             )
         except psycopg2.IntegrityError:
             # Race with another unit. DB already created.
@@ -442,4 +453,4 @@ class DbProvides(Object):
         """
         with connection.cursor() as cur:
             for ext in extensions:
-                cur.execute("CREATE EXTENSION IF NOT EXISTS %s", (Identifier(ext).string,))
+                cur.execute(f"CREATE EXTENSION IF NOT EXISTS {Identifier(ext).string}")
