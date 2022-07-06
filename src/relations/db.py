@@ -191,6 +191,7 @@ class DbProvides(Object):
             }
             dbs[f"{database}_standby_{standby_idx}"] = standby
 
+            logging.error(standby)
             standbys.append(pgb.parse_dict_to_kv_string(standby))
 
         return ", ".join(standbys)

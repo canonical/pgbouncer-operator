@@ -317,10 +317,12 @@ class TestDb(unittest.TestCase):
         assert "not_a_standby" not in standbys
         assert "pg_master" not in standbys
 
-        standby_list = standbys.split(",")
+        standby_list = standbys.split(", ")
         assert len(standby_list) == 2
 
         for standby in standby_list:
+            import logging
+            logging.error(standby)
             standby_dict = parse_kv_string_to_dict(standby)
             assert standby_dict.get("dbname") == db_name
             assert standby_dict.get("host") == "standby_host"
