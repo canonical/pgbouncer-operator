@@ -144,16 +144,19 @@ class DbProvides(Object):
 
         # Populate databags
         for databag in [pgb_app_databag, pgb_unit_databag]:
-            databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
-            databag["allowed-units"] = self.get_allowed_units(change_event.relation)
-            databag["host"] = f"http://{master_host}"
-            databag["master"] = pgb.parse_dict_to_kv_string(primary)
-            databag["port"] = master_port
-            databag["standbys"] = standbys
-            databag["version"] = "12"
-            databag["user"] = user
-            databag["password"] = password
-            databag["database"] = database
+            updates = {
+                "allowed-subnets": self.get_allowed_subnets(change_event.relation),
+                "allowed-units": self.get_allowed_units(change_event.relation),
+                "host": f"http://{master_host}",
+                "master": pgb.parse_dict_to_kv_string(primary),
+                "port": master_port,
+                "standbys": standbys,
+                "version": "12",
+                "user": user,
+                "password": password,
+                "database": database,
+            }
+            databag.update(updates)
 
         pgb_unit_databag["state"] = self._get_state(standbys)
 
@@ -170,7 +173,7 @@ class DbProvides(Object):
     def _get_postgres_standbys(self, cfg, app_name, database, user, password):
         dbs = cfg["databases"]
 
-        standbys = ""
+        standbys = []
         for standby_name, standby_data in dict(dbs).items():
             # skip everything that's not a postgres standby, as defined by the backend-db-admin
             # relation
@@ -188,11 +191,9 @@ class DbProvides(Object):
             }
             dbs[f"{database}_standby_{standby_idx}"] = standby
 
-            standbys += pgb.parse_dict_to_kv_string(standby) + ","
+            standbys.append(pgb.parse_dict_to_kv_string(standby))
 
-        # Strip final comma off standby string
-        standbys = standbys[:-1]
-        return standbys
+        return ", ".join(standbys)
 
     def _get_state(self, standbys: str) -> str:
         """Gets the given state for this unit.
@@ -205,7 +206,7 @@ class DbProvides(Object):
         """
         if standbys == "":
             return "standalone"
-        if self.charm.unit.is_leader():
+        elif self.charm.unit.is_leader():
             return "master"
         else:
             return "standby"

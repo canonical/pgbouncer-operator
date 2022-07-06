@@ -123,9 +123,6 @@ class BackendDbAdminRequires(Object):
         )
 
         postgres_data = change_event.relation.data.get(change_event.unit)
-        # if not postgres_data:
-        #     # if change_event.unit doesn't exist,
-        #     return
 
         # TODO the legacy charm doesn't store this data in a config file, but accesses this info
         #      through a method that we can no longer use. Instead of using the main pgbouncer
