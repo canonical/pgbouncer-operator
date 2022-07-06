@@ -71,9 +71,9 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
-    @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="test-pass")
-    @patch("relations.db.DbProvides.generate_username", return_value="test-user")
+    @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test_postgres_standbys")
+    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="test_pass")
+    @patch("relations.db.DbProvides.generate_username", return_value="test_user")
     @patch("ops.charm.EventBase.defer")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
     @patch("charm.PgBouncerCharm.add_user")
@@ -156,6 +156,7 @@ class TestDb(unittest.TestCase):
         )
         _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
 
+    @patch("charm.PgBouncerCharm.backend_postgres")
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
@@ -174,6 +175,7 @@ class TestDb(unittest.TestCase):
         _allowed_units,
         _external_units,
         _read_cfg,
+        _backend
     ):
         # Ensure event doesn't defer too early
         self.harness.set_leader(True)
@@ -188,9 +190,9 @@ class TestDb(unittest.TestCase):
         _read_cfg.return_value["databases"]["test_db"] = {
             "host": "test-host",
             "dbname": "external_test_unit",
-            "port": "test-port",
-            "user": "test-user",
-            "password": "test-pass",
+            "port": "test_port",
+            "user": "test_user",
+            "password": "test_pass",
             "fallback_application_name": "external_test_unit",
         }
 
@@ -200,8 +202,8 @@ class TestDb(unittest.TestCase):
         relation_data = mock_event.relation.data = {}
         pgb_unit_databag = relation_data[self.db_relation.charm.unit] = {}
         database = "test_db"
-        user = "test-user"
-        password = "test-pw"
+        user = "test_user"
+        password = "test_pw"
         pgb_app_databag = relation_data[self.charm.app] = {
             "database": database,
             "user": user,
@@ -243,6 +245,7 @@ class TestDb(unittest.TestCase):
         )
         _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
 
+    @patch("charm.PgBouncerCharm.backend_postgres")
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
@@ -261,6 +264,7 @@ class TestDb(unittest.TestCase):
         _allowed_units,
         _external_units,
         _read_cfg,
+        _backend
     ):
         self.harness.set_leader(True)
         _read_cfg.return_value["databases"]["pg_master"] = {
@@ -271,8 +275,8 @@ class TestDb(unittest.TestCase):
         mock_event = MagicMock()
         relation_data = mock_event.relation.data = {}
         database = "test_db"
-        user = "test-user"
-        password = "test-pw"
+        user = "test_user"
+        password = "test_pw"
 
         relation_data[self.db_relation.charm.unit] = {}
         relation_data[self.charm.app] = {
