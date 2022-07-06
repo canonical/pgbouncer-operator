@@ -134,7 +134,7 @@ class BackendDbAdminRequires(Object):
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
-        # TODO consider removing username and password from connection strings
+        # TODO remove username and password from connection strings
         if postgres_data.get("master"):
             dbs["pg_master"] = pgb.parse_kv_string_to_dict(postgres_data.get("master"))
         else:
@@ -146,8 +146,9 @@ class BackendDbAdminRequires(Object):
         standbys = standbys_str.split("\n") if standbys_str else []
 
         self._update_standbys(cfg, standbys)
+        password = postgres_data.get("password")
 
-        self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
+        self.charm.add_user(RELATION_ADMIN, password=password, admin=True, cfg=cfg)
         # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
@@ -197,7 +198,10 @@ class BackendDbAdminRequires(Object):
         for idx, standby in enumerate(standbys):
             standby_name = f"{BACKEND_STANDBY_PREFIX}{idx}"
             standby_names.append(standby_name)
-            dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
+            standby_dict = pgb.parse_kv_string_to_dict(standby)
+            standby_dict.pop("user", None)
+            standby_dict.pop("password", None)
+            dbs[standby_name] = standby_dict
 
         # Remove old standby information
         for db_name in list(dbs.keys()):

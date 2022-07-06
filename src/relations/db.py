@@ -32,6 +32,7 @@ Some example relation data is below. All values are examples, generated in a run
 import logging
 from typing import Iterable, List
 
+from copy import deepcopy
 import psycopg2
 from charms.pgbouncer_operator.v0 import pgb
 from charms.pgbouncer_operator.v0.pgb import PgbConfig
@@ -133,6 +134,7 @@ class DbProvides(Object):
             return
         database = database.replace("-", "_")
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
+        user = user.replace("-", "_")
         password = pgb_app_databag.get("password", pgb.generate_password())
 
         # Get data about primary unit for databags and charm config.
@@ -144,9 +146,11 @@ class DbProvides(Object):
             "port": master_port,
             "user": user,
             "password": password,
-            "fallback_application_name": external_app_name,
         }
-        dbs[database] = primary
+        dbs[database] = deepcopy(primary)
+        primary.update({
+            "fallback_application_name": external_app_name,
+        })
 
         # Get data about standby units for databags and charm config.
         standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
@@ -197,7 +201,7 @@ class DbProvides(Object):
 
     def generate_username(self, event, app_name):
         """Generates a username for this relation."""
-        return f"{self.relation_name}_{event.relation.id}_{app_name.replace('-', '_')}"
+        return f"{self.relation_name}_{event.relation.id}_{app_name}".replace("-", "_")
 
     def _get_postgres_standbys(self, cfg, app_name, database, user, password):
         dbs = cfg["databases"]
@@ -216,9 +220,11 @@ class DbProvides(Object):
                 "port": standby_data["port"],
                 "user": user,
                 "password": password,
-                "fallback_application_name": app_name,
             }
-            dbs[f"{database}_standby_{standby_idx}"] = standby
+            dbs[f"{database}_standby_{standby_idx}"] = deepcopy(standby)
+            standby.update({
+                "fallback_application_name": app_name,
+            })
 
             standbys += pgb.parse_dict_to_kv_string(standby) + ","
 

@@ -48,6 +48,12 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
     assert "pg_master" in list(cfg["databases"].keys())
     assert "cli" in cfg["databases"].keys()
 
+    # TODO assert cli database is created
+    # TODO assert db-admin user is created
+    # TODO assert we can actually connect from psql charm
+    # TODO user and password are the same in relation data, backend db, and pgb config
+    assert False
+
 
 @pytest.mark.legacy_relations
 async def test_add_replicas(ops_test: OpsTest):

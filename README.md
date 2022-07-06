@@ -53,6 +53,8 @@ The following config values are set as constants in the charm:
 
 ## Relations
 
+These modern relations will be implemented in a future PR
+
 - `database`
 - `database-admin`
 - `backend-database-admin`
@@ -73,6 +75,9 @@ The following relations are legacy, and will be deprecated in a future release.
     - `standbys` field, a \n-delimited list of standby data.
   - This legacy relation uses the unfortunate `master` term for postgresql primaries.
   - This relation is to be deprecated in future.
+
+When adding these relations, ensure that they are added in the following order, after all applications have been fully deployed:
+
 
 ### Observability
 
