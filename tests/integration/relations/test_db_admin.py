@@ -112,6 +112,7 @@ async def test_remove_backend_unit(ops_test: OpsTest):
     )
 
 
+# TODO verify we're removing the correct leader
 @pytest.mark.legacy_relations
 async def test_remove_db_admin_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
@@ -131,6 +132,7 @@ async def test_remove_db_admin_leader(ops_test: OpsTest):
     assert "cli" in cfg["databases"].keys()
 
 
+# TODO verify we're removing the correct leader
 @pytest.mark.legacy_relations
 async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")

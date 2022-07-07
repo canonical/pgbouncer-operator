@@ -121,6 +121,7 @@ class BackendDbAdminRequires(Object):
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
+        # TODO handle if change_event is None
         postgres_data = change_event.relation.data.get(change_event.unit)
 
         # TODO the legacy charm doesn't store this data in a config file, but accesses this info
@@ -140,15 +141,16 @@ class BackendDbAdminRequires(Object):
             change_event.defer()
             return
 
-        if change_event.unit.is_leader():
-            change_event.relation.data[self.charm.app] = postgres_data
+        # If we've made it this far, change_event.unit must be populated and not be None
+        if change_event.unit is not self.charm.unit:
+            change_event.relation.data[self.charm.app].update(postgres_data)
 
         standbys_str = postgres_data.get("standbys")
         standbys = standbys_str.split("\n") if standbys_str else []
 
         self._update_standbys(cfg, standbys)
         password = postgres_data.get("password")
-        user = postgres_data.get("user")
+        user = postgres_data.get("user").replace("-", "_")
 
         self.charm.add_user(user, password=password, admin=True, cfg=cfg)
         # TODO consider not reloading pgbouncer and letting the db relations handle it

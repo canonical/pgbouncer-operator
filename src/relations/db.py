@@ -176,11 +176,12 @@ class DbProvides(Object):
             databag["master"] = pgb.parse_dict_to_kv_string(primary)
             databag["port"] = master_port
             databag["standbys"] = standbys
-            databag["version"] = "12"
+            databag["version"] = self.charm.backend_relation.data.get(self.charm.app).get("version")
             databag["user"] = user
             databag["password"] = password
             databag["database"] = database
             databag["state"] = self._get_state(standbys)
+            # TODO explicitly reject extensions
             if roles:
                 databag["roles"] = ",".join(roles)
 
