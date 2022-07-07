@@ -24,7 +24,7 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
 @pytest.mark.abort_on_fail
-# @pytest.mark.smoke
+@pytest.mark.smoke
 async def test_build_and_deploy_current(ops_test: OpsTest):
     """Build the charm-under-test and deploy it together with related charms.
 
@@ -43,7 +43,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
     )
 
 
-# @pytest.mark.smoke
+@pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     unit = ops_test.model.units["pgbouncer-operator/0"]
