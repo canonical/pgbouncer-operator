@@ -21,16 +21,14 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from relations.backend_db_admin import RELATION_ID as LEGACY_BACKEND_RELATION_ID
+from constants import BACKEND_DB_ADMIN, INI_PATH
+from constants import PG as PG_USER
+from constants import PGB, PGB_DIR, USERLIST_PATH
 from relations.backend_db_admin import BackendDbAdminRequires
+from relations.db import DbProvides
 
 logger = logging.getLogger(__name__)
 
-PGB = "pgbouncer"
-PG_USER = "postgres"
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
 PEER = "pgbouncer-replicas"
 
@@ -48,6 +46,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
+        self.legacy_db_relation = DbProvides(self, admin=False)
+        self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.legacy_backend_relation = BackendDbAdminRequires(self)
 
         self._cores = os.cpu_count()
@@ -77,13 +77,13 @@ class PgBouncerCharm(CharmBase):
             os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o777)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib.
-        ini = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        self._render_service_configs(ini)
+        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
+        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        self._render_service_configs(cfg)
 
         # Initialise userlist, generating passwords for initial users. All config files use the
         # same userlist, so we only need one.
-        self._render_userlist(pgb.initialise_userlist_from_ini(ini))
+        self._render_userlist(pgb.initialise_userlist_from_ini(cfg))
 
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
@@ -143,17 +143,17 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
-        config = self._read_pgb_config()
-        config["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
+        cfg = self._read_pgb_config()
+        cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
-        config.set_max_db_connection_derivatives(
+        cfg.set_max_db_connection_derivatives(
             self.config["max_db_connections"],
             self._cores,
         )
 
-        config["pgbouncer"]["listen_addr"] = str(self.unit_ip)
+        cfg["pgbouncer"]["listen_addr"] = str(self.unit_ip)
 
-        self._render_service_configs(config, reload_pgbouncer=True)
+        self._render_service_configs(cfg, reload_pgbouncer=True)
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -380,7 +380,7 @@ class PgBouncerCharm(CharmBase):
 
         TODO this will be updated to include the new backend relation once it is written.
         """
-        legacy_backend_relation = self.model.get_relation(LEGACY_BACKEND_RELATION_ID)
+        legacy_backend_relation = self.model.get_relation(BACKEND_DB_ADMIN)
         return legacy_backend_relation is not None
 
     @property

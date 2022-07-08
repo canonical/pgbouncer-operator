@@ -15,11 +15,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-
-PGB = "pgbouncer"
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
+from constants import INI_PATH, PGB, PGB_DIR, USERLIST_PATH
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -158,9 +154,9 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.unit_ip")
     def test_on_config_changed(self, _unit_ip, _render, _read):
         mock_cores = 1
-        self.charm._cores = mock_cores
         ip = "1.1.1.1"
         self.charm.unit_ip = ip
+        self.charm._cores = mock_cores
         max_db_connections = 44
 
         # Copy config object and modify it as we expect in the hook.
@@ -183,7 +179,6 @@ class TestCharm(unittest.TestCase):
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")

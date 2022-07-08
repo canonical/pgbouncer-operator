@@ -77,10 +77,12 @@ from ops.charm import (
 from ops.framework import Object
 from ops.model import Unit
 
+from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
+
+# TODO append relation id to backend id, so each backend is unique
+
 logger = logging.getLogger(__name__)
 
-RELATION_ID = "backend-db-admin"
-BACKEND_STANDBY_PREFIX = "pgb_postgres_standby_"
 PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 
@@ -95,11 +97,17 @@ class BackendDbAdminRequires(Object):
     """
 
     def __init__(self, charm: CharmBase):
-        super().__init__(charm, RELATION_ID)
+        super().__init__(charm, BACKEND_DB_ADMIN)
 
-        self.framework.observe(charm.on[RELATION_ID].relation_changed, self._on_relation_changed)
-        self.framework.observe(charm.on[RELATION_ID].relation_departed, self._on_relation_departed)
-        self.framework.observe(charm.on[RELATION_ID].relation_broken, self._on_relation_broken)
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_changed, self._on_relation_changed
+        )
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_departed, self._on_relation_departed
+        )
+        self.framework.observe(
+            charm.on[BACKEND_DB_ADMIN].relation_broken, self._on_relation_broken
+        )
 
         self.charm = charm
 
@@ -136,7 +144,9 @@ class BackendDbAdminRequires(Object):
         self._update_standbys(cfg, standbys)
 
         self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
+        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self._trigger_db_relations()
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle backend-db-admin-relation-departed event.
@@ -163,7 +173,9 @@ class BackendDbAdminRequires(Object):
 
         self._update_standbys(cfg, standbys)
 
+        # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self._trigger_db_relations()
 
     def _update_standbys(self, cfg: PgbConfig, standbys: List[str]) -> PgbConfig:
         """Updates standby list to match new relation data.
@@ -212,3 +224,14 @@ class BackendDbAdminRequires(Object):
 
         self.charm.remove_user(RELATION_ADMIN)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self._trigger_db_relations()
+
+    def _trigger_db_relations(self):
+        """Triggers the other legacy relations if they exist."""
+        db_relation = self.charm.model.get_relation("db", None)
+        if db_relation is not None:
+            self.charm.on.db_relation_changed.emit(db_relation)
+
+        db_admin_relation = self.charm.model.get_relation("db-admin", None)
+        if db_admin_relation is not None:
+            self.charm.on.db_admin_relation_changed.emit(db_admin_relation)
