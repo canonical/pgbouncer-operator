@@ -35,6 +35,12 @@ from typing import Iterable
 
 from charms.pgbouncer_operator.v0 import pgb
 from charms.postgresql.v0.postgresql_helpers import PostgreSQLCreateDatabaseError
+
+
+import logging
+from typing import Iterable
+
+from charms.pgbouncer_operator.v0 import pgb
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,
@@ -43,6 +49,7 @@ from ops.charm import (
 )
 from ops.framework import Object
 from ops.model import Relation, Unit
+from psycopg2 import sql
 
 from constants import BACKEND_STANDBY_PREFIX
 
@@ -52,7 +59,7 @@ STANDBY_PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 
 
 class DbProvides(Object):
-    """Defines functionality for the 'requires' side of the 'db' relation.
+    """Defines functionality for the 'provides' side of the 'db' relation.
 
     Hook events observed:
         - relation-changed
@@ -99,7 +106,7 @@ class DbProvides(Object):
 
         logger.info(f"Setting up {change_event.relation.name} relation - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+            f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
         cfg = self.charm._read_pgb_config()
@@ -130,6 +137,7 @@ class DbProvides(Object):
             logger.warning("No database name provided")
             change_event.defer()
             return
+        # TODO consider replacing database/user parsing with sql.Identifier()
         database = database.replace("-", "_")
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
         user = user.replace("-", "_")
@@ -155,7 +163,8 @@ class DbProvides(Object):
         # Get data about standby units for databags and charm config.
         standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
 
-        # Get postgres roles and extensions if they exist
+        # Get postgres roles if they exist
+        # TODO ask marcelo if we actually need to do this
         roles = set(
             role.strip()
             for role in relation_data[external_unit].get("roles", "").split(",")
@@ -174,33 +183,33 @@ class DbProvides(Object):
 
         # Populate databags
         for databag in [pgb_app_databag, pgb_unit_databag]:
-            databag["allowed-subnets"] = self.get_allowed_subnets(change_event.relation)
-            databag["allowed-units"] = self.get_allowed_units(change_event.relation)
-            databag["host"] = f"http://{master_host}"
-            databag["master"] = pgb.parse_dict_to_kv_string(primary)
-            databag["port"] = master_port
-            databag["standbys"] = standbys
-            databag["version"] = self.charm.backend_relation.data.get(self.charm.app).get("version")
-            databag["user"] = user
-            databag["password"] = password
-            databag["database"] = database
-            databag["state"] = self._get_state(standbys)
-            # TODO explicitly reject extensions
+            updates = {
+                "allowed-subnets": self.get_allowed_subnets(change_event.relation),
+                "allowed-units": self.get_allowed_units(change_event.relation),
+                "host": f"http://{master_host}",
+                "master": pgb.parse_dict_to_kv_string(primary),
+                "port": master_port,
+                "standbys": standbys,
+                "version": "12",
+                "user": user,
+                "password": password,
+                "database": database,
+                "state": self._get_state(standbys)
+                # TODO explicitly reject extensions
+            }
+            # TODO reevaluate if roles are necessary
             if roles:
-                databag["roles"] = ",".join(roles)
-
-    def _generate_databags(self):
-        """Generates and populates databags for relation."""
-        pass
+                updates["roles"] = ",".join(roles)
+            databag.update(updates)
 
     def generate_username(self, event, app_name):
         """Generates a username for this relation."""
-        return f"{self.relation_name}_{event.relation.id}_{app_name}".replace("-", "_")
+        return f"{self.relation_name}_{event.relation.id}_{app_name.replace('-', '_')}"
 
     def _get_postgres_standbys(self, cfg, app_name, database, user, password):
         dbs = cfg["databases"]
 
-        standbys = ""
+        standbys = []
         for standby_name, standby_data in dict(dbs).items():
             # skip everything that's not a postgres standby, as defined by the backend-db-admin
             # relation
@@ -216,17 +225,15 @@ class DbProvides(Object):
                 "password": password,
             }
             dbs[f"{database}_standby_{standby_idx}"] = deepcopy(standby)
+
             standby.update(
                 {
                     "fallback_application_name": app_name,
                 }
             )
+            standbys.append(pgb.parse_dict_to_kv_string(standby))
 
-            standbys += pgb.parse_dict_to_kv_string(standby) + ","
-
-        # Strip final comma off standby string
-        standbys = standbys[:-1]
-        return standbys
+        return ", ".join(standbys)
 
     def _get_state(self, standbys: str) -> str:
         """Gets the given state for this unit.
@@ -254,7 +261,7 @@ class DbProvides(Object):
         """
         logger.info("db relation removed - updating config")
         logger.warning(
-            "DEPRECATION WARNING - db is a legacy relation, and will be deprecated in a future release. "
+            f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
         app_databag = departed_event.relation.data[self.charm.app]

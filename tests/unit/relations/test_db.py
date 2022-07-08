@@ -323,7 +323,7 @@ class TestDb(unittest.TestCase):
         assert "not_a_standby" not in standbys
         assert "pg_master" not in standbys
 
-        standby_list = standbys.split(",")
+        standby_list = standbys.split(", ")
         assert len(standby_list) == 2
 
         for standby in standby_list:
