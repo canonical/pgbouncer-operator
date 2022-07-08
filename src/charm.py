@@ -295,7 +295,10 @@ class PgBouncerCharm(CharmBase):
             return
 
         try:
-            self.backend_postgres.create_user(user, password, admin)
+            if self.backend_postgres is not None:
+                self.backend_postgres.create_user(user, password, admin)
+            else:
+                raise PostgreSQLCreateUserError
         except PostgreSQLCreateUserError:
             logger.error(f"failed to create postgres user {user} - exiting")
             self.unit.status = BlockedStatus(f"failed to create user {user}")
@@ -333,7 +336,8 @@ class PgBouncerCharm(CharmBase):
             cfg = self._read_pgb_config()
 
         try:
-            self.backend_postgres.delete_user(user)
+            if self.backend_postgres is not None:
+                self.backend_postgres.delete_user(user)
         except PostgreSQLDeleteUserError:
             logger.error(f"failed to delete postgres user {user} - exiting")
             self.unit.status = BlockedStatus(f"failed to delete user {user}")
