@@ -237,7 +237,7 @@ class BackendDbAdminRequires(Object):
             if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX:
                 del dbs[db_name]
 
-        self.charm.remove_user(broken_event.relation.data[self.charm.app].get("user"))
+        self.charm.remove_user(broken_event.relation.data[self.charm.app].get("user").replace("-", "_"))
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
 

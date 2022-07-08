@@ -162,6 +162,10 @@ class DbProvides(Object):
             if role.strip()
         )
 
+        # Write config data to charm filesystem
+        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
         try:
             self.charm.backend_postgres.create_database(database, user)
         except PostgreSQLCreateDatabaseError:
@@ -184,10 +188,6 @@ class DbProvides(Object):
             # TODO explicitly reject extensions
             if roles:
                 databag["roles"] = ",".join(roles)
-
-        # Write config data to charm filesystem
-        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
-        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def _generate_databags(self):
         """Generates and populates databags for relation."""
