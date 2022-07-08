@@ -12,7 +12,7 @@ import yaml
 from charms.pgbouncer_operator.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 

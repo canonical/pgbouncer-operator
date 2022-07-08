@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
