@@ -5,7 +5,7 @@ import os
 import subprocess
 import unittest
 from copy import deepcopy
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, call, patch, PropertyMock
 
 import ops.testing
 from charms.operator_libs_linux.v0 import apt
@@ -76,7 +76,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
-    @patch("charm.PgBouncerCharm._has_backend_relation", return_value=False)
+    @patch("charm.PgBouncerCharm.backend_relation", new_callable=PropertyMock, return_value=None)
     def test_on_start(self, _has_relation, _start):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
@@ -120,7 +120,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
-    @patch("charm.PgBouncerCharm._has_backend_relation", return_value=False)
+    @patch("charm.PgBouncerCharm.backend_relation", new_callable=PropertyMock, return_value=None)
     def test_on_update_status(self, _has_relation, _running):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
@@ -298,12 +298,15 @@ class TestCharm(unittest.TestCase):
         _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o777)
         _reload.assert_called()
 
+    @patch("charm.PgBouncerCharm.backend_postgres", return_value = None)
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
     @patch("charm.PgBouncerCharm._read_userlist", return_value={})
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_add_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _gen_pw):
+    def test_add_user(
+        self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _gen_pw, _backend
+    ):
         default_admins = DEFAULT_CFG[PGB]["admin_users"]
         default_stats = DEFAULT_CFG[PGB]["stats_users"]
 
@@ -339,6 +342,7 @@ class TestCharm(unittest.TestCase):
         assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
         assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
         _render_cfg.assert_called_with(max_cfg, True)
+        _backend.create_user.assert_called()
 
         # Test we can't duplicate stats or admin users
         self.charm.add_user(
@@ -347,11 +351,12 @@ class TestCharm(unittest.TestCase):
         assert max_cfg[PGB].get("admin_users") == default_admins + ["max-test"]
         assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
 
+    @patch("charm.PgBouncerCharm.backend_postgres")
     @patch("charm.PgBouncerCharm._read_userlist", return_value={"test_user": ""})
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    def test_remove_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist):
+    def test_remove_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _backend):
         user = "test_user"
         cfg = pgb.PgbConfig(DEFAULT_CFG)
         cfg[PGB]["admin_users"].append(user)
@@ -369,5 +374,6 @@ class TestCharm(unittest.TestCase):
         self.charm.remove_user(user, cfg=cfg, render_cfg=True, reload_pgbouncer=True)
         assert user not in cfg[PGB]["admin_users"]
         assert user not in cfg[PGB]["stats_users"]
+        _backend.delete_user.assert_called()
         _render_userlist.assert_called_with({})
         _render_cfg.assert_called_with(cfg, True)

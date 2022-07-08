@@ -57,6 +57,26 @@ juju model-config logging-config="<root>=INFO;unit=DEBUG"
 juju deploy ./pgbouncer-operator_ubuntu-20.04-amd64.charm
 ```
 
+### Adding Relations
+
+#### Legacy Relations
+
+**Only do this after all applications are fully installed.**
+
+```bash
+# Deploy postgresql
+juju deploy postgresql
+# Deploy db charm (in this case psql, aliased with a shorter name)
+juju deploy postgresql-charmers-postgresql-client psql
+# Check applications are fully installed and ready to relate
+juju status
+# Relate pgbouncer and postgres first, since database relations rely on this relation for
+# connection information
+juju add-relation pgbouncer-operator:backend-db-admin postgresql:db-admin
+# relate pgbouncer to database charm
+juju add-relation pgbouncer-operator:db-admin psql:db
+```
+
 ## Canonical Contributor Agreement
 
 Canonical welcomes contributions to the Charmed PGBouncer Operator. Please check out our [contributor agreement](https://ubuntu.com/legal/contributors) if you're interested in contributing to the solution.

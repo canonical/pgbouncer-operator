@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,18 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
         ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db"),
         ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
     )
-    await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in list(cfg["databases"].keys())
     assert "cli" in cfg["databases"].keys()
+
+    # TODO assert cli database is created
+    # TODO assert db-admin user is created
+    # TODO assert we can actually connect from psql charm
+    # TODO user and password are the same in relation data, backend db, and pgb config
+    #assert False
 
 
 @pytest.mark.legacy_relations
@@ -106,6 +112,7 @@ async def test_remove_backend_unit(ops_test: OpsTest):
     )
 
 
+# TODO verify we're removing the correct leader
 @pytest.mark.legacy_relations
 async def test_remove_db_admin_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
@@ -125,6 +132,7 @@ async def test_remove_db_admin_leader(ops_test: OpsTest):
     assert "cli" in cfg["databases"].keys()
 
 
+# TODO verify we're removing the correct leader
 @pytest.mark.legacy_relations
 async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")
@@ -144,10 +152,19 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
-    await ops_test.model.applications[PSQL].remove()
     await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
+
+
+@pytest.mark.legacy_relations
+async def test_delete_db_admin_application_while_in_legacy_relation(ops_test: OpsTest):
+    """Test that the pgbouncer charm stays online when the db-admin disconnects for some reason."""
+    await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db")
+    await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
+
+    await ops_test.model.remove_application(PSQL)
+    await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)

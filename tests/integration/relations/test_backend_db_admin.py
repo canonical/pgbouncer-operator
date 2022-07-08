@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
 
 
+# TODO verify we're removing the correct leader
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]

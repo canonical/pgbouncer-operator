@@ -84,7 +84,6 @@ from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
 logger = logging.getLogger(__name__)
 
 PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
-RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
 
 
 class BackendDbAdminRequires(Object):
@@ -122,6 +121,7 @@ class BackendDbAdminRequires(Object):
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
+        # TODO handle if change_event is None
         postgres_data = change_event.relation.data.get(change_event.unit)
 
         # TODO the legacy charm doesn't store this data in a config file, but accesses this info
@@ -131,19 +131,28 @@ class BackendDbAdminRequires(Object):
         cfg = self.charm._read_pgb_config()
         dbs = cfg["databases"]
 
+        # TODO remove username and password from connection strings
         if postgres_data.get("master"):
+            # TODO By appending relation_id to pg_master, we should be able to fix issues with
+            #      relating pgbouncer to itself
             dbs["pg_master"] = pgb.parse_kv_string_to_dict(postgres_data.get("master"))
         else:
             logger.info("waiting for postgres charm to correctly populate relation data")
             change_event.defer()
             return
 
+        # If we've made it this far, change_event.unit must be populated and not be None
+        if change_event.unit is not self.charm.unit:
+            change_event.relation.data[self.charm.app].update(postgres_data)
+
         standbys_str = postgres_data.get("standbys")
         standbys = standbys_str.split("\n") if standbys_str else []
 
         self._update_standbys(cfg, standbys)
+        password = postgres_data.get("password")
+        user = postgres_data.get("user").replace("-", "_")
 
-        self.charm.add_user(RELATION_ADMIN, admin=True, cfg=cfg)
+        self.charm.add_user(user, password=password, admin=True, cfg=cfg)
         # TODO consider not reloading pgbouncer and letting the db relations handle it
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
@@ -157,6 +166,9 @@ class BackendDbAdminRequires(Object):
         logger.warning(
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
+        if departed_event.departing_unit.app == self.charm.app:
+            # Just run for departing of remote units.
+            return
 
         cfg = self.charm._read_pgb_config()
 
@@ -193,7 +205,10 @@ class BackendDbAdminRequires(Object):
         for idx, standby in enumerate(standbys):
             standby_name = f"{BACKEND_STANDBY_PREFIX}{idx}"
             standby_names.append(standby_name)
-            dbs[standby_name] = pgb.parse_kv_string_to_dict(standby)
+            standby_dict = pgb.parse_kv_string_to_dict(standby)
+            standby_dict.pop("user", None)
+            standby_dict.pop("password", None)
+            dbs[standby_name] = standby_dict
 
         # Remove old standby information
         for db_name in list(dbs.keys()):
@@ -222,7 +237,7 @@ class BackendDbAdminRequires(Object):
             if db_name[:PREFIX_LEN] == BACKEND_STANDBY_PREFIX:
                 del dbs[db_name]
 
-        self.charm.remove_user(RELATION_ADMIN)
+        self.charm.remove_user(broken_event.relation.data[self.charm.app].get("user").replace("-", "_"))
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
         self._trigger_db_relations()
 

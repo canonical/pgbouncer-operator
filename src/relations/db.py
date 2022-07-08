@@ -27,9 +27,15 @@ Some example relation data is below. All values are examples, generated in a run
 │           │          user │ db_85_psql                                        │        │
 │           │       version │ 12                                                │        │
 └───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
-
-TODO this relation is almost identical to db-admin - unify code.
 """
+
+import logging
+from copy import deepcopy
+from typing import Iterable
+
+from charms.pgbouncer_operator.v0 import pgb
+from charms.postgresql.v0.postgresql_helpers import PostgreSQLCreateDatabaseError
+
 
 import logging
 from typing import Iterable
@@ -114,7 +120,16 @@ class DbProvides(Object):
         relation_data = change_event.relation.data
         pgb_unit_databag = relation_data[self.charm.unit]
         pgb_app_databag = relation_data[self.charm.app]
-        external_unit = self.get_external_units(change_event.relation)[0]
+        try:
+            external_unit = self.get_external_units(change_event.relation)[0]
+        except IndexError:
+            # In cases where pgbouncer changes the relation, we have no new information to add to
+            # the config. Scaling is not yet implemented, and calling this hook from the
+            # backend-db-admin relation occurs after the config updates are added.
+            logger.info(
+                f"no external unit found in {self.relation_name} relation - nothing to change in config, exiting relation hook"
+            )
+            return
         external_app_name = external_unit.app.name
 
         database = pgb_app_databag.get("database", relation_data[external_unit].get("database"))
@@ -122,8 +137,10 @@ class DbProvides(Object):
             logger.warning("No database name provided")
             change_event.defer()
             return
-        database = sql.Identifier(database).string
+        # TODO consider replacing database/user parsing with sql.Identifier()
+        database = database.replace("-", "_")
         user = pgb_app_databag.get("user", self.generate_username(change_event, external_app_name))
+        user = user.replace("-", "_")
         password = pgb_app_databag.get("password", pgb.generate_password())
 
         # Get data about primary unit for databags and charm config.
@@ -135,12 +152,34 @@ class DbProvides(Object):
             "port": master_port,
             "user": user,
             "password": password,
-            "fallback_application_name": external_app_name,
         }
-        dbs[database] = primary
+        dbs[database] = deepcopy(primary)
+        primary.update(
+            {
+                "fallback_application_name": external_app_name,
+            }
+        )
 
         # Get data about standby units for databags and charm config.
         standbys = self._get_postgres_standbys(cfg, external_app_name, database, user, password)
+
+        # Get postgres roles if they exist
+        # TODO ask marcelo if we actually need to do this
+        roles = set(
+            role.strip()
+            for role in relation_data[external_unit].get("roles", "").split(",")
+            if role.strip()
+        )
+
+        # Write config data to charm filesystem
+        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
+        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+
+        try:
+            self.charm.backend_postgres.create_database(database, user)
+        except PostgreSQLCreateDatabaseError:
+            logger.error(f"failed to create database {database} for {self.relation_name}")
+            return
 
         # Populate databags
         for databag in [pgb_app_databag, pgb_unit_databag]:
@@ -155,16 +194,13 @@ class DbProvides(Object):
                 "user": user,
                 "password": password,
                 "database": database,
+                "state": self._get_state(standbys)
+                # TODO explicitly reject extensions
             }
+            # TODO reevaluate if roles are necessary
+            if roles:
+                updates["roles"] = ",".join(roles)
             databag.update(updates)
-
-        pgb_unit_databag["state"] = self._get_state(standbys)
-
-        # Write config data to charm filesystem
-        # TODO revisit adding user - accessing dbs through psql config doesn't seem to work, though
-        # my test environment is a bit old.
-        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
-        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def generate_username(self, event, app_name):
         """Generates a username for this relation."""
@@ -187,10 +223,14 @@ class DbProvides(Object):
                 "port": standby_data["port"],
                 "user": user,
                 "password": password,
-                "fallback_application_name": app_name,
             }
-            dbs[f"{database}_standby_{standby_idx}"] = standby
+            dbs[f"{database}_standby_{standby_idx}"] = deepcopy(standby)
 
+            standby.update(
+                {
+                    "fallback_application_name": app_name,
+                }
+            )
             standbys.append(pgb.parse_dict_to_kv_string(standby))
 
         return ", ".join(standbys)

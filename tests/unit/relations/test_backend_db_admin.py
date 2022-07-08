@@ -35,8 +35,8 @@ class TestBackendDbAdmin(unittest.TestCase):
         The integration tests for this relation are a more extensive test of this functionality.
         """
         mock_event = MagicMock()
-        mock_event.unit = "mock_unit"
-        mock_event.relation.data = {"mock_unit": deepcopy(TEST_UNIT)}
+        mock_event.unit = self.harness.charm.unit
+        mock_event.relation.data = {self.harness.charm.unit: deepcopy(TEST_UNIT)}
 
         self.relation._on_relation_changed(mock_event)
 
@@ -53,7 +53,7 @@ class TestBackendDbAdmin(unittest.TestCase):
         _trigger_relations.assert_called()
         _trigger_relations.reset_mock()
 
-        del mock_event.relation.data["mock_unit"]["standbys"]
+        del mock_event.relation.data[self.harness.charm.unit]["standbys"]
 
         self.relation._on_relation_changed(mock_event)
 
@@ -76,16 +76,16 @@ class TestBackendDbAdmin(unittest.TestCase):
         The integration tests for this relation are a more extensive test of this functionality.
         """
         setup_mock_event = MagicMock()
-        setup_mock_event.unit = "mock_unit"
-        setup_mock_event.relation.data = {"mock_unit": deepcopy(TEST_UNIT)}
+        setup_mock_event.unit = self.harness.charm.unit
+        setup_mock_event.relation.data = {self.harness.charm.unit: deepcopy(TEST_UNIT)}
         self.relation._on_relation_changed(setup_mock_event)
         setup_cfg = pgb.PgbConfig(_render.call_args[0][0])
         _trigger_relations.reset_mock()
 
         depart_mock_event = MagicMock()
-        depart_mock_event.unit = "mock_unit"
+        depart_mock_event.unit = self.harness.charm.unit
         depart_mock_event.relation.data = {
-            "mock_unit": {
+            self.harness.charm.unit: {
                 "master": "host=master port=1 dbname=testdatabase",
             }
         }
@@ -108,7 +108,13 @@ class TestBackendDbAdmin(unittest.TestCase):
         input_cfg["databases"]["other_database"] = {"test": "value"}
         _read.return_value = input_cfg
 
-        self.relation._on_relation_broken(MagicMock())
+        mock_event = MagicMock()
+        mock_event.relation.data = {
+            self.harness.charm.app: {
+                "user": "jujuadmin_pgbouncer-operator",
+            }
+        }
+        self.relation._on_relation_broken(mock_event)
 
         broken_cfg = pgb.PgbConfig(_render.call_args[0][0])
         for dbname in ["pg_master", "pgb_postgres_standby_0", "pgb_postgres_standby_555"]:

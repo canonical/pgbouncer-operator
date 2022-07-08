@@ -12,172 +12,151 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""PostgreSQL's helpers Library.
-This library provides common PostgreSQL-specific features for the
-PostgreSQL machine and Kubernetes charms.
+"""PostgreSQL helper class.
+The `postgresql` module provides methods for interacting with the PostgreSQL instance.
+Any charm using this library should import the `psycopg2` or `psycopg2-binary` dependency.
 """
 import logging
-from typing import List
 
 import psycopg2
-from psycopg2._psycopg import AsIs
+from psycopg2 import sql
+
+# The unique Charmhub library identifier, never change it
+LIBID = "24ee217a54e840a598ff21a079c3e678"
+
+# Increment this major API version when introducing breaking changes
+LIBAPI = 0
+
+# Increment this PATCH version before using `charmcraft publish-lib` or reset
+# to 0 if you are raising the major API version
+LIBPATCH = 1
+
 
 logger = logging.getLogger(__name__)
 
 
-def build_username(app_name: str, admin: bool = False) -> str:
-    """Creates a database user.
-    Args:
-        app_name: psycopg2 connection object.
-        admin: whether the user should have a prefix in
-            the name indicating it's an admin user.
-    """
-    # Default prefix to not conflict with users manually created.
-    prefix = "juju_"
-    if admin:
-        prefix += "admin_"
-    # Replace "-" invalid character (otherwise it'll generate an error later).
-    return f"{prefix}{app_name.replace('-', '_')}"
+class PostgreSQLCreateDatabaseError(Exception):
+    """Exception raised when creating a database fails."""
 
 
-def build_connection_string(database: str, user: str, host: str, password: str) -> str:
-    """Builds a connection string based on authentication details.
-    Args:
-        database: name of the database to connect to.
-        user: user used to connect to the database.
-        host: address of the database server.
-        password: password used to connect to the database.
-    Returns:
-         a connection string.
-    """
-    return f"dbname='{database}' user='{user}' host='{host}' password='{password}'"
+class PostgreSQLCreateUserError(Exception):
+    """Exception raised when creating a user fails."""
 
 
-def connect_to_database(
-    database: str, user: str, host: str, password: str
-) -> psycopg2.extensions.connection:
-    """Creates an auth_query function for proxy applications.
-    Args:
-        database: name of the database to connect to.
-        user: user used to connect to the database.
-        host: address of the database server.
-        password: password used to connect to the database.
-    Returns:
-         psycopg2 connection object.
-    """
-    connection = psycopg2.connect(
-        f"dbname='{database}' user='{user}' host='{host}' password='{password}' connect_timeout=1"
-    )
-    logger.error(f"connecting to dbname='{database}' as user='{user}' on host='{host}'")
-    connection.autocommit = True
-    return connection
+class PostgreSQLDeleteUserError(Exception):
+    """Exception raised when deleting a user fails."""
 
 
-def create_auth_query_function(connection: psycopg2.extensions.connection) -> str:
-    """Creates an auth_query function for proxy applications.
-    Args:
-        connection: psycopg2 connection object.
-    Returns:
-         name of the created auth_query function.
-    """
-    auth_query_function = "proxy_auth_query"
-    execute(
-        connection,
-        [
-            f"""
-            CREATE OR REPLACE FUNCTION {auth_query_function}(uname TEXT)
-            RETURNS TABLE (usename name, passwd text) as
-            $$
-              SELECT usename, passwd FROM pg_shadow WHERE usename=$1;
-            $$
-            LANGUAGE sql SECURITY DEFINER;
-            """
-        ],
-    )
-    return auth_query_function
+class PostgreSQLGetPostgreSQLVersionError(Exception):
+    """Exception raised when retrieving PostgreSQL version fails."""
 
 
-def create_database(connection: psycopg2.extensions.connection, database: str, user: str) -> None:
-    """Creates a new database.
-    Args:
-        connection: psycopg2 connection object.
-        database: database to be created.
-        user: user that will have access to the database.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(f"CREATE DATABASE {pgidentifier(database)};")
-        cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {pgidentifier(database)} TO {pgidentifier(user)};")
+class PostgreSQL:
+    """Class to encapsulate all operations related to interacting with PostgreSQL instance."""
 
-def create_user(
-    connection: psycopg2.extensions.connection, user: str, password: str, admin: bool = False
-) -> None:
-    """Creates a database user.
-    Args:
-        connection: psycopg2 connection object.
-        user: user to be created.
-        password: password to be assigned to the user.
-        admin: whether the user should have additional admin privileges.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(f"CREATE ROLE {user} WITH LOGIN{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}';")
+    def __init__(
+        self,
+        host: str,
+        user: str,
+        password: str,
+        database: str,
+    ):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
 
+    def _connect_to_database(self, database: str = None) -> psycopg2.extensions.connection:
+        """Creates a connection to the database.
+        Args:
+            database: database to connect to (defaults to the database
+                provided when the object for this class was created).
+        Returns:
+             psycopg2 connection object.
+        """
+        connection = psycopg2.connect(
+            f"dbname='{database if database else self.database}' user='{self.user}' host='{self.host}' password='{self.password}' connect_timeout=1"
+        )
+        connection.autocommit = True
+        return connection
 
-def database_exists(connection: psycopg2.extensions.connection, database: str) -> bool:
-    """Checks for database existence.
-    Args:
-        connection: psycopg2 connection object.
-        database: name of the database to be checked.
-    Returns:
-        whether the database exists.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT 1 FROM pg_database WHERE datname={pgidentifier(database)};")
-        result = cursor.fetchone()
-        # If the data was returned, then the database exists.
-        exists = result[0] == 1 if result else False
-    return exists
+    def create_database(self, database: str, user: str) -> None:
+        """Creates a new database and grant privileges to a user on it.
+        Args:
+            database: database to be created.
+            user: user that will have access to the database.
+        """
+        try:
+            connection = self._connect_to_database()
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT datname FROM pg_database WHERE datname='{database}';")
+            if cursor.fetchone() is None:
+                cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(database)))
+            cursor.execute(
+                sql.SQL("GRANT ALL PRIVILEGES ON DATABASE {} TO {};").format(
+                    sql.Identifier(database), sql.Identifier(user)
+                )
+            )
+        except psycopg2.Error as e:
+            logger.error(f"Failed to create database: {e}")
+            raise PostgreSQLCreateDatabaseError()
 
+    def create_user(self, user: str, password: str, admin: bool = False) -> None:
+        """Creates a database user.
+        Args:
+            user: user to be created.
+            password: password to be assigned to the user.
+            admin: whether the user should have additional admin privileges.
+        """
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute(f"SELECT TRUE FROM pg_roles WHERE rolname='{user}';")
+                user_definition = f"{user} WITH LOGIN{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}'"
+                if cursor.fetchone() is not None:
+                    cursor.execute(f"ALTER ROLE {user_definition};")
+                else:
+                    cursor.execute(f"CREATE ROLE {user_definition};")
+        except psycopg2.Error as e:
+            logger.error(f"Failed to create user: {e}")
+            raise PostgreSQLCreateUserError()
 
-def quote_identifier(identifier: str):
-    r'''Quote an identifier, such as a table or role name.
-    In SQL, identifiers are quoted using " rather than ' (which is reserved
-    for strings).
-    >>> print(quote_identifier('hello'))
-    "hello"
-    Quotes and Unicode are handled if you make use of them in your
-    identifiers.
-    >>> print(quote_identifier("'"))
-    "'"
-    >>> print(quote_identifier('"'))
-    """"
-    >>> print(quote_identifier("\\"))
-    "\"
-    >>> print(quote_identifier('\\"'))
-    "\"""
-    >>> print(quote_identifier('\\ aargh" \u0441\u043b\u043e\u043d'))
-    U&"\\ aargh"" \0441\043b\043e\043d"
-    '''
-    try:
-        identifier.encode("US-ASCII")
-        return '"{}"'.format(identifier.replace('"', '""'))
-    except UnicodeEncodeError:
-        escaped = []
-        for c in identifier:
-            if c == "\\":
-                escaped.append("\\\\")
-            elif c == '"':
-                escaped.append('""')
-            else:
-                c = c.encode("US-ASCII", "backslashreplace").decode("US-ASCII")
-                # Note Python only supports 32 bit unicode, so we use
-                # the 4 hexdigit PostgreSQL syntax (\1234) rather than
-                # the 6 hexdigit format (\+123456).
-                if c.startswith("\\u"):
-                    c = "\\" + c[2:]
-                escaped.append(c)
-        return 'U&"%s"' % "".join(escaped)
+    def delete_user(self, user: str) -> None:
+        """Deletes a database user.
+        Args:
+            user: user to be deleted.
+        """
+        # List all databases.
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false;")
+                databases = [row[0] for row in cursor.fetchall()]
 
+            # Existing objects need to be reassigned in each database
+            # before the user can be deleted.
+            for database in databases:
+                with self._connect_to_database(
+                    database
+                ) as connection, connection.cursor() as cursor:
+                    cursor.execute(f"REASSIGN OWNED BY {user} TO postgres;")
+                    cursor.execute(f"DROP OWNED BY {user};")
 
-def pgidentifier(token: str):
-    """Wrap a string for interpolation by psycopg2 as an SQL identifier"""
-    return AsIs(quote_identifier(token))
+            # Delete the user.
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute(f"DROP ROLE {user};")
+        except psycopg2.Error as e:
+            logger.error(f"Failed to delete user: {e}")
+            raise PostgreSQLDeleteUserError()
+
+    def get_postgresql_version(self) -> str:
+        """Returns the PostgreSQL version.
+        Returns:
+            PostgreSQL version number.
+        """
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT version();")
+                # Split to get only the version number.
+                return cursor.fetchone()[0].split(" ")[1]
+        except psycopg2.Error as e:
+            logger.error(f"Failed to get PostgreSQL version: {e}")
+            raise PostgreSQLGetPostgreSQLVersionError()

@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,18 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db"),
         ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
     )
-    await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
+
+    # TODO assert cli database is created
+    # TODO assert db-admin user is created
+    # TODO assert we can actually connect from psql charm
+    # TODO user and password are the same in relation data, backend db, and pgb config
+    # assert False
 
 
 @pytest.mark.legacy_relations
@@ -119,6 +125,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
             timeout=1000,
         ),
     )
+    # TODO verify that config switches cli over to new leader
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
@@ -150,9 +157,9 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
+    # NB databases and users are left in the postgres charm
 
 
-#
 @pytest.mark.legacy_relations
 async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer charm stays online when the db disconnects for some reason."""
