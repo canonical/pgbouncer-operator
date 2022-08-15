@@ -7,7 +7,7 @@ This relation uses the pgsql interface.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
-┃ category  ┃          keys ┃ pgbouncer/25                                      ┃ psql/1 ┃
+┃ category  ┃          keys ┃ pgbouncer-operator/25                             ┃ psql/1 ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
 │ metadata  │      endpoint │ 'db'                                              │ 'db'   │
 │           │        leader │ True                                              │ True   │
@@ -27,8 +27,6 @@ Some example relation data is below. All values are examples, generated in a run
 │           │          user │ db_85_psql                                        │        │
 │           │       version │ 12                                                │        │
 └───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
-
-TODO this relation is almost identical to db-admin - unify code.
 """
 
 import logging
@@ -55,7 +53,7 @@ STANDBY_PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 class DbProvides(Object):
     """Defines functionality for the 'provides' side of the 'db' relation.
 
-    Hook evehttps://docs.google.com/spreadsheets/d/1aUdUEdA9E72ZDPhNzDfZT7V_t2LsT3pRkZCuDAL11ls/edit#gid=0nts observed:
+    Hook events observed:
         - relation-changed
         - relation-departed
         - relation-broken

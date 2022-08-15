@@ -47,7 +47,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units["pgbouncer-operator/0"]
     async with ops_test.fast_forward():
         await ops_test.model.applications[APP_NAME].set_config(
             {

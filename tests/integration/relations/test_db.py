@@ -44,7 +44,7 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         )
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
@@ -68,7 +68,7 @@ async def test_add_replicas(ops_test: OpsTest):
             ),
             ops_test.model.wait_for_idle(apps=[PGB], status="active"),
         )
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(unit)
     expected_databases = [
         "pg_master",
@@ -124,7 +124,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
                 timeout=1000,
             ),
         )
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
@@ -140,7 +140,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
             ),
             ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
         )
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
@@ -153,7 +153,7 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
-    unit = ops_test.model.units["pgbouncer/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(unit)
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
