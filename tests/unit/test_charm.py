@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, call, patch
 import ops.testing
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
-from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_k8s.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -39,7 +39,7 @@ class TestCharm(unittest.TestCase):
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("charm.PgBouncerCharm._render_file")
     @patch("charm.PgBouncerCharm._render_service_configs")
-    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
+    @patch("charms.pgbouncer_k8s.v0.pgb.initialise_userlist_from_ini")
     @patch("shutil.copy")
     @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
@@ -298,7 +298,7 @@ class TestCharm(unittest.TestCase):
         _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o777)
         _reload.assert_called()
 
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
+    @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="default-pass")
     @patch("charm.PgBouncerCharm._read_userlist", return_value={})
     @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")

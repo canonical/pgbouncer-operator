@@ -9,7 +9,7 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from constants import BACKEND_STANDBY_PREFIX
-from lib.charms.pgbouncer_operator.v0 import pgb
+from lib.charms.pgbouncer_k8s.v0 import pgb
 
 TEST_UNIT = {
     "master": "host=master port=1 dbname=testdatabase",

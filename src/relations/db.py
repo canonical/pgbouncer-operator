@@ -34,7 +34,7 @@ TODO this relation is almost identical to db-admin - unify code.
 import logging
 from typing import Iterable
 
-from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_k8s.v0 import pgb
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,

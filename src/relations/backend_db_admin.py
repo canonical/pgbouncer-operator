@@ -66,8 +66,8 @@ Example with 1 postgresql instance:
 import logging
 from typing import List
 
-from charms.pgbouncer_operator.v0 import pgb
-from charms.pgbouncer_operator.v0.pgb import PgbConfig
+from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,

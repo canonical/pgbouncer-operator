@@ -8,7 +8,7 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from constants import BACKEND_STANDBY_PREFIX
-from lib.charms.pgbouncer_operator.v0.pgb import (
+from lib.charms.pgbouncer_k8s.v0.pgb import (
     DEFAULT_CONFIG,
     PgbConfig,
     parse_dict_to_kv_string,
@@ -71,7 +71,7 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
     @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
-    @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="test-pass")
+    @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test-pass")
     @patch("relations.db.DbProvides.generate_username", return_value="test-user")
     @patch("ops.charm.EventBase.defer")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")

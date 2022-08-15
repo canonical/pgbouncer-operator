@@ -5,7 +5,7 @@
 
 import logging
 
-from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_k8s.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)

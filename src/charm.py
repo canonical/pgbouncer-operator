@@ -14,8 +14,8 @@ from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
-from charms.pgbouncer_operator.v0 import pgb
-from charms.pgbouncer_operator.v0.pgb import PgbConfig
+from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
