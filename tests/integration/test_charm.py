@@ -31,33 +31,35 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
     Assert on the unit status before any relations/configurations take place.
     """
     charm = await ops_test.build_charm(".")
-    await ops_test.model.deploy(
-        charm,
-        application_name=APP_NAME,
-    )
-    # Pgbouncer enters a blocked status without a postgres backend database relation
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
-    assert (
-        ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
-        == "waiting for backend database relation"
-    )
+    async with ops_test.fast_forward():
+        await ops_test.model.deploy(
+            charm,
+            application_name=APP_NAME,
+        )
+        # Pgbouncer enters a blocked status without a postgres backend database relation
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+        assert (
+            ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
+            == "waiting for backend database relation"
+        )
 
 
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     unit = ops_test.model.units["pgbouncer/0"]
-    await ops_test.model.applications[APP_NAME].set_config(
-        {
-            "pool_mode": "transaction",
-            "max_db_connections": "44",
-        }
-    )
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
-    assert (
-        ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
-        == "waiting for backend database relation"
-    )
+    async with ops_test.fast_forward():
+        await ops_test.model.applications[APP_NAME].set_config(
+            {
+                "pool_mode": "transaction",
+                "max_db_connections": "44",
+            }
+        )
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+        assert (
+            ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
+            == "waiting for backend database relation"
+        )
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await helpers.get_unit_cores(unit)

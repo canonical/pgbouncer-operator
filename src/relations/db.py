@@ -55,7 +55,7 @@ STANDBY_PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
 class DbProvides(Object):
     """Defines functionality for the 'provides' side of the 'db' relation.
 
-    Hook events observed:
+    Hook evehttps://docs.google.com/spreadsheets/d/1aUdUEdA9E72ZDPhNzDfZT7V_t2LsT3pRkZCuDAL11ls/edit#gid=0nts observed:
         - relation-changed
         - relation-departed
         - relation-broken
