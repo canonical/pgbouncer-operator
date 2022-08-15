@@ -46,7 +46,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     await ops_test.model.applications[APP_NAME].set_config(
         {
             "pool_mode": "transaction",
@@ -81,7 +81,7 @@ async def test_change_config(ops_test: OpsTest):
 
 
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     expected_processes = await helpers.get_unit_cores(unit)
 
     # verify the correct amount of pgbouncer processes are running

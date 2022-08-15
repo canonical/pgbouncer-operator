@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: pgbouncer-operator
+name: pgbouncer
 display-name: |
   PgBouncer Machine Operator
 description: |

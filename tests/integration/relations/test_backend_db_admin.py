@@ -37,7 +37,7 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
     await ops_test.model.add_relation(f"{APP_NAME}:backend-db-admin", f"{POSTGRESQL}:db-admin")
     await ops_test.model.wait_for_idle(apps=[APP_NAME, POSTGRESQL], status="active", timeout=1000)
 
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     cfg = await helpers.get_cfg(unit)
     # When there's only one postgres unit, we're in "standalone" mode with no standby replicas.
     assert list(cfg["databases"].keys()) == ["pg_master"]
@@ -50,7 +50,7 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
     Requires existing deployed pgbouncer and legacy postgres charms, connected by a
     backend-db-admin relation
     """
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     await ops_test.model.applications[POSTGRESQL].add_units(count=2)
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -71,7 +71,7 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     await ops_test.model.destroy_unit("postgresql/1")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -90,7 +90,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     await ops_test.model.destroy_unit("postgresql/0")
     await asyncio.gather(
         ops_test.model.wait_for_idle(
@@ -108,7 +108,7 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
 
 @pytest.mark.legacy_relations
 async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTest):
-    unit = ops_test.model.units["pgbouncer-operator/0"]
+    unit = ops_test.model.units["pgbouncer/0"]
     # Remove relation but keep pg application because we're going to need it for future tests.
     await ops_test.model.applications[POSTGRESQL].remove_relation(
         f"{APP_NAME}:backend-db-admin", f"{POSTGRESQL}:db-admin"

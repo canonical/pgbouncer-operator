@@ -10,29 +10,29 @@ Some example relation data is below. The only parts of this we actually need are
 
 Example with 2 postgresql instances:
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
+┃ category  ┃            keys ┃ pgbouncer/23 ┃ postgresql/4                          ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │ metadata  │        endpoint │ 'backend-db-admin'    │ 'db-admin'                            │
 │           │          leader │ True                  │ True                                  │
 ├───────────┼─────────────────┼───────────────────────┼───────────────────────────────────────┤
 │ unit data │ allowed-subnets │                       │ 10.101.233.152/32                     │
-│           │   allowed-units │                       │ pgbouncer-operator/23                 │
-│           │        database │                       │ pgbouncer-operator                    │
+│           │   allowed-units │                       │ pgbouncer/23                 │
+│           │        database │                       │ pgbouncer                    │
 │           │            host │                       │ 10.101.233.241                        │
-│           │          master │                       │ dbname=pgbouncer-operator             │
+│           │          master │                       │ dbname=pgbouncer             │
 │           │                 │                       │ host=10.101.233.241                   │
 │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
 │           │                 │                       │ cP2qjnwdj port=5432                   │
-│           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+│           │                 │                       │ user=jujuadmin_pgbouncer     │
 │           │        password │                       │ zWRHxMgqZBPcLPh5VXCfGyjJj4c7cP2qjnwdj │
 │           │            port │                       │ 5432                                  │
-│           │        standbys │                       │ dbname=pgbouncer-operator             │
+│           │        standbys │                       │ dbname=pgbouncer             │
 │           │                 │                       │ host=10.101.233.169                   │
 │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
 │           │                 │                       │ cP2qjnwdj port=5432                   │
-│           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+│           │                 │                       │ user=jujuadmin_pgbouncer     │
 │           │           state │                       │ master                                │
-│           │            user │                       │ jujuadmin_pgbouncer-operator          │
+│           │            user │                       │ jujuadmin_pgbouncer          │
 │           │         version │                       │ 12                                    │
 └───────────┴─────────────────┴───────────────────────┴───────────────────────────────────────┘
 If there were multiple standbys, they would be separated by a newline character.
@@ -40,24 +40,24 @@ If there were multiple standbys, they would be separated by a newline character.
 
 Example with 1 postgresql instance:
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ category  ┃            keys ┃ pgbouncer-operator/23 ┃ postgresql/4                          ┃
+┃ category  ┃            keys ┃ pgbouncer/23 ┃ postgresql/4                          ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │ metadata  │        endpoint │ 'backend-db-admin'    │ 'db-admin'                            │
 │           │          leader │ True                  │ True                                  │
 ├───────────┼─────────────────┼───────────────────────┼───────────────────────────────────────┤
 │ unit data │ allowed-subnets │                       │ 10.101.233.152/32                     │
-│           │   allowed-units │                       │ pgbouncer-operator/23                 │
-│           │        database │                       │ pgbouncer-operator                    │
+│           │   allowed-units │                       │ pgbouncer/23                 │
+│           │        database │                       │ pgbouncer                    │
 │           │            host │                       │ 10.101.233.241                        │
-│           │          master │                       │ dbname=pgbouncer-operator             │
+│           │          master │                       │ dbname=pgbouncer             │
 │           │                 │                       │ host=10.101.233.241                   │
 │           │                 │                       │ password=zWRHxMgqZBPcLPh5VXCfGyjJj4c7 │
 │           │                 │                       │ cP2qjnwdj port=5432                   │
-│           │                 │                       │ user=jujuadmin_pgbouncer-operator     │
+│           │                 │                       │ user=jujuadmin_pgbouncer     │
 │           │        password │                       │ zWRHxMgqZBPcLPh5VXCfGyjJj4c7cP2qjnwdj │
 │           │            port │                       │ 5432                                  │
 │           │           state │                       │ standalone                            │
-│           │            user │                       │ jujuadmin_pgbouncer-operator          │
+│           │            user │                       │ jujuadmin_pgbouncer          │
 │           │         version │                       │ 12                                    │
 └───────────┴─────────────────┴───────────────────────┴───────────────────────────────────────┘
 
@@ -84,7 +84,7 @@ from constants import BACKEND_DB_ADMIN, BACKEND_STANDBY_PREFIX
 logger = logging.getLogger(__name__)
 
 PREFIX_LEN = len(BACKEND_STANDBY_PREFIX)
-RELATION_ADMIN = "jujuadmin_pgbouncer-operator"
+RELATION_ADMIN = "jujuadmin_pgbouncer"
 
 
 class BackendDbAdminRequires(Object):

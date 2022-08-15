@@ -115,7 +115,7 @@ class TestBackendDbAdmin(unittest.TestCase):
             assert dbname not in broken_cfg["databases"].keys()
         assert "other_database" in broken_cfg["databases"].keys()
 
-        _remove_user.assert_called_with("jujuadmin_pgbouncer-operator")
+        _remove_user.assert_called_with("jujuadmin_pgbouncer")
         _trigger_relations.assert_called_once()
 
     @patch("ops.framework.BoundEvent.emit")
