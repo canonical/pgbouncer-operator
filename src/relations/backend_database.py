@@ -54,7 +54,7 @@ from ops.model import Application, BlockedStatus, Relation
 RELATION_NAME = "backend-database"
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
 PGB_DB = "pgbouncer"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
+from constants import USERLIST_PATH
 
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class BackendDatabaseRequires(Object):
 
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.push_file(
-            f"{PGB_DIR}/userlist.txt", f'"{self.auth_user}" "{hashed_password}"', perms=0o400
+            USERLIST_PATH, f'"{self.auth_user}" "{hashed_password}"', perms=0o400
         )
         cfg = self.charm.read_pgb_config()
         # adds user to pgb config
@@ -118,7 +118,7 @@ class BackendDatabaseRequires(Object):
         cfg["pgbouncer"][
             "auth_query"
         ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
-        cfg["pgbouncer"]["auth_file"] = f"{PGB_DIR}/userlist.txt"
+        cfg["pgbouncer"]["auth_file"] = USERLIST_PATH
         self.charm.render_pgb_config(cfg)
 
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)

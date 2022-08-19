@@ -159,9 +159,7 @@ class DbProvides(Object):
         pgb_unit_databag["state"] = self._get_state(standbys)
 
         # Write config data to charm filesystem
-        # TODO revisit adding user - accessing dbs through psql config doesn't seem to work, though
-        # my test environment is a bit old.
-        self.charm.add_user(user, password, admin=self.admin, cfg=cfg, render_cfg=False)
+        cfg.add_user(user,admin=self.admin)
         self.charm._render_service_configs(cfg, reload_pgbouncer=True)
 
     def generate_username(self, event, app_name):

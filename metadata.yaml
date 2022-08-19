@@ -35,6 +35,6 @@ provides:
 
 requires:
   # Legacy relations - these will be deprecated in a future release
-  backend-db-admin:
-    interface: pgsql
+  backend-database:
+    interface: postgresql-client
     optional: true
