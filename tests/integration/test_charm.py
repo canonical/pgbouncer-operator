@@ -64,7 +64,6 @@ async def test_change_config(ops_test: OpsTest):
     )
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    logging.error(unit)
     cores = await helpers.get_unit_cores(unit)
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
