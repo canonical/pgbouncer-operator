@@ -28,7 +28,6 @@ Some example relation data is below. All values are examples, generated in a run
 │           │       version │ 12                                                │        │
 └───────────┴───────────────┴───────────────────────────────────────────────────┴────────┘
 
-TODO this relation is almost identical to db-admin - unify code.
 """
 
 import logging
