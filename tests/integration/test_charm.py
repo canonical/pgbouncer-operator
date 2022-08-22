@@ -31,7 +31,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
     Assert on the unit status before any relations/configurations take place.
     """
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         charm = await ops_test.build_charm(".")
         await ops_test.model.deploy(
             charm,
@@ -49,7 +49,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         unit = ops_test.model.units["pgbouncer-operator/0"]
         await ops_test.model.applications[APP_NAME].set_config(
             {
@@ -94,7 +94,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=300)
     assert (
         ops_test.model.units[f"{APP_NAME}/0"].workload_status_message

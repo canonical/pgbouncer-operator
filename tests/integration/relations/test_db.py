@@ -26,7 +26,7 @@ APPS = [PG, PGB, PSQL]
 async def test_create_db_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         charm = await ops_test.build_charm(".")
         await asyncio.gather(
             ops_test.model.deploy(
@@ -54,20 +54,20 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
 async def test_add_replicas(ops_test: OpsTest):
     # We have to scale up backend because otherwise psql enters a waiting status for every unit
     # that doesn't have a backend unit.
-    with await ops_test.fast_forward():
-            await asyncio.gather(
-                ops_test.model.applications[PG].add_units(count=2),
-                ops_test.model.applications[PSQL].add_units(count=2),
-            )
-            await asyncio.gather(
-                ops_test.model.wait_for_idle(
-                    apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
-                ),
-                ops_test.model.wait_for_idle(
-                    apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=3
-                ),
-                ops_test.model.wait_for_idle(apps=[PGB], status="active"),
-            )
+    async with ops_test.fast_forward():
+        await asyncio.gather(
+            ops_test.model.applications[PG].add_units(count=2),
+            ops_test.model.applications[PSQL].add_units(count=2),
+        )
+        await asyncio.gather(
+            ops_test.model.wait_for_idle(
+                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+            ),
+            ops_test.model.wait_for_idle(
+                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=3
+            ),
+            ops_test.model.wait_for_idle(apps=[PGB], status="active"),
+        )
     unit = ops_test.model.units["pgbouncer-operator/0"]
     cfg = await helpers.get_cfg(unit)
     expected_databases = [
@@ -85,7 +85,7 @@ async def test_add_replicas(ops_test: OpsTest):
 @pytest.mark.legacy_relation
 async def test_remove_db_unit(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/1")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=2
@@ -101,7 +101,7 @@ async def test_remove_db_unit(ops_test: OpsTest):
 @pytest.mark.legacy_relation
 async def test_remove_backend_unit(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/1")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=1000, wait_for_exact_units=2
@@ -113,7 +113,7 @@ async def test_remove_backend_unit(ops_test: OpsTest):
 @pytest.mark.legacy_relation
 async def test_remove_db_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=1
@@ -133,7 +133,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
 @pytest.mark.legacy_relation
 async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=1000, wait_for_exact_units=1
@@ -150,7 +150,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
 async def test_remove_db_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{PSQL}:db")
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -163,7 +163,7 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
 @pytest.mark.legacy_relation
 async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer charm stays online when the db disconnects for some reason."""
-    with await ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
