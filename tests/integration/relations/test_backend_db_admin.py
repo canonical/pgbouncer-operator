@@ -18,6 +18,12 @@ APP_NAME = METADATA["name"]
 POSTGRESQL = "postgresql"
 
 
+"""
+These tests are being skipped due to breaking changes in the backend-db-admin relation, which
+will be deprecated in the next PR.
+"""
+
+@pytest.mark.skip
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relation
 @pytest.mark.backend
@@ -47,6 +53,7 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
 
+@pytest.mark.skip
 @pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
@@ -75,6 +82,7 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
     ]
 
 
+@pytest.mark.skip
 @pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
@@ -96,6 +104,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
 
 
+@pytest.mark.skip
 @pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):
@@ -116,6 +125,7 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
     assert "pgb_postgres_standby_0" not in cfg["databases"].keys()
 
 
+@pytest.mark.skip
 @pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTest):
