@@ -25,6 +25,7 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 @pytest.mark.abort_on_fail
 @pytest.mark.smoke
+@pytest.mark.standalone
 async def test_build_and_deploy_current(ops_test: OpsTest):
     """Build the charm-under-test and deploy it together with related charms.
 
@@ -43,6 +44,7 @@ async def test_build_and_deploy_current(ops_test: OpsTest):
     )
 
 
+@pytest.mark.standalone
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
@@ -80,6 +82,7 @@ async def test_change_config(ops_test: OpsTest):
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
+@pytest.mark.standalone
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
     expected_processes = await helpers.get_unit_cores(unit)
