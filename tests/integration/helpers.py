@@ -24,7 +24,7 @@ async def cat_from(unit, path: str) -> str:
         the entire content of the file.
     """
     action = await unit.run(f"cat {path}")
-    return action.results.get("Stdout", None)
+    return action.results.get("stdout", None)
 
 
 async def get_cfg(unit) -> pgb.PgbConfig:
@@ -65,7 +65,7 @@ async def get_unit_cores(unit: str) -> int:
         The number of cores on the unit.
     """
     get_cores_from_unit = await unit.run('python3 -c "import os; print(os.cpu_count())"')
-    cores = get_cores_from_unit.results.get("Stdout")
+    cores = get_cores_from_unit.results.get("stdout")
     if cores is not None:
         return int(cores)
     else:
@@ -85,7 +85,7 @@ async def get_running_instances(unit: str, service: str) -> int:
         an integer defining the number of running instances.
     """
     get_running_instances = await unit.run(f"ps aux | grep {service}")
-    ps_output = get_running_instances.results.get("Stdout")
+    ps_output = get_running_instances.results.get("stdout")
     num_of_ps_lines = len(ps_output.split("\n"))
     # one extra for grep process, and one for a blank line at the end
     return num_of_ps_lines - 2
