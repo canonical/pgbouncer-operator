@@ -19,7 +19,7 @@ POSTGRESQL = "postgresql"
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.legacy_relations
+@pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
@@ -47,7 +47,7 @@ async def test_create_backend_db_admin_legacy_relation(ops_test: OpsTest):
     assert list(cfg["databases"].keys()) == ["pg_master"]
 
 
-@pytest.mark.legacy_relations
+@pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
     """Test that the pgbouncer config accurately reflects postgres replication changes.
@@ -75,7 +75,7 @@ async def test_backend_db_admin_legacy_relation_scale_up(ops_test: OpsTest):
     ]
 
 
-@pytest.mark.legacy_relations
+@pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -96,7 +96,7 @@ async def test_backend_db_admin_legacy_relation_scale_down(ops_test: OpsTest):
     assert "pgb_postgres_standby_1" not in cfg["databases"].keys()
 
 
-@pytest.mark.legacy_relations
+@pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
@@ -116,7 +116,7 @@ async def test_backend_db_admin_legacy_relation_delete_postgres_leader(ops_test:
     assert "pgb_postgres_standby_0" not in cfg["databases"].keys()
 
 
-@pytest.mark.legacy_relations
+@pytest.mark.legacy_relation
 @pytest.mark.backend
 async def test_backend_db_admin_legacy_relation_remove_relation(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]

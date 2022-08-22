@@ -69,7 +69,7 @@ async def get_unit_cores(unit: str) -> int:
     if cores is not None:
         return int(cores)
     else:
-        raise Exception(get_cores_from_unit)
+        raise Exception(get_cores_from_unit.results)
 
 
 async def get_running_instances(unit: str, service: str) -> int:

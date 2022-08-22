@@ -11,6 +11,7 @@ show_missing = true
 [tool.pytest.ini_options]
 minversion = "6.0"
 log_cli_level = "INFO"
+asyncio_mode = "auto"
 markers = [
     "smoke: quick integration tests that can be run to quickly verify that the charm builds and deploys ok.",
     "dev: a quick development marker to run one test",

@@ -36,7 +36,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.4/stable # patch until https://bugs.launchpad.net/juju/+bug/1968849 is resolved
+          lxd-channel: 5.4/stable
       - name: Run integration tests
         # TODO set a predictable model name so it can be consumed by charm-logdump-action
         # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.

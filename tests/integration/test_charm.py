@@ -50,7 +50,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     async with ops_test.fast_forward():
-        unit = ops_test.model.units["pgbouncer-operator/0"]
+        unit = ops_test.model.units[f"{APP_NAME}/0"]
         await ops_test.model.applications[APP_NAME].set_config(
             {
                 "pool_mode": "transaction",
@@ -64,6 +64,7 @@ async def test_change_config(ops_test: OpsTest):
     )
 
     # The config changes depending on the amount of cores on the unit, so get that info.
+    logging.error(unit)
     cores = await helpers.get_unit_cores(unit)
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
