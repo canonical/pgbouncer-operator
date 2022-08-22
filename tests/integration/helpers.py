@@ -64,7 +64,7 @@ async def get_unit_cores(unit: str) -> int:
     Returns:
         The number of cores on the unit.
     """
-    get_cores_from_unit = await unit.run('nproc --all')
+    get_cores_from_unit = await unit.run("nproc --all")
     cores = get_cores_from_unit.results.get("Stdout")
     if cores is not None:
         return int(cores)
