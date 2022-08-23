@@ -25,35 +25,39 @@ INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 @pytest.mark.abort_on_fail
 @pytest.mark.smoke
-async def test_build_and_deploy_current(ops_test: OpsTest):
-    """Build the charm-under-test and deploy it together with related charms.
+@pytest.mark.standalone
+async def test_build_and_deploy(ops_test: OpsTest):
+    """Build and deploy the charm-under-test.
 
     Assert on the unit status before any relations/configurations take place.
     """
-    charm = await ops_test.build_charm(".")
-    await ops_test.model.deploy(
-        charm,
-        application_name=APP_NAME,
-    )
-    # Pgbouncer enters a blocked status without a postgres backend database relation
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+    async with ops_test.fast_forward():
+        charm = await ops_test.build_charm(".")
+        await ops_test.model.deploy(
+            charm,
+            application_name=APP_NAME,
+        )
+        # Pgbouncer enters a blocked status without a postgres backend database relation
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
     assert (
         ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
         == "waiting for backend database relation"
     )
 
 
+@pytest.mark.standalone
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
-    unit = ops_test.model.units["pgbouncer-operator/0"]
-    await ops_test.model.applications[APP_NAME].set_config(
-        {
-            "pool_mode": "transaction",
-            "max_db_connections": "44",
-        }
-    )
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
+    async with ops_test.fast_forward():
+        unit = ops_test.model.units[f"{APP_NAME}/0"]
+        await ops_test.model.applications[APP_NAME].set_config(
+            {
+                "pool_mode": "transaction",
+                "max_db_connections": "44",
+            }
+        )
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=1000)
     assert (
         ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
         == "waiting for backend database relation"
@@ -80,6 +84,7 @@ async def test_change_config(ops_test: OpsTest):
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
+@pytest.mark.standalone
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
     expected_processes = await helpers.get_unit_cores(unit)
@@ -89,7 +94,8 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=300)
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=300)
     assert (
         ops_test.model.units[f"{APP_NAME}/0"].workload_status_message
         == "waiting for backend database relation"

@@ -64,9 +64,12 @@ async def get_unit_cores(unit: str) -> int:
     Returns:
         The number of cores on the unit.
     """
-    get_cores_from_unit = await unit.run('python3 -c "import os; print(os.cpu_count())"')
+    get_cores_from_unit = await unit.run("nproc --all")
     cores = get_cores_from_unit.results.get("Stdout")
-    return int(cores)
+    if cores is not None:
+        return int(cores)
+    else:
+        raise Exception(get_cores_from_unit.results)
 
 
 async def get_running_instances(unit: str, service: str) -> int:
