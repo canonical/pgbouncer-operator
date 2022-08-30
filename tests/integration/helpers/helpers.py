@@ -22,10 +22,12 @@ PGB = METADATA["name"]
 
 async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
     """Get unit IP address.
+
     Args:
         ops_test: The ops test framework instance
         application_name: The name of the application
         unit_name: The name of the unit
+
     Returns:
         IP address of the unit
     """
@@ -35,11 +37,14 @@ async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: 
 
 async def get_unit_cores(unit: str) -> int:
     """Get the number of CPU cores available on the given unit.
+
     Since PgBouncer is single-threaded, the charm automatically creates one instance of pgbouncer
     per CPU core on a given unit. Therefore, the number of cores is the expected number of
     pgbouncer instances.
+
     Args:
         unit: the juju unit instance
+
     Returns:
         The number of cores on the unit.
     """
@@ -53,10 +58,13 @@ async def get_unit_cores(unit: str) -> int:
 
 async def get_running_instances(unit: str, service: str) -> int:
     """Returns the number of running instances of the given service.
+
     Uses `ps` to find the number of instances of a given service.
+
     Args:
         unit: the juju unit running the service
         service: a string that can be used to grep for the intended service.
+
     Returns:
         an integer defining the number of running instances.
     """
@@ -69,9 +77,11 @@ async def get_running_instances(unit: str, service: str) -> int:
 
 async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
     """Gets the databags from the given relation.
+
     Args:
         ops_test: ops_test testing instance
         unit_name: name of the unit
+
     Returns:
         A dict containing all unit information available to juju
     """
@@ -137,12 +147,15 @@ async def get_backend_user_pass(ops_test, backend_relation):
 
 async def get_app_relation_databag(ops_test: OpsTest, unit_name: str, relation_id: int) -> Dict:
     """Gets the app relation databag from the given relation.
+
     Juju show-unit command is backwards, so you have to pass the unit_name of the unit to which the
     data is presented, not the unit that presented the data.
+
     Args:
         ops_test: ops_test testing instance
         unit_name: name of the unit to which this databag is presented
         relation_id: id of the required relation
+
     Returns:
         App databag for the relation with the given ID, or None if nothing can be found.
     """
@@ -159,6 +172,7 @@ def wait_for_relation_joined_between(
     ops_test: OpsTest, endpoint_one: str, endpoint_two: str
 ) -> None:
     """Wait for relation to be be created before checking if it's waiting or idle.
+
     Args:
         ops_test: running OpsTest instance
         endpoint_one: one endpoint of the relation. Doesn't matter if it's provider or requirer.
@@ -185,6 +199,7 @@ def wait_for_relation_removed_between(
     ops_test: OpsTest, endpoint_one: str, endpoint_two: str
 ) -> None:
     """Wait for relation to be removed before checking if it's waiting or idle.
+
     Args:
         ops_test: running OpsTest instance
         endpoint_one: one endpoint of the relation. Doesn't matter if it's provider or requirer.

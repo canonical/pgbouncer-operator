@@ -8,7 +8,6 @@ import logging
 import os
 import pwd
 import shutil
-from socket import socket
 import subprocess
 from copy import deepcopy
 from typing import Dict, List
@@ -388,11 +387,6 @@ class PgBouncerCharm(CharmBase):
     def unit_ip(self) -> str:
         """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
-
-    @property
-    def unit_pod_hostname(self, name="") -> str:
-        """Creates the pod hostname from its name."""
-        return socket.getfqdn(name)
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ async def check_database_users_existence(
     admin: bool = False,
 ) -> None:
     """Checks that applications users exist in the database.
+
     Args:
         ops_test: The ops test framework
         users_that_should_exist: List of users that should exist in the database
@@ -59,6 +60,7 @@ async def check_database_creation(
     ops_test: OpsTest, database: str, user: str, password: str
 ) -> None:
     """Checks that database and tables are successfully created for the application.
+
     Args:
         ops_test: The ops test framework
         database: Name of the database that should have been created
@@ -96,11 +98,13 @@ async def execute_query_on_unit(
     database: str = "postgres",
 ):
     """Execute given PostgreSQL query on a unit.
+
     Args:
         unit_address: The public IP address of the unit to execute the query on.
         password: The PostgreSQL superuser password.
         query: Query to execute.
         database: Optional database to connect to (defaults to postgres database).
+
     Returns:
         A list of rows that were potentially returned from the query.
     """
@@ -114,9 +118,11 @@ async def execute_query_on_unit(
 
 async def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
     """Get unit IP address.
+
     Args:
         ops_test: The ops test framework instance
         unit_name: The name of the unit
+
     Returns:
         IP address of the unit
     """
