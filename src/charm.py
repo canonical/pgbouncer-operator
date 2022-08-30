@@ -16,22 +16,22 @@ from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from charms.pgbouncer_operator.v0.pgb import PgbConfig
-from relations.backend_database import BackendDatabaseRequires
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import INI_PATH
+from constants import AUTH_FILE_PATH, INI_PATH, PEERS
 from constants import PG as PG_USER
-from constants import PGB, PGB_DIR, AUTH_FILE_PATH
+from constants import PGB, PGB_DIR
+from relations.backend_database import BackendDatabaseRequires
+
 # TODO reinstate once legacy relations are in
 # from relations.db import DbProvides
 
 logger = logging.getLogger(__name__)
 
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
-PEER = "pgbouncer-replicas"
 
 
 class PgBouncerCharm(CharmBase):
@@ -46,7 +46,6 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
-
 
         self.backend = BackendDatabaseRequires(self)
 
@@ -383,7 +382,7 @@ class PgBouncerCharm(CharmBase):
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
-        return self.model.get_binding(PEER).network.bind_address
+        return self.model.get_binding(PEERS).network.bind_address
 
 
 if __name__ == "__main__":

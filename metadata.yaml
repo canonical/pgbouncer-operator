@@ -21,8 +21,8 @@ series:
   - focal
 
 peers:
-  pgbouncer-replicas:
-    interface: pgbouncer-replicas
+  pgb-peers:
+    interface: pgb-peers
 
 provides:
   # Legacy relations - these will be deprecated in a future release

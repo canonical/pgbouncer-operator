@@ -16,3 +16,4 @@ DATABASES = "databases"
 # legacy relation data
 DB = "db"
 DB_ADMIN = "db-admin"
+PEERS = "pgb-peers"
