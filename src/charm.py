@@ -14,20 +14,16 @@ from typing import Dict, List
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
-from charms.pgbouncer_operator.v0 import pgb
-from charms.pgbouncer_operator.v0.pgb import PgbConfig
+from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-
-from constants import BACKEND_DB_ADMIN, INI_PATH
 from constants import AUTH_FILE_PATH, INI_PATH, PEERS
 from constants import PG as PG_USER
 from constants import PGB, PGB_DIR, USERLIST_PATH
-from relations.backend_db_admin import BackendDbAdminRequires
-from relations.db import DbProvides
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
 
@@ -83,7 +79,7 @@ class PgBouncerCharm(CharmBase):
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        self._render_service_configs(cfg)
+        self.render_pgb_config(cfg)
 
         # Initialise userlist, generating passwords for initial users. All config files use the
         # same userlist, so we only need one.
@@ -162,7 +158,7 @@ class PgBouncerCharm(CharmBase):
             # self.update_backend_relation_port(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
-        self._render_service_configs(cfg, reload_pgbouncer=True)
+        self.render_pgb_config(cfg, reload_pgbouncer=True)
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -178,7 +174,7 @@ class PgBouncerCharm(CharmBase):
             config = pgb.PgbConfig(file.read())
         return config
 
-    def _render_service_configs(self, config: pgb.PgbConfig, reload_pgbouncer=False):
+    def render_pgb_config(self, config: pgb.PgbConfig, reload_pgbouncer=False):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -297,7 +293,7 @@ class PgBouncerCharm(CharmBase):
 
         self._render_userlist(userlist)
         if render_cfg:
-            self._render_service_configs(cfg, reload_pgbouncer)
+            self.render_pgb_config(cfg, reload_pgbouncer)
 
     def remove_user(
         self,
@@ -333,7 +329,7 @@ class PgBouncerCharm(CharmBase):
 
         self._render_userlist(userlist)
         if render_cfg:
-            self._render_service_configs(cfg, reload_pgbouncer)
+            self.render_pgb_config(cfg, reload_pgbouncer)
 
     def _reload_pgbouncer(self):
         """Reloads systemd pgbouncer service."""

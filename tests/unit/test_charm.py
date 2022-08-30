@@ -263,7 +263,7 @@ class TestCharm(unittest.TestCase):
 
             cfg_list.append(cfg.render())
 
-        self.charm._render_service_configs(default_cfg, reload_pgbouncer=False)
+        self.charm.render_pgb_config(default_cfg, reload_pgbouncer=False)
 
         _render.assert_any_call(INI_PATH, cfg_list[0], 0o700)
         _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o700)
@@ -273,7 +273,7 @@ class TestCharm(unittest.TestCase):
         # MaintenanceStatus will exit once pgbouncer reloads.
         self.assertIsInstance(self.harness.model.unit.status, MaintenanceStatus)
 
-        self.charm._render_service_configs(cfg, reload_pgbouncer=True)
+        self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
         _reload.assert_called_once()
 
     def test_read_userlist(self):
