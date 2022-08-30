@@ -22,11 +22,11 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import BACKEND_DB_ADMIN, INI_PATH
+from constants import INI_PATH
 from constants import PG as PG_USER
-from constants import PGB, PGB_DIR, USERLIST_PATH
-from relations.backend_db_admin import BackendDbAdminRequires
-from relations.db import DbProvides
+from constants import PGB, PGB_DIR, AUTH_FILE_PATH
+# TODO reinstate once legacy relations are in
+# from relations.db import DbProvides
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +154,7 @@ class PgBouncerCharm(CharmBase):
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
             # This emits relation-changed events to every client relation, so only do it when
             # necessary
+            # TODO add once legacy client relations are done.
             # self.update_backend_relation_port(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
@@ -228,7 +229,7 @@ class PgBouncerCharm(CharmBase):
             self._reload_pgbouncer()
 
     def _read_userlist(self) -> Dict[str, str]:
-        with open(USERLIST_PATH, "r") as file:
+        with open(AUTH_FILE_PATH, "r") as file:
             userlist = pgb.parse_userlist(file.read())
         return userlist
 
@@ -243,7 +244,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o660)
+        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(userlist), 0o660)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
