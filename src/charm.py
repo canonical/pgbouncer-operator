@@ -244,7 +244,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o700)
+        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(userlist), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -389,6 +389,39 @@ class PgBouncerCharm(CharmBase):
     def unit_ip(self) -> str:
         """Current unit IP."""
         return self.model.get_binding(PEERS).network.bind_address
+
+    # =====================
+    #  Relation Utilities
+    # =====================
+
+    def update_backend_relation_port(self, port):
+        """Update ports in backend relations to match updated pgbouncer port."""
+        # Skip updates if backend.postgres doesn't exist yet.
+        if not self.backend.postgres:
+            return
+
+        for relation in self.model.relations.get("db", []):
+            self.legacy_db_relation.update_port(relation, port)
+
+        for relation in self.model.relations.get("db-admin", []):
+            self.legacy_db_admin_relation.update_port(relation, port)
+
+    def update_postgres_endpoints(self, reload_pgbouncer):
+        """Update postgres endpoints in relation config values."""
+        # Skip updates if backend.postgres doesn't exist yet.
+        if not self.backend.postgres:
+            return
+
+        for relation in self.model.relations.get("db", []):
+            self.legacy_db_relation.update_postgres_endpoints(relation, reload_pgbouncer=False)
+
+        for relation in self.model.relations.get("db-admin", []):
+            self.legacy_db_admin_relation.update_postgres_endpoints(
+                relation, reload_pgbouncer=False
+            )
+
+        if reload_pgbouncer:
+            self._reload_pgbouncer()
 
 
 if __name__ == "__main__":

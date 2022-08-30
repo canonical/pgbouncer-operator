@@ -71,7 +71,7 @@ class TestCharm(unittest.TestCase):
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
-        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o700)
+        _render_file.assert_any_call(AUTH_FILE_PATH, initial_userlist, 0o700)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
@@ -290,12 +290,12 @@ class TestCharm(unittest.TestCase):
         test_users = {"test_user": "test_pass"}
 
         self.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o700)
+        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(test_users), 0o700)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
         self.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o700)
+        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(reload_users), 0o700)
         _reload.assert_called()
 
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
