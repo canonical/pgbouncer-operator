@@ -76,7 +76,7 @@ class TestDb(unittest.TestCase):
     @patch("ops.charm.EventBase.defer")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
     @patch("charm.PgBouncerCharm.add_user")
-    @patch("charm.PgBouncerCharm._render_service_configs")
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_instantiate_new_relation_on_relation_changed(
         self,
         _render_cfg,
@@ -161,7 +161,7 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
     @patch("charm.PgBouncerCharm.add_user")
-    @patch("charm.PgBouncerCharm._render_service_configs")
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_update_existing_relation_on_relation_changed(
         self,
         _render_cfg,
@@ -248,7 +248,7 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides._get_postgres_standbys", return_value="test-postgres-standbys")
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
     @patch("charm.PgBouncerCharm.add_user")
-    @patch("charm.PgBouncerCharm._render_service_configs")
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_admin_user_generated_with_correct_admin_permissions(
         self,
         _render_cfg,
@@ -349,7 +349,7 @@ class TestDb(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.remove_user")
-    @patch("charm.PgBouncerCharm._render_service_configs")
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_on_relation_broken(self, _render, _remove_user, _read):
         """Test that all traces of the given app are removed from pgb config, including user."""
         test_dbname = "test_db"
