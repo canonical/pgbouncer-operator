@@ -2,10 +2,11 @@
 # See LICENSE file for licensing details.
 
 """Postgres db relation hooks & helpers.
+
 This relation uses the pgsql interface, omitting roles and extensions as they are unsupported in
 the new postgres charm.
+
 Some example relation data is below. All values are examples, generated in a running test instance.
-TODO regenerate example relation data.
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
 ┃ category         ┃            keys ┃ pgbouncer    /0                            ┃ finos-waltz/0 ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
@@ -84,9 +85,11 @@ class RelationNotInitialisedError(Exception):
 
 class DbProvides(Object):
     """Defines functionality for the 'provides' side of the 'db' relation.
+
     This relation connects to client applications, providing database services in an identical way
     to the same relation in the PostgreSQL charm, to the point where they should be
     indistinguishable to the client app.
+
     Hook events observed:
         - relation-joined
         - relation-changed
@@ -96,6 +99,7 @@ class DbProvides(Object):
 
     def __init__(self, charm: CharmBase, admin: bool = False):
         """Constructor for DbProvides object.
+
         Args:
             charm: the charm for which this relation is provided
             admin: a boolean defining whether or not this relation has admin permissions, switching
@@ -126,6 +130,7 @@ class DbProvides(Object):
 
     def _on_relation_joined(self, join_event: RelationJoinedEvent):
         """Handle db-relation-joined event.
+
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
@@ -213,8 +218,10 @@ class DbProvides(Object):
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
+
         Takes information from the pgbouncer db app relation databag and copies it into the
         pgbouncer.ini config.
+
         This relation will defer if the backend relation isn't fully available, and if the
         relation_joined hook isn't completed.
         """
@@ -345,6 +352,7 @@ class DbProvides(Object):
 
     def _get_read_only_endpoint(self):
         """Get a read-only-endpoint from backend relation.
+
         Though multiple readonly endpoints can be provided by the new backend relation, only one
         can be consumed by this legacy relation.
         """
@@ -355,8 +363,10 @@ class DbProvides(Object):
 
     def _get_state(self) -> str:
         """Gets the given state for this unit.
+
         Args:
             standbys: the comma-separated list of postgres standbys
+
         Returns:
             The described state of this unit. Can be 'standalone', 'master', or 'standby'.
         """
@@ -367,6 +377,7 @@ class DbProvides(Object):
 
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
+
         Removes relevant information from pgbouncer config when db relation is removed. This
         function assumes that relation databags are destroyed when the relation itself is removed.
         """
@@ -383,8 +394,10 @@ class DbProvides(Object):
 
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
+
         Removes all traces of the given application from the pgbouncer config, and removes relation
         user if its unused by any other relations.
+
         This doesn't delete any tables so we aren't deleting a user's entire database with one
         command.
         """
