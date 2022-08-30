@@ -12,7 +12,7 @@ import yaml
 from charms.pgbouncer_k8s.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
-from tests.integration import legacy_helpers
+from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
@@ -64,14 +64,14 @@ async def test_change_config(ops_test: OpsTest):
     )
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    cores = await legacy_helpers.get_unit_cores(unit)
+    cores = await helpers.get_unit_cores(unit)
 
     expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
     expected_cfg["pgbouncer"]["listen_addr"] = unit.public_address
 
-    primary_cfg = await legacy_helpers.get_cfg(unit)
+    primary_cfg = await helpers.get_cfg(unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
@@ -80,17 +80,17 @@ async def test_change_config(ops_test: OpsTest):
     # and its tests, but we need to make sure they at least exist in the right places.
     for service_id in range(cores):
         path = f"{PGB_DIR}/instance_{service_id}/pgbouncer.ini"
-        service_cfg = await legacy_helpers.cat_from(unit, path)
+        service_cfg = await helpers.cat_from(unit, path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
 @pytest.mark.standalone
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    expected_processes = await legacy_helpers.get_unit_cores(unit)
+    expected_processes = await helpers.get_unit_cores(unit)
 
     # verify the correct amount of pgbouncer processes are running
-    assert await legacy_helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
@@ -102,4 +102,4 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     )
 
     # verify all processes start again
-    assert await legacy_helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
