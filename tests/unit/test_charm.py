@@ -15,7 +15,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import INI_PATH, PGB, PGB_DIR, AUTH_FILE_PATH
+from constants import INI_PATH, PGB_DIR
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -65,9 +65,7 @@ class TestCharm(unittest.TestCase):
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
-        initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
-        _render_file.assert_any_call(AUTH_FILE_PATH, initial_userlist, 0o700)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
@@ -147,18 +145,14 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charm.PgBouncerCharm.unit_ip")
-    def test_on_config_changed(self, _unit_ip, _render, _read):
+    def test_on_config_changed(self, _render, _read):
         mock_cores = 1
-        ip = "1.1.1.1"
-        self.charm.unit_ip = ip
         self.charm._cores = mock_cores
         max_db_connections = 44
 
         # Copy config object and modify it as we expect in the hook.
         config = deepcopy(_read.return_value)
         config["pgbouncer"]["pool_mode"] = "transaction"
-        config["pgbouncer"]["listen_addr"] = ip
         config.set_max_db_connection_derivatives(
             max_db_connections=max_db_connections,
             pgb_instances=mock_cores,
@@ -175,6 +169,11 @@ class TestCharm(unittest.TestCase):
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
+        import logging
+
+        logging.info(_read.return_value.render())
+        logging.info(config.render())
+        self.maxDiff = None
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
@@ -220,27 +219,6 @@ class TestCharm(unittest.TestCase):
 
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
-
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm.render_file")
-    def test_render_pgb_config(self, _render, _reload):
-        with open(TEST_VALID_INI, "r") as ini:
-            test_config = pgb.PgbConfig(ini.read())
-
-        self.charm._render_pgb_config(test_config, reload_pgbouncer=False)
-        _render.assert_called_with(INI_PATH, test_config.render(), 0o700)
-        _reload.assert_not_called()
-
-        # Copy config and edit a value
-        reload_config = pgb.PgbConfig(deepcopy(test_config.__dict__))
-        reload_config["pgbouncer"]["admin_users"] = ["test_admin"]
-
-        self.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
-        _render.assert_called_with(INI_PATH, reload_config.render(), 0o700)
-        _reload.assert_called()
-
-        self.charm._render_pgb_config(reload_config, config_path="/test/path")
-        _render.assert_called_with("/test/path", reload_config.render(), 0o700)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")

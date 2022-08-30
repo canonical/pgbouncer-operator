@@ -15,7 +15,6 @@ from typing import Dict, List
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_k8s.v0 import pgb
-from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -25,7 +24,6 @@ from constants import AUTH_FILE_PATH, INI_PATH, PEERS
 from constants import PG as PG_USER
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
-
 from relations.db import DbProvides
 
 logger = logging.getLogger(__name__)
@@ -100,7 +98,7 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(f"{service}")
 
-            if self.backend.postgres:
+            if self.backend.postgres():
                 self.unit.status = ActiveStatus("pgbouncer started")
             else:
                 # Wait for backend relation relation if it doesn't exist
@@ -122,7 +120,7 @@ class PgBouncerCharm(CharmBase):
                     )
                     return
 
-            if self.backend.postgres:
+            if self.backend.postgres() is not None:
                 # All is well, set ActiveStatus
                 self.unit.status = ActiveStatus()
             else:
@@ -244,7 +242,6 @@ class PgBouncerCharm(CharmBase):
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
-
 
     def _reload_pgbouncer(self):
         """Reloads systemd pgbouncer service."""
