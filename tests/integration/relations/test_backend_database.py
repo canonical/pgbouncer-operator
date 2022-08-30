@@ -87,4 +87,3 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
         cfg = await get_cfg(ops_test)
         logging.info(cfg.render())
         logger.info(await get_pgb_log(ops_test))
-
