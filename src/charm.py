@@ -23,12 +23,10 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 
 from constants import AUTH_FILE_PATH, INI_PATH, PEERS
 from constants import PG as PG_USER
-from constants import PGB, PGB_DIR, USERLIST_PATH
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
 
-# TODO reinstate once legacy relations are in
-# from relations.db import DbProvides
+from relations.db import DbProvides
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +47,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.backend = BackendDatabaseRequires(self)
+        self.legacy_db_relation = DbProvides(self, admin=False)
+        self.legacy_db_admin_relation = DbProvides(self, admin=True)
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]

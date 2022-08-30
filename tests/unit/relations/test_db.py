@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_STANDBY_PREFIX
+from constants import BACKEND_DATABASE_RELATION_NAME,  DB_RELATION_NAME, DB_ADMIN_RELATION_NAME
 from lib.charms.pgbouncer_operator.v0.pgb import (
     DEFAULT_CONFIG,
     PgbConfig,
@@ -30,6 +30,23 @@ class TestDb(unittest.TestCase):
         self.charm = self.harness.charm
         self.db_relation = self.charm.legacy_db_relation
         self.db_admin_relation = self.charm.legacy_db_admin_relation
+
+        # Define a backend relation
+        self.backend_rel_id = self.harness.add_relation(BACKEND_DATABASE_RELATION_NAME, "postgres")
+        self.harness.add_relation_unit(self.backend_rel_id, "postgres/0")
+        self.harness.add_relation_unit(self.backend_rel_id, self.unit)
+
+        # Define a db relation
+        self.db_rel_id = self.harness.add_relation(DB_RELATION_NAME, "client_app")
+        self.harness.add_relation_unit(self.db_rel_id, "client/0")
+        self.harness.add_relation_unit(self.db_rel_id, self.unit)
+
+        # Define a db-admin relation
+        self.db_admin_rel_id = self.harness.add_relation(
+            DB_ADMIN_RELATION_NAME, "admin_client_app"
+        )
+        self.harness.add_relation_unit(self.db_admin_rel_id, "admin_client/0")
+        self.harness.add_relation_unit(self.db_admin_rel_id, self.unit)
 
     def test_correct_admin_perms_set_in_constructor(self):
         assert self.charm.legacy_db_relation.relation_name == "db"
@@ -287,47 +304,6 @@ class TestDb(unittest.TestCase):
         _add_user.assert_called_with(
             user, password, admin=True, cfg=_read_cfg.return_value, render_cfg=False
         )
-
-    def test_get_postgres_standbys(self):
-        cfg = PgbConfig(DEFAULT_CONFIG)
-        cfg["databases"]["not_a_standby"] = {"dbname": "not_a_standby"}
-        cfg["databases"]["pg_master"] = {"dbname": "pg_master", "host": "test"}
-        cfg["databases"][BACKEND_STANDBY_PREFIX] = {
-            "dbname": BACKEND_STANDBY_PREFIX,
-            "host": "standby_host",
-            "port": "standby_port",
-        }
-        cfg["databases"][f"{BACKEND_STANDBY_PREFIX}0"] = {
-            "dbname": f"{BACKEND_STANDBY_PREFIX}0",
-            "host": "standby_host",
-            "port": "standby_port",
-        }
-        cfg["databases"][f"not_a_standby{BACKEND_STANDBY_PREFIX}"] = {
-            "dbname": f"not_a_standby{BACKEND_STANDBY_PREFIX}",
-            "host": "test",
-            "port": "port_test",
-        }
-
-        app = "app_name"
-        db_name = "db_name"
-        user = "user"
-        pw = "pw"
-        standbys = self.db_relation._get_postgres_standbys(cfg, app, db_name, user, pw)
-
-        assert "not_a_standby" not in standbys
-        assert "pg_master" not in standbys
-
-        standby_list = standbys.split(", ")
-        assert len(standby_list) == 2
-
-        for standby in standby_list:
-            standby_dict = parse_kv_string_to_dict(standby)
-            assert standby_dict.get("dbname") == db_name
-            assert standby_dict.get("host") == "standby_host"
-            assert standby_dict.get("port") == "standby_port"
-            assert standby_dict.get("user") == user
-            assert standby_dict.get("password") == pw
-            assert standby_dict.get("fallback_application_name") == app
 
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_string")
     def test_on_relation_departed(self, _get_units):

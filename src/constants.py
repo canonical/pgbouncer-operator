@@ -15,10 +15,8 @@ LOG_PATH = f"{PGB_DIR}/pgbouncer.log"
 # PGB config
 DATABASES = "databases"
 
-# legacy relation data
-DB = "db"
-DB_ADMIN = "db-admin"
+# relation data
+DB_RELATION_NAME = "db"
+DB_ADMIN_RELATION_NAME = "db-admin"
+BACKEND_DATABASE_RELATION_NAME = "backend-database"
 PEERS = "pgb-peers"
-
-# Legacy variable to delete
-BACKEND_STANDBY_PREFIX = "backend_standby_"
