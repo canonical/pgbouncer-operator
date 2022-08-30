@@ -8,6 +8,9 @@ PG = "postgres"
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
+# TODO userlist path will be deleted when we switch over to the new relations
+AUTH_FILE_PATH = f"{PGB_DIR}/userlist.txt"
+LOG_PATH = f"{PGB_DIR}/pgbouncer.log"
 
 # PGB config
 DATABASES = "databases"
