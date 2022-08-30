@@ -17,3 +17,6 @@ DATABASES = "databases"
 DB = "db"
 DB_ADMIN = "db-admin"
 PEERS = "pgb-peers"
+
+# Legacy variable to delete
+BACKEND_STANDBY_PREFIX = "backend_standby_"

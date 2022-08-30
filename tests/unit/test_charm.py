@@ -15,7 +15,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import INI_PATH, PGB, PGB_DIR, USERLIST_PATH
+from constants import INI_PATH, PGB, PGB_DIR, AUTH_FILE_PATH
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -71,12 +71,12 @@ class TestCharm(unittest.TestCase):
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
-        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o660)
+        _render_file.assert_any_call(AUTH_FILE_PATH, initial_userlist, 0o660)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
-    @patch("charm.PgBouncerCharm._has_backend_relation", return_value=False)
+    @patch("relations.backend_database.BackendDatabaseRequires.postgres", return_value=None)
     def test_on_start(self, _has_relation, _start):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
@@ -120,7 +120,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
-    @patch("charm.PgBouncerCharm._has_backend_relation", return_value=False)
+    @patch("relations.backend_database.BackendDatabaseRequires.postgres", return_value=None)
     def test_on_update_status(self, _has_relation, _running):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
@@ -290,12 +290,12 @@ class TestCharm(unittest.TestCase):
         test_users = {"test_user": "test_pass"}
 
         self.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o660)
+        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(test_users), 0o660)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
         self.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o660)
+        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(reload_users), 0o660)
         _reload.assert_called()
 
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")

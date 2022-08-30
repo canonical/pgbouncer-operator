@@ -379,6 +379,11 @@ class PgBouncerCharm(CharmBase):
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
 
+    def delete_file(self, path: str):
+        """Deletes file at the given path."""
+        if os.path.exists(path):
+            os.remove(path)
+
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
