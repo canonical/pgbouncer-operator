@@ -81,10 +81,6 @@ class PgBouncerCharm(CharmBase):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
-        # Initialise userlist, generating passwords for initial users. All config files use the
-        # same userlist, so we only need one.
-        self._render_userlist(pgb.initialise_userlist_from_ini(cfg))
-
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
         systemd.daemon_reload()
@@ -249,87 +245,6 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
-    def add_user(
-        self,
-        user: str,
-        password: str = None,
-        admin: bool = False,
-        stats: bool = False,
-        cfg: PgbConfig = None,
-        reload_pgbouncer: bool = False,
-        render_cfg: bool = False,
-    ):
-        """Adds a user to the config files.
-
-        Args:
-            user: the username for the intended user
-            password: intended password for the user
-            admin: whether or not the user has admin permissions
-            stats: whether or not the user has stats permissions
-            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
-                during this method.
-            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
-                restarted for changes to take effect.
-            render_cfg: whether or not to render config
-        """
-        if not cfg:
-            cfg = self.read_pgb_config()
-        userlist = self._read_userlist()
-
-        # Userlist is key-value dict of users and passwords.
-        if not password:
-            password = pgb.generate_password()
-
-        # Return early if user and password are already set to the correct values
-        if userlist.get(user) == password:
-            return
-
-        userlist[user] = password
-
-        if admin and user not in cfg[PGB]["admin_users"]:
-            cfg[PGB]["admin_users"].append(user)
-        if stats and user not in cfg[PGB]["stats_users"]:
-            cfg[PGB]["stats_users"].append(user)
-
-        self._render_userlist(userlist)
-        if render_cfg:
-            self.render_pgb_config(cfg, reload_pgbouncer)
-
-    def remove_user(
-        self,
-        user: str,
-        cfg: PgbConfig = None,
-        reload_pgbouncer: bool = False,
-        render_cfg: bool = False,
-    ):
-        """Removes a user from config files.
-
-        Args:
-            user: the username for the intended user.
-            cfg: A pgb.PgbConfig object that can be used to minimise writes and restarts. Modified
-                during this method.
-            reload_pgbouncer: whether or not to restart pgbouncer after changing config. Must be
-                restarted for changes to take effect.
-            render_cfg: whether or not to render config
-        """
-        if not cfg:
-            cfg = self.read_pgb_config()
-        userlist = self._read_userlist()
-
-        if user not in userlist.keys():
-            return
-
-        # remove userlist
-        del userlist[user]
-
-        if user in cfg[PGB]["admin_users"]:
-            cfg[PGB]["admin_users"].remove(user)
-        if user in cfg[PGB]["stats_users"]:
-            cfg[PGB]["stats_users"].remove(user)
-
-        self._render_userlist(userlist)
-        if render_cfg:
-            self.render_pgb_config(cfg, reload_pgbouncer)
 
     def _reload_pgbouncer(self):
         """Reloads systemd pgbouncer service."""
