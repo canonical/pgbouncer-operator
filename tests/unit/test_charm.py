@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, call, patch
 import ops.testing
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
-from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_k8s.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -39,14 +39,12 @@ class TestCharm(unittest.TestCase):
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("charm.PgBouncerCharm.render_file")
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
     @patch("shutil.copy")
     @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
         self,
         _reload,
         _copy,
-        _userlist,
         _render_configs,
         _render_file,
         _getpwnam,
@@ -55,8 +53,6 @@ class TestCharm(unittest.TestCase):
         _stop,
         _install,
     ):
-        _userlist.return_value = {"juju-admin": "test"}
-
         self.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])

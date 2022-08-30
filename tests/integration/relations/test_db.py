@@ -19,13 +19,7 @@ PG = "postgresql"
 PSQL = "psql"
 APPS = [PG, PGB, PSQL]
 
-"""
-These tests are being skipped due to breaking changes in the backend-db-admin relation, which
-will be deprecated in the next PR.
-"""
 
-
-@pytest.mark.skip
 @pytest.mark.smoke
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relation
@@ -56,7 +50,6 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
     assert "cli" in cfg["databases"].keys()
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_add_replicas(ops_test: OpsTest):
     # We have to scale up backend because otherwise psql enters a waiting status for every unit
@@ -89,7 +82,6 @@ async def test_add_replicas(ops_test: OpsTest):
         assert database in cfg["databases"].keys()
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_remove_db_unit(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/1")
@@ -106,7 +98,6 @@ async def test_remove_db_unit(ops_test: OpsTest):
         )
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_remove_backend_unit(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/1")
@@ -119,7 +110,6 @@ async def test_remove_backend_unit(ops_test: OpsTest):
         )
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_remove_db_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
@@ -140,7 +130,6 @@ async def test_remove_db_leader(ops_test: OpsTest):
     assert "cli" in cfg["databases"].keys()
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")
@@ -157,7 +146,6 @@ async def test_remove_backend_leader(ops_test: OpsTest):
     assert "cli" in cfg["databases"].keys()
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_remove_db_legacy_relation(ops_test: OpsTest):
     """Test that removing relations still works ok."""
@@ -171,7 +159,6 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
     assert "cli" not in cfg["databases"].keys()
 
 
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer charm stays online when the db disconnects for some reason."""

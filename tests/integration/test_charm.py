@@ -9,7 +9,7 @@ from unittest import TestCase
 
 import pytest
 import yaml
-from charms.pgbouncer_operator.v0 import pgb
+from charms.pgbouncer_k8s.v0 import pgb
 from pytest_operator.plugin import OpsTest
 
 from tests.integration import legacy_helpers
