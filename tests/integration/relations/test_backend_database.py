@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-PG = "postgresql"
+PG = "postgresql-k8s"
 RELATION = "backend-database"
 
 
+@pytest.mark.skip
 @pytest.mark.backend
-@pytest.mark.abort_on_fail
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
@@ -40,7 +40,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
                 charm,
                 application_name=PGB,
             ),
-            # Edge is the new postgres charm
+            # Edge 5 is the new postgres charm
             ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3),
         )
         await asyncio.gather(

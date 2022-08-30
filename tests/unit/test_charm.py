@@ -60,18 +60,18 @@ class TestCharm(unittest.TestCase):
         self.charm.on.install.emit()
 
         _install.assert_called_with(["pgbouncer"])
-        _mkdir.assert_any_call(PGB_DIR, 0o660)
+        _mkdir.assert_any_call(PGB_DIR, 0o700)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
 
         for service_id in self.charm.service_ids:
-            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o660)
+            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o700)
             _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_userlist = '"juju-admin" "test"'
         _render_configs.assert_called_once_with(initial_cfg)
-        _render_file.assert_any_call(AUTH_FILE_PATH, initial_userlist, 0o660)
+        _render_file.assert_any_call(USERLIST_PATH, initial_userlist, 0o700)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
@@ -206,7 +206,7 @@ class TestCharm(unittest.TestCase):
     def test_render_file(self, _getpwnam, _chown, _chmod):
         path = "test/test_render_file.txt"
         content = "this text file should never be written"
-        mode = 0o660
+        mode = 0o700
         with patch("builtins.open", unittest.mock.mock_open()) as _:
             self.charm.render_file(path, content, mode)
 
@@ -232,7 +232,7 @@ class TestCharm(unittest.TestCase):
             test_config = pgb.PgbConfig(ini.read())
 
         self.charm._render_pgb_config(test_config, reload_pgbouncer=False)
-        _render.assert_called_with(INI_PATH, test_config.render(), 0o660)
+        _render.assert_called_with(INI_PATH, test_config.render(), 0o700)
         _reload.assert_not_called()
 
         # Copy config and edit a value
@@ -240,11 +240,11 @@ class TestCharm(unittest.TestCase):
         reload_config["pgbouncer"]["admin_users"] = ["test_admin"]
 
         self.charm._render_pgb_config(reload_config, reload_pgbouncer=True)
-        _render.assert_called_with(INI_PATH, reload_config.render(), 0o660)
+        _render.assert_called_with(INI_PATH, reload_config.render(), 0o700)
         _reload.assert_called()
 
         self.charm._render_pgb_config(reload_config, config_path="/test/path")
-        _render.assert_called_with("/test/path", reload_config.render(), 0o660)
+        _render.assert_called_with("/test/path", reload_config.render(), 0o700)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
@@ -265,9 +265,9 @@ class TestCharm(unittest.TestCase):
 
         self.charm._render_service_configs(default_cfg, reload_pgbouncer=False)
 
-        _render.assert_any_call(INI_PATH, cfg_list[0], 0o660)
-        _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o660)
-        _render.assert_any_call(f"{PGB_DIR}/instance_1/pgbouncer.ini", cfg_list[2], 0o660)
+        _render.assert_any_call(INI_PATH, cfg_list[0], 0o700)
+        _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o700)
+        _render.assert_any_call(f"{PGB_DIR}/instance_1/pgbouncer.ini", cfg_list[2], 0o700)
 
         _reload.assert_not_called()
         # MaintenanceStatus will exit once pgbouncer reloads.
@@ -290,12 +290,12 @@ class TestCharm(unittest.TestCase):
         test_users = {"test_user": "test_pass"}
 
         self.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(test_users), 0o660)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(test_users), 0o700)
         _reload.assert_not_called()
 
         reload_users = {"reload_user": "reload_pass"}
         self.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(reload_users), 0o660)
+        _render.assert_called_with(USERLIST_PATH, pgb.generate_userlist(reload_users), 0o700)
         _reload.assert_called()
 
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
