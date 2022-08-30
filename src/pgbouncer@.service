@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=postgres
-ExecStart=/sbin/pgbouncer /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
+ExecStart=/sbin/pgbouncer -R /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 Restart=on-failure

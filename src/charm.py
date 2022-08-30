@@ -8,6 +8,7 @@ import logging
 import os
 import pwd
 import shutil
+from socket import socket
 import subprocess
 from copy import deepcopy
 from typing import Dict, List
@@ -68,13 +69,13 @@ class PgBouncerCharm(CharmBase):
         self._install_apt_packages([PGB])
 
         pg_user = pwd.getpwnam(PG_USER)
-        os.mkdir(PGB_DIR, 0o777)
+        os.mkdir(PGB_DIR, 0o600)
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
         # TODO this can be removed once socket activation is implemented (JIRA-218)
         for service_id in self.service_ids:
-            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o777)
+            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o600)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
@@ -218,7 +219,7 @@ class PgBouncerCharm(CharmBase):
             config_path: intended location for the config.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(config_path, pgbouncer_ini.render(), 0o777)
+        self._render_file(config_path, pgbouncer_ini.render(), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -239,7 +240,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o777)
+        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -387,6 +388,11 @@ class PgBouncerCharm(CharmBase):
     def unit_ip(self) -> str:
         """Current unit IP."""
         return self.model.get_binding(PEER).network.bind_address
+
+    @property
+    def unit_pod_hostname(self, name="") -> str:
+        """Creates the pod hostname from its name."""
+        return socket.getfqdn(name)
 
 
 if __name__ == "__main__":
