@@ -68,13 +68,13 @@ class PgBouncerCharm(CharmBase):
         self._install_apt_packages([PGB])
 
         pg_user = pwd.getpwnam(PG_USER)
-        os.mkdir(PGB_DIR, 0o740)
+        os.mkdir(PGB_DIR, 0o700)
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
         # TODO this can be removed once socket activation is implemented (JIRA-218)
         for service_id in self.service_ids:
-            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o740)
+            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o700)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
@@ -218,7 +218,7 @@ class PgBouncerCharm(CharmBase):
             config_path: intended location for the config.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self.render_file(config_path, pgbouncer_ini.render(), 0o740)
+        self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -239,7 +239,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o740)
+        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -364,7 +364,7 @@ class PgBouncerCharm(CharmBase):
         Args:
             path: the path to the file.
             content: the data to be written to the file.
-            mode: access permission mask applied to the file using chmod (e.g. 0o740).
+            mode: access permission mask applied to the file using chmod (e.g. 0o700).
         """
         with open(path, "w+") as file:
             file.write(content)
