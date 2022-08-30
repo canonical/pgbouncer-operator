@@ -50,27 +50,27 @@ jobs:
       #     app: pgbouncer-operator
       #     model: testing
 
-  # integration-backend:
-  #   name: Integration tests for backend relation
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-  #     - name: Setup operator environment
-  #       uses: charmed-kubernetes/actions-operator@main
-  #       with:
-  #         provider: lxd
-  #         lxd-channel: 5.4/stable
-  #     - name: Run integration tests
-  #       # TODO set a predictable model name so it can be consumed by charm-logdump-action
-  #       # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.
-  #       run: tox -e backend-integration
-  #     # - name: Dump logs
-  #     #   uses: canonical/charm-logdump-action@main
-  #     #   if: failure()
-  #     #   with:
-  #     #     app: pgbouncer-operator
-  #     #     model: testing
+  integration-backend:
+    name: Integration tests for backend relation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: lxd
+          lxd-channel: 5.4/stable
+      - name: Run integration tests
+        # TODO set a predictable model name so it can be consumed by charm-logdump-action
+        # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.
+        run: tox -e backend-integration
+      # - name: Dump logs
+      #   uses: canonical/charm-logdump-action@main
+      #   if: failure()
+      #   with:
+      #     app: pgbouncer-operator
+      #     model: testing
 
   # integration-legacy-relations:
   #   name: Integration tests for legacy relations

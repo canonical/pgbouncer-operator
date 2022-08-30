@@ -16,6 +16,7 @@ from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_operator.v0 import pgb
 from charms.pgbouncer_operator.v0.pgb import PgbConfig
+from relations.backend_database import BackendDatabaseRequires
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -46,9 +47,8 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.legacy_db_relation = DbProvides(self, admin=False)
-        self.legacy_db_admin_relation = DbProvides(self, admin=True)
-        self.legacy_backend_relation = BackendDbAdminRequires(self)
+
+        self.backend = BackendDatabaseRequires(self)
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
@@ -104,7 +104,7 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(f"{service}")
 
-            if self._has_backend_relation():
+            if self.backend.postgres:
                 self.unit.status = ActiveStatus("pgbouncer started")
             else:
                 # Wait for backend relation relation if it doesn't exist
@@ -126,7 +126,7 @@ class PgBouncerCharm(CharmBase):
                     )
                     return
 
-            if self._has_backend_relation():
+            if self.backend.postgres:
                 # All is well, set ActiveStatus
                 self.unit.status = ActiveStatus()
             else:
@@ -151,7 +151,11 @@ class PgBouncerCharm(CharmBase):
             self._cores,
         )
 
-        cfg["pgbouncer"]["listen_addr"] = str(self.unit_ip)
+        if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
+            # This emits relation-changed events to every client relation, so only do it when
+            # necessary
+            # self.update_backend_relation_port(self.config["listen_port"])
+            cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self._render_service_configs(cfg, reload_pgbouncer=True)
 
@@ -374,14 +378,6 @@ class PgBouncerCharm(CharmBase):
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
         os.chown(path, uid=u.pw_uid, gid=u.pw_gid)
-
-    def _has_backend_relation(self) -> bool:
-        """Returns whether or not this charm is related to a postgresql backend.
-
-        TODO this will be updated to include the new backend relation once it is written.
-        """
-        legacy_backend_relation = self.model.get_relation(BACKEND_DB_ADMIN)
-        return legacy_backend_relation is not None
 
     @property
     def unit_ip(self) -> str:
