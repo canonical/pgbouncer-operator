@@ -124,9 +124,9 @@ class TestDb(unittest.TestCase):
     )
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch(
-        "charm.PgBouncerCharm.unit_pod_hostname",
+        "charm.PgBouncerCharm.unit_ip",
         new_callable=PropertyMock,
-        return_value="test-host",
+        return_value="1.1.1.1",
     )
     @patch("relations.db.DbProvides.get_external_app")
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
@@ -142,7 +142,7 @@ class TestDb(unittest.TestCase):
         _allowed_subnets,
         _allowed_units,
         _external_app,
-        _hostname,
+        _ip,
         _read_cfg,
         _backend_postgres,
         _backend_dbag,
@@ -185,7 +185,7 @@ class TestDb(unittest.TestCase):
         # evaluate output
         dbconnstr = parse_dict_to_kv_string(
             {
-                "host": self.charm.unit_pod_hostname,
+                "host": self.charm.unit_ip,
                 "dbname": database,
                 "port": self.charm.config["listen_port"],
                 "user": user,
@@ -197,7 +197,7 @@ class TestDb(unittest.TestCase):
         for databag in [pgb_app_databag, pgb_unit_databag]:
             assert databag["allowed-subnets"] == _allowed_subnets.return_value
             assert databag["allowed-units"] == _allowed_units.return_value
-            assert databag["host"] == _hostname.return_value
+            assert databag["host"] == _ip.return_value
             assert databag["master"] == dbconnstr
             assert databag["port"] == str(self.charm.config["listen_port"])
             assert databag["standbys"] == dbconnstr

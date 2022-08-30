@@ -260,7 +260,7 @@ class DbProvides(Object):
                 "allowed-subnets": self.get_allowed_subnets(change_event.relation),
                 "allowed-units": self.get_allowed_units(change_event.relation),
                 "version": self.charm.backend.postgres.get_postgresql_version(),
-                "host": self.charm.unit_pod_hostname,
+                "host": self.charm.unit_ip,
                 "user": user,
                 "password": password,
                 "database": database,
@@ -281,7 +281,7 @@ class DbProvides(Object):
 
         dbconnstr = pgb.parse_dict_to_kv_string(
             {
-                "host": self.charm.unit_pod_hostname,
+                "host": self.charm.unit_ip,
                 "dbname": database,
                 "port": port,
                 "user": user,

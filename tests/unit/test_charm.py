@@ -248,7 +248,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
-    def testrender_pgb_config(self, _render, _reload):
+    def test_render_pgb_config(self, _render, _reload):
         self.charm.service_ids = [0, 1]
         default_cfg = pgb.PgbConfig(DEFAULT_CFG)
         cfg_list = [default_cfg.render()]
@@ -275,25 +275,3 @@ class TestCharm(unittest.TestCase):
 
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
         _reload.assert_called_once()
-
-    def test_read_userlist(self):
-        test_users = {"test_user": "test_pass"}
-        test_userlist = '"test_user" "test_pass"'
-
-        with patch("builtins.open", unittest.mock.mock_open(read_data=test_userlist)):
-            output = self.charm._read_userlist()
-        self.assertEqual(test_users, output)
-
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm.render_file")
-    def test_render_userlist(self, _render, _reload):
-        test_users = {"test_user": "test_pass"}
-
-        self.charm._render_userlist(test_users, reload_pgbouncer=False)
-        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(test_users), 0o700)
-        _reload.assert_not_called()
-
-        reload_users = {"reload_user": "reload_pass"}
-        self.charm._render_userlist(reload_users, reload_pgbouncer=True)
-        _render.assert_called_with(AUTH_FILE_PATH, pgb.generate_userlist(reload_users), 0o700)
-        _reload.assert_called()
