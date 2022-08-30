@@ -37,7 +37,7 @@ class TestCharm(unittest.TestCase):
     @patch("os.mkdir")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
-    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charm.PgBouncerCharm.render_file")
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("charms.pgbouncer_operator.v0.pgb.initialise_userlist_from_ini")
     @patch("shutil.copy")
@@ -149,7 +149,7 @@ class TestCharm(unittest.TestCase):
         self.charm.on.update_status.emit()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("charm.PgBouncerCharm.unit_ip")
     def test_on_config_changed(self, _unit_ip, _render, _read):
@@ -208,7 +208,7 @@ class TestCharm(unittest.TestCase):
         content = "this text file should never be written"
         mode = 0o600
         with patch("builtins.open", unittest.mock.mock_open()) as _:
-            self.charm._render_file(path, content, mode)
+            self.charm.render_file(path, content, mode)
 
         _chmod.assert_called_with(path, mode)
         _getpwnam.assert_called_with("postgres")
@@ -220,13 +220,13 @@ class TestCharm(unittest.TestCase):
             existing_config = pgb.PgbConfig(test_ini)
 
         with patch("builtins.open", unittest.mock.mock_open(read_data=test_ini)):
-            test_config = self.charm._read_pgb_config()
+            test_config = self.charm.read_pgb_config()
 
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charm.PgBouncerCharm.render_file")
     def test_render_pgb_config(self, _render, _reload):
         with open(TEST_VALID_INI, "r") as ini:
             test_config = pgb.PgbConfig(ini.read())
@@ -247,7 +247,7 @@ class TestCharm(unittest.TestCase):
         _render.assert_called_with("/test/path", reload_config.render(), 0o600)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charm.PgBouncerCharm.render_file")
     def test_render_service_configs(self, _render, _reload):
         self.charm.service_ids = [0, 1]
         default_cfg = pgb.PgbConfig(DEFAULT_CFG)
@@ -285,7 +285,7 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(test_users, output)
 
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
-    @patch("charm.PgBouncerCharm._render_file")
+    @patch("charm.PgBouncerCharm.render_file")
     def test_render_userlist(self, _render, _reload):
         test_users = {"test_user": "test_pass"}
 
@@ -300,7 +300,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.pgbouncer_operator.v0.pgb.generate_password", return_value="default-pass")
     @patch("charm.PgBouncerCharm._read_userlist", return_value={})
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_add_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist, _gen_pw):
@@ -348,7 +348,7 @@ class TestCharm(unittest.TestCase):
         assert max_cfg[PGB].get("stats_users") == default_stats + ["max-test"]
 
     @patch("charm.PgBouncerCharm._read_userlist", return_value={"test_user": ""})
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm._render_userlist")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_remove_user(self, _render_cfg, _render_userlist, _read_cfg, _read_userlist):

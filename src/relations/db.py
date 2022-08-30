@@ -102,7 +102,7 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        cfg = self.charm._read_pgb_config()
+        cfg = self.charm.read_pgb_config()
         dbs = cfg["databases"]
         if not dbs.get("pg_master"):
             # wait for backend_db_admin relation to populate config before we use it.
@@ -236,7 +236,7 @@ class DbProvides(Object):
         """
         app_databag = broken_event.relation.data[self.charm.app]
 
-        cfg = self.charm._read_pgb_config()
+        cfg = self.charm.read_pgb_config()
         dbs = cfg["databases"]
         user = app_databag["user"]
         database = app_databag["database"]

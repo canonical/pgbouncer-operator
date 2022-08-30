@@ -128,7 +128,7 @@ class BackendDbAdminRequires(Object):
         #      through a method that we can no longer use. Instead of using the main pgbouncer
         #      config file, perhaps it's a good idea to have a pgbouncer-postgres-replicas.ini
         #      file to store this info.
-        cfg = self.charm._read_pgb_config()
+        cfg = self.charm.read_pgb_config()
         dbs = cfg["databases"]
 
         if postgres_data.get("master"):
@@ -158,7 +158,7 @@ class BackendDbAdminRequires(Object):
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
-        cfg = self.charm._read_pgb_config()
+        cfg = self.charm.read_pgb_config()
 
         # Iterate through relation data to get the postgresql unit. Relation data keys are one Unit
         # and one Application for each side of the relation.
@@ -212,7 +212,7 @@ class BackendDbAdminRequires(Object):
             "DEPRECATION WARNING - backend-db-admin is a legacy relation, and will be deprecated in a future release. "
         )
 
-        cfg = self.charm._read_pgb_config()
+        cfg = self.charm.read_pgb_config()
         dbs = cfg["databases"]
 
         dbs.pop("pg_master", None)

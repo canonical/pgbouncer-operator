@@ -25,7 +25,7 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         self.relation = self.harness.charm.legacy_backend_relation
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")
@@ -66,7 +66,7 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         _trigger_relations.assert_called()
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(pgb.DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.add_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")
@@ -96,7 +96,7 @@ class TestBackendDbAdmin(unittest.TestCase):
 
         _trigger_relations.assert_called_once()
 
-    @patch("charm.PgBouncerCharm._read_pgb_config")
+    @patch("charm.PgBouncerCharm.read_pgb_config")
     @patch("charm.PgBouncerCharm.remove_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     @patch("relations.backend_db_admin.BackendDbAdminRequires._trigger_db_relations")

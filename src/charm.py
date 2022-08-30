@@ -144,7 +144,7 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
-        cfg = self._read_pgb_config()
+        cfg = self.read_pgb_config()
         cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
         cfg.set_max_db_connection_derivatives(
@@ -160,7 +160,7 @@ class PgBouncerCharm(CharmBase):
     #  PgBouncer-Specific Utilities
     # ==============================
 
-    def _read_pgb_config(self) -> pgb.PgbConfig:
+    def read_pgb_config(self) -> pgb.PgbConfig:
         """Get config object from pgbouncer.ini file.
 
         Returns:
@@ -219,7 +219,7 @@ class PgBouncerCharm(CharmBase):
             config_path: intended location for the config.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(config_path, pgbouncer_ini.render(), 0o600)
+        self.render_file(config_path, pgbouncer_ini.render(), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -240,7 +240,7 @@ class PgBouncerCharm(CharmBase):
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
+        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o600)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -269,7 +269,7 @@ class PgBouncerCharm(CharmBase):
             render_cfg: whether or not to render config
         """
         if not cfg:
-            cfg = self._read_pgb_config()
+            cfg = self.read_pgb_config()
         userlist = self._read_userlist()
 
         # Userlist is key-value dict of users and passwords.
@@ -309,7 +309,7 @@ class PgBouncerCharm(CharmBase):
             render_cfg: whether or not to render config
         """
         if not cfg:
-            cfg = self._read_pgb_config()
+            cfg = self.read_pgb_config()
         userlist = self._read_userlist()
 
         if user not in userlist.keys():
@@ -359,7 +359,7 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("failed to install packages")
 
-    def _render_file(self, path: str, content: str, mode: int) -> None:
+    def render_file(self, path: str, content: str, mode: int) -> None:
         """Write content rendered from a template to a file.
 
         Args:
