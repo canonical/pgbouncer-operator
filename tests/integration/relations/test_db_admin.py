@@ -48,7 +48,6 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
 
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "pg_master" in list(cfg["databases"].keys())
     assert "cli" in cfg["databases"].keys()
 
 
@@ -72,14 +71,7 @@ async def test_add_replicas(ops_test: OpsTest):
         )
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    expected_databases = [
-        "pg_master",
-        "pgb_postgres_standby_0",
-        "pgb_postgres_standby_1",
-        "cli",
-        "cli_standby_0",
-        "cli_standby_1",
-    ]
+    expected_databases = ["cli", "cli_standby_0"]
     for database in expected_databases:
         assert database in cfg["databases"].keys()
 
@@ -128,7 +120,6 @@ async def test_remove_db_admin_leader(ops_test: OpsTest):
         )
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
 
@@ -144,7 +135,6 @@ async def test_remove_backend_leader(ops_test: OpsTest):
         )
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
 
@@ -158,5 +148,4 @@ async def test_remove_db_admin_legacy_relation(ops_test: OpsTest):
 
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
