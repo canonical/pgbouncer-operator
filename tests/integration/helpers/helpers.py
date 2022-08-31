@@ -95,11 +95,15 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
 
 async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -> str:
     """Gets a file from the pgbouncer container of a pgbouncer application unit."""
-    cat_cmd = f"ssh {unit_name} cat {filepath}"
+    cat_cmd = f"ssh {unit_name} sudo cat {filepath}"
     return_code, output, _ = await ops_test.juju(*cat_cmd.split(" "))
     if return_code != 0:
         raise ProcessError(
-            "Expected cat command %s to succeed instead it failed: %s", cat_cmd, return_code
+            "Expected cat command %s to succeed instead it failed: %s %s %s",
+            cat_cmd,
+            return_code,
+            output,
+            _,
         )
     return output
 
