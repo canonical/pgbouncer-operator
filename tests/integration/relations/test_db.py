@@ -37,12 +37,17 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
             # Deploy a psql client shell charm
             ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
         )
-        await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
         await asyncio.gather(
-            # Add relations
-            ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db"),
-            ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database"),
+            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="blocked", timeout=1000)
         )
+        await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database"),
+
+        await asyncio.gather(
+            ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000)
+        )
+        await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units[f"{PGB}/0"]

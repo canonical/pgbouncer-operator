@@ -14,7 +14,6 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_user_pass,
     get_cfg,
-    get_pgb_log,
     wait_for_relation_joined_between,
     wait_for_relation_removed_between,
 )
