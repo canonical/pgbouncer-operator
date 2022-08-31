@@ -5,7 +5,7 @@ import os
 import subprocess
 import unittest
 from copy import deepcopy
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import ops.testing
 from charms.operator_libs_linux.v0 import apt
@@ -70,7 +70,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
-    @patch("relations.backend_database.BackendDatabaseRequires.postgres", return_value=None)
+    @patch("relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock, return_value=None)
     def test_on_start(self, _has_relation, _start):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
@@ -114,7 +114,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
-    @patch("relations.backend_database.BackendDatabaseRequires.postgres", return_value=None)
+    @patch("relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock, return_value=None)
     def test_on_update_status(self, _has_relation, _running):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
