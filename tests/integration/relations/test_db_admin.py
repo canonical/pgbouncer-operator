@@ -72,7 +72,7 @@ async def test_add_replicas(ops_test: OpsTest):
         )
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    expected_databases = ["cli", "cli_standby_0"]
+    expected_databases = ["cli", "cli_standby"]
     for database in expected_databases:
         assert database in cfg["databases"].keys()
 

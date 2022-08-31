@@ -57,6 +57,7 @@ from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,
+    PostgreSQLDeleteUserError,
 )
 from ops.charm import (
     CharmBase,
@@ -431,13 +432,20 @@ class DbProvides(Object):
                     # we can guarantee this is the last one.
                     delete_db = False
                     break
+            if not delete_db:
+                break
         if delete_db:
-            del cfg["databases"][database]
+            cfg["databases"].pop(database, None)
             cfg["databases"].pop(f"{database}_standby", None)
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
-        self.charm.backend.postgres.delete_user(user)
+        try:
+            self.charm.backend.postgres.delete_user(user)
+        except PostgreSQLDeleteUserError:
+            # We've likely lost connection at this point, and can't do anything about a trailing
+            # user.
+            pass
 
     def get_allowed_subnets(self, relation: Relation) -> str:
         """Gets the allowed subnets from this relation."""
