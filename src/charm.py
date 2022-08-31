@@ -275,7 +275,7 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("failed to install packages")
 
-    def render_file(self, path: str, content: str, mode: int) -> None:
+    def render_file(self, path: str, content: str, perms: int) -> None:
         """Write content rendered from a template to a file.
 
         Args:
@@ -286,7 +286,7 @@ class PgBouncerCharm(CharmBase):
         with open(path, "w+") as file:
             file.write(content)
         # Ensure correct permissions are set on the file.
-        os.chmod(path, mode)
+        os.chmod(path, perms)
         # Get the uid/gid for the postgres user.
         u = pwd.getpwnam(PG_USER)
         # Set the correct ownership for the file.
