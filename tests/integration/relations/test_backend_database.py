@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-PG = "postgresql-k8s"
+PG = "postgresql"
 RELATION = "backend-database"
 
 

@@ -33,7 +33,7 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
                 charm,
                 application_name=PGB,
             ),
-            ops_test.model.deploy(PG),
+            ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3),
             # Deploy a psql client shell charm
             ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
         )
