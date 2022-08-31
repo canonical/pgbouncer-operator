@@ -71,7 +71,7 @@ async def test_change_config(ops_test: OpsTest):
     expected_cfg.set_max_db_connection_derivatives(44, cores)
     expected_cfg["pgbouncer"]["listen_addr"] = unit.public_address
 
-    primary_cfg = await helpers.get_cfg(unit)
+    primary_cfg = await helpers.get_cfg(ops_test, unit)
     existing_cfg = pgb.PgbConfig(primary_cfg)
 
     TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))

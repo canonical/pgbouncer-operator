@@ -40,12 +40,12 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
         await asyncio.gather(
             # Add relations
             ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db"),
-            ops_test.model.add_relation(f"{PGB}:backend-db-admin", f"{PG}:db-admin"),
+            ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database"),
         )
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
+    cfg = await helpers.get_cfg(ops_test, "pgbouncer-operator/0")
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
@@ -69,7 +69,7 @@ async def test_add_replicas(ops_test: OpsTest):
             ops_test.model.wait_for_idle(apps=[PGB], status="active"),
         )
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
+    cfg = await helpers.get_cfg(ops_test, "pgbouncer-operator/0")
     expected_databases = [
         "pg_master",
         "pgb_postgres_standby_0",
@@ -125,7 +125,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
             ),
         )
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
+    cfg = await helpers.get_cfg(ops_test, "pgbouncer-operator/0")
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
@@ -141,7 +141,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
             ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
         )
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
+    cfg = await helpers.get_cfg(ops_test, "pgbouncer-operator/0")
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
@@ -154,7 +154,7 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
     unit = ops_test.model.units["pgbouncer-operator/0"]
-    cfg = await helpers.get_cfg(unit)
+    cfg = await helpers.get_cfg(ops_test, "pgbouncer-operator/0")
     assert "pg_master" in cfg["databases"].keys()
     assert "cli" not in cfg["databases"].keys()
 
