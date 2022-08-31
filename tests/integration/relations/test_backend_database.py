@@ -83,6 +83,6 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
         except RetryError:
             assert False, "pgbouncer config files failed to update in 3 minutes"
 
-        cfg = await get_cfg(ops_test, "pgbouncer-operator/0")
+        cfg = await get_cfg(ops_test, f"{PGB}/0")
         logging.info(cfg.render())
         logger.info(await get_pgb_log(ops_test))

@@ -9,18 +9,16 @@ from unittest import TestCase
 
 import pytest
 import yaml
-from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
+from constants import PGB_DIR
 from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-
-PGB_DIR = pgb.PGB_DIR
-INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
 
 
 @pytest.mark.abort_on_fail
@@ -45,7 +43,6 @@ async def test_build_and_deploy(ops_test: OpsTest):
     )
 
 
-@pytest.mark.dev
 @pytest.mark.standalone
 @pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
@@ -67,24 +64,20 @@ async def test_change_config(ops_test: OpsTest):
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await helpers.get_unit_cores(unit)
 
-    expected_cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+    expected_cfg = PgbConfig(DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
-    expected_cfg["pgbouncer"]["listen_addr"] = unit.public_address
 
     primary_cfg = await helpers.get_cfg(ops_test, unit.name)
-    existing_cfg = pgb.PgbConfig(primary_cfg)
+    existing_cfg = PgbConfig(primary_cfg)
 
-    logging.error(existing_cfg)
-    logging.error(primary_cfg)
+    assert existing_cfg.render() == primary_cfg.render()
 
-    TestCase().assertDictEqual(dict(existing_cfg), dict(expected_cfg))
-
-    # Validating service config files are correctly written is handled by _render_service_config
-    # and its tests, but we need to make sure they at least exist in the right places.
+    # Validating service config files are correctly written is handled by render_pgb_config and its
+    # tests, but we need to make sure they at least exist in the right places.
     for service_id in range(cores):
         path = f"{PGB_DIR}/instance_{service_id}/pgbouncer.ini"
-        service_cfg = await helpers.cat_from(unit, path)
+        service_cfg = await helpers.get_cfg(ops_test, unit.name, path=path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
