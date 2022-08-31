@@ -55,10 +55,7 @@ async def test_add_replicas(ops_test: OpsTest):
     # We have to scale up backend because otherwise psql enters a waiting status for every unit
     # that doesn't have a backend unit.
     async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.applications[PG].add_units(count=2),
-            ops_test.model.applications[PSQL].add_units(count=2),
-        )
+        await ops_test.model.applications[PSQL].add_units(count=2),
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
@@ -71,9 +68,6 @@ async def test_add_replicas(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
     expected_databases = [
-        "pg_master",
-        "pgb_postgres_standby_0",
-        "pgb_postgres_standby_1",
         "cli",
         "cli_standby_0",
         "cli_standby_1",
