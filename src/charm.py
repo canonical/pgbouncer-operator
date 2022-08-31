@@ -281,7 +281,7 @@ class PgBouncerCharm(CharmBase):
         Args:
             path: the path to the file.
             content: the data to be written to the file.
-            mode: access permission mask applied to the file using chmod (e.g. 0o700).
+            perms: access permission mask applied to the file using chmod (e.g. 0o700).
         """
         with open(path, "w+") as file:
             file.write(content)
