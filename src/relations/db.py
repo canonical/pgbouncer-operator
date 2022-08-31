@@ -18,34 +18,34 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │        database │ waltz                                      │ waltz         │
 │                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
 │                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_id_3  │               │
+│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
 │                  │                 │ fallback_application_name=finos-waltz      │               │
 │                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
 │                  │            port │ 6432                                       │               │
 │                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_id_3  │               │
+│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
 │                  │                 │ fallback_application_name=finos-waltz      │               │
 │                  │           state │ master                                     │               │
-│                  │            user │ relation_id_3                              │               │
+│                  │            user │ relation_3                                 │               │
 │                  │         version │ 12.11                                      │               │
 │ unit data        │ allowed-subnets │ 10.152.183.122/32                          │               │
 │                  │   allowed-units │ pgbouncer-k8s/0                            │               │
 │                  │        database │ waltz                                      │ waltz         │
 │                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
 │                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_id_3  │               │
+│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
 │                  │                 │ fallback_application_name=finos-waltz      │               │
 │                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
 │                  │            port │ 6432                                       │               │
 │                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_id_3  │               │
+│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
 │                  │                 │ fallback_application_name=finos-waltz      │               │
 │                  │           state │ master                                     │               │
-│                  │            user │ relation_id_3                              │               │
+│                  │            user │ relation_3                                 │               │
 │                  │         version │ 12.11                                      │               │
 └──────────────────┴─────────────────┴────────────────────────────────────────────┴───────────────┘
 """
@@ -134,9 +134,6 @@ class DbProvides(Object):
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
-        if not self.charm.unit.is_leader():
-            return
-
         if not self.charm.backend.postgres:
             # We can't relate an app to the backend database without a backend postgres relation
             wait_str = "waiting for backend-database relation to connect"
@@ -159,10 +156,22 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        remote_app_databag = join_event.relation.data[join_event.app]
+        remote_databag = join_event.relation.data[join_event.app]
+
+        database = remote_databag.get("database")
+        if not database:
+            # If the database field isn't populated, the remote app may be using the unit databag.
+            remote_databag = join_event.relation.data[join_event.unit]
+            database = remote_databag.get("database")
+
+            if not database:
+                # If there's nothing in either databag, break.
+                logger.warning("No database name provided in app databag")
+                join_event.defer()
+                return
 
         # Do not allow apps requesting extensions to be installed.
-        if "extensions" in remote_app_databag:
+        if "extensions" in remote_databag:
             logger.error(
                 "ERROR - `extensions` cannot be requested through relations"
                 " - they should be installed through a database charm config in the future"
@@ -170,12 +179,6 @@ class DbProvides(Object):
             self.charm.unit.status = BlockedStatus(
                 "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
             )
-            return
-
-        database = remote_app_databag.get("database")
-        if database is None:
-            logger.warning("No database name provided in app databag")
-            join_event.defer()
             return
 
         user = self._generate_username(join_event)
@@ -348,7 +351,7 @@ class DbProvides(Object):
         app_name = self.charm.app.name
         relation_id = event.relation.id
         model_name = self.model.name
-        return f"{app_name}_user_id_{relation_id}_{model_name}".replace("-", "_")
+        return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 
     def _get_read_only_endpoint(self):
         """Get a read-only-endpoint from backend relation.

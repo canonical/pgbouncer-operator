@@ -25,7 +25,7 @@ TODO update example data to work as VM data.
 │                  │                  │ "read-only-endp… │                  │
 │                  │                  │ "postgresql-k8s… │                  │
 │                  │                  │ "username":      │                  │
-│                  │                  │ "relation_id_18… │                  │
+│                  │                  │ "relation_18…    │                  │
 │                  │                  │ "version":       │                  │
 │                  │                  │ "12.9"}          │                  │
 │                  │         database │ pgbouncer        │                  │
@@ -33,7 +33,7 @@ TODO update example data to work as VM data.
 │                  │ extra-user-roles │ SUPERUSER        │                  │
 │                  │         password │                  │ 18cqKCp19xOPBhk9 │
 │                  │ read-only-endpo… │                  │ postgresql-k8s-… │
-│                  │         username │                  │ relation_id_18   │
+│                  │         username │                  │ relation_18      │
 │                  │          version │                  │ 12.9             │
 └──────────────────┴──────────────────┴──────────────────┴──────────────────┘
 """

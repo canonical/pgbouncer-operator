@@ -88,7 +88,7 @@ class TestDb(unittest.TestCase):
         mock_event.relation.id = 1
 
         database = "test_db"
-        user = "pgbouncer_operator_user_id_1_None"
+        user = "pgbouncer_operator_user_1_None"
         password = _gen_pw.return_value
 
         relation_data = mock_event.relation.data = {}

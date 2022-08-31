@@ -54,7 +54,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000),
 
         cfg = await get_cfg(ops_test, "pgbouncer-operator/0")
-        logging.info(cfg.render())
+        logger.info(cfg.render())
         pgb_user, pgb_password = await get_backend_user_pass(ops_test, relation)
         assert pgb_user in cfg["pgbouncer"]["admin_users"]
         assert cfg["pgbouncer"]["auth_query"]
@@ -66,7 +66,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
             f"{PGB}:{RELATION}", f"{PG}:database"
         )
         pgb_unit = ops_test.model.applications[PGB].units[0]
-        logging.info(await get_app_relation_databag(ops_test, pgb_unit.name, relation.id))
+        logger.info(await get_app_relation_databag(ops_test, pgb_unit.name, relation.id))
         wait_for_relation_removed_between(ops_test, PG, PGB)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
@@ -89,5 +89,5 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
             assert False, "pgbouncer config files failed to update in 3 minutes"
 
         cfg = await get_cfg(ops_test, f"{PGB}/0")
-        logging.info(cfg.render())
-        logger.info(await get_pgb_log(ops_test))
+        logger.info(cfg.render())
+        logger.info(await get_pgb_log(ops_test, pgb_unit.name))
