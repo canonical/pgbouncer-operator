@@ -41,13 +41,13 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
         )
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
-            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="blocked", timeout=1000)
+            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="blocked", timeout=1000),
         )
         await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database"),
 
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000),
-            ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000)
+            ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000),
         )
         await ops_test.model.add_relation(f"{PGB}:db-admin", f"{PSQL}:db"),
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
