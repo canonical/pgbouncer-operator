@@ -52,7 +52,6 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
 
     unit = ops_test.model.units[f"{PGB}/0"]
     cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "pg_master" in cfg["databases"].keys()
     assert "cli" in cfg["databases"].keys()
 
 
