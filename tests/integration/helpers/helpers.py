@@ -302,8 +302,9 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
 
     # Relate application to PostgreSQL.
     relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation}")
+    await wait_for_relation_joined_between(ops_test, PGB, application_name)
     await ops_test.model.wait_for_idle(
-        apps=[application_name],
+        apps=[application_name, PG, PGB],
         status="active",
         raise_on_blocked=False,  # Application that needs a relation is blocked initially.
         timeout=1000,
@@ -354,7 +355,7 @@ async def deploy_and_relate_bundle_with_pgbouncer_bundle(
     # Relate application to Pgbouncer.
     relation_name = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation_name}")
     await ops_test.model.wait_for_idle(
-        apps=[application_name],
+        apps=[application_name, PG, PGB],
         status="active",
         timeout=1000,
     )
