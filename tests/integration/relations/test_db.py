@@ -1,154 +1,146 @@
+#!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-
-import asyncio
 import logging
-from pathlib import Path
 
-import pytest
-import yaml
+import psycopg2 as psycopg2
+import pytest as pytest
+from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
 
+from constants import PG
 from tests.integration.helpers.helpers import (
-    deploy_postgres_bundle,
-    get_cfg,
-    wait_for_relation_joined_between,
+    deploy_and_relate_application_with_pgbouncer_bundle,
+)
+from tests.integration.helpers.postgresql_helpers import (
+    build_connection_string,
+    check_database_users_existence,
+    check_databases_creation,
 )
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-PGB = METADATA["name"]
-PG = "postgresql"
-PSQL = "psql"
-APPS = [PG, PGB, PSQL]
+MAILMAN3_CORE_APP_NAME = "mailman3-core"
+APPLICATION_UNITS = 1
+DATABASE_UNITS = 2
+RELATION_NAME = "db"
 
 
+@pytest.mark.legacy_relation
+async def test_mailman3_core_db(ops_test: OpsTest) -> None:
+    """Deploy Mailman3 Core to test the 'db' relation."""
+    async with ops_test.fast_forward():
+
+        # Extra config option for Mailman3 Core.
+        config = {"hostname": "example.org"}
+        # Deploy and test the deployment of Mailman3 Core.
+        relation_id = await deploy_and_relate_application_with_pgbouncer_bundle(
+            ops_test,
+            "mailman3-core",
+            MAILMAN3_CORE_APP_NAME,
+            APPLICATION_UNITS,
+            config,
+        )
+        await check_databases_creation(ops_test, ["mailman3"])
+
+        mailman3_core_users = [f"relation-{relation_id}"]
+
+        await check_database_users_existence(ops_test, mailman3_core_users, [])
+
+        # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
+        mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
+        action = await mailman_unit.run("mailman info")
+        result = action.results.get("Stdout", None)
+        assert "db url: postgres://" in result
+
+        # Do some CRUD operations using Mailman3 Core client.
+        domain_name = "canonical.com"
+        list_name = "postgresql-list"
+        credentials = (
+            result.split("credentials: ")[1].strip().split(":")
+        )  # This outputs a list containing username and password.
+        client = Client(
+            f"http://{mailman_unit.public_address}:8001/3.1", credentials[0], credentials[1]
+        )
+
+        # Create a domain and list the domains to check that the new one is there.
+        domain = client.create_domain(domain_name)
+        assert domain_name in [domain.mail_host for domain in client.domains]
+
+        # Update the domain by creating a mailing list into it.
+        mailing_list = domain.create_list(list_name)
+        assert mailing_list.fqdn_listname in [
+            mailing_list.fqdn_listname for mailing_list in domain.lists
+        ]
+
+        # Delete the domain and check that the change was persisted.
+        domain.delete()
+        assert domain_name not in [domain.mail_host for domain in client.domains]
+
+
+# Skipping scaling test until scaling is implemented.
+@pytest.mark.skip
+@pytest.mark.legacy_relation
 @pytest.mark.dev
-@pytest.mark.smoke
-@pytest.mark.abort_on_fail
-@pytest.mark.legacy_relation
-async def test_create_db_legacy_relation(ops_test: OpsTest):
-    """Test that the pgbouncer and postgres charms can relate to one another."""
-    # Build, deploy, and relate charms.
-    await deploy_postgres_bundle(ops_test)
+async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest):
+    """Test that relation data, like connection data, is updated correctly when scaling."""
+    # Retrieve the list of current database unit names.
+    units_to_remove = [unit.name for unit in ops_test.model.applications[PG].units]
+
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(
-            "postgresql-charmers-postgresql-client", application_name=PSQL
-        ),
-        await ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000),
-
-        await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
-        wait_for_relation_joined_between(ops_test, PGB, PSQL)
-        await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
-
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await get_cfg(ops_test, unit.name)
-    assert "cli" in cfg["databases"].keys()
-
-
-@pytest.mark.legacy_relation
-async def test_add_replicas(ops_test: OpsTest):
-    # We have to scale up backend because otherwise psql enters a waiting status for every unit
-    # that doesn't have a backend unit.
-    async with ops_test.fast_forward():
-        await ops_test.model.applications[PSQL].add_units(count=2),
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=3
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="active"),
-        )
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await get_cfg(ops_test, unit.name)
-    expected_databases = ["cli", "cli_standby"]
-    for database in expected_databases:
-        assert database in cfg["databases"].keys()
-
-
-@pytest.mark.legacy_relation
-async def test_remove_db_unit(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("psql/1")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=2
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[PG, PGB],
-                status="active",
-                timeout=1000,
-            ),
+        # Add two more units.
+        await ops_test.model.applications[PG].add_units(2)
+        await ops_test.model.wait_for_idle(
+            apps=[PG], status="active", timeout=1000, wait_for_exact_units=4
         )
 
-
-@pytest.mark.legacy_relation
-async def test_remove_backend_unit(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("postgresql/1")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=2
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
+        # Remove the original units.
+        await ops_test.model.applications[PG].destroy_units(*units_to_remove)
+        await ops_test.model.wait_for_idle(
+            apps=[PG], status="active", timeout=3000, wait_for_exact_units=2
         )
 
-
-@pytest.mark.legacy_relation
-async def test_remove_db_leader(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("psql/0")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=1
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[PG, PGB],
-                status="active",
-                timeout=1000,
-            ),
+        # Get the updated connection data and assert it can be used
+        # to write and read some data properly.
+        primary_connection_string = await build_connection_string(
+            ops_test, MAILMAN3_CORE_APP_NAME, RELATION_NAME
         )
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await get_cfg(ops_test, unit.name)
-    assert "cli" in cfg["databases"].keys()
-
-
-@pytest.mark.legacy_relation
-async def test_remove_backend_leader(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("postgresql/0")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=1
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
+        replica_connection_string = await build_connection_string(
+            ops_test, MAILMAN3_CORE_APP_NAME, RELATION_NAME, read_only_endpoint=True
         )
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await get_cfg(ops_test, unit.name)
-    assert "cli" in cfg["databases"].keys()
 
+        # Connect to the database using the primary connection string.
+        with psycopg2.connect(primary_connection_string) as connection:
+            connection.autocommit = True
+            with connection.cursor() as cursor:
+                # Check that it's possible to write and read data from the database that
+                # was created for the application.
+                cursor.execute("DROP TABLE IF EXISTS test;")
+                cursor.execute("CREATE TABLE test(data TEXT);")
+                cursor.execute("INSERT INTO test(data) VALUES('some data');")
+                cursor.execute("SELECT data FROM test;")
+                data = cursor.fetchone()
+                assert data[0] == "some data"
+        connection.close()
 
-@pytest.mark.legacy_relation
-async def test_remove_db_legacy_relation(ops_test: OpsTest):
-    """Test that removing relations still works ok."""
-    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{PSQL}:db")
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
+        # Connect to the database using the replica endpoint.
+        with psycopg2.connect(replica_connection_string) as connection:
+            with connection.cursor() as cursor:
+                # Read some data.
+                cursor.execute("SELECT data FROM test;")
+                data = cursor.fetchone()
+                assert data[0] == "some data"
 
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await get_cfg(ops_test, unit.name)
-    assert "cli" not in cfg["databases"].keys()
+                # Try to alter some data in a read-only transaction.
+                with pytest.raises(psycopg2.errors.ReadOnlySqlTransaction):
+                    cursor.execute("DROP TABLE test;")
+        connection.close()
 
-
-@pytest.mark.legacy_relation
-async def test_delete_db_application_while_in_legacy_relation(ops_test: OpsTest):
-    """Test that the pgbouncer charm stays online when the db disconnects for some reason."""
-    async with ops_test.fast_forward():
-        await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
-        await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
-
-        await ops_test.model.remove_application(PSQL)
-        await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
+        # Remove the relation and test that its user was deleted
+        # (by checking that the connection string doesn't work anymore).
+        await ops_test.model.applications[PG].remove_relation(
+            f"{PG}:{RELATION_NAME}", f"{MAILMAN3_CORE_APP_NAME}:{RELATION_NAME}"
+        )
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
+        with pytest.raises(psycopg2.OperationalError):
+            psycopg2.connect(primary_connection_string)
