@@ -471,7 +471,7 @@ class DbProvides(Object):
                 [
                     unit.name
                     for unit in relation.data
-                    if isinstance(unit, Unit) and not unit.app != self.charm.app
+                    if isinstance(unit, Unit) and unit.app != self.charm.app
                 ]
             )
         )
