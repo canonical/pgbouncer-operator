@@ -33,7 +33,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, charm: str) -> No
     config = {
         "extra-packages": "python-apt postgresql-contrib postgresql-.*-debversion postgresql-plpython.*"
     }
-    deploy_postgres_bundle(ops_test, pg_config=config)
+    await deploy_postgres_bundle(ops_test, pg_config=config)
 
     async with ops_test.fast_forward():
         ops_test.model.deploy()

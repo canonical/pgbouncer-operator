@@ -31,7 +31,7 @@ APPS = [PG, PGB, PSQL]
 async def test_create_db_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    deploy_postgres_bundle(ops_test)
+    await deploy_postgres_bundle(ops_test)
     async with ops_test.fast_forward():
         await ops_test.model.deploy(
             "postgresql-charmers-postgresql-client", application_name=PSQL
