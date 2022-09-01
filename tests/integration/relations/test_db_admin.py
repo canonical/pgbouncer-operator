@@ -37,7 +37,6 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     await deploy_postgres_bundle(ops_test, pg_config=config)
 
     async with ops_test.fast_forward():
-        ops_test.model.deploy()
         # Deploy and test the Landscape Scalable bundle (using this charm).
         relation_id = await deploy_and_relate_bundle_with_pgbouncer_bundle(
             ops_test, LANDSCAPE_SCALABLE_BUNDLE_NAME, LANDSCAPE_APP_NAME, relation_name="db-admin"

@@ -27,7 +27,6 @@ PG = "postgresql"
 RELATION = "backend-database"
 
 
-@pytest.mark.dev
 @pytest.mark.backend
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""

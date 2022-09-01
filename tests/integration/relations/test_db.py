@@ -12,6 +12,7 @@ from constants import PG
 from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
+    get_backend_user_pass,
 )
 from tests.integration.helpers.postgresql_helpers import (
     build_connection_string,
@@ -31,7 +32,7 @@ RELATION_NAME = "db"
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
-    await deploy_postgres_bundle(ops_test)
+    backend_relation = await deploy_postgres_bundle(ops_test)
 
     async with ops_test.fast_forward():
         # Extra config option for Mailman3 Core.
@@ -44,7 +45,8 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
             APPLICATION_UNITS,
             config,
         )
-        await check_databases_creation(ops_test, ["mailman3"])
+        pgb_user, pgb_pass = get_backend_user_pass(ops_test, backend_relation)
+        await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)
 
         mailman3_core_users = [f"relation-{relation_id}"]
 
