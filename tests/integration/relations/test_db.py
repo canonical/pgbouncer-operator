@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration.helpers import helpers
+from tests.integration.helpers.helpers import deploy_postgres_bundle, get_cfg,wait_for_relation_joined_between
 
 logger = logging.getLogger(__name__)
 
@@ -19,39 +19,24 @@ PG = "postgresql"
 PSQL = "psql"
 APPS = [PG, PGB, PSQL]
 
-
+@pytest.mark.dev
 @pytest.mark.smoke
 @pytest.mark.abort_on_fail
 @pytest.mark.legacy_relation
 async def test_create_db_legacy_relation(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
+    deploy_postgres_bundle(ops_test)
     async with ops_test.fast_forward():
-        charm = await ops_test.build_charm(".")
-        await asyncio.gather(
-            ops_test.model.deploy(
-                charm,
-                application_name=PGB,
-            ),
-            ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3),
-            # Deploy a psql client shell charm
-            ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
-        )
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
-            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="blocked", timeout=1000),
-        )
-        await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database"),
+        await ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
+        await ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000),
 
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000),
-            ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000),
-        )
         await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")
+        wait_for_relation_joined_between(ops_test, PGB, PSQL)
         await ops_test.model.wait_for_idle(apps=APPS, status="active", timeout=1000)
 
     unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
+    cfg = await get_cfg(ops_test, unit.name)
     assert "cli" in cfg["databases"].keys()
 
 
@@ -71,7 +56,7 @@ async def test_add_replicas(ops_test: OpsTest):
             ops_test.model.wait_for_idle(apps=[PGB], status="active"),
         )
     unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
+    cfg = await get_cfg(ops_test, unit.name)
     expected_databases = ["cli", "cli_standby"]
     for database in expected_databases:
         assert database in cfg["databases"].keys()
@@ -120,7 +105,7 @@ async def test_remove_db_leader(ops_test: OpsTest):
             ),
         )
     unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
+    cfg = await get_cfg(ops_test, unit.name)
     assert "cli" in cfg["databases"].keys()
 
 
@@ -135,7 +120,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
             ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
         )
     unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
+    cfg = await get_cfg(ops_test, unit.name)
     assert "cli" in cfg["databases"].keys()
 
 
@@ -147,7 +132,7 @@ async def test_remove_db_legacy_relation(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
 
     unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
+    cfg = await get_cfg(ops_test, unit.name)
     assert "cli" not in cfg["databases"].keys()
 
 

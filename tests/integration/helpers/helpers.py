@@ -7,6 +7,8 @@ from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
 
+import asyncio
+
 import yaml
 from charms.pgbouncer_k8s.v0 import pgb
 from pytest_operator.plugin import OpsTest
@@ -16,8 +18,7 @@ from constants import AUTH_FILE_PATH, INI_PATH, LOG_PATH
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-
-# TODO organise this file
+PG = "postgresql"
 
 
 async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
@@ -225,3 +226,29 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
         if endpoint_one not in endpoints and endpoint_two not in endpoints:
             return True
     return False
+
+
+async def deploy_postgres_bundle(ops_test: OpsTest) -> str:
+    """Build pgbouncer charm, deploy and relate it to postgresql charm.
+
+    Returns:
+        Relation object describing the relation between pgbouncer and postgres.
+    """
+    charm = await ops_test.build_charm(".")
+    async with ops_test.fast_forward():
+        await asyncio.gather(
+            ops_test.model.deploy(
+                charm,
+                application_name=PGB,
+            ),
+            ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3)
+        )
+        await asyncio.gather(
+            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
+        )
+        relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
+        wait_for_relation_joined_between(ops_test, PG, PGB)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
+
+        return relation
