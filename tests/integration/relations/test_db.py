@@ -9,7 +9,11 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from tests.integration.helpers.helpers import deploy_postgres_bundle, get_cfg,wait_for_relation_joined_between
+from tests.integration.helpers.helpers import (
+    deploy_postgres_bundle,
+    get_cfg,
+    wait_for_relation_joined_between,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +22,7 @@ PGB = METADATA["name"]
 PG = "postgresql"
 PSQL = "psql"
 APPS = [PG, PGB, PSQL]
+
 
 @pytest.mark.dev
 @pytest.mark.smoke
@@ -28,7 +33,9 @@ async def test_create_db_legacy_relation(ops_test: OpsTest):
     # Build, deploy, and relate charms.
     deploy_postgres_bundle(ops_test)
     async with ops_test.fast_forward():
-        await ops_test.model.deploy("postgresql-charmers-postgresql-client", application_name=PSQL),
+        await ops_test.model.deploy(
+            "postgresql-charmers-postgresql-client", application_name=PSQL
+        ),
         await ops_test.model.wait_for_idle(apps=[PSQL], status="blocked", timeout=1000),
 
         await ops_test.model.add_relation(f"{PGB}:db", f"{PSQL}:db")

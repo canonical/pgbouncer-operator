@@ -11,12 +11,11 @@ from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from tests.integration.helpers.helpers import (
+    deploy_postgres_bundle,
     get_app_relation_databag,
     get_backend_user_pass,
     get_cfg,
-    wait_for_relation_joined_between,
     wait_for_relation_removed_between,
-    deploy_postgres_bundle
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
 
@@ -43,9 +42,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     await check_database_users_existence(ops_test, [pgb_user], [], pgb_user, pgb_password)
 
     # Remove relation but keep pg application because we're going to need it for future tests.
-    await ops_test.model.applications[PG].remove_relation(
-        f"{PGB}:{RELATION}", f"{PG}:database"
-    )
+    await ops_test.model.applications[PG].remove_relation(f"{PGB}:{RELATION}", f"{PG}:database")
     pgb_unit = ops_test.model.applications[PGB].units[0]
     logger.info(await get_app_relation_databag(ops_test, pgb_unit.name, relation.id))
     wait_for_relation_removed_between(ops_test, PG, PGB)

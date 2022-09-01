@@ -2,12 +2,13 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import asyncio
 import json
+import tempfile
+import zipfile
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
-
-import asyncio
 
 import yaml
 from charms.pgbouncer_k8s.v0 import pgb
@@ -228,11 +229,11 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
     return False
 
 
-async def deploy_postgres_bundle(ops_test: OpsTest) -> str:
+async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
 
     Returns:
-        Relation object describing the relation between pgbouncer and postgres.
+        libjuju Relation object describing the relation between pgbouncer and postgres.
     """
     charm = await ops_test.build_charm(".")
     async with ops_test.fast_forward():
@@ -241,7 +242,13 @@ async def deploy_postgres_bundle(ops_test: OpsTest) -> str:
                 charm,
                 application_name=PGB,
             ),
-            ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3)
+            ops_test.model.deploy(
+                PG,
+                channel="edge",
+                trust=True,
+                num_units=3,
+                config=pg_config,
+            ),
         )
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
@@ -252,3 +259,104 @@ async def deploy_postgres_bundle(ops_test: OpsTest) -> str:
         await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
 
         return relation
+
+
+async def deploy_and_relate_application_with_pgbouncer_bundle(
+    ops_test: OpsTest,
+    charm: str,
+    application_name: str,
+    number_of_units: int,
+    config: dict = None,
+    channel: str = "stable",
+    relation: str = "db",
+) -> int:
+    """Helper function to deploy and relate application with Pgbouncer.
+
+    Args:
+        ops_test: The ops test framework.
+        charm: Charm identifier.
+        application_name: The name of the application to deploy.
+        number_of_units: The number of units to deploy.
+        config: Extra config options for the application.
+        channel: The channel to use for the charm.
+        relation: Name of the PostgreSQL relation to relate
+            the application to.
+
+    Returns:
+        the id of the created relation.
+    """
+    # Deploy application.
+    await ops_test.model.deploy(
+        charm,
+        channel=channel,
+        application_name=application_name,
+        num_units=number_of_units,
+        config=config,
+    )
+    await ops_test.model.wait_for_idle(
+        apps=[application_name],
+        status="active",
+        raise_on_blocked=False,
+        timeout=1000,
+    )
+
+    # Relate application to PostgreSQL.
+    relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation}")
+    await ops_test.model.wait_for_idle(
+        apps=[application_name],
+        status="active",
+        raise_on_blocked=False,  # Application that needs a relation is blocked initially.
+        timeout=1000,
+    )
+
+    return relation.id
+
+
+async def deploy_and_relate_bundle_with_pgbouncer_bundle(
+    ops_test: OpsTest, bundle: str, application_name: str, relation_name: str = "db"
+) -> str:
+    """Helper function to deploy and relate a bundle with pgbouncer.
+
+    Assumes pgbouncer and postgres are deployed and related.
+
+    Args:
+        ops_test: The ops test framework.
+        bundle: Bundle identifier.
+        application_name: The name of the application to check for
+            an active state after the deployment.
+        relation_name: name of the relation to be added
+    """
+    # Deploy the bundle.
+    with tempfile.NamedTemporaryFile() as original:
+        # Download the original bundle.
+        await ops_test.juju("download", bundle, "--filepath", original.name)
+
+        # Open the bundle compressed file and update the contents
+        # of the bundle.yaml file to deploy it.
+        with zipfile.ZipFile(original.name, "r") as archive:
+            bundle_yaml = archive.read("bundle.yaml")
+            data = yaml.load(bundle_yaml, Loader=yaml.FullLoader)
+
+            # Remove PostgreSQL and relations with it from the bundle.yaml file.
+            del data["services"]["postgresql"]
+            data["relations"] = [
+                relation
+                for relation in data["relations"]
+                if "postgresql:db" not in relation and "postgresql:db-admin" not in relation
+            ]
+
+            # Write the new bundle content to a temporary file and deploy it.
+            with tempfile.NamedTemporaryFile() as patched:
+                patched.write(yaml.dump(data).encode("utf_8"))
+                patched.seek(0)
+                await ops_test.juju("deploy", patched.name)
+
+    # Relate application to Pgbouncer.
+    relation_name = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation_name}")
+    await ops_test.model.wait_for_idle(
+        apps=[application_name],
+        status="active",
+        timeout=1000,
+    )
+
+    return relation_name.id
