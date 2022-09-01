@@ -10,6 +10,7 @@ from pytest_operator.plugin import OpsTest
 
 from constants import PG
 from tests.integration.helpers.helpers import (
+    deploy_postgres_bundle,
     deploy_and_relate_application_with_pgbouncer_bundle,
 )
 from tests.integration.helpers.postgresql_helpers import (
@@ -26,11 +27,13 @@ DATABASE_UNITS = 2
 RELATION_NAME = "db"
 
 
+@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
-    async with ops_test.fast_forward():
+    await deploy_postgres_bundle(ops_test)
 
+    async with ops_test.fast_forward():
         # Extra config option for Mailman3 Core.
         config = {"hostname": "example.org"}
         # Deploy and test the deployment of Mailman3 Core.
