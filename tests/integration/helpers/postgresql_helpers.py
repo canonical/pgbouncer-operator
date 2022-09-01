@@ -121,6 +121,7 @@ async def check_databases_creation(
             # Ensure that application tables exist in the database
             output = await execute_query_on_unit(
                 unit_address,
+                user,
                 password,
                 "SELECT table_name FROM information_schema.tables;",
                 database=database,

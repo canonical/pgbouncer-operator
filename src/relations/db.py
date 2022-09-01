@@ -158,7 +158,6 @@ class DbProvides(Object):
         )
 
         remote_databag = join_event.relation.data[join_event.app]
-
         database = remote_databag.get("database")
         if not database:
             # If the database field isn't populated, the remote app may be using the unit databag.

@@ -245,7 +245,6 @@ async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}):
             ops_test.model.deploy(
                 PG,
                 channel="edge",
-                trust=True,
                 num_units=3,
                 config=pg_config,
             ),
