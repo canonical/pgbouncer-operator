@@ -27,7 +27,7 @@ RABBITMQ_APP_NAME = "rabbitmq-server"
 DATABASE_UNITS = 3
 
 
-@pytest.mark.dev
+# @pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""

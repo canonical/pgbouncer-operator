@@ -4,11 +4,12 @@
 import itertools
 from pathlib import Path
 from typing import List
-from constants import PG
 
 import psycopg2
 import yaml
 from pytest_operator.plugin import OpsTest
+
+from constants import PG
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
