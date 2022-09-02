@@ -94,7 +94,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
 
 
 async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -> str:
-    """Gets a file from the pgbouncer container of a pgbouncer application unit."""
+    """Gets a file from unit filesystem.."""
     cat_cmd = f"ssh {unit_name} cat {filepath}"
     return_code, output, _ = await ops_test.juju(*cat_cmd.split(" "))
     if return_code != 0:
@@ -105,18 +105,18 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
 
 
 async def get_cfg(ops_test: OpsTest, unit_name: str) -> pgb.PgbConfig:
-    """Gets pgbouncer config from pgbouncer container."""
+    """Gets pgbouncer config from unit filesystem."""
     cat = await cat_file_from_unit(ops_test, INI_PATH, unit_name)
     return pgb.PgbConfig(cat)
 
 
 async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from pgbouncer container."""
+    """Gets pgbouncer logs from unit filesystem."""
     return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
 
 
 async def get_userlist(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from pgbouncer container."""
+    """Gets pgbouncer logs from unit filesystem."""
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
 
 
