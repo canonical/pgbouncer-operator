@@ -136,8 +136,7 @@ class PgBouncerCharm(CharmBase):
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
             # This emits relation-changed events to every client relation, so only do it when
             # necessary
-            # TODO add once legacy client relations are done.
-            # self.update_backend_relation_port(self.config["listen_port"])
+            self.update_backend_relation_port(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
