@@ -102,7 +102,8 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_reload")
-    def test_reload_pgbouncer(self, _reload):
+    @patch("charm.PgBouncerCharm.check_pgb_running")
+    def test_reload_pgbouncer(self, _running, _reload):
         intended_instances = self._cores = os.cpu_count()
         self.charm._reload_pgbouncer()
         calls = [
@@ -110,7 +111,7 @@ class TestCharm(unittest.TestCase):
             for instance in range(intended_instances)
         ]
         _reload.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
+        _running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _reload.side_effect = systemd.SystemdError()
@@ -123,27 +124,25 @@ class TestCharm(unittest.TestCase):
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_update_status(self, _has_relation, _running):
+    def test_on_update_status(self, _postgres, _running):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when the pgbouncer services aren't running
         self.charm.on.update_status.emit()
-        # Verify we immediately block once we know we have services that aren't running.
-        _running.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        _postgres.return_value = True
 
         # If all pgbouncer services are running but we have no backend relation, verify we block &
         # wait for the backend relation.
-        _running.return_value = True
         self.charm.on.update_status.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call("pgbouncer@0")]
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
         # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
         _running.reset_mock()
         _running.return_value = True
-        _has_relation.return_value = True
         self.charm.on.update_status.emit()
+        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
@@ -177,11 +176,6 @@ class TestCharm(unittest.TestCase):
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-        import logging
-
-        logging.info(_read.return_value.render())
-        logging.info(config.render())
-        self.maxDiff = None
         self.assertDictEqual(dict(_read.return_value), dict(config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
