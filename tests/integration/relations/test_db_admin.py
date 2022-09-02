@@ -59,7 +59,6 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
 
 @pytest.mark.legacy_relation
 async def test_add_replicas(ops_test: OpsTest):
-    await ops_test.model.applications[PSQL].add_units(count=2)
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
