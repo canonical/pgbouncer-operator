@@ -13,7 +13,7 @@ not definite.
 Example:
 TODO update example data to work as VM data.
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
-┃ category         ┃             keys ┃ pgbouncer-k8s-o… ┃ postgresql-k8s/0 ┃
+┃ category         ┃             keys ┃ pgbouncer-opera… ┃ postgresql/0     ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
 │ metadata         │         endpoint │ 'backend-databa… │ 'database'       │
 │                  │           leader │ True             │ True             │
@@ -139,6 +139,8 @@ class BackendDatabaseRequires(Object):
         logger.info("removing auth user")
 
         uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
+
+        # TODO remove all databases that were created for client applications
 
         try:
             with self.postgres.connect_to_database(PGB_DB) as conn, conn.cursor() as cursor:
