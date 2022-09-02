@@ -9,10 +9,8 @@ import psycopg2
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
-
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-
+PG = "postgresql"
 
 async def build_connection_string(
     ops_test: OpsTest,

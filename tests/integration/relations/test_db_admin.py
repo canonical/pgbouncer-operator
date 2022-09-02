@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 from tests.integration.helpers.helpers import (
     deploy_and_relate_bundle_with_pgbouncer_bundle,
     deploy_postgres_bundle,
+    get_backend_user_pass,
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
@@ -34,7 +35,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     config = {
         "extra-packages": "python-apt postgresql-contrib postgresql-.*-debversion postgresql-plpython.*"
     }
-    await deploy_postgres_bundle(ops_test, pg_config=config)
+    backend_relation = await deploy_postgres_bundle(ops_test, pg_config=config)
 
     async with ops_test.fast_forward():
         # Deploy and test the Landscape Scalable bundle (using this charm).
@@ -54,8 +55,9 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     )
 
     landscape_users = [f"relation-{relation_id}"]
+    pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
 
-    await check_database_users_existence(ops_test, landscape_users, [])
+    await check_database_users_existence(ops_test, landscape_users, [], pgb_user, pgb_pass)
 
     # Configure and admin user in Landscape and get its API credentials.
     unit = ops_test.model.applications[LANDSCAPE_APP_NAME].units[0]
