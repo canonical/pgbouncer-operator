@@ -77,40 +77,12 @@ async def test_add_replicas(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relation
-async def test_remove_db_admin_unit(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("psql/1")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=2
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[PG, PGB],
-                status="active",
-                timeout=1000,
-            ),
-        )
-
-
-@pytest.mark.legacy_relation
-async def test_remove_backend_unit(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("postgresql/1")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=2
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
-        )
-
-
-@pytest.mark.legacy_relation
 async def test_remove_db_admin_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=1
+                apps=[PSQL], status="active", timeout=1000
             ),
             ops_test.model.wait_for_idle(
                 apps=[PG, PGB],
@@ -129,7 +101,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=1
+                apps=[PG], status="active", timeout=1000
             ),
             ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
         )
