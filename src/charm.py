@@ -116,6 +116,7 @@ class PgBouncerCharm(CharmBase):
             # If we don't have any backend, this charm doesn't serve a purpose, and therefore
             # should be related to one or removed.
             self.unit.status = BlockedStatus("waiting for backend database relation")
+            return
 
         self.check_pgb_running()
 

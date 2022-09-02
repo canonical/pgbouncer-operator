@@ -145,10 +145,10 @@ class BackendDatabaseRequires(Object):
         if event.departing_unit != self.charm.unit:
             return
 
+        # TODO delete databases that were created for client applications
+
         logger.info("removing auth user")
-
         uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
-
         try:
             with self.postgres.connect_to_database(PGB_DB) as conn, conn.cursor() as cursor:
                 cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
