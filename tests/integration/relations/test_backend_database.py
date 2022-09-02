@@ -33,7 +33,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     # Build, deploy, and relate charms.
     relation = await deploy_postgres_bundle(ops_test)
 
-    cfg = await get_cfg(ops_test, "pgbouncer-operator/0")
+    cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
     pgb_user, pgb_password = await get_backend_user_pass(ops_test, relation)
     assert pgb_user in cfg["pgbouncer"]["admin_users"]
@@ -55,18 +55,18 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
             ),
         )
 
-    # Wait for pgbouncer charm to update its config files.
-    try:
-        for attempt in Retrying(stop=stop_after_delay(3 * 60), wait=wait_fixed(3)):
-            with attempt:
-                cfg = await get_cfg(ops_test, "pgbouncer-operator/0")
-                if (
-                    pgb_user not in cfg["pgbouncer"]["admin_users"]
-                    and "auth_query" not in cfg["pgbouncer"].keys()
-                ):
-                    break
-    except RetryError:
-        assert False, "pgbouncer config files failed to update in 3 minutes"
+        # Wait for pgbouncer charm to update its config files.
+        try:
+            for attempt in Retrying(stop=stop_after_delay(3 * 60), wait=wait_fixed(3)):
+                with attempt:
+                    cfg = await get_cfg(ops_test, f"{PGB}/0")
+                    if (
+                        pgb_user not in cfg["pgbouncer"]["admin_users"]
+                        and "auth_query" not in cfg["pgbouncer"].keys()
+                    ):
+                        break
+        except RetryError:
+            assert False, "pgbouncer config files failed to update in 3 minutes"
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())

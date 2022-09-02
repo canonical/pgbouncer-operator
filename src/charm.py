@@ -110,26 +110,15 @@ class PgBouncerCharm(CharmBase):
     def _on_update_status(self, _) -> None:
         """Update Status hook.
 
-        Uses systemd status to verify pgbouncer is running.
+        Uses systemd status to verify pgbouncer is running and that we have backend relation.
         """
-        try:
-            for service in self.pgb_services:
-                if not systemd.service_running(f"{service}"):
-                    self.unit.status = self.unit.status = BlockedStatus(
-                        f"{service} is not running - try restarting using `juju actions pgbouncer restart`"
-                    )
-                    return
+        if self.backend.postgres is None:
+            # If we don't have any backend, this charm doesn't serve a purpose, and therefore
+            # should be related to one or removed.
+            self.unit.status = BlockedStatus("waiting for backend database relation")
+            return
 
-            if self.backend.postgres is not None:
-                # All is well, set ActiveStatus
-                self.unit.status = ActiveStatus()
-            else:
-                # If we don't have any backend, this charm doesn't serve a purpose, and therefore
-                # should be related to one or removed.
-                self.unit.status = BlockedStatus("waiting for backend database relation")
-        except systemd.SystemdError as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("failed to get pgbouncer status")
+        self.check_pgb_running()
 
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
@@ -148,11 +137,37 @@ class PgBouncerCharm(CharmBase):
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
             # This emits relation-changed events to every client relation, so only do it when
             # necessary
-            # TODO add once legacy client relations are done.
-            # self.update_backend_relation_port(self.config["listen_port"])
+            self.update_backend_relation_port(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
+
+    def check_pgb_running(self):
+        """Checks that pgbouncer systemd service is running."""
+        try:
+            for service in self.pgb_services:
+                if not systemd.service_running(f"{service}"):
+                    self.unit.status = BlockedStatus(f"{service} is not running")
+                    return
+
+        except systemd.SystemdError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("failed to get pgbouncer status")
+            return
+
+        self.unit.status = ActiveStatus()
+
+    def _reload_pgbouncer(self):
+        """Reloads systemd pgbouncer service."""
+        self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
+        try:
+            for service in self.pgb_services:
+                systemd.service_reload(service, restart_on_failure=True)
+        except systemd.SystemdError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("Failed to restart pgbouncer")
+
+        self.check_pgb_running()
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -242,17 +257,6 @@ class PgBouncerCharm(CharmBase):
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
-
-    def _reload_pgbouncer(self):
-        """Reloads systemd pgbouncer service."""
-        self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
-        try:
-            for service in self.pgb_services:
-                systemd.service_reload(service, restart_on_failure=True)
-            self.unit.status = ActiveStatus("PgBouncer Reloaded")
-        except systemd.SystemdError as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
     # =================
     #  Charm Utilities

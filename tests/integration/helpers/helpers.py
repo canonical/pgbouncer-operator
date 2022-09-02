@@ -112,7 +112,7 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
 
 async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = INI_PATH) -> pgb.PgbConfig:
     """Gets pgbouncer config from unit filesystem."""
-    cat = await cat_file_from_unit(ops_test, INI_PATH, unit_name)
+    cat = await cat_file_from_unit(ops_test, path, unit_name)
     return pgb.PgbConfig(cat)
 
 
