@@ -28,7 +28,7 @@ DATABASE_UNITS = 2
 RELATION_NAME = "db"
 
 
-# @pytest.mark.dev
+@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
