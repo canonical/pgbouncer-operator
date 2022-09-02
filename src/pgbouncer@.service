@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=postgres
+# -R flag is used to ensure sockets are reused across pgbouncer instances
 ExecStart=/sbin/pgbouncer -R /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
