@@ -7,43 +7,44 @@ This relation uses the pgsql interface, omitting roles and extensions as they ar
 the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
+TODO update relation data to match VM IPs, not k8s hostnames
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
-┃ category         ┃            keys ┃ pgbouncer    /0                            ┃ finos-waltz/0 ┃
+┃ category         ┃            keys ┃ pgbouncer/0                                ┃ application/0 ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
 │ metadata         │        endpoint │ 'db'                                       │ 'db'          │
 │                  │          leader │ True                                       │ True          │
 ├──────────────────┼─────────────────┼────────────────────────────────────────────┼───────────────┤
 │ application data │ allowed-subnets │ 10.152.183.122/32                          │               │
-│                  │   allowed-units │ pgbouncer-k8s/0                            │               │
-│                  │        database │ waltz                                      │ waltz         │
+│                  │   allowed-units │ application/0                              │               │
+│                  │        database │ app_db                                     │ app_db        │
 │                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
 │                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
+│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-waltz      │               │
+│                  │                 │ fallback_application_name=finos-app_db     │               │
 │                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
 │                  │            port │ 6432                                       │               │
 │                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
+│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-waltz      │               │
+│                  │                 │ fallback_application_name=finos-app_db     │               │
 │                  │           state │ master                                     │               │
 │                  │            user │ relation_3                                 │               │
 │                  │         version │ 12.11                                      │               │
 │ unit data        │ allowed-subnets │ 10.152.183.122/32                          │               │
-│                  │   allowed-units │ pgbouncer-k8s/0                            │               │
-│                  │        database │ waltz                                      │ waltz         │
+│                  │   allowed-units │ application/0                              │               │
+│                  │        database │ app_db                                     │ app_db        │
 │                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
 │                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
+│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-waltz      │               │
+│                  │                 │ fallback_application_name=finos-app_db     │               │
 │                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
 │                  │            port │ 6432                                       │               │
 │                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=waltz port=6432 user=relation_3     │               │
+│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
 │                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-waltz      │               │
+│                  │                 │ fallback_application_name=finos-app_db     │               │
 │                  │           state │ master                                     │               │
 │                  │            user │ relation_3                                 │               │
 │                  │         version │ 12.11                                      │               │
@@ -472,7 +473,7 @@ class DbProvides(Object):
                 [
                     unit.name
                     for unit in relation.data
-                    if isinstance(unit, Unit) and not unit.app != self.charm.app
+                    if isinstance(unit, Unit) and unit.app != self.charm.app
                 ]
             )
         )
