@@ -81,9 +81,7 @@ async def test_remove_db_admin_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("psql/0")
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000
-            ),
+            ops_test.model.wait_for_idle(apps=[PSQL], status="active", timeout=1000),
             ops_test.model.wait_for_idle(
                 apps=[PG, PGB],
                 status="active",
@@ -100,9 +98,7 @@ async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000
-            ),
+            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
             ops_test.model.wait_for_idle(apps=[PGB, PSQL], status="active", timeout=1000),
         )
     unit = ops_test.model.units[f"{PGB}/0"]
