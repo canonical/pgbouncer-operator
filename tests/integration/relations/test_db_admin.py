@@ -93,3 +93,4 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     await ops_test.model.remove_application(LANDSCAPE_APP_NAME, block_until_done=True)
     await ops_test.model.remove_application(HAPROXY_APP_NAME, block_until_done=True)
     await ops_test.model.remove_application(RABBITMQ_APP_NAME, block_until_done=True)
+
