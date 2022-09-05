@@ -49,7 +49,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)
 
-        mailman3_core_users = get_legacy_relation_username(relation_id)
+        mailman3_core_users = get_legacy_relation_username(ops_test, relation_id)
 
         await check_database_users_existence(ops_test, mailman3_core_users, [], pgb_user, pgb_pass)
 

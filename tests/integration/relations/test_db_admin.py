@@ -57,7 +57,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
         ],
     )
 
-    landscape_users = get_legacy_relation_username(relation_id)
+    landscape_users = get_legacy_relation_username(ops_test, relation_id)
     pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
 
     await check_database_users_existence(ops_test, landscape_users, [], pgb_user, pgb_pass)
