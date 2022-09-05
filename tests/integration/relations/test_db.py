@@ -50,7 +50,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
 
         mailman3_core_users = [f"relation-{relation_id}"]
 
-        await check_database_users_existence(ops_test, mailman3_core_users, [])
+        await check_database_users_existence(ops_test, mailman3_core_users, [], pgb_user, pgb_pass)
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
