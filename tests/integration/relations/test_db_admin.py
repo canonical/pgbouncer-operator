@@ -58,42 +58,6 @@ async def test_create_db_admin_legacy_relation(ops_test: OpsTest):
 
 
 @pytest.mark.legacy_relation
-async def test_add_replicas(ops_test: OpsTest):
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[PSQL], status="active", timeout=1000, wait_for_exact_units=3
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="active"),
-        )
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
-    expected_databases = ["cli", "cli_standby"]
-    for database in expected_databases:
-        assert database in cfg["databases"].keys()
-
-
-@pytest.mark.legacy_relation
-async def test_remove_db_admin_leader(ops_test: OpsTest):
-    await ops_test.model.destroy_unit("psql/0")
-    async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PSQL], status="active", timeout=1000),
-            ops_test.model.wait_for_idle(
-                apps=[PG, PGB],
-                status="active",
-                timeout=1000,
-            ),
-        )
-    unit = ops_test.model.units[f"{PGB}/0"]
-    cfg = await helpers.get_cfg(ops_test, unit.name)
-    assert "cli" in cfg["databases"].keys()
-
-
-@pytest.mark.legacy_relation
 async def test_remove_backend_leader(ops_test: OpsTest):
     await ops_test.model.destroy_unit("postgresql/0")
     async with ops_test.fast_forward():
