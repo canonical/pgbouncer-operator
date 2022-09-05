@@ -2,13 +2,15 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
+from pathlib import Path
 
 import psycopg2 as psycopg2
 import pytest as pytest
+import yaml
 from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
 
-from constants import PG, PGB
+from constants import PG
 from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
@@ -20,6 +22,9 @@ from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
     check_databases_creation,
 )
+
+METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+PGB = METADATA["name"]
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +57,9 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
 
         mailman3_core_users = get_legacy_relation_username(ops_test, relation_id)
 
-        await check_database_users_existence(ops_test, [mailman3_core_users], [], pgb_user, pgb_pass)
+        await check_database_users_existence(
+            ops_test, [mailman3_core_users], [], pgb_user, pgb_pass
+        )
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
