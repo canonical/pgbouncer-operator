@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from charms.pgbouncer_k8s.v0.pgb import (
     DEFAULT_CONFIG,
@@ -11,7 +11,6 @@ from charms.pgbouncer_k8s.v0.pgb import (
     get_hashed_password,
 )
 from ops.testing import Harness
-from unittest.mock import call
 
 from charm import PgBouncerCharm
 
@@ -57,7 +56,9 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_database_created(mock_event)
 
         postgres.create_user.assert_called_with(self.backend.auth_user, pw, admin=True)
-        _init_auth.assert_has_calls([call(dbname=self.backend.database.database), call(dbname="postgres")])
+        _init_auth.assert_has_calls(
+            [call(dbname=self.backend.database.database), call(dbname="postgres")]
+        )
 
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
         _render.assert_any_call(
@@ -85,7 +86,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.update_postgres_endpoints")
     @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
     def test_relation_departed(self, _remove_auth, _update_endpoints, _postgres, _auth_user):
-        postgres = _postgres.return_value
         depart_event = MagicMock()
         depart_event.departing_unit = self.charm.unit
         self.backend._on_relation_departed(depart_event)
