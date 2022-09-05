@@ -8,7 +8,7 @@ import pytest as pytest
 from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
+from constants import PG, PGB
 from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
@@ -36,6 +36,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     backend_relation = await deploy_postgres_bundle(ops_test, db_units=DATABASE_UNITS)
 
     async with ops_test.fast_forward():
+        await ops_test.model.applications[PGB].set_config({"listen_port": "5432"})
         # Extra config option for Mailman3 Core.
         config = {"hostname": "example.org"}
         # Deploy and test the deployment of Mailman3 Core.
@@ -51,11 +52,12 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
 
         mailman3_core_users = get_legacy_relation_username(ops_test, relation_id)
 
-        await check_database_users_existence(ops_test, mailman3_core_users, [], pgb_user, pgb_pass)
+        await check_database_users_existence(ops_test, [mailman3_core_users], [], pgb_user, pgb_pass)
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
         action = await mailman_unit.run("mailman info")
+        logging.info(action)
         result = action.results.get("Stdout", None)
         assert "db url: postgres://" in result
 
