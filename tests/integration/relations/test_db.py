@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 MAILMAN3_CORE_APP_NAME = "mailman3-core"
 APPLICATION_UNITS = 1
-DATABASE_UNITS = 2
+DATABASE_UNITS = 1
 RELATION_NAME = "db"
 
 

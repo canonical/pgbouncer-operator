@@ -269,7 +269,9 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     channel: str = "stable",
     relation: str = "db",
 ) -> int:
-    """Helper function to deploy and relate application with Pgbouncer.
+    """Helper function to deploy and relate application with Pgbouncer cluster
+
+    This assumes pgbouncer already exists and is related to postgres
 
     Args:
         ops_test: The ops test framework.
@@ -278,7 +280,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         number_of_units: The number of units to deploy.
         config: Extra config options for the application.
         channel: The channel to use for the charm.
-        relation: Name of the PostgreSQL relation to relate
+        relation: Name of the pgbouncer relation to relate
             the application to.
 
     Returns:
@@ -299,13 +301,12 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         timeout=1000,
     )
 
-    # Relate application to PostgreSQL.
+    # Relate application to pgbouncer.
     relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation}")
     wait_for_relation_joined_between(ops_test, PGB, application_name)
     await ops_test.model.wait_for_idle(
         apps=[application_name, PG, PGB],
         status="active",
-        raise_on_blocked=False,  # Application that needs a relation is blocked initially.
         timeout=1000,
     )
 
