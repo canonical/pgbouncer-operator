@@ -235,8 +235,9 @@ class TestDb(unittest.TestCase):
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
     def test_on_relation_broken(
-        self, _render_cfg, _backend_postgres, _delete_user, _postgres, _read
+        self, _remove_auth, _render_cfg, _backend_postgres, _delete_user, _postgres, _read
     ):
         """Test that all traces of the given app are removed from pgb config, including user."""
         database = "test_db"

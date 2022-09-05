@@ -65,6 +65,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
         action = await mailman_unit.run("mailman info")
         logging.info(action)
+        logging.info(action.results)
         result = action.results.get("Stdout", None)
         assert "db url: postgres://" in result
 
