@@ -40,15 +40,7 @@ jobs:
           provider: lxd
           lxd-channel: 5.4/stable
       - name: Run integration tests
-        # TODO set a predictable model name so it can be consumed by charm-logdump-action
-        # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.
         run: tox -e standalone-integration
-      # - name: Dump logs
-      #   uses: canonical/charm-logdump-action@main
-      #   if: failure()
-      #   with:
-      #     app: pgbouncer-operator
-      #     model: testing
 
   integration-backend:
     name: Integration tests for backend relation
@@ -62,15 +54,7 @@ jobs:
           provider: lxd
           lxd-channel: 5.4/stable
       - name: Run integration tests
-        # TODO set a predictable model name so it can be consumed by charm-logdump-action
-        # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.
         run: tox -e backend-integration
-      # - name: Dump logs
-      #   uses: canonical/charm-logdump-action@main
-      #   if: failure()
-      #   with:
-      #     app: pgbouncer-operator
-      #     model: testing
 
   integration-legacy-relations:
     name: Integration tests for legacy relations
@@ -84,12 +68,4 @@ jobs:
           provider: lxd
           lxd-channel: 5.4/stable
       - name: Run integration tests
-        # TODO set a predictable model name so it can be consumed by charm-logdump-action
-        # For now, setting one using "-- --model testing" causes it to get lost in the CI. This can be replicated locally.
         run: tox -e legacy-relation-integration
-      # - name: Dump logs
-      #   uses: canonical/charm-logdump-action@main
-      #   if: failure()
-      #   with:
-      #     app: pgbouncer-operator
-      #     model: testing
