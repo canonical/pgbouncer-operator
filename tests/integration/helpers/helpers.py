@@ -229,7 +229,7 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
     return False
 
 
-async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}):
+async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}, db_units=3):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
 
     Returns:
@@ -245,12 +245,12 @@ async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}):
             ops_test.model.deploy(
                 PG,
                 channel="edge",
-                num_units=3,
+                num_units=db_units,
                 config=pg_config,
             ),
         )
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units),
             ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")

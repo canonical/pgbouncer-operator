@@ -28,14 +28,14 @@ RABBITMQ_APP_NAME = "rabbitmq-server"
 DATABASE_UNITS = 3
 
 
-# @pytest.mark.dev
+@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_landscape_scalable_bundle_db(ops_test: OpsTest) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
     config = {
         "extra-packages": "python-apt postgresql-contrib postgresql-.*-debversion postgresql-plpython.*"
     }
-    backend_relation = await deploy_postgres_bundle(ops_test, pg_config=config)
+    backend_relation = await deploy_postgres_bundle(ops_test, pg_config=config, db_units=DATABASE_UNITS)
 
     async with ops_test.fast_forward():
         # Deploy and test the Landscape Scalable bundle (using this charm).

@@ -32,7 +32,7 @@ RELATION_NAME = "db"
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
-    backend_relation = await deploy_postgres_bundle(ops_test)
+    backend_relation = await deploy_postgres_bundle(ops_test, db_units=DATABASE_UNITS)
 
     async with ops_test.fast_forward():
         # Extra config option for Mailman3 Core.
@@ -96,7 +96,7 @@ async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest
         # Add two more units.
         await ops_test.model.applications[PG].add_units(2)
         await ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=1000, wait_for_exact_units=4
+            apps=[PG], status="active", timeout=1000, wait_for_exact_units=5
         )
 
         # Remove the original units.
