@@ -80,6 +80,7 @@ async def check_database_users_existence(
         else "SELECT usename FROM pg_catalog.pg_user;",
     )
     import logging
+
     logging.info(output)
     logging.info(users_that_should_exist)
     logging.info(users_that_should_not_exist)

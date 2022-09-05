@@ -250,7 +250,9 @@ async def deploy_postgres_bundle(ops_test: OpsTest, pg_config: dict = {}, db_uni
             ),
         )
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units),
+            ops_test.model.wait_for_idle(
+                apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
+            ),
             ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
@@ -269,7 +271,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     channel: str = "stable",
     relation: str = "db",
 ) -> int:
-    """Helper function to deploy and relate application with Pgbouncer cluster
+    """Helper function to deploy and relate application with Pgbouncer cluster.
 
     This assumes pgbouncer already exists and is related to postgres
 

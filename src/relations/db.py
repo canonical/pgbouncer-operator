@@ -78,6 +78,8 @@ from ops.model import (
     WaitingStatus,
 )
 
+from constants import PG
+
 logger = logging.getLogger(__name__)
 
 
@@ -331,6 +333,16 @@ class DbProvides(Object):
             }
         else:
             cfg["databases"].pop(f"{database}_standby", None)
+
+        if self.admin:
+            # Admin relations get access to postgres root db
+            cfg["databases"][PG] = {
+                "host": postgres_endpoint.split(":")[0],
+                "dbname": PG,
+                "port": postgres_endpoint.split(":")[1],
+                "auth_user": self.charm.backend.auth_user,
+            }
+
         # Write config data to charm filesystem
         self.charm.render_pgb_config(cfg, reload_pgbouncer=reload_pgbouncer)
 
@@ -434,9 +446,13 @@ class DbProvides(Object):
                     break
             if not delete_db:
                 break
+
         if delete_db:
             cfg["databases"].pop(database, None)
             cfg["databases"].pop(f"{database}_standby", None)
+            self.charm.backend.remove_auth_function(database)
+
+        # TODO delete postgres database from config if there's no admin relations left
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
