@@ -77,7 +77,7 @@ async def get_running_instances(unit: str, service: str) -> int:
     return num_of_ps_lines - 2
 
 
-async def get_unit_info(ops_test: OpsTest, unit_name: str, format="json") -> Dict:
+async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
     """Gets the databags from the given relation.
 
     Args:
@@ -90,7 +90,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str, format="json") -> Dic
     get_databag = await ops_test.juju(
         "show-unit",
         unit_name,
-        f"--format={format}",
+        "--format=json",
     )
     return json.loads(get_databag[1])[unit_name]
 
