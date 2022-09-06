@@ -42,9 +42,8 @@ async def test_landscape_scalable_bundle(ops_test: OpsTest) -> None:
         "extra-packages": "python-apt postgresql-contrib postgresql-.*-debversion postgresql-plpython.*"
     }
     backend_relation = await deploy_postgres_bundle(
-        ops_test, pg_config=config, db_units=DATABASE_UNITS
+        ops_test, pg_config=config, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
     )
-    await ops_test.model.applications[PGB].set_config({"listen_port": "5432"})
 
     async with ops_test.fast_forward():
         # Deploy and test the Landscape Scalable bundle (using this charm).

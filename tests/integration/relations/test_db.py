@@ -40,19 +40,20 @@ RELATION_NAME = "db"
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
-    backend_relation = await deploy_postgres_bundle(ops_test, db_units=DATABASE_UNITS)
+    backend_relation = await deploy_postgres_bundle(
+        ops_test, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
+    )
 
     async with ops_test.fast_forward():
-        await ops_test.model.applications[PGB].set_config({"listen_port": "5432"})
         # Extra config option for Mailman3 Core.
-        config = {"hostname": "example.org"}
+        mailman_config = {"hostname": "example.org"}
         # Deploy and test the deployment of Mailman3 Core.
         relation_id = await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
             "mailman3-core",
             MAILMAN3_CORE_APP_NAME,
             APPLICATION_UNITS,
-            config,
+            mailman_config,
         )
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)
