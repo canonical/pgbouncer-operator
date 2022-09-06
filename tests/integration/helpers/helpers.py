@@ -358,11 +358,11 @@ async def deploy_and_relate_bundle_with_pgbouncer_bundle(
                 await ops_test.juju("deploy", patched.name)
 
     # Relate application to Pgbouncer.
-    relation_name = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation_name}")
+    relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation_name}")
     await ops_test.model.wait_for_idle(
         apps=[application_name, PG, PGB],
         status="active",
         timeout=1000,
     )
 
-    return relation_name.id
+    return relation.id
