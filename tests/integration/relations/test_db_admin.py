@@ -6,8 +6,8 @@ import json
 import logging
 from pathlib import Path
 
-import yaml
 import pytest
+import yaml
 from landscape_api.base import run_query
 from pytest_operator.plugin import OpsTest
 
@@ -32,6 +32,7 @@ DATABASE_UNITS = 3
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
+
 
 @pytest.mark.dev
 @pytest.mark.legacy_relation
