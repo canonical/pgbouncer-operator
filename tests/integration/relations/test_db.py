@@ -15,7 +15,9 @@ from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_backend_user_pass,
+    get_cfg,
     get_legacy_relation_username,
+    get_unit_info,
 )
 from tests.integration.helpers.postgresql_helpers import (
     build_connection_string,
@@ -41,7 +43,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     backend_relation = await deploy_postgres_bundle(ops_test, db_units=DATABASE_UNITS)
 
     async with ops_test.fast_forward():
-        await ops_test.model.applications[PGB].set_config({"listen_port": "5432"})
+        await ops_test.model.applications[PGB].set_config({"listen_port": 5432})
         # Extra config option for Mailman3 Core.
         config = {"hostname": "example.org"}
         # Deploy and test the deployment of Mailman3 Core.
@@ -66,8 +68,10 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         action = await mailman_unit.run("mailman info")
         logging.info(action)
         logging.info(action.results)
-        result = action.results.get("Stdout", None)
-        assert "db url: postgres://" in result
+        result = action.results.get("Stdout", action.results.get("Stderr", None))
+        logging.info(await get_cfg(ops_test, mailman_unit.name))
+        logging.info(await get_unit_info(ops_test, mailman_unit.name, format="yaml"))
+        assert "db url: postgres://" in result, f"no postgres db url, Stderr: {result}"
 
         # Do some CRUD operations using Mailman3 Core client.
         domain_name = "canonical.com"
