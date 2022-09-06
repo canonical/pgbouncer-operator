@@ -4,7 +4,9 @@
 import ast
 import json
 import logging
+from pathlib import Path
 
+import yaml
 import pytest
 from landscape_api.base import run_query
 from pytest_operator.plugin import OpsTest
@@ -28,6 +30,8 @@ LANDSCAPE_SCALABLE_BUNDLE_NAME = "ch:landscape-scalable"
 RABBITMQ_APP_NAME = "rabbitmq-server"
 DATABASE_UNITS = 3
 
+METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+PGB = METADATA["name"]
 
 @pytest.mark.dev
 @pytest.mark.legacy_relation
@@ -39,6 +43,7 @@ async def test_landscape_scalable_bundle(ops_test: OpsTest) -> None:
     backend_relation = await deploy_postgres_bundle(
         ops_test, pg_config=config, db_units=DATABASE_UNITS
     )
+    await ops_test.model.applications[PGB].set_config({"listen_port": "5432"})
 
     async with ops_test.fast_forward():
         # Deploy and test the Landscape Scalable bundle (using this charm).

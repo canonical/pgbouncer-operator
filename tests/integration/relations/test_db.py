@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 import psycopg2 as psycopg2
-import pytest as pytest
+import pytest
 import yaml
 from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
