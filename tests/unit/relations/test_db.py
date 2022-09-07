@@ -38,7 +38,7 @@ class TestDb(unittest.TestCase):
         assert self.charm.legacy_db_admin_relation.relation_name == "db-admin"
         assert self.charm.legacy_db_admin_relation.admin is True
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("ops.charm.EventBase.defer")
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     def test_on_relation_changed_early_returns(self, _get_units, _defer, _read_cfg):
@@ -66,7 +66,7 @@ class TestDb(unittest.TestCase):
         self.db_relation._on_relation_changed(mock_event)
         _defer.assert_called_once()
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
@@ -154,7 +154,7 @@ class TestDb(unittest.TestCase):
         )
         _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
@@ -241,7 +241,7 @@ class TestDb(unittest.TestCase):
         )
         _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("relations.db.DbProvides.get_external_units", return_value=[MagicMock()])
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
     @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
@@ -347,7 +347,7 @@ class TestDb(unittest.TestCase):
         self.assertDictEqual(app_databag, expected_app_databag)
         self.assertDictEqual(unit_databag, expected_unit_databag)
 
-    @patch("charm.PgBouncerCharm._read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.remove_user")
     @patch("charm.PgBouncerCharm._render_service_configs")
     def test_on_relation_broken(self, _render, _remove_user, _read):

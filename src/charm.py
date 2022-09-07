@@ -68,13 +68,13 @@ class PgBouncerCharm(CharmBase):
         self._install_apt_packages([PGB])
 
         pg_user = pwd.getpwnam(PG_USER)
-        os.mkdir(PGB_DIR, 0o777)
+        os.mkdir(PGB_DIR, 0o700)
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
         # TODO this can be removed once socket activation is implemented (JIRA-218)
         for service_id in self.service_ids:
-            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o777)
+            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o700)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
@@ -143,7 +143,7 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
-        cfg = self._read_pgb_config()
+        cfg = self.read_pgb_config()
         cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
         cfg.set_max_db_connection_derivatives(
@@ -159,7 +159,7 @@ class PgBouncerCharm(CharmBase):
     #  PgBouncer-Specific Utilities
     # ==============================
 
-    def _read_pgb_config(self) -> pgb.PgbConfig:
+    def read_pgb_config(self) -> pgb.PgbConfig:
         """Get config object from pgbouncer.ini file.
 
         Returns:
@@ -211,14 +211,14 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             pgbouncer_ini: PgbConfig object containing pgbouncer config.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
             config_path: intended location for the config.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self._render_file(config_path, pgbouncer_ini.render(), 0o777)
+        self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -233,13 +233,13 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             userlist: dictionary of users:password strings.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self._render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o777)
+        self.render_file(USERLIST_PATH, pgb.generate_userlist(userlist), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -268,7 +268,7 @@ class PgBouncerCharm(CharmBase):
             render_cfg: whether or not to render config
         """
         if not cfg:
-            cfg = self._read_pgb_config()
+            cfg = self.read_pgb_config()
         userlist = self._read_userlist()
 
         # Userlist is key-value dict of users and passwords.
@@ -308,7 +308,7 @@ class PgBouncerCharm(CharmBase):
             render_cfg: whether or not to render config
         """
         if not cfg:
-            cfg = self._read_pgb_config()
+            cfg = self.read_pgb_config()
         userlist = self._read_userlist()
 
         if user not in userlist.keys():
@@ -358,13 +358,13 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("failed to install packages")
 
-    def _render_file(self, path: str, content: str, mode: int) -> None:
+    def render_file(self, path: str, content: str, mode: int) -> None:
         """Write content rendered from a template to a file.
 
         Args:
             path: the path to the file.
             content: the data to be written to the file.
-            mode: access permission mask applied to the file using chmod (e.g. 0o640).
+            mode: access permission mask applied to the file using chmod (e.g. 0o700).
         """
         with open(path, "w+") as file:
             file.write(content)
