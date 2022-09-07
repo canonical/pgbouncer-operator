@@ -269,7 +269,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     ops_test: OpsTest,
     charm: str,
     application_name: str,
-    number_of_units: int,
+    number_of_units: int = 1,
     config: dict = {},
     channel: str = "stable",
     relation: str = "db",
@@ -307,7 +307,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     )
 
     # Relate application to pgbouncer.
-    relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:{relation}")
+    relation = await ops_test.model.relate(application_name, f"{PGB}:{relation}")
     wait_for_relation_joined_between(ops_test, PGB, application_name)
     await ops_test.model.wait_for_idle(
         apps=[application_name, PG, PGB],
@@ -315,7 +315,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         timeout=1000,
     )
 
-    return relation.id
+    return relation
 
 
 async def deploy_and_relate_bundle_with_pgbouncer_bundle(
