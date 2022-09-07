@@ -38,11 +38,11 @@ PGB = METADATA["name"]
 @pytest.mark.legacy_relation
 async def test_landscape_scalable_bundle(ops_test: OpsTest) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
-    config = {
+    pg_config = {
         "extra-packages": "python-apt postgresql-contrib postgresql-.*-debversion postgresql-plpython.*"
     }
     backend_relation = await deploy_postgres_bundle(
-        ops_test, pg_config=config, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
+        ops_test, pg_config=pg_config, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
     )
 
     async with ops_test.fast_forward():
@@ -67,7 +67,7 @@ async def test_landscape_scalable_bundle(ops_test: OpsTest) -> None:
 
     await check_database_users_existence(ops_test, landscape_users, [], pgb_user, pgb_pass)
 
-    # Configure and admin user in Landscape and get its API credentials.
+    # Configure an admin user in Landscape and get its API credentials.
     unit = ops_test.model.applications[LANDSCAPE_APP_NAME].units[0]
     action = await unit.run_action(
         "bootstrap",

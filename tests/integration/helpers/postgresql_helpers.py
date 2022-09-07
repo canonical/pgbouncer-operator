@@ -79,11 +79,6 @@ async def check_database_users_existence(
         if admin
         else "SELECT usename FROM pg_catalog.pg_user;",
     )
-    import logging
-
-    logging.info(output)
-    logging.info(users_that_should_exist)
-    logging.info(users_that_should_not_exist)
     # Assert users that should exist.
     for user in users_that_should_exist:
         if admin:
@@ -108,8 +103,6 @@ async def check_databases_creation(
         user: an admin user that can access the database
         password: password for `user`
     """
-    unit = ops_test.model.applications[PG].units[0]
-
     for unit in ops_test.model.applications[PG].units:
         unit_address = await unit.get_public_address()
 

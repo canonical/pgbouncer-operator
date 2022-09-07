@@ -36,7 +36,6 @@ DATABASE_UNITS = 1
 RELATION_NAME = "db"
 
 
-@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_mailman3_core_db(ops_test: OpsTest) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
@@ -67,12 +66,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
         action = await mailman_unit.run("mailman info")
-        logging.info(action)
-        logging.info(action.results)
         result = action.results.get("Stdout", action.results.get("Stderr", None))
-        pgb_unit = ops_test.model.applications[PGB].units[0]
-        logging.info(await get_cfg(ops_test, pgb_unit.name))
-        logging.info(await get_unit_info(ops_test, mailman_unit.name))
         assert "db url: postgres://" in result, f"no postgres db url, Stderr: {result}"
 
         # Do some CRUD operations using Mailman3 Core client.
