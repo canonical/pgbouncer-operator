@@ -1,7 +1,11 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Helper functions for pgbouncer integration tests."""
+"""Legacy helper functions for pgbouncer integration tests.
+
+These tests are used in the old relation tests, and will be replaced. These helpers are also old,
+and will be replaced by the files in tests/integration/helpers.
+"""
 
 import logging
 
