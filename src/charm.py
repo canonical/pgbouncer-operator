@@ -25,6 +25,7 @@ from constants import PG as PG_USER
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
+from relations.peers import Peers
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
+        self.peers = Peers(self)
         self.backend = BackendDatabaseRequires(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
@@ -237,12 +239,7 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
-    def _read_userlist(self) -> Dict[str, str]:
-        with open(AUTH_FILE_PATH, "r") as file:
-            userlist = pgb.parse_userlist(file.read())
-        return userlist
-
-    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+    def render_auth_file(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
 
         Args:
