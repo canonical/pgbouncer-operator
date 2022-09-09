@@ -7,49 +7,55 @@ This relation uses the pgsql interface, omitting roles and extensions as they ar
 the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-TODO update relation data to match VM IPs, not k8s hostnames
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
-┃ category         ┃            keys ┃ pgbouncer/0                                ┃ application/0 ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
-│ metadata         │        endpoint │ 'db'                                       │ 'db'          │
-│                  │          leader │ True                                       │ True          │
-├──────────────────┼─────────────────┼────────────────────────────────────────────┼───────────────┤
-│ application data │ allowed-subnets │ 10.152.183.122/32                          │               │
-│                  │   allowed-units │ application/0                              │               │
-│                  │        database │ app_db                                     │ app_db        │
-│                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
-│                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
-│                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-app_db     │               │
-│                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
-│                  │            port │ 6432                                       │               │
-│                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
-│                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-app_db     │               │
-│                  │           state │ master                                     │               │
-│                  │            user │ relation_3                                 │               │
-│                  │         version │ 12.11                                      │               │
-│ unit data        │ allowed-subnets │ 10.152.183.122/32                          │               │
-│                  │   allowed-units │ application/0                              │               │
-│                  │        database │ app_db                                     │ app_db        │
-│                  │            host │ pgbouncer-k8s-0.pgbouncer-k8s-op…          │               │
-│                  │          master │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
-│                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-app_db     │               │
-│                  │        password │ BjWDKjvZyClvTl4d5VDOK3mH                   │               │
-│                  │            port │ 6432                                       │               │
-│                  │        standbys │ host=pgbouncer-k8s-0.pgbouncer-k…          │               │
-│                  │                 │ dbname=app_db port=6432 user=relation_3    │               │
-│                  │                 │ password=BjWDKjvZyClvTl4d5VDOK3mH          │               │
-│                  │                 │ fallback_application_name=finos-app_db     │               │
-│                  │           state │ master                                     │               │
-│                  │            user │ relation_3                                 │               │
-│                  │         version │ 12.11                                      │               │
-└──────────────────┴─────────────────┴────────────────────────────────────────────┴───────────────┘
-"""
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ relation (id: 3) ┃ mailman3-core           ┃ pgbouncer-operator                                                  ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ relation name    │ db                      │ db                                                                  │
+│ interface        │ pgsql                   │ pgsql                                                               │
+│ leader unit      │ 0                       │ 0                                                                   │
+├──────────────────┼─────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+│ application data │ ╭─────────────────────╮ │ ╭─────────────────────────────────────────────────────────────────╮ │
+│                  │ │ <empty>             │ │ │                                                                 │ │
+│                  │ ╰─────────────────────╯ │ │  allowed-subnets  10.180.162.173/32                             │ │
+│                  │                         │ │  allowed-units    mailman3-core/0                               │ │
+│                  │                         │ │  database         mailman3                                      │ │
+│                  │                         │ │  host             10.180.162.172                                │ │
+│                  │                         │ │  master           host=10.180.162.172 dbname=mailman3 port=5432 │ │
+│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
+│                  │                         │ │                   fallback_application_name=mailman3-core       │ │
+│                  │                         │ │  password         6aYuYqS0xaOLvMkbhIbpUPzn                      │ │
+│                  │                         │ │  port             5432                                          │ │
+│                  │                         │ │  standbys         host=10.180.162.172 dbname=mailman3 port=5432 │ │
+│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
+│                  │                         │ │                   fallback_application_name=mailman3-core       │ │
+│                  │                         │ │  state            master                                        │ │
+│                  │                         │ │  user             pgbouncer_operator_user_3_test_db_df8v        │ │
+│                  │                         │ │  version          12.12                                         │ │
+│                  │                         │ ╰─────────────────────────────────────────────────────────────────╯ │
+│ unit data        │ ╭─ mailman3-core/0* ──╮ │ ╭─ pgbouncer-operator/0* ─────────────────────────────────────────╮ │
+│                  │ │                     │ │ │                                                                 │ │
+│                  │ │  database  mailman3 │ │ │  allowed-subnets  10.180.162.173/32                             │ │
+│                  │ ╰─────────────────────╯ │ │  allowed-units    mailman3-core/0                               │ │
+│                  │                         │ │  database         mailman3                                      │ │
+│                  │                         │ │  host             10.180.162.172                                │ │
+│                  │                         │ │  master           host=10.180.162.172 dbname=mailman3 port=5432 │ │
+│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
+│                  │                         │ │                   fallback_application_name=mailman3-core       │ │
+│                  │                         │ │  password         6aYuYqS0xaOLvMkbhIbpUPzn                      │ │
+│                  │                         │ │  port             5432                                          │ │
+│                  │                         │ │  standbys         host=10.180.162.172 dbname=mailman3 port=5432 │ │
+│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
+│                  │                         │ │                   fallback_application_name=mailman3-core       │ │
+│                  │                         │ │  state            master                                        │ │
+│                  │                         │ │  user             pgbouncer_operator_user_3_test_db_df8v        │ │
+│                  │                         │ │  version          12.12                                         │ │
+│                  │                         │ ╰─────────────────────────────────────────────────────────────────╯ │
+└──────────────────┴─────────────────────────┴─────────────────────────────────────────────────────────────────────┘
+"""  # noqa: W505
 
 import logging
 from typing import Dict, Iterable
@@ -79,6 +85,8 @@ from ops.model import (
 )
 
 logger = logging.getLogger(__name__)
+
+BACKEND_WAIT_MSG = "waiting for backend-database relation to connect"
 
 
 class RelationNotInitialisedError(Exception):
@@ -138,7 +146,7 @@ class DbProvides(Object):
         """
         if not self.charm.backend.postgres:
             # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = "waiting for backend-database relation to connect"
+            wait_str = BACKEND_WAIT_MSG
             logger.warning(wait_str)
             self.charm.unit.status = WaitingStatus(wait_str)
             join_event.defer()
@@ -158,22 +166,24 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        remote_databag = join_event.relation.data[join_event.app]
+        remote_app_databag = join_event.relation.data[join_event.app]
+        remote_unit_databag = join_event.relation.data[join_event.unit]
+        if not (database := remote_app_databag.get("database")) or not (
+            database := remote_unit_databag.get("database")
+        ):
+            # If there's nothing in either databag, return early.
+            no_db = "No database name provided in app or unit databag"
+            logger.warning(no_db)
+            self.charm.unit.status = WaitingStatus(no_db)
+            join_event.defer()
+            return
 
-        database = remote_databag.get("database")
-        if not database:
-            # If the database field isn't populated, the remote app may be using the unit databag.
-            remote_databag = join_event.relation.data[join_event.unit]
-            database = remote_databag.get("database")
-
-            if not database:
-                # If there's nothing in either databag, break.
-                logger.warning("No database name provided in app databag")
-                join_event.defer()
-                return
-
-        # Do not allow apps requesting extensions to be installed.
-        if "extensions" in remote_databag:
+        # Do not allow apps requesting extensions to be installed. Extensions should be installed
+        # through db charm config
+        if (
+            remote_app_databag.get("extensions") is not None
+            or remote_unit_databag.get("extensions") is not None
+        ):
             logger.error(
                 "ERROR - `extensions` cannot be requested through relations"
                 " - they should be installed through a database charm config in the future"
@@ -181,6 +191,7 @@ class DbProvides(Object):
             self.charm.unit.status = BlockedStatus(
                 "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
             )
+            join_event.fail()
             return
 
         user = self._generate_username(join_event)
@@ -232,7 +243,7 @@ class DbProvides(Object):
         """
         if not self.charm.backend.postgres:
             # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = "waiting for backend-database relation to connect"
+            wait_str = BACKEND_WAIT_MSG
             logger.warning(wait_str)
             self.charm.unit.status = WaitingStatus(wait_str)
             change_event.defer()
@@ -251,9 +262,11 @@ class DbProvides(Object):
         password = pgb_app_databag.get("password")
 
         if None in [database, user, password]:
-            logger.warning(
+            not_initialised = (
                 "relation not fully initialised - deferring until join_event is complete"
             )
+            logger.warning(not_initialised)
+            self.charm.unit.status(not_initialised)
             change_event.defer()
             return
 
@@ -304,7 +317,7 @@ class DbProvides(Object):
         )
 
     def update_postgres_endpoints(self, relation: Relation, reload_pgbouncer: bool = False):
-        """Updates postgres replicas."""
+        """Updates postgres endpoints."""
         database = relation.data[self.charm.app].get("database")
         if database is None:
             logger.warning("relation not fully initialised - skipping postgres endpoint update")
@@ -443,10 +456,11 @@ class DbProvides(Object):
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
         try:
             self.charm.backend.postgres.delete_user(user)
-        except PostgreSQLDeleteUserError:
+        except PostgreSQLDeleteUserError as err:
             # We've likely lost connection at this point, and can't do anything about a trailing
             # user.
-            pass
+            logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
+            logger.error(err)
 
     def get_allowed_subnets(self, relation: Relation) -> str:
         """Gets the allowed subnets from this relation."""
