@@ -119,7 +119,7 @@ async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
     return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
 
 
-async def get_userlist(ops_test: OpsTest, unit_name) -> str:
+async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
     """Gets pgbouncer logs from pgbouncer container."""
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
 

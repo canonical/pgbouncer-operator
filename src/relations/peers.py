@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Pgbouncer pgb-peers relation hooks & helpers.
+
 Example:
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ relation (id: 0) ┃ pgbouncer-k8s                                                                              ┃
@@ -68,7 +69,9 @@ logger = logging.getLogger(__name__)
 
 class Peers(Object):
     """Defines functionality for the pgbouncer peer relation.
+
     The data created in this relation allows the pgbouncer charm to connect to the postgres charm.
+
     Hook events observed:
         - relation-created
         - relation-joined
@@ -145,7 +148,9 @@ class Peers(Object):
 
     def set_secret(self, scope: str, key: str, value: str):
         """Sets secret value.
+
         Placeholder method for Juju Secrets interface.
+
         Args:
             scope: scope for data. Can be "unit" or "app".
             key: key to set value to
@@ -166,7 +171,9 @@ class Peers(Object):
 
     def del_secret(self, scope: str, key: str):
         """Deletes secret value.
+
         Placeholder method for Juju Secrets interface.
+
         Args:
             scope: scope for data. Can be "unit" or "app".
             key: key to access data
@@ -182,10 +189,13 @@ class Peers(Object):
 
     def get_secret(self, scope: str, key: str) -> Optional[str]:
         """Gets secret value.
+
         Placeholder method for Juju Secrets interface.
+
         Args:
             scope: scope for data. Can be "unit" or "app".
             key: key to access data
+
         Returns:
             value at `key` in `scope` databag.
         """

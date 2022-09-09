@@ -77,7 +77,9 @@ class PgBouncerCharm(CharmBase):
             os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o700)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
+        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
+        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
+        # throw a fit.
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
@@ -128,6 +130,9 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
+        if not self.unit.is_leader():
+            return
+
         cfg = self.read_pgb_config()
         cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
@@ -197,6 +202,8 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
+        self.peers.update_cfg(config)
+
         # create a copy of the config so the original reference is unchanged.
         primary_config = deepcopy(config)
 
@@ -239,18 +246,20 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self._reload_pgbouncer()
 
-    def render_auth_file(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+    def render_auth_file(self, auth_file: Dict[str, str], reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
 
         Args:
-            userlist: dictionary of users:password strings.
+            auth_file: dictionary of users:password strings.
             reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
                 in the container. When config files are updated, pgbouncer must be restarted for
                 the changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(userlist), 0o700)
+
+        self.peers.update_auth_file(auth_file)
+        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(auth_file), 0o700)
 
         if reload_pgbouncer:
             self._reload_pgbouncer()
@@ -310,7 +319,7 @@ class PgBouncerCharm(CharmBase):
     def update_backend_relation_port(self, port):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
-        if not self.backend.postgres:
+        if not self.backend.postgres or not self.unit.is_leader():
             return
 
         for relation in self.model.relations.get("db", []):
@@ -322,7 +331,7 @@ class PgBouncerCharm(CharmBase):
     def update_postgres_endpoints(self, reload_pgbouncer):
         """Update postgres endpoints in relation config values."""
         # Skip updates if backend.postgres doesn't exist yet.
-        if not self.backend.postgres:
+        if not self.backend.postgres or not self.unit.is_leader():
             return
 
         for relation in self.model.relations.get("db", []):
