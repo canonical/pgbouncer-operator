@@ -16,6 +16,6 @@ DATABASES = "databases"
 # relation data
 DB_RELATION_NAME = "db"
 DB_ADMIN_RELATION_NAME = "db-admin"
-BACKEND_DATABASE_RELATION_NAME = "backend-database"
+BACKEND_RELATION_NAME = "backend-database"
 PEERS = "pgb-peers"
 PEER_RELATION_NAME = PEERS

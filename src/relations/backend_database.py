@@ -11,7 +11,7 @@ and "read-only-endpoints" fields. All values are examples taken from a test depl
 not definite.
 
 Example:
-TODO update example data to work as VM data.
+TODO update example data to VM data.
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
 ┃ category         ┃             keys ┃ pgbouncer-opera… ┃ postgresql/0     ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
@@ -48,7 +48,7 @@ from charms.data_platform_libs.v0.database_requires import (
 )
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL
-from ops.charm import CharmBase, RelationDepartedEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
     ActiveStatus,
@@ -58,11 +58,7 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_PATH
-
-RELATION_NAME = "backend-database"
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-PGB_DB = "pgbouncer"
+from constants import AUTH_FILE_PATH, BACKEND_RELATION_NAME, PGB, PGB_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +77,13 @@ class BackendDatabaseRequires(Object):
     """
 
     def __init__(self, charm: CharmBase):
-        super().__init__(charm, RELATION_NAME)
+        super().__init__(charm, BACKEND_RELATION_NAME)
 
         self.charm = charm
         self.database = DatabaseRequires(
             self.charm,
-            relation_name=RELATION_NAME,
-            database_name=PGB_DB,
+            relation_name=BACKEND_RELATION_NAME,
+            database_name=PGB,
             extra_user_roles="SUPERUSER",
         )
 
@@ -96,7 +92,9 @@ class BackendDatabaseRequires(Object):
         self.framework.observe(
             self.database.on.read_only_endpoints_changed, self._on_endpoints_changed
         )
-        self.framework.observe(charm.on[RELATION_NAME].relation_broken, self._on_relation_broken)
+        self.framework.observe(
+            charm.on[BACKEND_RELATION_NAME].relation_broken, self._on_relation_broken
+        )
 
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Handle backend-database-database-created event.
@@ -105,9 +103,11 @@ class BackendDatabaseRequires(Object):
         """
         logger.info("initialising postgres and pgbouncer relations")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
-        if self.postgres is None:
+        if not self.charm.unit.is_leader():
+            return
+        if self.postgres is None or self.relation.data[self.charm.app].get("database") is None:
             event.defer()
-            logging.error("deferring database-created hook - postgres database not ready")
+            logger.error("deferring database-created hook - postgres database not ready")
             return
 
         plaintext_password = pgb.generate_password()
@@ -115,11 +115,9 @@ class BackendDatabaseRequires(Object):
         # later on
         self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
         self.initialise_auth_function(dbname=self.database.database)
-
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
-        self.charm.render_file(
-            AUTH_FILE_PATH, f'"{self.auth_user}" "{hashed_password}"', perms=0o600
-        )
+        self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
+
         cfg = self.charm.read_pgb_config()
         # adds user to pgb config
         cfg.add_user(user=event.username, admin=True)
@@ -142,7 +140,7 @@ class BackendDatabaseRequires(Object):
         pgbouncer-uninstall doesn't actually uninstall anything - it actually removes permissions
         for the auth user.
         """
-        if event.departing_unit != self.charm.unit:
+        if event.departing_unit != self.charm.unit or not self.charm.unit.is_leader():
             return
 
         logger.info("removing auth user")
@@ -152,7 +150,7 @@ class BackendDatabaseRequires(Object):
 
         try:
             # TODO de-authorise all databases
-            with self.postgres.connect_to_database(PGB_DB) as conn, conn.cursor() as cursor:
+            with self.postgres.connect_to_database(PGB) as conn, conn.cursor() as cursor:
                 cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
             conn.close()
         except psycopg2.Error:
@@ -165,12 +163,16 @@ class BackendDatabaseRequires(Object):
 
         logger.info("auth user removed")
 
-    def _on_relation_broken(self, _):
+    def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle backend-database-relation-broken event.
 
         Removes all traces of this relation from pgbouncer config.
         """
-        cfg = self.charm.read_pgb_config()
+        try:
+            cfg = self.charm.read_pgb_config()
+        except FileNotFoundError:
+            event.defer()
+            return
         cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
@@ -178,7 +180,7 @@ class BackendDatabaseRequires(Object):
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
 
-    def initialise_auth_function(self, dbname=PGB_DB):
+    def initialise_auth_function(self, dbname=PGB):
         """Runs an SQL script to initialise the auth function.
 
         This function must run in every database for authentication to work correctly, and assumes
@@ -202,7 +204,7 @@ class BackendDatabaseRequires(Object):
     @property
     def relation(self) -> Relation:
         """Relation object for postgres backend-database relation."""
-        backend_relation = self.model.get_relation(RELATION_NAME)
+        backend_relation = self.model.get_relation(BACKEND_RELATION_NAME)
         if not backend_relation:
             return None
         else:
@@ -217,7 +219,7 @@ class BackendDatabaseRequires(Object):
         if not self.relation:
             return None
 
-        databag = self.app_databag
+        databag = self.postgres_databag
         endpoint = databag.get("endpoints")
         user = databag.get("username")
         password = databag.get("password")
@@ -233,14 +235,14 @@ class BackendDatabaseRequires(Object):
     @property
     def auth_user(self):
         """Username for auth_user."""
-        username = self.app_databag.get("username")
+        username = self.postgres_databag.get("username")
         if username is None:
             return None
 
         return f"pgbouncer_auth_{username}".replace("-", "_")
 
     @property
-    def app_databag(self) -> Dict:
+    def postgres_databag(self) -> Dict:
         """Wrapper around accessing the remote application databag for the backend relation.
 
         Returns None if relation is none.
