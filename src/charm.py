@@ -225,9 +225,9 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             pgbouncer_ini: PgbConfig object containing pgbouncer config.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
             config_path: intended location for the config.
         """
@@ -247,9 +247,9 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             userlist: dictionary of users:password strings.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
