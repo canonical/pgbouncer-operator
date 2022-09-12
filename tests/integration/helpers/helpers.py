@@ -4,8 +4,6 @@
 
 import asyncio
 import json
-import tempfile
-import zipfile
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -124,6 +122,12 @@ async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
 async def get_userlist(ops_test: OpsTest, unit_name) -> str:
     """Gets pgbouncer logs from unit filesystem."""
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
+
+
+async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):
+    connstr = f"--username={user} -h {host} -p {port} --dbname={dbname}"
+    run_cmd = f'run --unit {unit_name} -- PGPASSWORD={pgpass} psql {connstr} --command="{command}"'
+    return await ops_test.juju(*run_cmd.split(" "))
 
 
 def get_backend_relation(ops_test: OpsTest):
