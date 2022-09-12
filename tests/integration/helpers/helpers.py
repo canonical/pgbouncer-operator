@@ -305,7 +305,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     )
     await ops_test.model.wait_for_idle(
         apps=[application_name],
-        raise_on_blocked=False,
         timeout=1000,
     )
 

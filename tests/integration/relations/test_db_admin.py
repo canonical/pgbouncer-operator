@@ -13,6 +13,7 @@ from tests.integration.helpers.helpers import (
     deploy_postgres_bundle,
     get_app_relation_databag,
     run_sql,
+    wait_for_relation_joined_between,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,17 +22,29 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 PG = "postgresql"
 PSQL = "psql"
-
+RELATION="db-admin"
 
 @pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     await deploy_postgres_bundle(ops_test, db_units=1)
-    psql_relation = await deploy_and_relate_application_with_pgbouncer_bundle(
-        ops_test,
+
+    # Deploy application.
+    await ops_test.model.deploy(
         "postgresql-charmers-postgresql-client",
         application_name=PSQL,
-        relation="db-admin",
+    )
+    await ops_test.model.wait_for_idle(
+        apps=[PSQL],
+        timeout=600,
+    )
+
+    psql_relation = await ops_test.model.relate(f"{PSQL}:{RELATION}", f"{PGB}:{RELATION}")
+    wait_for_relation_joined_between(ops_test, PGB, PSQL)
+    await ops_test.model.wait_for_idle(
+        apps=[PSQL, PG, PGB],
+        status="active",
+        timeout=600,
     )
 
     unit_name = f"{PSQL}/0"
