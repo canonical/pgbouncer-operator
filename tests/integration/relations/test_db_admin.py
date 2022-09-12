@@ -27,13 +27,12 @@ RELATION="db-admin"
 @pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
-    await deploy_postgres_bundle(ops_test, db_units=1)
-
     # Deploy application.
     await ops_test.model.deploy(
         "postgresql-charmers-postgresql-client",
         application_name=PSQL,
     )
+    await deploy_postgres_bundle(ops_test, db_units=1)
 
     psql_relation = await ops_test.model.relate(f"{PSQL}:db", f"{PGB}:{RELATION}")
     wait_for_relation_joined_between(ops_test, PGB, PSQL)
@@ -44,7 +43,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     )
 
     unit_name = f"{PSQL}/0"
-    psql_databag = get_app_relation_databag(ops_test, unit_name, psql_relation.id)
+    psql_databag = await get_app_relation_databag(ops_test, unit_name, psql_relation.id)
 
     pgpass = psql_databag.get("password")
     user = psql_databag.get("user")
@@ -53,10 +52,11 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     dbname = psql_databag.get("database")
 
     assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
+
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass' ;"
-    rtn, _, err = run_sql(ops_test, unit_name, user_command, pgpass, user, host, port, dbname)
+    rtn, _, err = await run_sql(ops_test, unit_name, user_command, pgpass, user, host, port, dbname)
     assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
     db_command = "CREATE DATABASE test_db;"
-    rtn, _, err = run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
+    rtn, _, err = await run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
