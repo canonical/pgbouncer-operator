@@ -53,7 +53,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
 
     assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
 
-    user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass' ;"
+    user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
     rtn, _, err = await run_sql(ops_test, unit_name, user_command, pgpass, user, host, port, dbname)
     assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
