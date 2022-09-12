@@ -39,7 +39,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
         timeout=600,
     )
 
-    psql_relation = await ops_test.model.relate(f"{PSQL}:{RELATION}", f"{PGB}:{RELATION}")
+    psql_relation = await ops_test.model.relate(f"{PSQL}:db", f"{PGB}:{RELATION}")
     wait_for_relation_joined_between(ops_test, PGB, PSQL)
     await ops_test.model.wait_for_idle(
         apps=[PSQL, PG, PGB],
@@ -56,11 +56,11 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     port = psql_databag.get("port")
     dbname = psql_databag.get("database")
 
-    assert None in [pgpass, user, host, port, dbname], "databag incorrectly populated"
+    assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass' ;"
     rtn, _, err = run_sql(ops_test, unit_name, user_command, pgpass, user, host, port, dbname)
-    assert rtn == 0, f"failed to run admin command, {err}"
+    assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
     db_command = "CREATE DATABASE test_db;"
     rtn, _, err = run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
-    assert rtn == 0, f"failed to run admin command, {err}"
+    assert rtn == 0, f"failed to run admin command {db_command}, {err}"
