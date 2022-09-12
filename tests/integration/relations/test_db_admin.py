@@ -9,7 +9,6 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import (
-    deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_app_relation_databag,
     run_sql,
@@ -22,7 +21,8 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 PG = "postgresql"
 PSQL = "psql"
-RELATION="db-admin"
+RELATION = "db-admin"
+
 
 @pytest.mark.dev
 @pytest.mark.legacy_relation
@@ -54,7 +54,9 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
 
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
-    rtn, _, err = await run_sql(ops_test, unit_name, user_command, pgpass, user, host, port, dbname)
+    rtn, _, err = await run_sql(
+        ops_test, unit_name, user_command, pgpass, user, host, port, dbname
+    )
     assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
     db_command = "CREATE DATABASE test_db;"
