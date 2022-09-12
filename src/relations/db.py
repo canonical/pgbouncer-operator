@@ -268,7 +268,7 @@ class DbProvides(Object):
                 "relation not fully initialised - deferring until join_event is complete"
             )
             logger.warning(not_initialised)
-            self.charm.unit.status(not_initialised)
+            self.charm.unit.status = WaitingStatus(not_initialised)
             change_event.defer()
             return
 
