@@ -30,7 +30,7 @@ PGB = METADATA["name"]
 PG = "postgresql"
 PSQL = "psql"
 
-
+@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     pg_relation = await deploy_postgres_bundle(ops_test)
