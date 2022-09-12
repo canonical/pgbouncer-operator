@@ -24,7 +24,6 @@ PSQL = "psql"
 RELATION = "db-admin"
 
 
-@pytest.mark.dev
 @pytest.mark.legacy_relation
 async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     # Deploy application.
