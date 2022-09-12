@@ -95,6 +95,7 @@ class TestDb(unittest.TestCase):
         relation_data[self.charm.unit] = {}
         relation_data[self.charm.app] = {}
         relation_data[mock_event.app] = {"database": database}
+        relation_data[mock_event.unit] = {"database": database}
         _backend_pg.return_value = _postgres
         _postgres.create_user = _create_user
         _postgres.create_database = _create_database
