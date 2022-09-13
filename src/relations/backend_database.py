@@ -39,7 +39,7 @@ TODO update example data to work as VM data.
 """
 
 import logging
-from typing import Dict
+from typing import Dict, List
 
 import psycopg2
 from charms.data_platform_libs.v0.database_requires import (
@@ -114,8 +114,7 @@ class BackendDatabaseRequires(Object):
         # create authentication user on postgres database, so we can authenticate other users
         # later on
         self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
-        self.initialise_auth_function(dbname=self.database.database)
-        self.initialise_auth_function(dbname=PG)
+        self.initialise_auth_function([self.database.database, PG])
 
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.render_file(
@@ -152,8 +151,7 @@ class BackendDatabaseRequires(Object):
 
         try:
             # TODO de-authorise all databases
-            self.remove_auth_function()
-            self.remove_auth_function(PG)
+            self.remove_auth_function([PGB_DB, PG])
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
                 "failed to remove auth user when disconnecting from postgres application."
@@ -176,7 +174,7 @@ class BackendDatabaseRequires(Object):
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
 
-    def initialise_auth_function(self, dbname=PGB_DB):
+    def initialise_auth_function(self, dbs):
         """Runs an SQL script to initialise the auth function.
 
         This function must run in every database for authentication to work correctly, and assumes
@@ -192,20 +190,21 @@ class BackendDatabaseRequires(Object):
 
         install_script = open("src/relations/sql/pgbouncer-install.sql", "r").read()
 
-        with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
-            cursor.execute(install_script.replace("auth_user", self.auth_user))
-        conn.close()
+        for dbname in dbs:
+            with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                cursor.execute(install_script.replace("auth_user", self.auth_user))
+            conn.close()
         logger.info("auth function initialised")
 
-    def remove_auth_function(self, dbname=PGB_DB):
+    def remove_auth_function(self, dbs: List[str]):
         """Runs an SQL script to remove auth function."""
         logger.info("initialising auth function")
 
         uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
-
-        with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
-            cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
-        conn.close()
+        for dbname in dbs:
+            with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
+            conn.close()
         logger.info("auth function remove")
 
     @property
