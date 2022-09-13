@@ -1,8 +1,25 @@
-name: Tests
+name: Release to latest/edge
+
 on:
-  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@1.0.3
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}" # FIXME: current token will expire in 2023-07-04
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -53,6 +70,7 @@ jobs:
       - name: Run integration tests
         run: tox -e backend-integration
 
+
   integration-legacy-relations:
     name: Integration tests for legacy relations
     runs-on: ubuntu-latest
@@ -66,3 +84,29 @@ jobs:
           lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e legacy-relation-integration
+
+  release-to-charmhub:
+    name: Release to CharmHub
+    needs:
+      - lib-check
+      - lint
+      - unit-test
+      - integration-standalone
+      - integration-backend
+      - integration-legacy-relations
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Select charmhub channel
+        uses: canonical/charming-actions/channel@2.0.0-rc
+        id: channel
+      - name: Upload charm to charmhub
+        uses: canonical/charming-actions/upload-charm@2.0.0-rc
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          channel: "${{ steps.channel.outputs.name }}"
