@@ -42,8 +42,8 @@ jobs:
       - name: Run tests
         run: tox -e unit
 
-  integration-test-lxd:
-    name: Integration tests for (lxd)
+  integration-standalone:
+    name: Integration tests for standalone charm
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,8 +52,38 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
+          lxd-channel: 5.4/stable
       - name: Run integration tests
-        run: tox -e integration
+        run: tox -e standalone-integration
+
+  integration-backend:
+    name: Integration tests for backend relation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: lxd
+          lxd-channel: 5.4/stable
+      - name: Run integration tests
+        run: tox -e backend-integration
+
+
+  integration-legacy-relations:
+    name: Integration tests for legacy relations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: lxd
+          lxd-channel: 5.4/stable
+      - name: Run integration tests
+        run: tox -e legacy-relation-integration
 
   release-to-charmhub:
     name: Release to CharmHub
@@ -61,7 +91,10 @@ jobs:
       - lib-check
       - lint
       - unit-test
-      - integration-test-lxd
+      - integration-standalone
+      - integration-backend
+      - integration-legacy-relations
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
