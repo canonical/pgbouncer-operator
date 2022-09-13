@@ -174,14 +174,14 @@ class BackendDatabaseRequires(Object):
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
 
-    def initialise_auth_function(self, dbs):
+    def initialise_auth_function(self, dbs: List[str]):
         """Runs an SQL script to initialise the auth function.
 
         This function must run in every database for authentication to work correctly, and assumes
         self.postgres is set up correctly.
 
         Args:
-            dbname: the name of the database to connect to.
+            dbs: a list of database names to connect to.
 
         Raises:
             psycopg2.Error if self.postgres isn't usable.
@@ -197,7 +197,14 @@ class BackendDatabaseRequires(Object):
         logger.info("auth function initialised")
 
     def remove_auth_function(self, dbs: List[str]):
-        """Runs an SQL script to remove auth function."""
+        """Runs an SQL script to remove auth function.
+
+        Args:
+            dbs: a list of database names to connect to.
+
+        Raises:
+            psycopg2.Error if self.postgres isn't usable.
+        """
         logger.info("initialising auth function")
 
         uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
