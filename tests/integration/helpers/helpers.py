@@ -2,6 +2,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import asyncio
 import json
 from multiprocessing import ProcessError
 from pathlib import Path
@@ -16,8 +17,7 @@ from constants import AUTH_FILE_PATH, INI_PATH, LOG_PATH
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-
-# TODO organise this file
+PG = "postgresql"
 
 
 async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
@@ -94,7 +94,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
 
 
 async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -> str:
-    """Gets a file from the pgbouncer container of a pgbouncer application unit."""
+    """Gets a file from the filesystem of a pgbouncer application unit."""
     cat_cmd = f"ssh {unit_name} sudo cat {filepath}"
     return_code, output, _ = await ops_test.juju(*cat_cmd.split(" "))
     if return_code != 0:
@@ -109,19 +109,26 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
 
 
 async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = INI_PATH) -> pgb.PgbConfig:
-    """Gets pgbouncer config from pgbouncer container."""
+    """Gets pgbouncer config from unit filesystem."""
     cat = await cat_file_from_unit(ops_test, path, unit_name)
     return pgb.PgbConfig(cat)
 
 
 async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from pgbouncer container."""
+    """Gets pgbouncer logs from unit filesystem."""
     return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
 
 
 async def get_userlist(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from pgbouncer container."""
+    """Gets pgbouncer logs from unit filesystem."""
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
+
+
+async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):
+    run_cmd = f"run --unit {unit_name} --"
+    connstr = f"--username={user} -h {host} -p {port} --dbname={dbname}"
+    cmd = f'PGPASSWORD={pgpass} psql {connstr} --command="{command}"'
+    return await ops_test.juju(*run_cmd.split(" "), cmd)
 
 
 def get_backend_relation(ops_test: OpsTest):
@@ -225,3 +232,90 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
         if endpoint_one not in endpoints and endpoint_two not in endpoints:
             return True
     return False
+
+
+async def deploy_postgres_bundle(
+    ops_test: OpsTest, pgb_config: dict = {}, pg_config: dict = {}, db_units=3
+):
+    """Build pgbouncer charm, deploy and relate it to postgresql charm.
+
+    Returns:
+        libjuju Relation object describing the relation between pgbouncer and postgres.
+    """
+    charm = await ops_test.build_charm(".")
+    async with ops_test.fast_forward():
+        await asyncio.gather(
+            ops_test.model.deploy(
+                charm,
+                application_name=PGB,
+                config=pgb_config,
+            ),
+            ops_test.model.deploy(
+                PG,
+                channel="edge",
+                num_units=db_units,
+                config=pg_config,
+            ),
+        )
+        await asyncio.gather(
+            ops_test.model.wait_for_idle(
+                apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
+            ),
+            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
+        )
+        relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
+        wait_for_relation_joined_between(ops_test, PG, PGB)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
+
+        return relation
+
+
+async def deploy_and_relate_application_with_pgbouncer_bundle(
+    ops_test: OpsTest,
+    charm: str,
+    application_name: str,
+    number_of_units: int = 1,
+    config: dict = {},
+    channel: str = "stable",
+    relation: str = "db",
+):
+    """Helper function to deploy and relate application with Pgbouncer cluster.
+
+    This assumes pgbouncer already exists and is related to postgres
+
+    Args:
+        ops_test: The ops test framework.
+        charm: Charm identifier.
+        application_name: The name of the application to deploy.
+        number_of_units: The number of units to deploy.
+        config: Extra config options for the application.
+        channel: The channel to use for the charm.
+        relation: Name of the pgbouncer relation to relate
+            the application to.
+
+    Returns:
+        the id of the created relation.
+    """
+    # Deploy application.
+    await ops_test.model.deploy(
+        charm,
+        channel=channel,
+        application_name=application_name,
+        num_units=number_of_units,
+        config=config,
+    )
+    await ops_test.model.wait_for_idle(
+        apps=[application_name],
+        timeout=1000,
+    )
+
+    # Relate application to pgbouncer.
+    relation = await ops_test.model.relate(application_name, f"{PGB}:{relation}")
+    wait_for_relation_joined_between(ops_test, PGB, application_name)
+    await ops_test.model.wait_for_idle(
+        apps=[application_name, PG, PGB],
+        status="active",
+        timeout=1000,
+    )
+
+    return relation

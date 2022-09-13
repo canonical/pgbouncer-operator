@@ -84,6 +84,8 @@ from ops.model import (
     WaitingStatus,
 )
 
+from constants import PG
+
 logger = logging.getLogger(__name__)
 
 BACKEND_WAIT_MSG = "waiting for backend-database relation to connect"
@@ -168,7 +170,7 @@ class DbProvides(Object):
 
         remote_app_databag = join_event.relation.data[join_event.app]
         remote_unit_databag = join_event.relation.data[join_event.unit]
-        if not (database := remote_app_databag.get("database")) or not (
+        if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
             # If there's nothing in either databag, return early.
@@ -216,7 +218,7 @@ class DbProvides(Object):
             return
 
         # set up auth function
-        self.charm.backend.initialise_auth_function(dbname=database)
+        self.charm.backend.initialise_auth_function([database])
 
         # Create user in pgbouncer config
         cfg = self.charm.read_pgb_config()
@@ -266,7 +268,7 @@ class DbProvides(Object):
                 "relation not fully initialised - deferring until join_event is complete"
             )
             logger.warning(not_initialised)
-            self.charm.unit.status(not_initialised)
+            self.charm.unit.status = WaitingStatus(not_initialised)
             change_event.defer()
             return
 
@@ -345,6 +347,16 @@ class DbProvides(Object):
             }
         else:
             cfg["databases"].pop(f"{database}_standby", None)
+
+        if self.admin:
+            # Admin relations get access to postgres root db
+            cfg["databases"][PG] = {
+                "host": postgres_endpoint.split(":")[0],
+                "dbname": PG,
+                "port": postgres_endpoint.split(":")[1],
+                "auth_user": self.charm.backend.auth_user,
+            }
+
         # Write config data to charm filesystem
         self.charm.render_pgb_config(cfg, reload_pgbouncer=reload_pgbouncer)
 
@@ -448,9 +460,13 @@ class DbProvides(Object):
                     break
             if not delete_db:
                 break
+
         if delete_db:
             cfg["databases"].pop(database, None)
             cfg["databases"].pop(f"{database}_standby", None)
+            self.charm.backend.remove_auth_function(database)
+
+        # TODO delete postgres database from config if there's no admin relations left
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)

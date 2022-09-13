@@ -39,7 +39,7 @@ TODO update example data to work as VM data.
 """
 
 import logging
-from typing import Dict
+from typing import Dict, List
 
 import psycopg2
 from charms.data_platform_libs.v0.database_requires import (
@@ -58,7 +58,7 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_PATH
+from constants import AUTH_FILE_PATH, PG
 
 RELATION_NAME = "backend-database"
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
@@ -114,7 +114,7 @@ class BackendDatabaseRequires(Object):
         # create authentication user on postgres database, so we can authenticate other users
         # later on
         self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
-        self.initialise_auth_function(dbname=self.database.database)
+        self.initialise_auth_function([self.database.database, PG])
 
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.render_file(
@@ -146,15 +146,12 @@ class BackendDatabaseRequires(Object):
             return
 
         logger.info("removing auth user")
-        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
 
         # TODO remove all databases that were created for client applications
 
         try:
             # TODO de-authorise all databases
-            with self.postgres.connect_to_database(PGB_DB) as conn, conn.cursor() as cursor:
-                cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
-            conn.close()
+            self.remove_auth_function([PGB_DB, PG])
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
                 "failed to remove auth user when disconnecting from postgres application."
@@ -162,7 +159,6 @@ class BackendDatabaseRequires(Object):
             return
 
         self.postgres.delete_user(self.auth_user)
-
         logger.info("auth user removed")
 
     def _on_relation_broken(self, _):
@@ -178,14 +174,14 @@ class BackendDatabaseRequires(Object):
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
 
-    def initialise_auth_function(self, dbname=PGB_DB):
+    def initialise_auth_function(self, dbs: List[str]):
         """Runs an SQL script to initialise the auth function.
 
         This function must run in every database for authentication to work correctly, and assumes
         self.postgres is set up correctly.
 
         Args:
-            dbname: the name of the database to connect to.
+            dbs: a list of database names to connect to.
 
         Raises:
             psycopg2.Error if self.postgres isn't usable.
@@ -194,10 +190,29 @@ class BackendDatabaseRequires(Object):
 
         install_script = open("src/relations/sql/pgbouncer-install.sql", "r").read()
 
-        with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
-            cursor.execute(install_script.replace("auth_user", self.auth_user))
-        conn.close()
+        for dbname in dbs:
+            with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                cursor.execute(install_script.replace("auth_user", self.auth_user))
+            conn.close()
         logger.info("auth function initialised")
+
+    def remove_auth_function(self, dbs: List[str]):
+        """Runs an SQL script to remove auth function.
+
+        Args:
+            dbs: a list of database names to connect to.
+
+        Raises:
+            psycopg2.Error if self.postgres isn't usable.
+        """
+        logger.info("initialising auth function")
+
+        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
+        for dbname in dbs:
+            with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
+            conn.close()
+        logger.info("auth function remove")
 
     @property
     def relation(self) -> Relation:
