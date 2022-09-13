@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
-PG = "postgresql-k8s"
-RELATION = "backend-database"
-FINOS_WALTZ = "finos-waltz"
+PG = "postgresql"
+BACKEND_RELATION = "backend-database"
+MAILMAN = "mailman3-core"
 
 
 @pytest.mark.scaling
@@ -31,11 +31,8 @@ FINOS_WALTZ = "finos-waltz"
 async def test_deploy_at_scale(ops_test):
     # Build, deploy, and relate charms.
     charm = await ops_test.build_charm(".")
-    resources = {
-        "pgbouncer-image": METADATA["resources"]["pgbouncer-image"]["upstream-source"],
-    }
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(charm, resources=resources, application_name=PGB, num_units=3)
+        await ops_test.model.deploy(charm, application_name=PGB, num_units=3)
         await ops_test.model.wait_for_idle(
             apps=[PGB], status="active", timeout=1000, wait_for_exact_units=3
         ),
@@ -51,7 +48,7 @@ async def test_scaled_relations(ops_test: OpsTest):
         await asyncio.gather(
             # Edge 5 is the new postgres charm
             ops_test.model.deploy(PG, channel="edge", trust=True, num_units=3),
-            ops_test.model.deploy("finos-waltz-k8s", application_name=FINOS_WALTZ, channel="edge"),
+            ops_test.model.deploy(MAILMAN, application_name=MAILMAN, channel="edge"),
         )
 
         await asyncio.gather(
@@ -63,7 +60,7 @@ async def test_scaled_relations(ops_test: OpsTest):
             ),
         )
 
-        await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
+        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION}", f"{PG}:database")
         wait_for_relation_joined_between(ops_test, PG, PGB)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=1000),
@@ -72,10 +69,10 @@ async def test_scaled_relations(ops_test: OpsTest):
             ),
         )
 
-        await ops_test.model.add_relation(f"{PGB}:db", f"{FINOS_WALTZ}:db")
-        wait_for_relation_joined_between(ops_test, PGB, FINOS_WALTZ)
+        await ops_test.model.add_relation(f"{PGB}:db", f"{MAILMAN}:db")
+        wait_for_relation_joined_between(ops_test, PGB, MAILMAN)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB, FINOS_WALTZ], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=1000),
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
             ),
@@ -87,22 +84,25 @@ async def test_scaled_relations(ops_test: OpsTest):
 async def test_scaling(ops_test: OpsTest):
     """Test data is replicated to new units after a scale up."""
     # Ensure the initial number of units in the application.
-    initial_scale = 3
+    initial_scale = 4
     async with ops_test.fast_forward():
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB, FINOS_WALTZ], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=1000),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=1000, wait_for_exact_units=initial_scale
             ),
         )
 
         # Scale down the application.
         await scale_application(ops_test, PGB, initial_scale - 1)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB, FINOS_WALTZ], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=1000),
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+            ),
+            ops_test.model.wait_for_idle(
+                apps=[PGB], status="active", timeout=1000, wait_for_exact_units=initial_scale - 1
             ),
         )
 
@@ -112,8 +112,8 @@ async def test_scaling(ops_test: OpsTest):
 async def test_exit_relations(ops_test: OpsTest):
     """Test that we can exit relations with multiple units without breaking anything."""
     async with ops_test.fast_forward():
-        await ops_test.model.remove_application(FINOS_WALTZ)
-        wait_for_relation_removed_between(ops_test, PGB, FINOS_WALTZ)
+        await ops_test.model.remove_application(MAILMAN)
+        wait_for_relation_removed_between(ops_test, PGB, MAILMAN)
         await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
 
         await ops_test.model.remove_application(PG)

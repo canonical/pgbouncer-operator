@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from ops.testing import Harness
 
-from charm import PgBouncerK8sCharm
+from charm import PgBouncerCharm
 from lib.charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from relations.peers import AUTH_FILE_DATABAG_KEY, CFG_FILE_DATABAG_KEY
 
 
 class TestPeers(unittest.TestCase):
     def setUp(self):
-        self.harness = Harness(PgBouncerK8sCharm)
+        self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
 
@@ -22,9 +22,9 @@ class TestPeers(unittest.TestCase):
         self.unit = self.charm.unit.name
 
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
-    @patch("charm.PgBouncerK8sCharm.render_pgb_config")
-    @patch("charm.PgBouncerK8sCharm.render_auth_file")
-    @patch("charm.PgBouncerK8sCharm.reload_pgbouncer")
+    @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("charm.PgBouncerCharm.render_auth_file")
+    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     def test_on_peers_changed(
         self, reload_pgbouncer, render_auth_file, render_pgb_config, app_databag
     ):

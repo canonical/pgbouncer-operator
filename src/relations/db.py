@@ -12,7 +12,6 @@ This relation uses the pgsql interface, omitting roles and extensions as they ar
 the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-TODO update relation data to match VM IPs, not k8s hostnames
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
 ┃ category         ┃            keys ┃ pgbouncer/0                                ┃ application/0 ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
