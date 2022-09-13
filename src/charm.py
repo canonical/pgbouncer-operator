@@ -165,11 +165,11 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = ActiveStatus()
 
     def _reload_pgbouncer(self):
-        """Reloads systemd pgbouncer service."""
+        """Restarts systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             for service in self.pgb_services:
-                systemd.service_reload(service, restart_on_failure=True)
+                systemd.service_restart(service)
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
@@ -234,9 +234,9 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             pgbouncer_ini: PgbConfig object containing pgbouncer config.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
             config_path: intended location for the config.
         """
@@ -251,9 +251,9 @@ class PgBouncerCharm(CharmBase):
 
         Args:
             auth_file: dictionary of users:password strings.
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer application
-                in the container. When config files are updated, pgbouncer must be restarted for
-                the changes to take effect. However, these config updates can be done in batches,
+            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
+                application. When config files are updated, pgbouncer must be restarted for the
+                changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")

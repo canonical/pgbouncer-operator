@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from charms.pgbouncer_k8s.v0.pgb import (
     DEFAULT_CONFIG,
@@ -56,7 +56,9 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_database_created(mock_event)
 
         postgres.create_user.assert_called_with(self.backend.auth_user, pw, admin=True)
-        _init_auth.assert_called_with(dbname=self.backend.database.database)
+        _init_auth.assert_has_calls(
+            [call(dbname=self.backend.database.database), call(dbname="postgres")]
+        )
 
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
         _render.assert_any_call(
@@ -82,21 +84,12 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.update_postgres_endpoints")
-    def test_relation_departed(self, _update_endpoints, _postgres, _auth_user):
-        postgres = _postgres.return_value
+    @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
+    def test_relation_departed(self, _remove_auth, _update_endpoints, _postgres, _auth_user):
         depart_event = MagicMock()
         depart_event.departing_unit = self.charm.unit
         self.backend._on_relation_departed(depart_event)
-
-        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
-
-        postgres.connect_to_database.assert_called_with("pgbouncer")
-        conn = postgres.connect_to_database().__enter__()
-        cursor = conn.cursor().__enter__()
-        cursor.execute.assert_called_with(
-            uninstall_script.replace("auth_user", self.backend.auth_user)
-        )
-        conn.close.assert_called()
+        _remove_auth.assert_called()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock

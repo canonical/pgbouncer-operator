@@ -115,6 +115,8 @@ class BackendDatabaseRequires(Object):
         # later on
         self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
         self.initialise_auth_function(dbname=self.database.database)
+        self.initialise_auth_function(dbname=PG)
+
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
 
@@ -144,15 +146,13 @@ class BackendDatabaseRequires(Object):
             return
 
         logger.info("removing auth user")
-        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
 
         # TODO remove all databases that were created for client applications
 
         try:
             # TODO de-authorise all databases
-            with self.postgres.connect_to_database(PGB) as conn, conn.cursor() as cursor:
-                cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
-            conn.close()
+            self.remove_auth_function()
+            self.remove_auth_function(PG)
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
                 "failed to remove auth user when disconnecting from postgres application."
@@ -160,7 +160,6 @@ class BackendDatabaseRequires(Object):
             return
 
         self.postgres.delete_user(self.auth_user)
-
         logger.info("auth user removed")
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
@@ -200,6 +199,17 @@ class BackendDatabaseRequires(Object):
             cursor.execute(install_script.replace("auth_user", self.auth_user))
         conn.close()
         logger.info("auth function initialised")
+
+    def remove_auth_function(self, dbname=PGB_DB):
+        """Runs an SQL script to remove auth function."""
+        logger.info("initialising auth function")
+
+        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
+
+        with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
+            cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
+        conn.close()
+        logger.info("auth function remove")
 
     @property
     def relation(self) -> Relation:
