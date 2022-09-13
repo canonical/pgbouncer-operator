@@ -104,7 +104,7 @@ class TestDb(unittest.TestCase):
 
         _create_user.assert_called_with(user, password, admin=True)
         _create_database.assert_called_with(database, user)
-        _init_auth.assert_called_with(dbname=database)
+        _init_auth.assert_called_with([database])
         assert user in _read_cfg.return_value["pgbouncer"]["admin_users"]
         _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
 
@@ -236,8 +236,9 @@ class TestDb(unittest.TestCase):
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
     def test_on_relation_broken(
-        self, _render_cfg, _backend_postgres, _delete_user, _postgres, _read
+        self, _remove_auth, _render_cfg, _backend_postgres, _delete_user, _postgres, _read
     ):
         """Test that all traces of the given app are removed from pgb config, including user."""
         database = "test_db"
