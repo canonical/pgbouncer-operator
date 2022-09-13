@@ -63,7 +63,7 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
-from typing import Dict, Iterable
+from typing import Iterable
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
@@ -387,12 +387,9 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        app_databag = departed_event.relation.data[self.charm.app]
-        unit_databag = departed_event.relation.data[self.charm.unit]
-
         self.update_databags(
             departed_event.relation,
-            {"allowed-units" : self.get_allowed_units(departed_event.relation)}
+            {"allowed-units": self.get_allowed_units(departed_event.relation)},
         )
 
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
@@ -422,16 +419,14 @@ class DbProvides(Object):
         # check database can be deleted from pgb config, and if so, delete it. Database is kept on
         # postgres application because we don't want to delete all user data with one command.
         delete_db = True
-        for relname in ["db", "db-admin"]:
-            for relation in self.model.relations.get(relname, []):
-                if relation.id == broken_event.relation.id:
-                    continue
-                if relation.data[self.charm.unit].get("database") == database:
-                    # There's multiple applications using this database, so don't remove it until
-                    # we can guarantee this is the last one.
-                    delete_db = False
-                    break
-            if not delete_db:
+        relations = [self.model.relations.get("db", []) + self.model.relations.get("db-admin"), []]
+        for relation in relations:
+            if relation.id == broken_event.relation.id:
+                continue
+            if relation.data[self.charm.unit].get("database") == database:
+                # There's multiple applications using this database, so don't remove it until
+                # we can guarantee this is the last one.
+                delete_db = False
                 break
 
         if delete_db:
@@ -448,8 +443,8 @@ class DbProvides(Object):
             try:
                 self.charm.backend.postgres.delete_user(user)
             except PostgreSQLDeleteUserError as err:
-                # We've likely lost connection at this point, and can't do anything about a trailing
-                # user.
+                # We've likely lost connection at this point, and can't do anything about a
+                # trailing user.
                 logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
                 logger.error(err)
 

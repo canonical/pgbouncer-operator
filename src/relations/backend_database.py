@@ -58,7 +58,7 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_PATH, BACKEND_RELATION_NAME, PGB, PGB_DIR
+from constants import AUTH_FILE_PATH, BACKEND_RELATION_NAME, PG, PGB, PGB_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ class BackendDatabaseRequires(Object):
         conn.close()
         logger.info("auth function initialised")
 
-    def remove_auth_function(self, dbname=PGB_DB):
+    def remove_auth_function(self, dbname=PGB):
         """Runs an SQL script to remove auth function."""
         logger.info("initialising auth function")
 
