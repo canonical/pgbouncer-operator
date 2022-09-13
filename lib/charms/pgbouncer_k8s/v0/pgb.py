@@ -49,7 +49,7 @@ DEFAULT_CONFIG = {
     "databases": {},
     "pgbouncer": {
         "listen_addr": "*",
-        "listen_port": "6432",
+        "listen_port": 6432,
         "logfile": f"{PGB_DIR}/pgbouncer.log",
         "pidfile": f"{PGB_DIR}/pgbouncer.pid",
         "admin_users": set(),
@@ -230,7 +230,8 @@ class PgbConfig(MutableMapping):
             "pgbouncer": ["logfile", "pidfile"],
         }
         if not set(essentials.keys()).issubset(set(self.keys())):
-            raise PgbConfig.ConfigParsingError("necessary sections not found in config.")
+            missing_keys = set(essentials.keys()) - (set(self.keys()))
+            raise PgbConfig.ConfigParsingError(f"necessary sections not found in config: {missing_keys}")
 
         if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
             missing_config_values = set(essentials["pgbouncer"]) - set(self["pgbouncer"].keys())

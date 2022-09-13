@@ -95,18 +95,22 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
 
 async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -> str:
     """Gets a file from the pgbouncer container of a pgbouncer application unit."""
-    cat_cmd = f"ssh {unit_name} cat {filepath}"
+    cat_cmd = f"ssh {unit_name} sudo cat {filepath}"
     return_code, output, _ = await ops_test.juju(*cat_cmd.split(" "))
     if return_code != 0:
         raise ProcessError(
-            "Expected cat command %s to succeed instead it failed: %s", cat_cmd, return_code
+            "Expected cat command %s to succeed instead it failed: %s %s %s",
+            cat_cmd,
+            return_code,
+            output,
+            _,
         )
     return output
 
 
-async def get_cfg(ops_test: OpsTest, unit_name: str) -> pgb.PgbConfig:
+async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = INI_PATH) -> pgb.PgbConfig:
     """Gets pgbouncer config from pgbouncer container."""
-    cat = await cat_file_from_unit(ops_test, INI_PATH, unit_name)
+    cat = await cat_file_from_unit(ops_test, path, unit_name)
     return pgb.PgbConfig(cat)
 
 
@@ -134,7 +138,7 @@ def get_legacy_relation_username(ops_test: OpsTest, relation_id: int):
     """Gets a username as it should be generated in the db and db-admin legacy relations."""
     app_name = ops_test.model.applications[PGB].name
     model_name = ops_test.model_name
-    return f"{app_name}_user_id_{relation_id}_{model_name}".replace("-", "_")
+    return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 
 
 async def get_backend_user_pass(ops_test, backend_relation):

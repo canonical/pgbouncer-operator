@@ -10,7 +10,7 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-PG = "postgresql-k8s"
+PG = "postgresql"
 
 
 async def check_database_users_existence(
@@ -32,7 +32,7 @@ async def check_database_users_existence(
         pg_user_password: password for `pg_user`
     """
     unit = ops_test.model.applications[PG].units[0]
-    unit_address = await get_unit_address(ops_test, unit.name)
+    unit_address = get_unit_address(ops_test, unit.name)
 
     # Retrieve all users in the database.
     output = await execute_query_on_unit(
@@ -116,7 +116,7 @@ async def execute_query_on_unit(
     return output
 
 
-async def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
+def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
     """Get unit IP address.
 
     Args:
@@ -126,5 +126,4 @@ async def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
     Returns:
         IP address of the unit
     """
-    status = await ops_test.model.get_status()
-    return status["applications"][unit_name.split("/")[0]].units[unit_name]["address"]
+    return ops_test.model.units.get(unit_name).public_address

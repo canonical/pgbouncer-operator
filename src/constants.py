@@ -7,16 +7,14 @@ PGB = "pgbouncer"
 PG = "postgres"
 PGB_DIR = "/var/lib/postgresql/pgbouncer"
 INI_PATH = f"{PGB_DIR}/pgbouncer.ini"
-USERLIST_PATH = f"{PGB_DIR}/userlist.txt"
-# TODO userlist path will be deleted when we switch over to the new relations
 AUTH_FILE_PATH = f"{PGB_DIR}/userlist.txt"
 LOG_PATH = f"{PGB_DIR}/pgbouncer.log"
 
 # PGB config
 DATABASES = "databases"
 
-# legacy relation data
-DB = "db"
-DB_ADMIN = "db-admin"
-BACKEND_DB_ADMIN = "backend-db-admin"
-BACKEND_STANDBY_PREFIX = "pgb_postgres_standby_"
+# relation data
+DB_RELATION_NAME = "db"
+DB_ADMIN_RELATION_NAME = "db-admin"
+BACKEND_DATABASE_RELATION_NAME = "backend-database"
+PEERS = "pgb-peers"
