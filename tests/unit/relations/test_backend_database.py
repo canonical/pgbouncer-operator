@@ -56,13 +56,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_database_created(mock_event)
 
         postgres.create_user.assert_called_with(self.backend.auth_user, pw, admin=True)
-<<<<<<< HEAD
-        _init_auth.assert_has_calls(
-            [call(dbname=self.backend.database.database), call(dbname="postgres")]
-        )
-=======
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
 
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
         _render.assert_any_call(

@@ -58,15 +58,7 @@ from ops.model import (
     Relation,
 )
 
-<<<<<<< HEAD
 from constants import AUTH_FILE_PATH, BACKEND_RELATION_NAME, PG, PGB, PGB_DIR
-=======
-from constants import AUTH_FILE_PATH, PG
-
-RELATION_NAME = "backend-database"
-PGB_DIR = "/var/lib/postgresql/pgbouncer"
-PGB_DB = "pgbouncer"
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +114,7 @@ class BackendDatabaseRequires(Object):
         # create authentication user on postgres database, so we can authenticate other users
         # later on
         self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
-<<<<<<< HEAD
-        self.initialise_auth_function(dbname=self.database.database)
-        self.initialise_auth_function(dbname=PG)
-=======
         self.initialise_auth_function([self.database.database, PG])
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
 
         hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
@@ -163,12 +150,7 @@ class BackendDatabaseRequires(Object):
 
         try:
             # TODO de-authorise all databases
-<<<<<<< HEAD
-            self.remove_auth_function()
-            self.remove_auth_function(PG)
-=======
             self.remove_auth_function([PGB_DB, PG])
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
                 "failed to remove auth user when disconnecting from postgres application."
@@ -195,11 +177,7 @@ class BackendDatabaseRequires(Object):
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
 
-<<<<<<< HEAD
-    def initialise_auth_function(self, dbname=PGB):
-=======
     def initialise_auth_function(self, dbs: List[str]):
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
         """Runs an SQL script to initialise the auth function.
 
         This function must run in every database for authentication to work correctly, and assumes
@@ -221,17 +199,6 @@ class BackendDatabaseRequires(Object):
             conn.close()
         logger.info("auth function initialised")
 
-<<<<<<< HEAD
-    def remove_auth_function(self, dbname=PGB):
-        """Runs an SQL script to remove auth function."""
-        logger.info("initialising auth function")
-
-        uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
-
-        with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
-            cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
-        conn.close()
-=======
     def remove_auth_function(self, dbs: List[str]):
         """Runs an SQL script to remove auth function.
 
@@ -248,7 +215,6 @@ class BackendDatabaseRequires(Object):
             with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
                 cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
             conn.close()
->>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
         logger.info("auth function remove")
 
     @property
