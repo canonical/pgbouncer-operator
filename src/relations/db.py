@@ -8,7 +8,7 @@ the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ relation (id: 3) ┃ mailman3-core           ┃ pgbouncer-operator                                                  ┃
+┃ relation (id: 3) ┃ mailman3-core           ┃ pgbouncer                                                           ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │ relation name    │ db                      │ db                                                                  │
 │ interface        │ pgsql                   │ pgsql                                                               │
@@ -21,17 +21,17 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                         │ │  database         mailman3                                      │ │
 │                  │                         │ │  host             10.180.162.172                                │ │
 │                  │                         │ │  master           host=10.180.162.172 dbname=mailman3 port=5432 │ │
-│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   user=pgbouncer_user_3_test_db_df8v            │ │
 │                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
 │                  │                         │ │                   fallback_application_name=mailman3-core       │ │
 │                  │                         │ │  password         6aYuYqS0xaOLvMkbhIbpUPzn                      │ │
 │                  │                         │ │  port             5432                                          │ │
 │                  │                         │ │  standbys         host=10.180.162.172 dbname=mailman3 port=5432 │ │
-│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   user=pgbouncer_user_3_test_db_df8v            │ │
 │                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
 │                  │                         │ │                   fallback_application_name=mailman3-core       │ │
 │                  │                         │ │  state            master                                        │ │
-│                  │                         │ │  user             pgbouncer_operator_user_3_test_db_df8v        │ │
+│                  │                         │ │  user             pgbouncer_user_3_test_db_df8v                 │ │
 │                  │                         │ │  version          12.12                                         │ │
 │                  │                         │ ╰─────────────────────────────────────────────────────────────────╯ │
 │ unit data        │ ╭─ mailman3-core/0* ──╮ │ ╭─ pgbouncer-operator/0* ─────────────────────────────────────────╮ │
@@ -41,17 +41,17 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                         │ │  database         mailman3                                      │ │
 │                  │                         │ │  host             10.180.162.172                                │ │
 │                  │                         │ │  master           host=10.180.162.172 dbname=mailman3 port=5432 │ │
-│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   user=pgbouncer_user_3_test_db_df8v            │ │
 │                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
 │                  │                         │ │                   fallback_application_name=mailman3-core       │ │
 │                  │                         │ │  password         6aYuYqS0xaOLvMkbhIbpUPzn                      │ │
 │                  │                         │ │  port             5432                                          │ │
 │                  │                         │ │  standbys         host=10.180.162.172 dbname=mailman3 port=5432 │ │
-│                  │                         │ │                   user=pgbouncer_operator_user_3_test_db_df8v   │ │
+│                  │                         │ │                   user=pgbouncer_user_3_test_db_df8v            │ │
 │                  │                         │ │                   password=6aYuYqS0xaOLvMkbhIbpUPzn             │ │
 │                  │                         │ │                   fallback_application_name=mailman3-core       │ │
 │                  │                         │ │  state            master                                        │ │
-│                  │                         │ │  user             pgbouncer_operator_user_3_test_db_df8v        │ │
+│                  │                         │ │  user             pgbouncer_user_3_test_db_df8v                 │ │
 │                  │                         │ │  version          12.12                                         │ │
 │                  │                         │ ╰─────────────────────────────────────────────────────────────────╯ │
 └──────────────────┴─────────────────────────┴─────────────────────────────────────────────────────────────────────┘
