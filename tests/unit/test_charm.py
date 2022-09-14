@@ -136,7 +136,6 @@ class TestCharm(unittest.TestCase):
         _postgres.return_value = True
 
         # check fail when services aren't all running
-        intended_instances = self._cores = os.cpu_count()
         assert not self.charm.check_pgb_available()
         calls = [call(f"pgbouncer@0")]
         _running.assert_has_calls(calls)
@@ -149,8 +148,11 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
         _running.side_effect = None
 
-        # otherwise return activestatus
+        # otherwise check all services and return activestatus
+        intended_instances = self._cores = os.cpu_count()
         assert self.charm.check_pgb_available()
+        calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
+        _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
