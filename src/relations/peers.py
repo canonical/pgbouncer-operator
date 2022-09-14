@@ -89,6 +89,7 @@ class Peers(Object):
 
     @property
     def relation(self):
+        """Returns the relations in this model , or None if peer is not initialised."""
         if not (peer_relation := self.model.get_relation(PEER_RELATION_NAME, None)):
             return None
         return peer_relation
