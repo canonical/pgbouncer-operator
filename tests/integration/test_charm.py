@@ -37,7 +37,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
             application_name=PGB,
         )
         # Pgbouncer enters a blocked status without a postgres backend database relation
-        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
 
@@ -53,7 +53,7 @@ async def test_change_config(ops_test: OpsTest):
                 "max_db_connections": "44",
             }
         )
-        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # The config changes depending on the amount of cores on the unit, so get that info.

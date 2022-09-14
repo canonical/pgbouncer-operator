@@ -259,13 +259,13 @@ async def deploy_postgres_bundle(
         )
         await asyncio.gather(
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
             ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600),
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
         wait_for_relation_joined_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
 
         return relation
 
@@ -306,7 +306,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     )
     await ops_test.model.wait_for_idle(
         apps=[application_name],
-        timeout=1000,
+        timeout=600,
     )
 
     # Relate application to pgbouncer.
@@ -315,7 +315,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     await ops_test.model.wait_for_idle(
         apps=[application_name, PG, PGB],
         status="active",
-        timeout=1000,
+        timeout=600,
     )
 
     return relation
@@ -333,6 +333,6 @@ async def scale_application(ops_test: OpsTest, application_name: str, scale: int
     await ops_test.model.wait_for_idle(
         apps=[application_name],
         status="active",
-        timeout=1000,
+        timeout=600,
         wait_for_exact_units=scale,
     )

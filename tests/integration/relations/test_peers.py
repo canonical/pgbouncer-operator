@@ -34,7 +34,7 @@ async def test_deploy_at_scale(ops_test):
     async with ops_test.fast_forward():
         await ops_test.model.deploy(charm, application_name=PGB, num_units=3)
         await ops_test.model.wait_for_idle(
-            apps=[PGB], status="blocked", timeout=1000, wait_for_exact_units=3
+            apps=[PGB], status="blocked", timeout=600, wait_for_exact_units=3
         ),
 
 
@@ -52,28 +52,28 @@ async def test_scaled_relations(ops_test: OpsTest):
 
         await asyncio.gather(
             ops_test.model.wait_for_idle(
-                apps=[PGB], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PGB], status="active", timeout=600, wait_for_exact_units=3
             ),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
         )
 
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION}", f"{PG}:database")
         wait_for_relation_joined_between(ops_test, PG, PGB)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
         )
 
         await ops_test.model.add_relation(f"{PGB}:db", f"{MAILMAN}:db")
         wait_for_relation_joined_between(ops_test, PGB, MAILMAN)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=600),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
         )
 
@@ -87,21 +87,21 @@ async def test_scaling(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB, MAILMAN], status="active", timeout=600),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=initial_scale
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=initial_scale
             ),
         )
 
         # Scale down the application.
         await scale_application(ops_test, PGB, initial_scale - 1)
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=600),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
             ops_test.model.wait_for_idle(
-                apps=[PGB], status="active", timeout=1000, wait_for_exact_units=initial_scale - 1
+                apps=[PGB], status="active", timeout=600, wait_for_exact_units=initial_scale - 1
             ),
         )
 
@@ -113,8 +113,8 @@ async def test_exit_relations(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.remove_application(MAILMAN)
         wait_for_relation_removed_between(ops_test, PGB, MAILMAN)
-        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
 
         await ops_test.model.remove_application(PG)
         wait_for_relation_removed_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)

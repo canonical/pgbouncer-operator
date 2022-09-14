@@ -49,9 +49,9 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
 
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600),
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=3
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
         )
 
