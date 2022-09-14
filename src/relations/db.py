@@ -63,7 +63,7 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
-from typing import Iterable
+from typing import Iterable, Dict
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
@@ -447,6 +447,53 @@ class DbProvides(Object):
                 # trailing user.
                 logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
                 logger.error(err)
+
+    def get_databags(self, relation):
+        """Returns a list of writable databags for this unit."""
+        databags = [relation.data[self.charm.unit]]
+        if self.charm.unit.is_leader():
+            databags.append(relation.data[self.charm.app])
+        return databags
+
+    def update_databags(self, relation, updates: Dict[str, str]):
+        """Updates databag with the given dict."""
+        databags = self.get_databags(relation)
+
+        # Databag entries can only be strings
+        for key, item in updates.items():
+            updates[key] = str(item)
+
+        for databag in databags:
+            databag.update(updates)
+
+    def _generate_username(self, event):
+        """Generates a unique username for this relation."""
+        app_name = self.charm.app.name
+        relation_id = event.relation.id
+        model_name = self.model.name
+        return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
+
+    def _get_read_only_endpoint(self):
+        """Get a read-only-endpoint from backend relation.
+        Though multiple readonly endpoints can be provided by the new backend relation, only one
+        can be consumed by this legacy relation.
+        """
+        read_only_endpoints = self.charm.backend.app_databag.get("read-only-endpoints")
+        if read_only_endpoints is None or len(read_only_endpoints) == 0:
+            return None
+        return read_only_endpoints.split(",")[0]
+
+    def _get_state(self) -> str:
+        """Gets the given state for this unit.
+        Args:
+            standbys: the comma-separated list of postgres standbys
+        Returns:
+            The described state of this unit. Can be 'standalone', 'master', or 'standby'.
+        """
+        if self.charm.unit.is_leader():
+            return "master"
+        else:
+            return "standby"
 
     def get_allowed_subnets(self, relation: Relation) -> str:
         """Gets the allowed subnets from this relation."""

@@ -164,7 +164,7 @@ class PgBouncerCharm(CharmBase):
 
         self.unit.status = ActiveStatus()
 
-    def _reload_pgbouncer(self):
+    def reload_pgbouncer(self):
         """Restarts systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
@@ -222,7 +222,7 @@ class PgBouncerCharm(CharmBase):
             self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
     def _render_pgb_config(
         self,
@@ -244,7 +244,7 @@ class PgBouncerCharm(CharmBase):
         self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
     def render_auth_file(self, auth_file: Dict[str, str], reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
@@ -262,7 +262,7 @@ class PgBouncerCharm(CharmBase):
         self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(auth_file), 0o700)
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
     # =================
     #  Charm Utilities
@@ -343,7 +343,7 @@ class PgBouncerCharm(CharmBase):
             )
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
 
 if __name__ == "__main__":

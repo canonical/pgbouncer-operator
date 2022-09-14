@@ -223,7 +223,7 @@ class TestDb(unittest.TestCase):
         app_databag = mock_event.relation.data[self.charm.app]
         unit_databag = mock_event.relation.data[self.charm.unit]
 
-        expected_app_databag = {"allowed-units": "test_string"}
+        expected_app_databag = {"allowed-units": "app"}
         expected_unit_databag = {"allowed-units": "test_string"}
 
         self.assertDictEqual(app_databag, expected_app_databag)

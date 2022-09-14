@@ -105,14 +105,14 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.check_pgb_running")
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
-        self.charm._reload_pgbouncer()
+        self.charm.reload_pgbouncer()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
         _running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _restart.side_effect = systemd.SystemdError()
-        self.charm._reload_pgbouncer()
+        self.charm.reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
@@ -219,7 +219,7 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
 
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
+    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
     def test_render_pgb_config(self, _render, _reload):
         self.charm.service_ids = [0, 1]
