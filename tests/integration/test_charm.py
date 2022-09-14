@@ -82,7 +82,7 @@ async def test_change_config(ops_test: OpsTest):
 
 @pytest.mark.standalone
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
-    unit = ops_test.model.units["{PGB}/0"]
+    unit = ops_test.model.units[f"{PGB}/0"]
     expected_processes = await helpers.get_unit_cores(unit)
 
     # verify the correct amount of pgbouncer processes are running
