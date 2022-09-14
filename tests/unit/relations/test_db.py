@@ -18,11 +18,6 @@ TEST_UNIT = {
     "standbys": "host=standby1 port=1 dbname=testdatabase",
 }
 
-BACKEND_RELATION_NAME = "backend-database"
-DB_RELATION_NAME = "db"
-DB_ADMIN_RELATION_NAME = "db-admin"
-PEER_RELATION_NAME = "pgb-peers"
-
 from constants import (
     BACKEND_RELATION_NAME,
     DB_ADMIN_RELATION_NAME,
@@ -62,7 +57,7 @@ class TestDb(unittest.TestCase):
         self.harness.add_relation_unit(self.db_admin_rel_id, self.unit)
 
         # Define a peer relation
-        self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer-k8s")
+        self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
         self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
     def test_correct_admin_perms_set_in_constructor(self):
@@ -130,7 +125,7 @@ class TestDb(unittest.TestCase):
         _create_user.assert_called_with(user, password, admin=False)
 
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.app_databag", new_callable=PropertyMock
+        "relations.backend_database.BackendDatabaseRequires.postgres_databag", new_callable=PropertyMock
     )
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -175,15 +170,15 @@ class TestDb(unittest.TestCase):
 
         mock_event = MagicMock()
         relation_data = mock_event.relation.data = {}
-        pgb_unit_databag = relation_data[self.db_relation.charm.unit] = {}
         database = "test_db"
         user = "test_user"
         password = "test_pw"
-        pgb_app_databag = relation_data[self.charm.app] = {
+        pgb_unit_databag = relation_data[self.db_relation.charm.unit] = {
             "database": database,
             "user": user,
             "password": password,
         }
+        pgb_app_databag = relation_data[self.charm.app] = dict(pgb_unit_databag)
 
         external_app = _external_app.return_value
         relation_data[external_app] = {}
@@ -206,7 +201,6 @@ class TestDb(unittest.TestCase):
                 "fallback_application_name": external_app.name,
             }
         )
-
         for databag in [pgb_app_databag, pgb_unit_databag]:
             assert databag["allowed-subnets"] == _allowed_subnets.return_value
             assert databag["allowed-units"] == _allowed_units.return_value
@@ -252,6 +246,7 @@ class TestDb(unittest.TestCase):
     def test_on_relation_broken(
         self, _remove_auth, _render_cfg, _backend_postgres, _delete_user, _postgres, _read
     ):
+        self.harness.set_leader()
         """Test that all traces of the given app are removed from pgb config, including user."""
         database = "test_db"
         username = "test_user"
@@ -265,12 +260,13 @@ class TestDb(unittest.TestCase):
         _read.return_value = input_cfg
 
         mock_event = MagicMock()
-        app_databag = {
+        mock_databag = {
             "user": username,
             "database": database,
         }
         mock_event.relation.data = {}
-        mock_event.relation.data[self.charm.app] = app_databag
+        mock_event.relation.data[self.charm.app] = mock_databag
+        mock_event.relation.data[self.charm.unit] = dict(mock_databag)
 
         self.db_relation._on_relation_broken(mock_event)
 

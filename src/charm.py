@@ -246,11 +246,11 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self.reload_pgbouncer()
 
-    def render_auth_file(self, auth_file: Dict[str, str], reload_pgbouncer: bool = False):
+    def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
 
         Args:
-            auth_file: dictionary of users:password strings.
+            auth_file: the auth file to be rendered
             reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
                 application. When config files are updated, pgbouncer must be restarted for the
                 changes to take effect. However, these config updates can be done in batches,
@@ -259,7 +259,7 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
 
         self.peers.update_auth_file(auth_file)
-        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(auth_file), 0o700)
+        self.render_file(AUTH_FILE_PATH, auth_file, perms=0o700)
 
         if reload_pgbouncer:
             self.reload_pgbouncer()

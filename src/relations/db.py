@@ -419,7 +419,7 @@ class DbProvides(Object):
         # check database can be deleted from pgb config, and if so, delete it. Database is kept on
         # postgres application because we don't want to delete all user data with one command.
         delete_db = True
-        relations = [self.model.relations.get("db", []) + self.model.relations.get("db-admin"), []]
+        relations = self.model.relations.get("db", []) + self.model.relations.get("db-admin", [])
         for relation in relations:
             if relation.id == broken_event.relation.id:
                 continue
@@ -478,7 +478,7 @@ class DbProvides(Object):
         Though multiple readonly endpoints can be provided by the new backend relation, only one
         can be consumed by this legacy relation.
         """
-        read_only_endpoints = self.charm.backend.app_databag.get("read-only-endpoints")
+        read_only_endpoints = self.charm.backend.postgres_databag.get("read-only-endpoints")
         if read_only_endpoints is None or len(read_only_endpoints) == 0:
             return None
         return read_only_endpoints.split(",")[0]

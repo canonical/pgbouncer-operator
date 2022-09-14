@@ -150,7 +150,7 @@ class BackendDatabaseRequires(Object):
 
         try:
             # TODO de-authorise all databases
-            self.remove_auth_function([PGB_DB, PG])
+            self.remove_auth_function([PGB, PG])
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
                 "failed to remove auth user when disconnecting from postgres application."
