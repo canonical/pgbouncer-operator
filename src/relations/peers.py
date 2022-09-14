@@ -88,16 +88,24 @@ class Peers(Object):
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
 
     @property
+    def relation(self):
+        if not (peer_relation := self.model.get_relation(PEER_RELATION_NAME, None)):
+            return None
+        return peer_relation
+
+    @property
     def app_databag(self):
         """Returns the app databag for the Peer relation."""
-        peer_relation = self.model.get_relation(PEER_RELATION_NAME)
-        return peer_relation.data[self.charm.app]
+        if not self.relation:
+            return None
+        return self.relation.data[self.charm.app]
 
     @property
     def unit_databag(self):
         """Returns the unit databag for the Peer relation."""
-        peer_relation = self.model.get_relation(PEER_RELATION_NAME)
-        return peer_relation.data[self.charm.unit]
+        if not self.relation:
+            return None
+        return self.relation.data[self.charm.unit]
 
     def _on_created(self, event: RelationCreatedEvent):
         if not self.charm.unit.is_leader():
@@ -208,7 +216,7 @@ class Peers(Object):
 
     def update_cfg(self, cfg: PgbConfig) -> None:
         """Writes cfg to app databag if leader."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or not self.relation:
             return
 
         self.set_secret("app", CFG_FILE_DATABAG_KEY, cfg.render())
@@ -223,7 +231,7 @@ class Peers(Object):
 
     def update_auth_file(self, auth_file: str) -> None:
         """Writes auth_file to app databag if leader."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or not self.relation:
             return
 
         self.set_secret("app", AUTH_FILE_DATABAG_KEY, auth_file)
