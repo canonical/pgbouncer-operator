@@ -119,8 +119,13 @@ async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
     return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
 
 
+<<<<<<< HEAD
 async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
     """Gets pgbouncer auth file from unit filesystem."""
+=======
+async def get_userlist(ops_test: OpsTest, unit_name) -> str:
+    """Gets pgbouncer logs from unit filesystem."""
+>>>>>>> 1dc3f21ebfe86c39ba406d83a743229861d65812
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
 
 
