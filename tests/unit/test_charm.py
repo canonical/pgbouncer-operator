@@ -150,30 +150,35 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_on_config_changed(self, _render, _read):
+        self.harness.set_leader()
         mock_cores = 1
         self.charm._cores = mock_cores
         max_db_connections = 44
 
         # Copy config object and modify it as we expect in the hook.
-        config = deepcopy(_read.return_value)
-        config["pgbouncer"]["pool_mode"] = "transaction"
-        config.set_max_db_connection_derivatives(
+        test_config = deepcopy(_read.return_value)
+        test_config["pgbouncer"]["pool_mode"] = "transaction"
+        test_config.set_max_db_connection_derivatives(
             max_db_connections=max_db_connections,
             pgb_instances=mock_cores,
         )
+
+        test_config["pgbouncer"]["listen_port"] = "6464"
+        self.maxDiff = None
 
         # set config to include pool_mode and max_db_connections
         self.harness.update_config(
             {
                 "pool_mode": "transaction",
                 "max_db_connections": max_db_connections,
+                "listen_port": "6464",
             }
         )
 
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-        self.assertDictEqual(dict(_read.return_value), dict(config))
+        self.assertDictEqual(dict(_read.return_value), dict(test_config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")

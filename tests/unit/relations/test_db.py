@@ -21,6 +21,14 @@ TEST_UNIT = {
 BACKEND_RELATION_NAME = "backend-database"
 DB_RELATION_NAME = "db"
 DB_ADMIN_RELATION_NAME = "db-admin"
+PEER_RELATION_NAME = "pgb-peers"
+
+from constants import (
+    BACKEND_RELATION_NAME,
+    DB_ADMIN_RELATION_NAME,
+    DB_RELATION_NAME,
+    PEER_RELATION_NAME,
+)
 
 
 class TestDb(unittest.TestCase):
@@ -53,6 +61,10 @@ class TestDb(unittest.TestCase):
         self.harness.add_relation_unit(self.db_admin_rel_id, "admin_client/0")
         self.harness.add_relation_unit(self.db_admin_rel_id, self.unit)
 
+        # Define a peer relation
+        self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer-k8s")
+        self.harness.add_relation_unit(self.peers_rel_id, self.unit)
+
     def test_correct_admin_perms_set_in_constructor(self):
         assert self.charm.legacy_db_relation.relation_name == "db"
         assert self.charm.legacy_db_relation.admin is False
@@ -81,7 +93,7 @@ class TestDb(unittest.TestCase):
         _read_cfg,
         _backend_pg,
     ):
-        self.harness.set_leader(True)
+        self.harness.set_leader()
 
         mock_event = MagicMock()
         mock_event.app.name = "external_test_app"

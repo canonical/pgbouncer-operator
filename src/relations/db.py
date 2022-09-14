@@ -63,7 +63,7 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
-from typing import Iterable, Dict
+from typing import Dict, Iterable
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
