@@ -93,7 +93,6 @@ from constants import PG
 
 logger = logging.getLogger(__name__)
 
-BACKEND_WAIT_MSG = "waiting for backend-database relation to connect"
 
 
 class RelationNotInitialisedError(Exception):
@@ -151,20 +150,7 @@ class DbProvides(Object):
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
-        if not self.charm.backend.postgres:
-            # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = BACKEND_WAIT_MSG
-            logger.warning(wait_str)
-            self.charm.unit.status = WaitingStatus(wait_str)
-            join_event.defer()
-            return
-
-        try:
-            cfg = self.charm.read_pgb_config()
-        except FileNotFoundError:
-            wait_str = "waiting for pgbouncer to start"
-            logger.warning(wait_str)
-            self.charm.unit.status = WaitingStatus(wait_str)
+        if not self.charm.check_pgb_available():
             join_event.defer()
             return
 
@@ -236,6 +222,7 @@ class DbProvides(Object):
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
             logger.error(err_msg)
+            join_event.fail()
             self.charm.unit.status = BlockedStatus(err_msg)
             return
 
@@ -256,11 +243,7 @@ class DbProvides(Object):
         This relation will defer if the backend relation isn't fully available, and if the
         relation_joined hook isn't completed.
         """
-        if not self.charm.backend.postgres:
-            # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = BACKEND_WAIT_MSG
-            logger.warning(wait_str)
-            self.charm.unit.status = WaitingStatus(wait_str)
+        if not self.charm.check_pgb_available():
             change_event.defer()
             return
 
@@ -339,6 +322,7 @@ class DbProvides(Object):
         database = relation.data[self.charm.app].get("database")
         if database is None:
             logger.warning("relation not fully initialised - skipping postgres endpoint update")
+            # TODO return false
             return
 
         # In postgres, "endpoints" will only ever have one value. Other databases using the library

@@ -10,10 +10,10 @@ from charms.pgbouncer_k8s.v0.pgb import (
     PgbConfig,
     get_hashed_password,
 )
-from constants import PGB, PEER_RELATION_NAME, BACKEND_RELATION_NAME
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
+from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME, PGB
 
 
 class TestBackendDatabaseRelation(unittest.TestCase):
@@ -52,7 +52,15 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.update_postgres_endpoints")
     def test_on_database_created(
-        self, _update_endpoints, _cfg, _render, _init_auth, _gen_pw, _relation, _postgres, _auth_user
+        self,
+        _update_endpoints,
+        _cfg,
+        _render,
+        _init_auth,
+        _gen_pw,
+        _relation,
+        _postgres,
+        _auth_user,
     ):
         self.harness.set_leader()
         pw = _gen_pw.return_value
@@ -71,6 +79,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
         import logging
+
         logging.error(_render.mock_calls)
         _render.assert_any_call(
             f"{PGB_DIR}/userlist.txt", f'"{self.backend.auth_user}" "{hash_pw}"', perms=0o700

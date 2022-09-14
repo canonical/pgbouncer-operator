@@ -77,8 +77,10 @@ class TestDb(unittest.TestCase):
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL.create_database")
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("charm.PgBouncerCharm.check_pgb_available", return_value=True)
     def test_on_relation_joined(
         self,
+        _,
         _render_cfg,
         _init_auth,
         _create_database,
@@ -125,7 +127,8 @@ class TestDb(unittest.TestCase):
         _create_user.assert_called_with(user, password, admin=False)
 
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.postgres_databag", new_callable=PropertyMock
+        "relations.backend_database.BackendDatabaseRequires.postgres_databag",
+        new_callable=PropertyMock,
     )
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -142,8 +145,10 @@ class TestDb(unittest.TestCase):
     @patch("relations.db.DbProvides._get_state", return_value="test-state")
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL")
+    @patch("charm.PgBouncerCharm.check_pgb_available", return_value=True)
     def test_on_relation_changed(
         self,
+        _,
         _postgres,
         _render_cfg,
         _state,

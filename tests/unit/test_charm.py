@@ -31,6 +31,7 @@ class TestCharm(unittest.TestCase):
         self.harness.begin()
 
         self.charm = self.harness.charm
+        self.unit = self.harness.charm.unit
 
     @patch("charm.PgBouncerCharm._install_apt_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
@@ -102,7 +103,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
-    @patch("charm.PgBouncerCharm.check_pgb_running")
+    @patch("charm.PgBouncerCharm.check_pgb_available")
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
@@ -115,37 +116,42 @@ class TestCharm(unittest.TestCase):
         self.charm.reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
+    @patch("charm.PgBouncerCharm.read_pgb_config", side_effect=FileNotFoundError)
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres",
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_update_status(self, _postgres, _running):
-        intended_instances = self._cores = os.cpu_count()
+    def test_check_pgb_available(self, _postgres, _running, _read_cfg):
+        # check fail on config not available
+        assert not self.charm.check_pgb_available()
+        self.assertIsInstance(self.unit.status, WaitingStatus)
+        _read_cfg.side_effect = None
+
+        # check fail on postgres not available
         # Testing charm blocks when the pgbouncer services aren't running
-        self.charm.on.update_status.emit()
+        assert not self.charm.check_pgb_available()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
         _postgres.return_value = True
 
-        # If all pgbouncer services are running but we have no backend relation, verify we block &
-        # wait for the backend relation.
-        self.charm.on.update_status.emit()
-        calls = [call("pgbouncer@0")]
+        # check fail when services aren't all running
+        intended_instances = self._cores = os.cpu_count()
+        assert not self.charm.check_pgb_available()
+        calls = [call(f"pgbouncer@0")]
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
-
-        # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
-        _running.reset_mock()
         _running.return_value = True
-        self.charm.on.update_status.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
-        _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
-        _running.side_effect = systemd.SystemdError()
-        self.charm.on.update_status.emit()
+        # check fail when we can't get service status
+        _running.side_effect = systemd.SystemdError
+        assert not self.charm.check_pgb_available()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        _running.side_effect = None
+
+        # otherwise return activestatus
+        assert self.charm.check_pgb_available()
+        self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
