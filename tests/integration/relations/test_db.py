@@ -17,7 +17,7 @@ from tests.integration.helpers.helpers import (
     get_backend_user_pass,
     get_legacy_relation_username,
 )
-from tests.integration.helpers.postgresql_helpers import (
+from tests.integration.helpers.postgresql_helpers import (  # skip
     build_connection_string,
     check_database_users_existence,
     check_databases_creation,

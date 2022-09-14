@@ -10,7 +10,7 @@ import pwd
 import shutil
 import subprocess
 from copy import deepcopy
-from typing import Dict, List
+from typing import List
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd

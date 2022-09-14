@@ -137,7 +137,7 @@ class TestCharm(unittest.TestCase):
 
         # check fail when services aren't all running
         assert not self.charm.check_pgb_available()
-        calls = [call(f"pgbouncer@0")]
+        calls = [call("pgbouncer@0")]
         _running.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
         _running.return_value = True

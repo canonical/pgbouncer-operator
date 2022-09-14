@@ -94,7 +94,6 @@ from constants import PG
 logger = logging.getLogger(__name__)
 
 
-
 class RelationNotInitialisedError(Exception):
     """An error to be raised if the relation is not initialised."""
 
@@ -459,6 +458,7 @@ class DbProvides(Object):
 
     def _get_read_only_endpoint(self):
         """Get a read-only-endpoint from backend relation.
+
         Though multiple readonly endpoints can be provided by the new backend relation, only one
         can be consumed by this legacy relation.
         """
@@ -469,8 +469,10 @@ class DbProvides(Object):
 
     def _get_state(self) -> str:
         """Gets the given state for this unit.
+
         Args:
             standbys: the comma-separated list of postgres standbys
+
         Returns:
             The described state of this unit. Can be 'standalone', 'master', or 'standby'.
         """
