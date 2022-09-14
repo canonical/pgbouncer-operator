@@ -38,10 +38,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
         )
         # Pgbouncer enters a blocked status without a postgres backend database relation
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    assert (
-        ops_test.model.units[f"{PGB}/0"].workload_status_message
-        == WAIT_MSG
-    )
+    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
 
 @pytest.mark.standalone
@@ -57,10 +54,7 @@ async def test_change_config(ops_test: OpsTest):
             }
         )
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000)
-    assert (
-        ops_test.model.units[f"{PGB}/0"].workload_status_message
-        == WAIT_MSG
-    )
+    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await helpers.get_unit_cores(unit)
@@ -94,10 +88,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     await unit.run("kill $(ps aux | grep pgbouncer | awk '{print $2}')")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=300)
-    assert (
-        ops_test.model.units[f"{PGB}/0"].workload_status_message
-        == WAIT_MSG
-    )
+    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # verify all processes start again
     assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
