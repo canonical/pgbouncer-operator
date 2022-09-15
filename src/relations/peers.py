@@ -92,7 +92,6 @@ class Peers(Object):
         """Returns the relations in this model , or None if peer is not initialised."""
         return self.model.get_relation(PEER_RELATION_NAME, None)
 
-
     @property
     def app_databag(self):
         """Returns the app databag for the Peer relation."""
