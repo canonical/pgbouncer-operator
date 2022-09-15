@@ -97,7 +97,7 @@ class Peers(Object):
     @property
     def app_databag(self):
         """Returns the app databag for the Peer relation."""
-        if not self.relation:
+        if not self.relation or not self.charm.unit.is_leader():
             return None
         return self.relation.data[self.charm.app]
 

@@ -232,7 +232,7 @@ class BackendDatabaseRequires(Object):
 
         Returns None if backend relation is not fully initialised.
         """
-        if not self.relation:
+        if not self.relation or self.charm.unit.is_leader():
             return None
 
         databag = self.postgres_databag
