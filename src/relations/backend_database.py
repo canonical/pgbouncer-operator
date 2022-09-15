@@ -239,7 +239,7 @@ class BackendDatabaseRequires(Object):
         endpoint = databag.get("endpoints")
         user = databag.get("username")
         password = databag.get("password")
-        database = self.relation.data[self.charm.app].get("database")
+        database = self.database.database
 
         if None in [endpoint, user, password, database]:
             return None

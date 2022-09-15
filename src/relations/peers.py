@@ -90,14 +90,13 @@ class Peers(Object):
     @property
     def relation(self):
         """Returns the relations in this model , or None if peer is not initialised."""
-        if not (peer_relation := self.model.get_relation(PEER_RELATION_NAME, None)):
-            return None
-        return peer_relation
+        return self.model.get_relation(PEER_RELATION_NAME, None)
+
 
     @property
     def app_databag(self):
         """Returns the app databag for the Peer relation."""
-        if not self.relation or not self.charm.unit.is_leader():
+        if not self.relation:
             return None
         return self.relation.data[self.charm.app]
 
