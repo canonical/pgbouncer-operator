@@ -320,19 +320,21 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
 
     return relation
 
-
-async def scale_application(ops_test: OpsTest, application_name: str, scale: int) -> None:
+async def scale_application(ops_test: OpsTest, application_name: str, count: int) -> None:
     """Scale a given application to a specific unit count.
-
     Args:
         ops_test: The ops test framework instance
         application_name: The name of the application
-        scale: The number of units to scale to
+        count: The desired number of units to scale to
     """
-    await ops_test.model.applications[application_name].scale(scale)
+    change = count - len(ops_test.model.applications[application_name].units)
+    if change > 0:
+        await ops_test.model.applications[application_name].add_units(change)
+    elif change < 0:
+        units = [
+            unit.name for unit in ops_test.model.applications[application_name].units[0:-change]
+        ]
+        await ops_test.model.applications[application_name].destroy_units(*units)
     await ops_test.model.wait_for_idle(
-        apps=[application_name],
-        status="active",
-        timeout=600,
-        wait_for_exact_units=scale,
+        apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
     )
