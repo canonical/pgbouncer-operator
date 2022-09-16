@@ -160,6 +160,7 @@ class DbProvides(Object):
 
         remote_app_databag = join_event.relation.data[join_event.app]
         remote_unit_databag = join_event.relation.data[join_event.unit]
+        # This may be where database is split into individual characters?
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
@@ -320,7 +321,7 @@ class DbProvides(Object):
 
         Requires the backend relation to be running.
         """
-        database = relation.data[self.charm.app].get("database")
+        database = self.get_databags[0].get("database")
         if database is None:
             logger.warning("relation not fully initialised - skipping postgres endpoint update")
             # TODO return false
@@ -388,6 +389,7 @@ class DbProvides(Object):
         """
         if not self.charm.unit.is_leader():
             return
+
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
         database = databag.get("database")
@@ -419,7 +421,7 @@ class DbProvides(Object):
         if delete_db:
             cfg["databases"].pop(database, None)
             cfg["databases"].pop(f"{database}_standby", None)
-            self.charm.backend.remove_auth_function(database)
+            self.charm.backend.remove_auth_function([database])
 
         # TODO delete postgres database from config if there's no admin relations left
 

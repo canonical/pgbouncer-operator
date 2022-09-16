@@ -13,6 +13,7 @@ from tests.integration.helpers.helpers import (
     scale_application,
     wait_for_relation_joined_between,
     wait_for_relation_removed_between,
+    get_unit_info,
 )
 
 logger = logging.getLogger(__name__)
@@ -115,15 +116,19 @@ async def test_scaling(ops_test: OpsTest):
         )
 
 
+@pytest.mark.skip
 @pytest.mark.scaling
 @pytest.mark.run(order=4)
 async def test_exit_relations(ops_test: OpsTest):
     """Test that we can exit relations with multiple units without breaking anything."""
     async with ops_test.fast_forward():
+        logging.info(await get_unit_info(ops_test, unit_name=f"{PGB}/2"))
         await ops_test.model.remove_application(MAILMAN)
         wait_for_relation_removed_between(ops_test, PGB, MAILMAN)
         await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
 
+        logging.info(await get_unit_info(ops_test, unit_name=f"{PGB}/2"))
         await ops_test.model.remove_application(PG)
         wait_for_relation_removed_between(ops_test, PG, PGB)
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
+        logging.info(await get_unit_info(ops_test, unit_name=f"{PGB}/2"))
