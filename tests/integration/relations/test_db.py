@@ -92,8 +92,9 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         assert domain_name not in [domain.mail_host for domain in client.domains]
 
 
+
+
 # Skip scaling test until scaling is implemented.
-@pytest.mark.skip
 @pytest.mark.legacy_relation
 async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest):
     """Test that relation data, like connection data, is updated correctly when scaling."""
@@ -102,9 +103,9 @@ async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest
 
     async with ops_test.fast_forward():
         # Add two more units.
-        await ops_test.model.applications[PG].add_units(2)
+        await ops_test.model.applications[PGB].add_units(2)
         await ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=1000, wait_for_exact_units=5
+            apps=[PGB], status="active", timeout=1000, wait_for_exact_units=3
         )
 
         # Remove the original units.
