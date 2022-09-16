@@ -156,7 +156,6 @@ class DbProvides(Object):
 
         remote_app_databag = join_event.relation.data[join_event.app]
         remote_unit_databag = join_event.relation.data[join_event.unit]
-        # This may be where database is split into individual characters?
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):

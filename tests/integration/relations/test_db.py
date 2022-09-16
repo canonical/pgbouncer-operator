@@ -16,6 +16,7 @@ from tests.integration.helpers.helpers import (
     deploy_postgres_bundle,
     get_backend_user_pass,
     get_legacy_relation_username,
+    scale_application,
 )
 from tests.integration.helpers.postgresql_helpers import (
     build_connection_string,
@@ -101,7 +102,7 @@ async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest
 
     async with ops_test.fast_forward():
         # Add two more units.
-        await ops_test.model.applications[PGB].add_units(2)
+        await scale_application(ops_test, PGB, 3)
         await ops_test.model.wait_for_idle(
             apps=[PGB], status="active", timeout=1000, wait_for_exact_units=3
         )
