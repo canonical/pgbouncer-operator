@@ -242,6 +242,8 @@ class DbProvides(Object):
         This relation will defer if the backend relation isn't fully available, and if the
         relation_joined hook isn't completed.
         """
+        if not self.charm.unit.is_leader():
+            return
         if not self.charm.check_pgb_available():
             change_event.defer()
             return
@@ -384,6 +386,8 @@ class DbProvides(Object):
         This doesn't delete any tables so we aren't deleting a user's entire database with one
         command.
         """
+        if not self.charm.unit.is_leader():
+            return
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
         database = databag.get("database")
@@ -421,15 +425,15 @@ class DbProvides(Object):
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
-        if self.charm.unit.is_leader():
-            self.charm.peers.remove_user(user)
-            try:
-                self.charm.backend.postgres.delete_user(user)
-            except PostgreSQLDeleteUserError as err:
-                # We've likely lost connection at this point, and can't do anything about a
-                # trailing user.
-                logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
-                logger.error(err)
+
+        self.charm.peers.remove_user(user)
+        try:
+            self.charm.backend.postgres.delete_user(user)
+        except PostgreSQLDeleteUserError as err:
+            # We've likely lost connection at this point, and can't do anything about a
+            # trailing user.
+            logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
+            logger.error(err)
 
     def get_databags(self, relation):
         """Returns a list of writable databags for this unit."""
