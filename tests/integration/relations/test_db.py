@@ -109,7 +109,7 @@ async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest
         # Remove the original units.
         await ops_test.model.applications[PGB].destroy_units(*units_to_remove)
         await ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=3000, wait_for_exact_units=2
+            apps=[PGB], status="active", timeout=3000, wait_for_exact_units=2
         )
 
         # Get the updated connection data and assert it can be used
@@ -150,9 +150,9 @@ async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest
 
         # Remove the relation and test that its user was deleted
         # (by checking that the connection string doesn't work anymore).
-        await ops_test.model.applications[PG].remove_relation(
+        await ops_test.model.applications[PGB].remove_relation(
             f"{PG}:{RELATION_NAME}", f"{MAILMAN3_CORE_APP_NAME}:{RELATION_NAME}"
         )
-        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
         with pytest.raises(psycopg2.OperationalError):
             psycopg2.connect(primary_connection_string)

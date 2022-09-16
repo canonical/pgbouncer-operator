@@ -11,32 +11,40 @@ and "read-only-endpoints" fields. All values are examples taken from a test depl
 not definite.
 
 Example:
-TODO update example data to VM data.
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
-┃ category         ┃             keys ┃ pgbouncer-opera… ┃ postgresql/0     ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
-│ metadata         │         endpoint │ 'backend-databa… │ 'database'       │
-│                  │           leader │ True             │ True             │
-├──────────────────┼──────────────────┼──────────────────┼──────────────────┤
-│ application data │             data │ {"endpoints":    │ {"database":     │
-│                  │                  │ "postgresql-k8s… │ "postgresql",    │
-│                  │                  │ "password":      │ "extra-user-rol… │
-│                  │                  │ "18cqKCp19xOPBh… │ "SUPERUSER"}     │
-│                  │                  │ "read-only-endp… │                  │
-│                  │                  │ "postgresql-k8s… │                  │
-│                  │                  │ "username":      │                  │
-│                  │                  │ "relation_18…    │                  │
-│                  │                  │ "version":       │                  │
-│                  │                  │ "12.9"}          │                  │
-│                  │         database │ pgbouncer        │                  │
-│                  │        endpoints │                  │ postgresql-k8s-… │
-│                  │ extra-user-roles │ SUPERUSER        │                  │
-│                  │         password │                  │ 18cqKCp19xOPBhk9 │
-│                  │ read-only-endpo… │                  │ postgresql-k8s-… │
-│                  │         username │                  │ relation_18      │
-│                  │          version │                  │ 12.9             │
-└──────────────────┴──────────────────┴──────────────────┴──────────────────┘
-"""
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ relation (id: 3) ┃ postgresql                               ┃ pgbouncer                                       ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ relation name    │ database                                 │ backend-database                                │
+│ interface        │ postgresql_client                        │ postgresql_client                               │
+│ leader unit      │ 0                                        │ 2                                               │
+├──────────────────┼──────────────────────────────────────────┼─────────────────────────────────────────────────┤
+│ application data │ ╭──────────────────────────────────────╮ │ ╭─────────────────────────────────────────────╮ │
+│                  │ │                                      │ │ │                                             │ │
+│                  │ │  data       {"database": "pgbouncer",│ │ │  database          pgbouncer                │ │
+│                  │ │             "extra-user-roles":      │ │ │  extra-user-roles  SUPERUSER                │ │
+│                  │ │             "SUPERUSER"}             │ │ ╰─────────────────────────────────────────────╯ │
+│                  │ │  endpoints  10.180.162.236:5432      │ │                                                 │
+│                  │ │  password   yPEgUWCYX0SBxpvC         │ │                                                 │
+│                  │ │  username   relation-3               │ │                                                 │
+│                  │ │  version    12.12                    │ │                                                 │
+│                  │ ╰──────────────────────────────────────╯ │                                                 │
+│ unit data        │ ╭─ postgresql/0* ─╮                      │ ╭─ pgbouncer/1 ───────────────────────────────╮ │
+│                  │ │ <empty>         │                      │ │                                             │ │
+│                  │ ╰─────────────────╯                      │ │  data  {"endpoints": "10.180.162.236:5432", │ │
+│                  │                                          │ │         "password": "yPEgUWCYX0SBxpvC",     │ │
+│                  │                                          │ │         "username": "relation-3",           │ │
+│                  │                                          │ │         "version": "12.12"}                 │ │
+│                  │                                          │ ╰─────────────────────────────────────────────╯ │
+│                  │                                          │ ╭─ pgbouncer/2* ──────────────────────────────╮ │
+│                  │                                          │ │                                             │ │
+│                  │                                          │ │  data  {"endpoints": "10.180.162.236:5432", │ │
+│                  │                                          │ │         "password": "yPEgUWCYX0SBxpvC",     │ │
+│                  │                                          │ │        "username": "relation-3",            │ │
+│                  │                                          │ │         "version": "12.12"}                 │ │
+│                  │                                          │ ╰─────────────────────────────────────────────╯ │
+└──────────────────┴──────────────────────────────────────────┴─────────────────────────────────────────────────┘
+
+"""  # noqa: W505
 
 import logging
 from typing import Dict, List
