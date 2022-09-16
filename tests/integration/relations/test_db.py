@@ -4,22 +4,18 @@
 import logging
 from pathlib import Path
 
-import psycopg2 as psycopg2
 import pytest
 import yaml
 from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
 
-from constants import PG
 from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_backend_user_pass,
     get_legacy_relation_username,
-    scale_application,
 )
 from tests.integration.helpers.postgresql_helpers import (
-    build_connection_string,
     check_database_users_existence,
     check_databases_creation,
 )
@@ -91,4 +87,3 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         # Delete the domain and check that the change was persisted.
         domain.delete()
         assert domain_name not in [domain.mail_host for domain in client.domains]
-
