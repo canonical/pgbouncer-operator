@@ -321,9 +321,11 @@ class DbProvides(Object):
 
         Requires the backend relation to be running.
         """
-        database = self.get_databags[0].get("database")
+        database = self.get_databags(relation)[0].get("database")
         if database is None:
-            logger.warning("relation not fully initialised - skipping postgres endpoint update")
+            logger.warning(
+                f"{self.relation_name} relation not fully initialised - skipping postgres endpoint update"
+            )
             # TODO return false
             return
 

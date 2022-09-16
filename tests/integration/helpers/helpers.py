@@ -320,8 +320,10 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
 
     return relation
 
+
 async def scale_application(ops_test: OpsTest, application_name: str, count: int) -> None:
     """Scale a given application to a specific unit count.
+
     Args:
         ops_test: The ops test framework instance
         application_name: The name of the application

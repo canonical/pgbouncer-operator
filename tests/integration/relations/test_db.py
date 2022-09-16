@@ -92,8 +92,6 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         assert domain_name not in [domain.mail_host for domain in client.domains]
 
 
-
-
 # Skip scaling test until scaling is implemented.
 @pytest.mark.legacy_relation
 async def test_relation_data_is_updated_correctly_when_scaling(ops_test: OpsTest):

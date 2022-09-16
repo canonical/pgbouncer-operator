@@ -10,10 +10,10 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import (
+    get_unit_info,
     scale_application,
     wait_for_relation_joined_between,
     wait_for_relation_removed_between,
-    get_unit_info,
 )
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,6 @@ async def test_scaling(ops_test: OpsTest):
         )
 
 
-@pytest.mark.skip
 @pytest.mark.scaling
 @pytest.mark.run(order=4)
 async def test_exit_relations(ops_test: OpsTest):
