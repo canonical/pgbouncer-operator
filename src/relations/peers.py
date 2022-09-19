@@ -107,7 +107,6 @@ class Peers(Object):
             return None
         return self.relation.data[self.charm.unit]
 
-
     @property
     def units_ips(self) -> Set[str]:
         """Fetch current list of peers IPs.
@@ -128,14 +127,13 @@ class Peers(Object):
         """Get the IP address of a specific unit."""
         # Check if host is current host.
         if unit == self.unit:
-            return str(self.model.get_binding(PEER_RELATION_NAME).network.bind_address)
+            return self.charm.unit_ip
         # Check if host is a peer.
         elif unit in self.relation.data:
             return str(self.relation.data[unit].get(ADDRESS_KEY))
         # Return None if the unit is not a peer neither the current unit.
         else:
             return None
-
 
     def _on_created(self, event: RelationCreatedEvent):
         if not self.charm.unit.is_leader():
@@ -158,6 +156,7 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
+        logger.error(self.charm.unit_ip)
         self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
 
         if self.charm.unit.is_leader():

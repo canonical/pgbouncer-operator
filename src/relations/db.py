@@ -59,6 +59,7 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
+from copy import deepcopy
 from typing import Dict, Iterable
 
 from charms.pgbouncer_k8s.v0 import pgb
@@ -84,7 +85,6 @@ from ops.model import (
     Unit,
     WaitingStatus,
 )
-from copy import deepcopy
 
 from constants import PG
 
@@ -293,16 +293,6 @@ class DbProvides(Object):
             logger.warning("relation not fully initialised - skipping port update")
             return
 
-        dbconnstr = pgb.parse_dict_to_kv_string(
-            {
-                "host": self.charm.unit_ip,
-                "dbname": database,
-                "port": port,
-                "user": user,
-                "password": password,
-                "fallback_application_name": self.get_external_app(relation).name,
-            }
-        )
         master_dbconnstr = pgb.parse_dict_to_kv_string(
             {
                 "host": self.charm.peers.leader_ip,
