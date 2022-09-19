@@ -12,8 +12,13 @@ from constants import (
     DB_ADMIN_RELATION_NAME,
     DB_RELATION_NAME,
     PEER_RELATION_NAME,
+    PG,
 )
-from lib.charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
+from lib.charms.pgbouncer_k8s.v0.pgb import (
+    DEFAULT_CONFIG,
+    PgbConfig,
+    parse_dict_to_kv_string,
+)
 from tests.helpers import patch_network_get
 
 TEST_UNIT = {
@@ -177,14 +182,83 @@ class TestDb(unittest.TestCase):
             },
         )
 
-    def test_update_port(self):
-        assert False
+    @patch("relations.db.DbProvides.get_databags", return_value=[{}])
+    @patch("relations.db.DbProvides.get_external_app")
+    @patch("relations.db.DbProvides.update_databags")
+    def test_update_port(self, _update_databags, _get_external_app, _get_databags):
+        relation = MagicMock()
+        database = "test_db"
+        user = "test_user"
+        password = "test_pw"
+        port = "5555"
 
-    def test_update_postgres_endpoints(self):
-        assert False
+        _get_databags.return_value[0] = {
+            "database": database,
+            "user": user,
+            "password": password,
+        }
 
-    def test_update_databags(self):
-        assert False
+        master_dbconnstr = {
+            "host": self.charm.peers.leader_ip,
+            "dbname": database,
+            "port": port,
+            "user": user,
+            "password": password,
+            "fallback_application_name": _get_external_app().name,
+        }
+
+        standby_dbconnstrs = []
+        for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
+            standby_dbconnstr = dict(master_dbconnstr)
+            standby_dbconnstr.update({"host": standby_ip})
+            standby_dbconnstrs.append(parse_dict_to_kv_string(standby_dbconnstr))
+
+        self.db_relation.update_port(relation, port)
+        _update_databags.assert_called_with(
+            relation,
+            {
+                "master": parse_dict_to_kv_string(master_dbconnstr),
+                "port": port,
+                "standbys": ",".join(standby_dbconnstrs),
+            },
+        )
+
+    @patch("relations.db.DbProvides.get_databags", return_value=[{}])
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.postgres_databag",
+        new_callable=PropertyMock,
+        return_value={},
+    )
+    @patch("relations.db.DbProvides._get_read_only_endpoint", return_value=None)
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
+    @patch("charm.PgBouncerCharm.render_pgb_config")
+    def test_update_postgres_endpoints(
+        self, _render_cfg, _read_cfg, _read_only_endpoint, _pg_databag, _get_databags
+    ):
+        database = "test_db"
+        _get_databags.return_value[0] = {"database": database}
+        _pg_databag.return_value = {"endpoints": "ip:port"}
+        cfg = _read_cfg.return_value
+
+        relation = MagicMock()
+        reload_pgbouncer = False
+
+        self.db_relation.update_postgres_endpoints(relation, reload_pgbouncer)
+        assert database in cfg["databases"].keys()
+        assert f"{database}_standby" not in cfg["databases"].keys()
+        assert PG not in cfg["databases"].keys()
+        _render_cfg.assert_called_with(cfg, reload_pgbouncer=reload_pgbouncer)
+        _read_only_endpoint.return_value = "readonly:endpoint"
+
+        self.db_relation.update_postgres_endpoints(relation, reload_pgbouncer)
+        assert database in cfg["databases"].keys()
+        assert f"{database}_standby" in cfg["databases"].keys()
+        assert PG not in cfg["databases"].keys()
+
+        self.db_admin_relation.update_postgres_endpoints(relation, reload_pgbouncer)
+        assert database in cfg["databases"].keys()
+        assert f"{database}_standby" in cfg["databases"].keys()
+        assert PG in cfg["databases"].keys()
 
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_string")
     def test_on_relation_departed(self, _get_units):
