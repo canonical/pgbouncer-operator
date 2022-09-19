@@ -18,16 +18,17 @@ from lib.charms.pgbouncer_k8s.v0.pgb import (
     PgbConfig,
     parse_dict_to_kv_string,
 )
+from tests.helpers import patch_network_get
 
 TEST_UNIT = {
     "master": "host=master port=1 dbname=testdatabase",
     "standbys": "host=standby1 port=1 dbname=testdatabase",
 }
-from tests.helpers import patch_network_get
 
 
 @patch_network_get(private_address="1.1.1.1")
 class TestDb(unittest.TestCase):
+    @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -68,7 +69,6 @@ class TestDb(unittest.TestCase):
         assert self.charm.legacy_db_admin_relation.relation_name == "db-admin"
         assert self.charm.legacy_db_admin_relation.admin is True
 
-    @patch_network_get(private_address="1.1.1.1")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )

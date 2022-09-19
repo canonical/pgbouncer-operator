@@ -110,23 +110,24 @@ class Peers(Object):
     @property
     def units_ips(self) -> Set[str]:
         """Fetch current list of peers IPs.
+
         Returns:
             A list of peers addresses (strings).
         """
         # Get all members IPs and remove the current unit IP from the list.
         addresses = {self._get_unit_ip(unit) for unit in self.relation.units}
-        addresses.add(self._unit_ip)
+        addresses.add(self.charm.unit_ip)
         return addresses
 
     @property
     def leader_ip(self) -> str:
-        """gets the IP of the leader unit."""
+        """Gets the IP of the leader unit."""
         return self.app_databag.get("leader", None)
 
     def _get_unit_ip(self, unit: Unit) -> Optional[str]:
         """Get the IP address of a specific unit."""
         # Check if host is current host.
-        if unit == self.unit:
+        if unit == self.charm.unit:
             return self.charm.unit_ip
         # Check if host is a peer.
         elif unit in self.relation.data:
@@ -156,7 +157,6 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
-        logger.error(self.charm.unit_ip)
         self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
 
         if self.charm.unit.is_leader():

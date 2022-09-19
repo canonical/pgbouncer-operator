@@ -293,27 +293,25 @@ class DbProvides(Object):
             logger.warning("relation not fully initialised - skipping port update")
             return
 
-        master_dbconnstr = pgb.parse_dict_to_kv_string(
-            {
-                "host": self.charm.peers.leader_ip,
-                "dbname": database,
-                "port": port,
-                "user": user,
-                "password": password,
-                "fallback_application_name": self.get_external_app(relation).name,
-            }
-        )
+        master_dbconnstr = {
+            "host": self.charm.peers.leader_ip,
+            "dbname": database,
+            "port": port,
+            "user": user,
+            "password": password,
+            "fallback_application_name": self.get_external_app(relation).name,
+        }
 
         standby_dbconnstrs = []
         for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
             standby_dbconnstr = deepcopy(master_dbconnstr)
             standby_dbconnstr.update({"host": standby_ip})
-            standby_dbconnstrs.add(standby_dbconnstr)
+            standby_dbconnstrs.append(pgb.parse_dict_to_kv_string(standby_dbconnstr))
 
         self.update_databags(
             relation,
             {
-                "master": master_dbconnstr,
+                "master": pgb.parse_dict_to_kv_string(master_dbconnstr),
                 "port": str(port),
                 "standbys": ",".join(standby_dbconnstrs),
             },

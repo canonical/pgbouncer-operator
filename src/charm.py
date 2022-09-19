@@ -317,7 +317,7 @@ class PgBouncerCharm(CharmBase):
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
-        return self.model.get_binding(PEERS).network.bind_address
+        return str(self.model.get_binding(PEERS).network.bind_address)
 
     # =====================
     #  Relation Utilities
