@@ -84,6 +84,7 @@ from ops.model import (
     Unit,
     WaitingStatus,
 )
+from copy import deepcopy
 
 from constants import PG
 
@@ -302,12 +303,29 @@ class DbProvides(Object):
                 "fallback_application_name": self.get_external_app(relation).name,
             }
         )
+        master_dbconnstr = pgb.parse_dict_to_kv_string(
+            {
+                "host": self.charm.peers.leader_ip,
+                "dbname": database,
+                "port": port,
+                "user": user,
+                "password": password,
+                "fallback_application_name": self.get_external_app(relation).name,
+            }
+        )
+
+        standby_dbconnstrs = []
+        for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
+            standby_dbconnstr = deepcopy(master_dbconnstr)
+            standby_dbconnstr.update({"host": standby_ip})
+            standby_dbconnstrs.add(standby_dbconnstr)
+
         self.update_databags(
             relation,
             {
-                "master": dbconnstr,
+                "master": master_dbconnstr,
                 "port": str(port),
-                "standbys": dbconnstr,
+                "standbys": ",".join(standby_dbconnstrs),
             },
         )
 
@@ -477,7 +495,7 @@ class DbProvides(Object):
             standbys: the comma-separated list of postgres standbys
 
         Returns:
-            The described state of this unit. Can be 'standalone', 'master', or 'standby'.
+            The described state of this unit. Can be 'master' or 'standby'.
         """
         if self.charm.unit.is_leader():
             return "master"
