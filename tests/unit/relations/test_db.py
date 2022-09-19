@@ -16,7 +16,6 @@ from constants import (
 from lib.charms.pgbouncer_k8s.v0.pgb import (
     DEFAULT_CONFIG,
     PgbConfig,
-    parse_dict_to_kv_string,
 )
 from tests.helpers import patch_network_get
 
@@ -25,7 +24,7 @@ TEST_UNIT = {
     "standbys": "host=standby1 port=1 dbname=testdatabase",
 }
 
-
+# TODO verify if this is necessary
 @patch_network_get(private_address="1.1.1.1")
 class TestDb(unittest.TestCase):
     @patch_network_get(private_address="1.1.1.1")
@@ -162,67 +161,31 @@ class TestDb(unittest.TestCase):
         _backend_postgres,
         _backend_dbag,
     ):
-        # Ensure event doesn't defer too early
         self.harness.set_leader(True)
 
-        # set up mocks
-        _read_cfg.return_value["databases"]["test_db"] = {
-            "host": "test-host",
-            "dbname": "external_test_unit",
-            "port": "test_port",
-            "user": "test_user",
-            "password": "test_pass",
-            "fallback_application_name": "external_test_unit",
-        }
-
         mock_event = MagicMock()
-        relation_data = mock_event.relation.data = {}
         database = "test_db"
         user = "test_user"
         password = "test_pw"
-        pgb_unit_databag = relation_data[self.charm.unit] = {
-            "database": database,
-            "user": user,
-            "password": password,
-        }
-        pgb_app_databag = relation_data[self.charm.app] = dict(pgb_unit_databag)
-
-        external_app = _external_app.return_value
-        relation_data[external_app] = {}
-        external_app.name = "external_test_app"
+        relation_data = mock_event.relation.data = {}
 
         _backend_postgres.return_value = _postgres
-        _postgres.get_postgresql_version.return_value = "12"
 
         # Call the function
         self.db_relation._on_relation_changed(mock_event)
 
-        # evaluate output
-        dbconnstr = parse_dict_to_kv_string(
-            {
-                "host": self.charm.unit_ip,
-                "dbname": database,
-                "port": self.charm.config["listen_port"],
-                "user": user,
-                "password": password,
-                "fallback_application_name": external_app.name,
-            }
-        )
-        for databag in [pgb_app_databag, pgb_unit_databag]:
-            assert databag["allowed-subnets"] == _allowed_subnets.return_value
-            assert databag["allowed-units"] == _allowed_units.return_value
-            assert databag["host"] == _ip.return_value
-            assert databag["master"] == dbconnstr
-            assert databag["port"] == str(self.charm.config["listen_port"])
-            assert databag["standbys"] == dbconnstr
-            assert databag["version"] == "12"
-            assert databag["user"] == user
-            assert databag["password"] == password
-            assert databag["database"] == database
+        _update_port.assert_called_with()
+        _update_postgres_endpoints.assert_called_with()
+        _update_databags.assert_called_with({"big ol dict": ""})
 
-        assert pgb_unit_databag["state"] == _state.return_value
+    def test_update_port(self):
+        assert False
 
-        _render_cfg.assert_called_with(_read_cfg.return_value, reload_pgbouncer=True)
+    def test_update_postgres_endpoints(self):
+        assert False
+
+    def test_update_databags(self):
+        assert False
 
     @patch("relations.db.DbProvides.get_allowed_units", return_value="test_string")
     def test_on_relation_departed(self, _get_units):
