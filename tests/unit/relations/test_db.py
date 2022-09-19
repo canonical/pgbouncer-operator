@@ -13,10 +13,7 @@ from constants import (
     DB_RELATION_NAME,
     PEER_RELATION_NAME,
 )
-from lib.charms.pgbouncer_k8s.v0.pgb import (
-    DEFAULT_CONFIG,
-    PgbConfig,
-)
+from lib.charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from tests.helpers import patch_network_get
 
 TEST_UNIT = {
@@ -24,8 +21,7 @@ TEST_UNIT = {
     "standbys": "host=standby1 port=1 dbname=testdatabase",
 }
 
-# TODO verify if this is necessary
-@patch_network_get(private_address="1.1.1.1")
+
 class TestDb(unittest.TestCase):
     @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
@@ -128,55 +124,58 @@ class TestDb(unittest.TestCase):
         _create_user.assert_called_with(user, password, admin=False)
 
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.postgres_databag",
-        new_callable=PropertyMock,
-    )
-    @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
-    @patch(
-        "charm.PgBouncerCharm.unit_ip",
-        new_callable=PropertyMock,
-        return_value="1.1.1.1",
-    )
-    @patch("relations.db.DbProvides.get_external_app")
-    @patch("relations.db.DbProvides.get_allowed_units", return_value="test_allowed_unit")
-    @patch("relations.db.DbProvides.get_allowed_subnets", return_value="test_allowed_subnet")
-    @patch("relations.db.DbProvides._get_state", return_value="test-state")
-    @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL")
     @patch("charm.PgBouncerCharm.check_pgb_available", return_value=True)
+    @patch("relations.db.DbProvides.get_databags", return_value=[{}])
+    @patch("relations.db.DbProvides.update_port")
+    @patch("relations.db.DbProvides.update_postgres_endpoints")
+    @patch("relations.db.DbProvides.update_databags")
+    @patch("relations.db.DbProvides.get_allowed_units")
+    @patch("relations.db.DbProvides.get_allowed_subnets")
+    @patch("relations.db.DbProvides._get_state")
     def test_on_relation_changed(
         self,
-        _,
-        _postgres,
-        _render_cfg,
-        _state,
+        _get_state,
         _allowed_subnets,
         _allowed_units,
-        _external_app,
-        _ip,
-        _read_cfg,
+        _update_databags,
+        _update_postgres_endpoints,
+        _update_port,
+        _get_databags,
+        _check_pgb_available,
         _backend_postgres,
-        _backend_dbag,
     ):
         self.harness.set_leader(True)
 
-        mock_event = MagicMock()
         database = "test_db"
         user = "test_user"
         password = "test_pw"
-        relation_data = mock_event.relation.data = {}
-
-        _backend_postgres.return_value = _postgres
+        _get_databags.return_value[0] = {
+            "database": database,
+            "user": user,
+            "password": password,
+        }
 
         # Call the function
-        self.db_relation._on_relation_changed(mock_event)
+        event = MagicMock()
+        self.db_relation._on_relation_changed(event)
 
-        _update_port.assert_called_with()
-        _update_postgres_endpoints.assert_called_with()
-        _update_databags.assert_called_with({"big ol dict": ""})
+        _update_port.assert_called_with(event.relation, self.charm.config["listen_port"])
+        _update_postgres_endpoints.assert_called_with(event.relation, reload_pgbouncer=True)
+        _update_databags.assert_called_with(
+            event.relation,
+            {
+                "allowed-subnets": _allowed_subnets.return_value,
+                "allowed-units": _allowed_units.return_value,
+                "version": self.charm.backend.postgres.get_postgresql_version(),
+                "host": self.charm.unit_ip,
+                "user": user,
+                "password": password,
+                "database": database,
+                "state": _get_state.return_value,
+            },
+        )
 
     def test_update_port(self):
         assert False

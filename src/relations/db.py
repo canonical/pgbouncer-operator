@@ -59,7 +59,6 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
-from copy import deepcopy
 from typing import Dict, Iterable
 
 from charms.pgbouncer_k8s.v0 import pgb
@@ -304,7 +303,7 @@ class DbProvides(Object):
 
         standby_dbconnstrs = []
         for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
-            standby_dbconnstr = deepcopy(master_dbconnstr)
+            standby_dbconnstr = dict(master_dbconnstr)
             standby_dbconnstr.update({"host": standby_ip})
             standby_dbconnstrs.append(pgb.parse_dict_to_kv_string(standby_dbconnstr))
 
