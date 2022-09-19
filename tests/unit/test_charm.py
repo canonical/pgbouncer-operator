@@ -172,7 +172,6 @@ class TestCharm(unittest.TestCase):
         )
 
         test_config["pgbouncer"]["listen_port"] = "6464"
-        self.maxDiff = None
 
         # set config to include pool_mode and max_db_connections
         self.harness.update_config(

@@ -177,7 +177,7 @@ class TestDb(unittest.TestCase):
         database = "test_db"
         user = "test_user"
         password = "test_pw"
-        pgb_unit_databag = relation_data[self.db_relation.charm.unit] = {
+        pgb_unit_databag = relation_data[self.charm.unit] = {
             "database": database,
             "user": user,
             "password": password,
