@@ -56,7 +56,7 @@ from typing import Optional, Set
 from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase, RelationChangedEvent, RelationCreatedEvent
 from ops.framework import Object
-from ops.model import Unit, Relation
+from ops.model import Relation, Unit
 from ops.pebble import ConnectionError
 
 from constants import PEER_RELATION_NAME
