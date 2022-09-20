@@ -114,9 +114,10 @@ async def test_scaling(ops_test: OpsTest):
             updated_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
 
         for unit_name in initial_cfgs.keys():
-            assert updated_cfgs[unit_name] == initial_cfgs[unit_name]
+            assert dict(updated_cfgs[unit_name]) == dict(initial_cfgs[unit_name])
 
-        new_cfg = updated_cfgs.items() ^ initial_cfgs.items()
+        new_unit = updated_cfgs.keys() - initial_cfgs.keys()
+        assert dict(updated_cfgs[new_unit]) == dict(initial_cfgs[ops_test.model.application.units[0]])
 
 
         # Scale down the application.
