@@ -10,6 +10,7 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import (
+    get_cfg,
     get_unit_info,
     scale_application,
     wait_for_relation_joined_between,
@@ -43,7 +44,7 @@ async def test_deploy_at_scale(ops_test):
 @pytest.mark.abort_on_fail
 @pytest.mark.run(order=2)
 async def test_scaled_relations(ops_test: OpsTest):
-    """Test that the pgbouncer and postgres charms can relate to one another."""
+    """Test that the pgbouncer, postgres, and client charms can relate to one another."""
     # Build, deploy, and relate charms.
     async with ops_test.fast_forward():
         await asyncio.gather(
@@ -92,6 +93,11 @@ async def test_scaling(ops_test: OpsTest):
     # Ensure the initial number of units in the application.
     initial_scale = 4
     async with ops_test.fast_forward():
+
+        initial_cfgs = {}
+        for unit in ops_test.model.application.units:
+            initial_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
+
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=600),
@@ -102,6 +108,16 @@ async def test_scaling(ops_test: OpsTest):
                 apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
         )
+
+        updated_cfgs = {}
+        for unit in ops_test.model.application.units:
+            updated_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
+
+        for unit_name in initial_cfgs.keys():
+            assert updated_cfgs[unit_name] == initial_cfgs[unit_name]
+
+        new_cfg = updated_cfgs.items() ^ initial_cfgs.items()
+
 
         # Scale down the application.
         await scale_application(ops_test, PGB, initial_scale - 1)

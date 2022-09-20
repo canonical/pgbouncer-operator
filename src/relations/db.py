@@ -304,7 +304,7 @@ class DbProvides(Object):
         standby_dbconnstrs = []
         for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
             standby_dbconnstr = dict(master_dbconnstr)
-            standby_dbconnstr.update({"host": standby_ip})
+            standby_dbconnstr.update({"host": standby_ip, "dbname": f"{database}_standby"})
             standby_dbconnstrs.append(pgb.parse_dict_to_kv_string(standby_dbconnstr))
 
         self.update_databags(
