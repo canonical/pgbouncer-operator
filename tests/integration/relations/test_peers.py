@@ -94,10 +94,6 @@ async def test_scaling(ops_test: OpsTest):
     initial_scale = 4
     async with ops_test.fast_forward():
 
-        initial_cfgs = {}
-        for unit in ops_test.model.applications[PGB].units:
-            initial_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
-
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=600),
@@ -107,19 +103,6 @@ async def test_scaling(ops_test: OpsTest):
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
-        )
-
-        updated_cfgs = {}
-        for unit in ops_test.model.applications[PGB].units:
-            updated_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
-
-        for unit_name in initial_cfgs.keys():
-            assert updated_cfgs[unit_name].render() == initial_cfgs[unit_name].render()
-
-        new_unit = updated_cfgs.keys() - initial_cfgs.keys()
-        assert (
-            updated_cfgs[new_unit].render()
-            == initial_cfgs[ops_test.model.applications[PGB].units[0]].render()
         )
 
         # Scale down the application.
