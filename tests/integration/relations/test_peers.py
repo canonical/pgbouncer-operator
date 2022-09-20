@@ -95,7 +95,7 @@ async def test_scaling(ops_test: OpsTest):
     async with ops_test.fast_forward():
 
         initial_cfgs = {}
-        for unit in ops_test.model.application.units:
+        for unit in ops_test.model.applications[PGB].units:
             initial_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
 
         await scale_application(ops_test, PGB, initial_scale)
@@ -110,7 +110,7 @@ async def test_scaling(ops_test: OpsTest):
         )
 
         updated_cfgs = {}
-        for unit in ops_test.model.application.units:
+        for unit in ops_test.model.applications[PGB].units:
             updated_cfgs[unit.name] = await get_cfg(ops_test, unit.name)
 
         for unit_name in initial_cfgs.keys():
@@ -118,7 +118,7 @@ async def test_scaling(ops_test: OpsTest):
 
         new_unit = updated_cfgs.keys() - initial_cfgs.keys()
         assert dict(updated_cfgs[new_unit]) == dict(
-            initial_cfgs[ops_test.model.application.units[0]]
+            initial_cfgs[ops_test.model.applications[PGB].units[0]]
         )
 
         # Scale down the application.

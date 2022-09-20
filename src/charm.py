@@ -155,7 +155,7 @@ class PgBouncerCharm(CharmBase):
 
         if not self.backend.postgres:
             # We can't relate an app to the backend database without a backend postgres relation
-            backend_wait_msg = "waiting for backend-database relation to connect"
+            backend_wait_msg = "waiting for backend database relation to connect"
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
 
