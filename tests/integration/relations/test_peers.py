@@ -10,7 +10,6 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import (
-    get_cfg,
     get_unit_info,
     scale_application,
     wait_for_relation_joined_between,

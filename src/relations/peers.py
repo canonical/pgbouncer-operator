@@ -56,7 +56,7 @@ from typing import Optional, Set
 from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase, RelationChangedEvent, RelationCreatedEvent
 from ops.framework import Object
-from ops.model import Unit
+from ops.model import Unit, Relation
 from ops.pebble import ConnectionError
 
 from constants import PEER_RELATION_NAME
@@ -90,9 +90,9 @@ class Peers(Object):
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
 
     @property
-    def relation(self):
+    def relation(self) -> Relation:
         """Returns the relations in this model , or None if peer is not initialised."""
-        return self.model.get_relation(PEER_RELATION_NAME, None)
+        return self.model.get_relation(PEER_RELATION_NAME)
 
     @property
     def app_databag(self):
@@ -113,7 +113,7 @@ class Peers(Object):
         """Fetch current list of peers IPs.
 
         Returns:
-            A list of peers addresses (strings).
+            A set of peers addresses (strings).
         """
         # Get all members IPs and remove the current unit IP from the list.
         addresses = {self._get_unit_ip(unit) for unit in self.relation.units}
@@ -131,7 +131,7 @@ class Peers(Object):
         if unit == self.charm.unit:
             return self.charm.unit_ip
         # Check if host is a peer.
-        elif unit in self.relation.data.keys():
+        elif unit in self.relation.data:
             return str(self.relation.data[unit].get(ADDRESS_KEY))
         # Return None if the unit is not a peer neither the current unit.
         else:
@@ -158,8 +158,7 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
-
-        self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
+        event.relation.data[self.charm.unit].update({ADDRESS_KEY: self.charm.unit_ip})
 
         if self.charm.unit.is_leader():
             try:
