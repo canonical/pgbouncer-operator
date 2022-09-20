@@ -12,52 +12,67 @@ This relation uses the pgsql interface, omitting roles and extensions as they ar
 the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ relation (id: 4) ┃ mailman3-core            ┃ pgbouncer                                                     ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ relation name    │ db                       │ db                                                            │
-│ interface        │ pgsql                    │ pgsql                                                         │
-│ leader unit      │ 0                        │ 2                                                             │
-├──────────────────┼──────────────────────────┼───────────────────────────────────────────────────────────────┤
-│ application data │ ╭──────────────────────╮ │ ╭───────────────────────────────────────────────────────────╮ │
-│                  │ │ <empty>              │ │ │                                                           │ │
-│                  │ ╰──────────────────────╯ │ │  allowed-subnets  10.180.162.145/32                       │ │
-│                  │                          │ │  database         mailman3                                │ │
-│                  │                          │ │  host             10.180.162.10                           │ │
-│                  │                          │ │  master           host=10.180.162.10                      │ │
-│                  │                          │ │                   dbname=mailman3                         │ │
-│                  │                          │ │                   port=5432                               │ │
-│                  │                          │ │                   user=pgbouncer_user_4_test_db_pccj      │ │
-│                  │                          │ │                   password=bRRJhvjPzwAbCboQuMJ3JtEc       │ │
-│                  │                          │ │                   fallback_application_name=mailman3-core │ │
-│                  │                          │ │  password         bRRJhvjPzwAbCboQuMJ3JtEc                │ │
-│                  │                          │ │  port             5432                                    │ │
-│                  │                          │ │  standbys         host=10.180.162.10                      │ │
-│                  │                          │ │                   dbname=mailman3                         │ │
-│                  │                          │ │                   port=5432                               │ │
-│                  │                          │ │                   user=pgbouncer_user_4_test_db_pccj      │ │
-│                  │                          │ │                   password=bRRJhvjPzwAbCboQuMJ3JtEc       │ │
-│                  │                          │ │                   fallback_application_name=mailman3-core │ │
-│                  │                          │ │  state            master                                  │ │
-│                  │                          │ │  user             pgbouncer_user_4_test_db_pccj           │ │
-│                  │                          │ │  version          12.12                                   │ │
-│                  │                          │ ╰───────────────────────────────────────────────────────────╯ │
-│ unit data        │ ╭─ mailman3-core/0* ───╮ │ ╭─ pgbouncer/1 ─────────────────────────────╮                 │
-│                  │ │                      │ │ │                                           │                 │
-│                  │ │  database  mailman3  │ │ │  database  mailman3                       │                 │
-│                  │ ╰──────────────────────╯ │ │  password  bRRJhvjPzwAbCboQuMJ3JtEc       │                 │
-│                  │                          │ │  user      pgbouncer_user_4_test_db_pccj  │                 │
-│                  │                          │ ╰───────────────────────────────────────────╯                 │
-│                  │                          │ ╭─ pgbouncer/2* ────────────────────────────╮                 │
-│                  │                          │ │                                           │                 │
-│                  │                          │ │  database  mailman3                       │                 │
-│                  │                          │ │  password  bRRJhvjPzwAbCboQuMJ3JtEc       │                 │
-│                  │                          │ │  user      pgbouncer_user_4_test_db_pccj  │                 │
-│                  │                          │ ╰───────────────────────────────────────────╯                 │
-└──────────────────┴──────────────────────────┴───────────────────────────────────────────────────────────────┘
-
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ relation (id: 4) ┃ psql                ┃ pgbouncer                                                       ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ relation name    │ db                  │ db-admin                                                        │
+│ interface        │ pgsql               │ pgsql                                                           │
+│ leader unit      │ 0                   │ 0                                                               │
+├──────────────────┼─────────────────────┼─────────────────────────────────────────────────────────────────┤
+│ application data │ ╭─────────────────╮ │ ╭─────────────────────────────────────────────────────────────╮ │
+│                  │ │ <empty>         │ │ │                                                             │ │
+│                  │ ╰─────────────────╯ │ │  allowed-subnets  10.180.162.56/32                          │ │
+│                  │                     │ │  allowed-units    psql/0                                    │ │
+│                  │                     │ │  database         cli                                       │ │
+│                  │                     │ │  host             10.180.162.4                              │ │
+│                  │                     │ │  master           host=10.180.162.4 dbname=cli port=6432    │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
+│                  │                     │ │  password         T6NX0iz1ZRHZF5kfYDanKM5z                  │ │
+│                  │                     │ │  port             6432                                      │ │
+│                  │                     │ │  state            master                                    │ │
+│                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
+│                  │                     │ │  version          12.12                                     │ │
+│                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
+│ unit data        │ ╭─ psql/0* ───────╮ │ ╭─ pgbouncer/0* ──────────────────────────────────────────────╮ │
+│                  │ │                 │ │ │                                                             │ │
+│                  │ │  database  cli  │ │ │  allowed-subnets  10.180.162.56/32                          │ │
+│                  │ ╰─────────────────╯ │ │  allowed-units    psql/0                                    │ │
+│                  │                     │ │  database         cli                                       │ │
+│                  │                     │ │  host             10.180.162.4                              │ │
+│                  │                     │ │  master           host=10.180.162.4 dbname=cli port=6432    │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
+│                  │                     │ │  password         T6NX0iz1ZRHZF5kfYDanKM5z                  │ │
+│                  │                     │ │  port             6432                                      │ │
+│                  │                     │ │  state            master                                    │ │
+│                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
+│                  │                     │ │  version          12.12                                     │ │
+│                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
+│                  │                     │ ╭─ pgbouncer/1 ───────────────────────────────────────────────╮ │
+│                  │                     │ │                                                             │ │
+│                  │                     │ │  allowed-subnets  10.180.162.56/32                          │ │
+│                  │                     │ │  allowed-units    psql/0                                    │ │
+│                  │                     │ │  database         cli                                       │ │
+│                  │                     │ │  host             10.180.162.203                            │ │
+│                  │                     │ │  master           host=10.180.162.4 dbname=cli port=6432    │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
+│                  │                     │ │  password         T6NX0iz1ZRHZF5kfYDanKM5z                  │ │
+│                  │                     │ │  port             6432                                      │ │
+│                  │                     │ │  standbys         host=10.180.162.203 dbname=cli_standby po │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
+│                  │                     │ │  state            standby                                   │ │
+│                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
+│                  │                     │ │  version          12.12                                     │ │
+│                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
+└──────────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────┘
 """  # noqa: W505
-
 import logging
 from typing import Dict, Iterable
 
