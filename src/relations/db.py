@@ -239,8 +239,6 @@ class DbProvides(Object):
         This relation will defer if the backend relation isn't fully available, and if the
         relation_joined hook isn't completed.
         """
-        if not self.charm.unit.is_leader():
-            return
         self.charm.unit.status = self.charm.check_status()
         if not isinstance(self.charm.unit.status, ActiveStatus):
             change_event.defer()
