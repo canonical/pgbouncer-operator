@@ -113,7 +113,7 @@ class PgBouncerCharm(CharmBase):
 
     def _on_update_status(self, _) -> None:
         """Update Status hook."""
-        self.unit_status = self.check_status()
+        self.unit.status = self.check_status()
 
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
