@@ -103,7 +103,7 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
-    @patch("charm.PgBouncerCharm.check_pgb_available")
+    @patch("charm.PgBouncerCharm.check_status", return_value=BlockedStatus())
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
@@ -123,37 +123,32 @@ class TestCharm(unittest.TestCase):
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_check_pgb_available(self, _postgres, _running, _read_cfg):
+    def test_check_status(self, _postgres, _running, _read_cfg):
         # check fail on config not available
-        assert not self.charm.check_pgb_available()
-        self.assertIsInstance(self.unit.status, WaitingStatus)
+        self.assertIsInstance(self.charm.check_status(), WaitingStatus)
         _read_cfg.side_effect = None
 
         # check fail on postgres not available
         # Testing charm blocks when the pgbouncer services aren't running
-        assert not self.charm.check_pgb_available()
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
         _postgres.return_value = True
 
         # check fail when services aren't all running
-        assert not self.charm.check_pgb_available()
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
         calls = [call("pgbouncer@0")]
         _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
         _running.return_value = True
 
         # check fail when we can't get service status
         _running.side_effect = systemd.SystemdError
-        assert not self.charm.check_pgb_available()
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
         _running.side_effect = None
 
         # otherwise check all services and return activestatus
         intended_instances = self._cores = os.cpu_count()
-        assert self.charm.check_pgb_available()
+        self.assertIsInstance(self.charm.check_status(), ActiveStatus)
         calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
         _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")

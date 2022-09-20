@@ -145,7 +145,8 @@ class DbProvides(Object):
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
-        if not self.charm.check_pgb_available():
+        self.charm.unit.status = self.charm.check_status()
+        if not isinstance(self.charm.unit.status, ActiveStatus):
             join_event.defer()
             return
 
@@ -240,7 +241,8 @@ class DbProvides(Object):
         """
         if not self.charm.unit.is_leader():
             return
-        if not self.charm.check_pgb_available():
+        self.charm.unit.status = self.charm.check_status()
+        if not isinstance(self.charm.unit.status, ActiveStatus):
             change_event.defer()
             return
 

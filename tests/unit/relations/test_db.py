@@ -4,6 +4,7 @@
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from ops.model import ActiveStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
@@ -79,7 +80,7 @@ class TestDb(unittest.TestCase):
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL.create_database")
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charm.PgBouncerCharm.check_pgb_available", return_value=True)
+    @patch("charm.PgBouncerCharm.check_status", return_value=ActiveStatus())
     def test_on_relation_joined(
         self,
         _,
@@ -131,7 +132,7 @@ class TestDb(unittest.TestCase):
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("charm.PgBouncerCharm.check_pgb_available", return_value=True)
+    @patch("charm.PgBouncerCharm.check_status", return_value=ActiveStatus())
     @patch("relations.db.DbProvides.get_databags", return_value=[{}])
     @patch("relations.db.DbProvides.update_port")
     @patch("relations.db.DbProvides.update_postgres_endpoints")
@@ -148,7 +149,7 @@ class TestDb(unittest.TestCase):
         _update_postgres_endpoints,
         _update_port,
         _get_databags,
-        _check_pgb_available,
+        _check_status,
         _backend_postgres,
     ):
         self.harness.set_leader(True)
