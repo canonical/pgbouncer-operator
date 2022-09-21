@@ -319,6 +319,7 @@ class DbProvides(Object):
         connection_updates = {
             "master": pgb.parse_dict_to_kv_string(master_dbconnstr),
             "port": str(port),
+            "host": self.charm.unit_ip
         }
 
         standby_ips = self.charm.peers.units_ips - {self.charm.peers.leader_ip}
@@ -404,7 +405,9 @@ class DbProvides(Object):
         This doesn't delete any tables so we aren't deleting a user's entire database with one
         command.
         """
-        if not self.charm.unit.is_leader():
+        # Only delete relation data if we're the leader, and we're the last unit to leave.
+        if not self.charm.unit.is_leader() or len(self.charm.peers.unit_ips) > 1:
+            self.charm.update_client_connection_info()
             return
 
         databag = self.get_databags(broken_event.relation)[0]

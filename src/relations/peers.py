@@ -117,7 +117,11 @@ class Peers(Object):
         Returns:
             A set of peers addresses (strings).
         """
-        return {self._get_unit_ip(unit) for unit in self.relation.units}
+        unit_ips = {self._get_unit_ip(unit) for unit in self.relation.units}
+        unit_ips.remove(None)
+        unit_ips.remove(self.leader_ip)
+        unit_ips.add(self.charm.unit_ip)
+        return unit_ips
 
     @property
     def leader_ip(self) -> str:
@@ -157,7 +161,7 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
-        event.relation.data[self.charm.unit].update({ADDRESS_KEY: self.charm.unit_ip})
+        self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
         self.charm.update_client_connection_info()
 
         if self.charm.unit.is_leader():
