@@ -8,6 +8,8 @@ connections, and updates the config with the correct information for pgbouncer t
 backend database. As a result, pretty much every part of this relation relies on the backend
 relation being implemented first.
 
+Both databags are used, because different legacy charms expect the data from different databags.
+
 This relation uses the pgsql interface, omitting roles and extensions as they are unsupported in
 the new postgres charm.
 
