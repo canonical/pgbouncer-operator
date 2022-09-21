@@ -31,6 +31,10 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ │                   fallback_application_name=psql            │ │
 │                  │                     │ │  password         T6NX0iz1ZRHZF5kfYDanKM5z                  │ │
 │                  │                     │ │  port             6432                                      │ │
+│                  │                     │ │  standbys         host=10.180.162.203 dbname=cli_standby po │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
 │                  │                     │ │  state            master                                    │ │
 │                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
 │                  │                     │ │  version          12.12                                     │ │
@@ -47,6 +51,10 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ │                   fallback_application_name=psql            │ │
 │                  │                     │ │  password         T6NX0iz1ZRHZF5kfYDanKM5z                  │ │
 │                  │                     │ │  port             6432                                      │ │
+│                  │                     │ │  standbys         host=10.180.162.203 dbname=cli_standby po │ │
+│                  │                     │ │                   user=pgbouncer_user_4_test_db_admin_3una  │ │
+│                  │                     │ │                   password=T6NX0iz1ZRHZF5kfYDanKM5z         │ │
+│                  │                     │ │                   fallback_application_name=psql            │ │
 │                  │                     │ │  state            master                                    │ │
 │                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
 │                  │                     │ │  version          12.12                                     │ │
