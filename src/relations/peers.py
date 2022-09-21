@@ -161,7 +161,8 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
-        self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
+        # self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
+        event.relation.data[self.charm.unit].update({ADDRESS_KEY: self.charm.unit_ip})
         self.charm.update_client_connection_info()
 
         if self.charm.unit.is_leader():
@@ -175,6 +176,7 @@ class Peers(Object):
 
             self.update_cfg(cfg)
             self.app_databag["leader_ip"] = self.charm.unit_ip
+            self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
             return
 
         if cfg := self.get_secret("app", CFG_FILE_DATABAG_KEY):
@@ -182,6 +184,8 @@ class Peers(Object):
 
         if auth_file := self.get_secret("app", AUTH_FILE_DATABAG_KEY):
             self.charm.render_auth_file(auth_file)
+
+        self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
 
         if cfg is not None or auth_file is not None:
             try:
