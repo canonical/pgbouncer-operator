@@ -15,7 +15,8 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import INI_PATH, PGB_DIR
+from constants import BACKEND_RELATION_NAME, INI_PATH, PGB_DIR
+from tests.helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -152,7 +153,10 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    def test_on_config_changed(self, _render, _read):
+    @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
+    @patch_network_get(private_address="1.1.1.1")
+    def test_on_config_changed(self, _app_databag, _render, _read):
+        self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
         self.harness.set_leader()
         mock_cores = 1
         self.charm._cores = mock_cores

@@ -88,6 +88,8 @@ class Peers(Object):
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_created, self._on_created)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_joined, self._on_changed)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
+        self.framework.observe(charm.on[PEER_RELATION_NAME].relation_departed, self._on_departed)
+        self.framework.observe(charm.on.leader_elected, self._on_leader_elected)
 
     @property
     def relation(self) -> Relation:
@@ -110,15 +112,12 @@ class Peers(Object):
 
     @property
     def units_ips(self) -> Set[str]:
-        """Fetch current list of peers IPs.
+        """Fetch current set of peers IPs.
 
         Returns:
             A set of peers addresses (strings).
         """
-        # Get all members IPs and remove the current unit IP from the list.
-        addresses = {self._get_unit_ip(unit) for unit in self.relation.units}
-        addresses.add(self.charm.unit_ip)
-        return addresses
+        return {self._get_unit_ip(unit) for unit in self.relation.units}
 
     @property
     def leader_ip(self) -> str:
@@ -159,6 +158,7 @@ class Peers(Object):
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
         event.relation.data[self.charm.unit].update({ADDRESS_KEY: self.charm.unit_ip})
+        self.charm.update_client_connection_info()
 
         if self.charm.unit.is_leader():
             try:
@@ -185,6 +185,17 @@ class Peers(Object):
                 self.charm.reload_pgbouncer()
             except ConnectionError:
                 event.defer()
+
+    def _on_departed(self, _):
+        self._update_connection()
+
+    def _on_leader_elected(self, _):
+        self._update_connection()
+
+    def _update_connection(self):
+        self.charm.update_client_connection_info()
+        if self.charm.unit.is_leader():
+            self.app_databag["leader_ip"] = self.charm.unit_ip
 
     def set_secret(self, scope: str, key: str, value: str):
         """Sets secret value.

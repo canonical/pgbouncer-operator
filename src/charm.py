@@ -10,7 +10,7 @@ import pwd
 import shutil
 import subprocess
 from copy import deepcopy
-from typing import List, Union
+from typing import List, Optional, Union
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
@@ -135,7 +135,7 @@ class PgBouncerCharm(CharmBase):
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
             # This emits relation-changed events to every client relation, so only do it when
             # necessary
-            self.update_backend_relation_port(self.config["listen_port"])
+            self.update_client_connection_info(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
@@ -322,17 +322,20 @@ class PgBouncerCharm(CharmBase):
     #  Relation Utilities
     # =====================
 
-    def update_backend_relation_port(self, port):
+    def update_client_connection_info(self, port: Optional[str] = None):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
-        if not self.backend.postgres or not self.unit.is_leader():
+        if not self.backend.postgres:
             return
 
+        if port is None:
+            port = self.config["listen_port"]
+
         for relation in self.model.relations.get("db", []):
-            self.legacy_db_relation.update_port(relation, port)
+            self.legacy_db_relation.update_connection_info(relation, port)
 
         for relation in self.model.relations.get("db-admin", []):
-            self.legacy_db_admin_relation.update_port(relation, port)
+            self.legacy_db_admin_relation.update_connection_info(relation, port)
 
     def update_postgres_endpoints(self, reload_pgbouncer):
         """Update postgres endpoints in relation config values."""
