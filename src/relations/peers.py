@@ -64,6 +64,7 @@ from constants import PEER_RELATION_NAME
 CFG_FILE_DATABAG_KEY = "cfg_file"
 AUTH_FILE_DATABAG_KEY = "auth_file"
 ADDRESS_KEY = "private-address"
+LEADER_ADDRESS_KEY = "leader_ip"
 
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ class Peers(Object):
     @property
     def leader_ip(self) -> str:
         """Gets the IP of the leader unit."""
-        return self.app_databag.get("leader_ip", None)
+        return self.app_databag.get(LEADER_ADDRESS_KEY, None)
 
     def _get_unit_ip(self, unit: Unit) -> Optional[str]:
         """Get the IP address of a specific unit."""
@@ -161,8 +162,7 @@ class Peers(Object):
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
-        # self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
-        event.relation.data[self.charm.unit].update({ADDRESS_KEY: self.charm.unit_ip})
+        self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
         self.charm.update_client_connection_info()
 
         if self.charm.unit.is_leader():
@@ -175,8 +175,7 @@ class Peers(Object):
                 return
 
             self.update_cfg(cfg)
-            self.app_databag["leader_ip"] = self.charm.unit_ip
-            self.unit_databag[ADDRESS_KEY] = self.charm.unit_ip
+            self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
             return
 
         if cfg := self.get_secret("app", CFG_FILE_DATABAG_KEY):
@@ -203,7 +202,7 @@ class Peers(Object):
     def _update_connection(self):
         self.charm.update_client_connection_info()
         if self.charm.unit.is_leader():
-            self.app_databag["leader_ip"] = self.charm.unit_ip
+            self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
 
     def set_secret(self, scope: str, key: str, value: str):
         """Sets secret value.
