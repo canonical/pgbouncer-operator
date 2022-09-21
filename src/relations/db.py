@@ -319,11 +319,12 @@ class DbProvides(Object):
         connection_updates = {
             "master": pgb.parse_dict_to_kv_string(master_dbconnstr),
             "port": str(port),
-            "host": self.charm.unit_ip
+            "host": self.charm.unit_ip,
         }
 
         standby_ips = self.charm.peers.units_ips - {self.charm.peers.leader_ip}
-        # Only one standby value in legacy relation
+        # Only one standby value in legacy relation on pgbouncer. There are multiple standbys on
+        # postgres, but not on the legacy pgbouncer charm.
         if len(standby_ips) > 0:
             standby_ip = standby_ips.pop()
             standby_dbconnstr = dict(master_dbconnstr)
@@ -406,7 +407,7 @@ class DbProvides(Object):
         command.
         """
         # Only delete relation data if we're the leader, and we're the last unit to leave.
-        if not self.charm.unit.is_leader() or len(self.charm.peers.unit_ips) > 1:
+        if not self.charm.unit.is_leader() or len(self.charm.peers.units_ips) > 1:
             self.charm.update_client_connection_info()
             return
 

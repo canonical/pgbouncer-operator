@@ -210,11 +210,11 @@ class TestDb(unittest.TestCase):
             "fallback_application_name": _get_external_app().name,
         }
 
-        standby_dbconnstrs = []
-        for standby_ip in self.charm.peers.units_ips - {self.charm.peers.leader_ip}:
+        standby_ips = self.charm.peers.units_ips - {self.charm.peers.leader_ip}
+        if len(standby_ips) > 0:
+            standby_ip = standby_ips.pop()
             standby_dbconnstr = dict(master_dbconnstr)
             standby_dbconnstr.update({"host": standby_ip, "dbname": f"{database}_standby"})
-            standby_dbconnstrs.append(parse_dict_to_kv_string(standby_dbconnstr))
 
         self.db_relation.update_connection_info(relation, port)
         _update_databags.assert_called_with(
@@ -222,7 +222,8 @@ class TestDb(unittest.TestCase):
             {
                 "master": parse_dict_to_kv_string(master_dbconnstr),
                 "port": port,
-                "standbys": ",".join(standby_dbconnstrs),
+                "standbys": parse_dict_to_kv_string(standby_dbconnstr),
+                "host": "1.1.1.1",
             },
         )
 

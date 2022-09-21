@@ -117,11 +117,11 @@ class Peers(Object):
         Returns:
             A set of peers addresses (strings).
         """
-        unit_ips = {self._get_unit_ip(unit) for unit in self.relation.units}
-        unit_ips.discard(None)
-        unit_ips.discard(self.leader_ip)
-        unit_ips.add(self.charm.unit_ip)
-        return unit_ips
+        units_ips = {self._get_unit_ip(unit) for unit in self.relation.units}
+        units_ips.discard(None)
+        units_ips.discard(self.leader_ip)
+        units_ips.add(self.charm.unit_ip)
+        return units_ips
 
     @property
     def leader_ip(self) -> str:
