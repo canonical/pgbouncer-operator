@@ -118,8 +118,8 @@ class Peers(Object):
             A set of peers addresses (strings).
         """
         unit_ips = {self._get_unit_ip(unit) for unit in self.relation.units}
-        unit_ips.remove(None)
-        unit_ips.remove(self.leader_ip)
+        unit_ips.discard(None)
+        unit_ips.discard(self.leader_ip)
         unit_ips.add(self.charm.unit_ip)
         return unit_ips
 
