@@ -113,10 +113,10 @@ class Peers(Object):
 
     @property
     def units_ips(self) -> Set[str]:
-        """Fetch current set of peers IPs.
+        """Fetch current set of peers IPs, not including the leader.
 
         Returns:
-            A set of peers addresses (strings).
+            A set of strings containing peers addresses, not including the leader.
         """
         units_ips = {self._get_unit_ip(unit) for unit in self.relation.units}
         units_ips.discard(None)
