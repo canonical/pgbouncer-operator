@@ -207,6 +207,8 @@ class Peers(Object):
     def set_secret(self, scope: str, key: str, value: str):
         """Sets secret value.
 
+        Pass in "None" to the value to delete the secret.
+
         Placeholder method for Juju Secrets interface.
 
         Args:
@@ -224,24 +226,6 @@ class Peers(Object):
                 self.app_databag.pop(key, None)
                 return
             self.app_databag.update({key: value})
-        else:
-            raise RuntimeError("Unknown secret scope.")
-
-    def del_secret(self, scope: str, key: str):
-        """Deletes secret value.
-
-        Placeholder method for Juju Secrets interface.
-
-        Args:
-            scope: scope for data. Can be "unit" or "app".
-            key: key to access data
-        """
-        if scope == "unit":
-            self.unit_databag.pop(key, None)
-            return
-        elif scope == "app":
-            self.app_databag.pop(key, None)
-            return
         else:
             raise RuntimeError("Unknown secret scope.")
 
@@ -299,4 +283,4 @@ class Peers(Object):
         if not self.charm.unit.is_leader():
             return
 
-        self.del_secret("app", username)
+        self.set_secret("app", username, None)
