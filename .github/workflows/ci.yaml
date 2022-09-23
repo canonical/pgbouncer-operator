@@ -66,3 +66,18 @@ jobs:
           lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e legacy-relation-integration
+
+
+  integration-scaling:
+    name: Integration tests for scaling pgbouncer (microk8s)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+         provider: lxd
+         lxd-channel: 5.4/stable
+      - name: Run scaling integration tests
+        run: tox -e scaling-integration

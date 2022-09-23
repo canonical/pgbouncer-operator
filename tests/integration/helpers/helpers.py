@@ -119,8 +119,8 @@ async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
     return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
 
 
-async def get_userlist(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from unit filesystem."""
+async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
+    """Gets pgbouncer auth file from unit filesystem."""
     return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
 
 
@@ -259,13 +259,13 @@ async def deploy_postgres_bundle(
         )
         await asyncio.gather(
             ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
+                apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
             ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=1000),
+            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600),
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
         wait_for_relation_joined_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
 
         return relation
 
@@ -306,7 +306,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     )
     await ops_test.model.wait_for_idle(
         apps=[application_name],
-        timeout=1000,
+        timeout=600,
     )
 
     # Relate application to pgbouncer.
@@ -315,7 +315,28 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     await ops_test.model.wait_for_idle(
         apps=[application_name, PG, PGB],
         status="active",
-        timeout=1000,
+        timeout=600,
     )
 
     return relation
+
+
+async def scale_application(ops_test: OpsTest, application_name: str, count: int) -> None:
+    """Scale a given application to a specific unit count.
+
+    Args:
+        ops_test: The ops test framework instance
+        application_name: The name of the application
+        count: The desired number of units to scale to
+    """
+    change = count - len(ops_test.model.applications[application_name].units)
+    if change > 0:
+        await ops_test.model.applications[application_name].add_units(change)
+    elif change < 0:
+        units = [
+            unit.name for unit in ops_test.model.applications[application_name].units[0:-change]
+        ]
+        await ops_test.model.applications[application_name].destroy_units(*units)
+    await ops_test.model.wait_for_idle(
+        apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
+    )

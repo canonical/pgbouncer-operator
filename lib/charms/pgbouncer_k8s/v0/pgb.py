@@ -16,8 +16,37 @@
 
 This charm library provides common pgbouncer-specific features for the pgbouncer machine and
 Kubernetes charms, including automatic config management.
-"""
 
+The following is an example of a pgbouncer.ini config file output by PgbConfig.render():
+
+[databases]
+discourse-k8s = host=postgresql-k8s-primary.test-db-admin-ipve.svc.cluster.local dbname=discourse-k8s port=5432
+discourse-k8s_standby = host=postgresql-k8s-replicas.test-db-admin-ipve.svc.cluster.local dbname=discourse-k8s port=5432
+discourse-charmers-discourse-k8s = host=postgresql-k8s-primary.test-db-admin-ipve.svc.cluster.local dbname=discourse-charmers-discourse-k8s port=5432
+discourse-charmers-discourse-k8s_standby = host=postgresql-k8s-replicas.test-db-admin-ipve.svc.cluster.local dbname=discourse-charmers-discourse-k8s port=5432
+
+[pgbouncer]
+listen_addr = *
+listen_port = 5432
+logfile = /var/lib/postgresql/pgbouncer/pgbouncer.log
+pidfile = /var/lib/postgresql/pgbouncer/pgbouncer.pid
+admin_users = relation_1,pgbouncer_k8s_user_2_test_db_admin_ipve,pgbouncer_k8s_user_4_test_db_admin_ipve
+stats_users =
+auth_type = md5
+user = postgres
+max_client_conn = 10000
+ignore_startup_parameters = extra_float_digits
+so_reuseport = 1
+unix_socket_dir = /var/lib/postgresql/pgbouncer
+pool_mode = session
+max_db_connections = 100
+default_pool_size = 13
+min_pool_size = 7
+reserve_pool_size = 7
+auth_user = pgbouncer_auth_relation_1
+auth_query = SELECT username, password FROM pgbouncer_auth_relation_1.get_auth($1)
+
+"""  # noqa: W505
 
 import io
 import logging
@@ -37,7 +66,7 @@ LIBID = "113f4a7480c04631bfdf5fe776f760cd"
 LIBAPI = 0
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 2
+LIBPATCH = 3
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +78,7 @@ DEFAULT_CONFIG = {
     "databases": {},
     "pgbouncer": {
         "listen_addr": "*",
-        "listen_port": 6432,
+        "listen_port": "6432",
         "logfile": f"{PGB_DIR}/pgbouncer.log",
         "pidfile": f"{PGB_DIR}/pgbouncer.pid",
         "admin_users": set(),
@@ -118,6 +147,14 @@ class PgbConfig(MutableMapping):
     def __str__(self):
         """String representation of PgbConfig object."""
         return str(self.__dict__)
+
+    def keys(self):
+        """Returns keys of PgbConfig object."""
+        return self.__dict__.keys()
+
+    def items(self):
+        """Returns items of PgbConfig object."""
+        return self.__dict__.items()
 
     def read_dict(self, input: Dict) -> None:
         """Populates this object from a dictionary.
@@ -231,7 +268,9 @@ class PgbConfig(MutableMapping):
         }
         if not set(essentials.keys()).issubset(set(self.keys())):
             missing_keys = set(essentials.keys()) - (set(self.keys()))
-            raise PgbConfig.ConfigParsingError(f"necessary sections not found in config: {missing_keys}")
+            raise PgbConfig.ConfigParsingError(
+                f"necessary sections not found in config: {missing_keys}"
+            )
 
         if not set(essentials["pgbouncer"]).issubset(set(self["pgbouncer"].keys())):
             missing_config_values = set(essentials["pgbouncer"]) - set(self["pgbouncer"].keys())
@@ -319,9 +358,7 @@ class PgbConfig(MutableMapping):
         self[pgb]["reserve_pool_size"] = str(math.ceil(effective_db_connections / 4))
 
     def add_user(self, user: str, admin: bool = False, stats: bool = False):
-        """Adds a user.
-
-        Users are added to userlist.txt and pgbouncer.ini config files
+        """Adds a user to the config.
 
         Args:
             user: the username for the intended user
@@ -337,7 +374,7 @@ class PgbConfig(MutableMapping):
             self[PGB]["stats_users"] = stats_users.union({user})
 
     def remove_user(self, user: str):
-        """Removes a user from config files.
+        """Removes a user from config.
 
         Args:
             user: the username for the intended user.

@@ -10,7 +10,7 @@ import pwd
 import shutil
 import subprocess
 from copy import deepcopy
-from typing import Dict, List
+from typing import List, Optional, Union
 
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
@@ -25,6 +25,7 @@ from constants import PG as PG_USER
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
+from relations.peers import Peers
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
+        self.peers = Peers(self)
         self.backend = BackendDatabaseRequires(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
@@ -75,7 +77,9 @@ class PgBouncerCharm(CharmBase):
             os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o700)
             os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config
+        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
+        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
+        # throw a fit.
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
@@ -108,17 +112,8 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to start pgbouncer")
 
     def _on_update_status(self, _) -> None:
-        """Update Status hook.
-
-        Uses systemd status to verify pgbouncer is running and that we have backend relation.
-        """
-        if self.backend.postgres is None:
-            # If we don't have any backend, this charm doesn't serve a purpose, and therefore
-            # should be related to one or removed.
-            self.unit.status = BlockedStatus("waiting for backend database relation")
-            return
-
-        self.check_pgb_running()
+        """Update Status hook."""
+        self.unit.status = self.check_status()
 
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
@@ -126,6 +121,9 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
+        if not self.unit.is_leader():
+            return
+
         cfg = self.read_pgb_config()
         cfg["pgbouncer"]["pool_mode"] = self.config["pool_mode"]
 
@@ -137,27 +135,42 @@ class PgBouncerCharm(CharmBase):
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
             # This emits relation-changed events to every client relation, so only do it when
             # necessary
-            self.update_backend_relation_port(self.config["listen_port"])
+            self.update_client_connection_info(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
 
-    def check_pgb_running(self):
-        """Checks that pgbouncer systemd service is running."""
+    def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
+        """Checks that pgbouncer systemd service is running.
+
+        Returns:
+            Recommended unit status. Can be active, blocked, or waiting.
+        """
+        try:
+            self.read_pgb_config()
+        except FileNotFoundError:
+            wait_str = "waiting for pgbouncer to start"
+            logger.warning(wait_str)
+            return WaitingStatus(wait_str)
+
+        if not self.backend.postgres:
+            # We can't relate an app to the backend database without a backend postgres relation
+            backend_wait_msg = "waiting for backend database relation to connect"
+            logger.warning(backend_wait_msg)
+            return BlockedStatus(backend_wait_msg)
+
         try:
             for service in self.pgb_services:
                 if not systemd.service_running(f"{service}"):
-                    self.unit.status = BlockedStatus(f"{service} is not running")
-                    return
+                    return BlockedStatus(f"{service} is not running")
 
         except systemd.SystemdError as e:
             logger.error(e)
-            self.unit.status = BlockedStatus("failed to get pgbouncer status")
-            return
+            return BlockedStatus("failed to get pgbouncer status")
 
-        self.unit.status = ActiveStatus()
+        return ActiveStatus()
 
-    def _reload_pgbouncer(self):
+    def reload_pgbouncer(self):
         """Restarts systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
@@ -167,7 +180,7 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
-        self.check_pgb_running()
+        self.unit.status = self.check_status()
 
     # ==============================
     #  PgBouncer-Specific Utilities
@@ -195,6 +208,8 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
+        self.peers.update_cfg(config)
+
         # create a copy of the config so the original reference is unchanged.
         primary_config = deepcopy(config)
 
@@ -213,7 +228,7 @@ class PgBouncerCharm(CharmBase):
             self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
     def _render_pgb_config(
         self,
@@ -235,28 +250,25 @@ class PgBouncerCharm(CharmBase):
         self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
-    def _read_userlist(self) -> Dict[str, str]:
-        with open(AUTH_FILE_PATH, "r") as file:
-            userlist = pgb.parse_userlist(file.read())
-        return userlist
-
-    def _render_userlist(self, userlist: Dict[str, str], reload_pgbouncer: bool = False):
+    def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
 
         Args:
-            userlist: dictionary of users:password strings.
+            auth_file: the auth file to be rendered
             reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
                 application. When config files are updated, pgbouncer must be restarted for the
                 changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
-        self.render_file(AUTH_FILE_PATH, pgb.generate_userlist(userlist), 0o700)
+
+        self.peers.update_auth_file(auth_file)
+        self.render_file(AUTH_FILE_PATH, auth_file, perms=0o700)
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
     # =================
     #  Charm Utilities
@@ -304,28 +316,31 @@ class PgBouncerCharm(CharmBase):
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
-        return self.model.get_binding(PEERS).network.bind_address
+        return str(self.model.get_binding(PEERS).network.bind_address)
 
     # =====================
     #  Relation Utilities
     # =====================
 
-    def update_backend_relation_port(self, port):
+    def update_client_connection_info(self, port: Optional[str] = None):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
         if not self.backend.postgres:
             return
 
+        if port is None:
+            port = self.config["listen_port"]
+
         for relation in self.model.relations.get("db", []):
-            self.legacy_db_relation.update_port(relation, port)
+            self.legacy_db_relation.update_connection_info(relation, port)
 
         for relation in self.model.relations.get("db-admin", []):
-            self.legacy_db_admin_relation.update_port(relation, port)
+            self.legacy_db_admin_relation.update_connection_info(relation, port)
 
     def update_postgres_endpoints(self, reload_pgbouncer):
         """Update postgres endpoints in relation config values."""
         # Skip updates if backend.postgres doesn't exist yet.
-        if not self.backend.postgres:
+        if not self.backend.postgres or not self.unit.is_leader():
             return
 
         for relation in self.model.relations.get("db", []):
@@ -337,7 +352,7 @@ class PgBouncerCharm(CharmBase):
             )
 
         if reload_pgbouncer:
-            self._reload_pgbouncer()
+            self.reload_pgbouncer()
 
 
 if __name__ == "__main__":

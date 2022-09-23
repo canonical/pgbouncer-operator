@@ -15,7 +15,8 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import INI_PATH, PGB_DIR
+from constants import BACKEND_RELATION_NAME, INI_PATH, PGB_DIR
+from tests.helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
@@ -31,6 +32,7 @@ class TestCharm(unittest.TestCase):
         self.harness.begin()
 
         self.charm = self.harness.charm
+        self.unit = self.harness.charm.unit
 
     @patch("charm.PgBouncerCharm._install_apt_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
@@ -102,78 +104,87 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
-    @patch("charm.PgBouncerCharm.check_pgb_running")
+    @patch("charm.PgBouncerCharm.check_status", return_value=BlockedStatus())
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
-        self.charm._reload_pgbouncer()
+        self.charm.reload_pgbouncer()
         calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
         _running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _restart.side_effect = systemd.SystemdError()
-        self.charm._reload_pgbouncer()
+        self.charm.reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
+    @patch("charm.PgBouncerCharm.read_pgb_config", side_effect=FileNotFoundError)
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres",
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_update_status(self, _postgres, _running):
-        intended_instances = self._cores = os.cpu_count()
+    def test_check_status(self, _postgres, _running, _read_cfg):
+        # check fail on config not available
+        self.assertIsInstance(self.charm.check_status(), WaitingStatus)
+        _read_cfg.side_effect = None
+
+        # check fail on postgres not available
         # Testing charm blocks when the pgbouncer services aren't running
-        self.charm.on.update_status.emit()
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
         _postgres.return_value = True
 
-        # If all pgbouncer services are running but we have no backend relation, verify we block &
-        # wait for the backend relation.
-        self.charm.on.update_status.emit()
+        # check fail when services aren't all running
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
         calls = [call("pgbouncer@0")]
         _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
-
-        # If all pgbouncer services are running and we have backend relation, set ActiveStatus.
-        _running.reset_mock()
         _running.return_value = True
-        self.charm.on.update_status.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
-        _running.assert_has_calls(calls)
-        self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
-        _running.side_effect = systemd.SystemdError()
-        self.charm.on.update_status.emit()
-        self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        # check fail when we can't get service status
+        _running.side_effect = systemd.SystemdError
+        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
+        _running.side_effect = None
+
+        # otherwise check all services and return activestatus
+        intended_instances = self._cores = os.cpu_count()
+        self.assertIsInstance(self.charm.check_status(), ActiveStatus)
+        calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
+        _running.assert_has_calls(calls)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    def test_on_config_changed(self, _render, _read):
+    @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
+    @patch_network_get(private_address="1.1.1.1")
+    def test_on_config_changed(self, _app_databag, _render, _read):
+        self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
+        self.harness.set_leader()
         mock_cores = 1
         self.charm._cores = mock_cores
         max_db_connections = 44
 
         # Copy config object and modify it as we expect in the hook.
-        config = deepcopy(_read.return_value)
-        config["pgbouncer"]["pool_mode"] = "transaction"
-        config.set_max_db_connection_derivatives(
+        test_config = deepcopy(_read.return_value)
+        test_config["pgbouncer"]["pool_mode"] = "transaction"
+        test_config.set_max_db_connection_derivatives(
             max_db_connections=max_db_connections,
             pgb_instances=mock_cores,
         )
+
+        test_config["pgbouncer"]["listen_port"] = "6464"
 
         # set config to include pool_mode and max_db_connections
         self.harness.update_config(
             {
                 "pool_mode": "transaction",
                 "max_db_connections": max_db_connections,
+                "listen_port": "6464",
             }
         )
 
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-        self.assertDictEqual(dict(_read.return_value), dict(config))
+        self.assertDictEqual(dict(_read.return_value), dict(test_config))
 
     @patch("charms.operator_libs_linux.v0.apt.add_package")
     @patch("charms.operator_libs_linux.v0.apt.update")
@@ -219,7 +230,7 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(test_ini, test_config.render())
         self.assertEqual(existing_config, test_config)
 
-    @patch("charm.PgBouncerCharm._reload_pgbouncer")
+    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
     def test_render_pgb_config(self, _render, _reload):
         self.charm.service_ids = [0, 1]
