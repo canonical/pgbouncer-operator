@@ -131,16 +131,6 @@ async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname
     return await ops_test.juju(*run_cmd.split(" "), cmd)
 
 
-def get_backend_relation(ops_test: OpsTest):
-    """Gets the backend-database relation used to connect pgbouncer to the backend."""
-    app_name = ops_test.model.applications[PGB].name
-    for rel in ops_test.model.relations:
-        if app_name in rel.endpoints and "postgresql" in rel.endpoints:
-            return rel
-
-    return None
-
-
 def get_legacy_relation_username(ops_test: OpsTest, relation_id: int):
     """Gets a username as it should be generated in the db and db-admin legacy relations."""
     app_name = ops_test.model.applications[PGB].name

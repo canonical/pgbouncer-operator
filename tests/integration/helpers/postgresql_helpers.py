@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List
 
 import psycopg2
+import requests as requests
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -127,6 +128,21 @@ async def check_databases_creation(
             assert len(output)
 
 
+def enable_connections_logging(ops_test: OpsTest, unit_name: str) -> None:
+    """Turn on the log of all connections made to a PostgreSQL instance.
+
+    Args:
+        ops_test: The ops test framework instance
+        unit_name: The name of the unit to turn on the connection logs
+    """
+    unit_address = get_unit_address(ops_test, unit_name)
+    requests.patch(
+        f"https://{unit_address}:8008/config",
+        json={"postgresql": {"parameters": {"log_connections": True}}},
+        verify=False,
+    )
+
+
 async def execute_query_on_unit(
     unit_address: str,
     user: str,
@@ -153,6 +169,20 @@ async def execute_query_on_unit(
     return output
 
 
+async def get_primary(ops_test: OpsTest) -> str:
+    """Get the primary unit.
+
+    Args:
+        ops_test: ops_test instance.
+
+    Returns:
+        the current primary unit.
+    """
+    action = await ops_test.model.units.get(f"{PG}/0").run_action("get-primary")
+    action = await action.wait()
+    return action.results["primary"]
+
+
 def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
     """Get unit IP address.
 
@@ -164,3 +194,23 @@ def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
         IP address of the unit
     """
     return ops_test.model.units.get(unit_name).public_address
+
+
+async def run_command_on_unit(ops_test: OpsTest, unit_name: str, command: str) -> str:
+    """Run a command on a specific unit.
+
+    Args:
+        ops_test: The ops test framework instance
+        unit_name: The name of the unit to run the command on
+        command: The command to run
+
+    Returns:
+        the command output if it succeeds, otherwise raises an exception.
+    """
+    complete_command = f"run --unit {unit_name} -- {command}"
+    return_code, stdout, _ = await ops_test.juju(*complete_command.split())
+    if return_code != 0:
+        raise Exception(
+            "Expected command %s to succeed instead it failed: %s", command, return_code
+        )
+    return stdout
