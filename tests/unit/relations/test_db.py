@@ -51,9 +51,7 @@ class TestDb(unittest.TestCase):
         self.harness.add_relation_unit(self.db_rel_id, "client_app/0")
 
         # Define a db-admin relation
-        self.db_admin_rel_id = self.harness.add_relation(
-            DB_ADMIN_RELATION_NAME, "admin_client"
-        )
+        self.db_admin_rel_id = self.harness.add_relation(DB_ADMIN_RELATION_NAME, "admin_client")
         self.harness.add_relation_unit(self.db_admin_rel_id, "admin_client/0")
 
         # Define a peer relation
