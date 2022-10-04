@@ -21,7 +21,7 @@ from tests.integration.helpers.helpers import (
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
     enable_connections_logging,
-    get_primary,
+    get_postgres_primary,
     run_command_on_unit,
 )
 
@@ -106,11 +106,10 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
         # between PgBouncer and PostgreSQL.
         await ops_test.model.deploy(MAILMAN3)
         await ops_test.model.add_relation(f"{PGB}:db", f"{MAILMAN3}:db")
-        wait_for_relation_joined_between(ops_test, PGB, MAILMAN3)
         await ops_test.model.wait_for_idle(apps=[PG, PGB, MAILMAN3], status="active", timeout=1000)
 
         # Check the logs to ensure TLS is being used by PgBouncer.
-        postgresql_primary_unit = await get_primary(ops_test)
+        postgresql_primary_unit = await get_postgres_primary(ops_test)
         logs = await run_command_on_unit(
             ops_test, postgresql_primary_unit, "journalctl -u patroni.service"
         )
