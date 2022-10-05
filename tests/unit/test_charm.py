@@ -170,14 +170,14 @@ class TestCharm(unittest.TestCase):
             pgb_instances=mock_cores,
         )
 
-        test_config["pgbouncer"]["listen_port"] = "6464"
+        test_config["pgbouncer"]["listen_port"] = 6464
 
         # set config to include pool_mode and max_db_connections
         self.harness.update_config(
             {
                 "pool_mode": "transaction",
                 "max_db_connections": max_db_connections,
-                "listen_port": "6464",
+                "listen_port": 6464,
             }
         )
 
