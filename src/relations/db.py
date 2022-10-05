@@ -84,7 +84,7 @@ Some example relation data is below. All values are examples, generated in a run
 └──────────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────┘
 """  # noqa: W505
 import logging
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
@@ -368,13 +368,12 @@ class DbProvides(Object):
             "auth_user": self.charm.backend.auth_user,
         }
 
-        read_only_endpoints = self._get_read_only_endpoints()
-        if read_only_endpoints:
-            endpoint_ips = [endpoint.split(":")[0] for endpoint in read_only_endpoints]
+        read_only_endpoint = self._get_read_only_endpoint()
+        if read_only_endpoint:
             cfg["databases"][f"{database}_standby"] = {
-                "host": ",".join(endpoint_ips),
+                "host": read_only_endpoint.split(":")[0],
                 "dbname": database,
-                "port": read_only_endpoints[0].split(":")[1],
+                "port": read_only_endpoint.split(":")[1],
                 "auth_user": self.charm.backend.auth_user,
             }
         else:
@@ -494,16 +493,16 @@ class DbProvides(Object):
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 
-    def _get_read_only_endpoints(self) -> List[str]:
-        """Get a list of read-only-endpoint from backend relation.
+    def _get_read_only_endpoint(self):
+        """Get a read-only-endpoint from backend relation.
 
         Though multiple readonly endpoints can be provided by the new backend relation, only one
         can be consumed by this legacy relation.
         """
         read_only_endpoints = self.charm.backend.postgres_databag.get("read-only-endpoints")
         if read_only_endpoints is None or len(read_only_endpoints) == 0:
-            return []
-        return read_only_endpoints.split(",")
+            return None
+        return read_only_endpoints.split(",")[0]
 
     def _get_state(self) -> str:
         """Gets the given state for this unit.
