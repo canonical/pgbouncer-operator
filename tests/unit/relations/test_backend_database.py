@@ -32,7 +32,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         # Define a backend relation
         self.rel_id = self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
         self.harness.add_relation_unit(self.rel_id, "postgres/0")
-        self.harness.add_relation_unit(self.rel_id, self.unit)
 
         # Define a peer relation
         self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
