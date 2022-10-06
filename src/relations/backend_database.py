@@ -199,7 +199,6 @@ class BackendDatabaseRequires(Object):
             psycopg2.Error if self.postgres isn't usable.
         """
         logger.info("initialising auth function")
-
         install_script = open("src/relations/sql/pgbouncer-install.sql", "r").read()
 
         for dbname in dbs:
@@ -217,8 +216,7 @@ class BackendDatabaseRequires(Object):
         Raises:
             psycopg2.Error if self.postgres isn't usable.
         """
-        logger.info("initialising auth function")
-
+        logger.info("removing auth function from backend relation")
         uninstall_script = open("src/relations/sql/pgbouncer-uninstall.sql", "r").read()
         for dbname in dbs:
             with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
@@ -230,6 +228,7 @@ class BackendDatabaseRequires(Object):
     def relation(self) -> Relation:
         """Relation object for postgres backend-database relation."""
         backend_relation = self.model.get_relation(BACKEND_RELATION_NAME)
+
         if not backend_relation:
             return None
         else:
