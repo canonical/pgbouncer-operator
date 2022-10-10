@@ -44,6 +44,10 @@ jobs:
 
   integration-standalone:
     name: Integration tests for standalone charm
+    needs:
+      - lib-check
+      - lint
+      - unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,6 +62,10 @@ jobs:
 
   integration-backend:
     name: Integration tests for backend relation
+    needs:
+      - lib-check
+      - lint
+      - unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,6 +81,10 @@ jobs:
 
   integration-legacy-relations:
     name: Integration tests for legacy relations
+    needs:
+      - lib-check
+      - lint
+      - unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -87,6 +99,10 @@ jobs:
 
   integration-scaling:
     name: Integration tests for scaling pgbouncer (microk8s)
+    needs:
+      - lib-check
+      - lint
+      - unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -109,7 +125,6 @@ jobs:
       - integration-backend
       - integration-legacy-relations
       - integration-scaling
-
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
