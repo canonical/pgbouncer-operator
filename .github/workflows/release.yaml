@@ -20,111 +20,16 @@ jobs:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}" # FIXME: current token will expire in 2023-07-04
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        run: python3 -m pip install tox
-      - name: Run linters
-        run: tox -e lint
-
-  unit-test:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        run: python -m pip install tox
-      - name: Run tests
-        run: tox -e unit
-
-  integration-standalone:
-    name: Integration tests for standalone charm
+  ci:
     needs:
       - lib-check
-      - lint
-      - unit-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: lxd
-          lxd-channel: 5.4/stable
-      - name: Run integration tests
-        run: tox -e standalone-integration
-
-  integration-backend:
-    name: Integration tests for backend relation
-    needs:
-      - lib-check
-      - lint
-      - unit-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: lxd
-          lxd-channel: 5.4/stable
-      - name: Run integration tests
-        run: tox -e backend-integration
-
-
-  integration-legacy-relations:
-    name: Integration tests for legacy relations
-    needs:
-      - lib-check
-      - lint
-      - unit-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: lxd
-          lxd-channel: 5.4/stable
-      - name: Run integration tests
-        run: tox -e legacy-relation-integration
-
-  integration-scaling:
-    name: Integration tests for scaling pgbouncer (microk8s)
-    needs:
-      - lib-check
-      - lint
-      - unit-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-         provider: lxd
-         lxd-channel: 5.4/stable
-      - name: Run scaling integration tests
-        run: tox -e scaling-integration
+    uses: ./.github/workflows/ci.yaml
 
   release-to-charmhub:
     name: Release to CharmHub
     needs:
       - lib-check
-      - lint
-      - unit-test
-      - integration-standalone
-      - integration-backend
-      - integration-legacy-relations
-      - integration-scaling
+      - ci
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
