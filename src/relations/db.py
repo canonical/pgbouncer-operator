@@ -205,7 +205,6 @@ class DbProvides(Object):
             self.charm.unit.status = BlockedStatus(
                 "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
             )
-            join_event.fail()
             return
 
         user = self._generate_username(join_event)
@@ -243,7 +242,7 @@ class DbProvides(Object):
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
             logger.error(err_msg)
-            join_event.fail()
+            join_event.defer()
             self.charm.unit.status = BlockedStatus(err_msg)
             return
 
