@@ -32,10 +32,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     """
     async with ops_test.fast_forward():
         charm = await ops_test.build_charm(".")
-        await ops_test.model.deploy(
-            charm,
-            application_name=PGB,
-        )
+        await ops_test.model.deploy(charm, application_name=PGB, series="jammy")
         # Pgbouncer enters a blocked status without a postgres backend database relation
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
