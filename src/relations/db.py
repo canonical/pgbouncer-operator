@@ -318,7 +318,7 @@ class DbProvides(Object):
             return
 
         master_dbconnstr = {
-            "host": self.charm.peers.leader_ip,
+            "host": self.charm.leader_ip,
             "dbname": database,
             "port": port,
             "user": user,
@@ -332,7 +332,7 @@ class DbProvides(Object):
             "host": self.charm.unit_ip,
         }
 
-        standby_ips = self.charm.peers.units_ips - {self.charm.peers.leader_ip}
+        standby_ips = self.charm.peers.units_ips - {self.charm.leader_ip}
         # Only one standby value in legacy relation on pgbouncer. There are multiple standbys on
         # postgres, but not on the legacy pgbouncer charm.
         if len(standby_ips) > 0:
@@ -368,7 +368,7 @@ class DbProvides(Object):
             "auth_user": self.charm.backend.auth_user,
         }
 
-        read_only_endpoint = self._get_read_only_endpoint()
+        read_only_endpoint = self.charm.backend.get_read_only_endpoint()
         if read_only_endpoint:
             cfg["databases"][f"{database}_standby"] = {
                 "host": read_only_endpoint.split(":")[0],
@@ -493,17 +493,6 @@ class DbProvides(Object):
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 
-    def _get_read_only_endpoint(self):
-        """Get a read-only-endpoint from backend relation.
-
-        Though multiple readonly endpoints can be provided by the new backend relation, only one
-        can be consumed by this legacy relation.
-        """
-        read_only_endpoints = self.charm.backend.postgres_databag.get("read-only-endpoints")
-        if read_only_endpoints is None or len(read_only_endpoints) == 0:
-            return None
-        return read_only_endpoints.split(",")[0]
-
     def _get_state(self) -> str:
         """Gets the given state for this unit.
 
@@ -553,3 +542,17 @@ class DbProvides(Object):
         for entry in relation.data.keys():
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry
+
+    def _check_backend(self) -> bool:
+        """Verifies backend is ready, defers event if not.
+
+        Returns:
+            bool signifying whether backend is ready or not
+        """
+        if not self.charm.backend.ready:
+            # We can't relate an app to the backend database without a backend postgres relation
+            wait_str = "waiting for backend-database relation to connect"
+            logger.warning(wait_str)
+            self.charm.unit.status = WaitingStatus(wait_str)
+            return False
+        return True

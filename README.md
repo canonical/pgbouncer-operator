@@ -53,10 +53,13 @@ The following config values are set as constants in the charm:
 
 ## Relations
 
-- `database`
-- `database-admin`
+- `database:postgresql-client`
+  - Provides a relation to client applications.
+  - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_standby"`.
 - `backend-database-admin`
   - Relates to backend postgresql database charm.
+
+The expected data presented in a relation interface is provided in the docstring at the top of the source files for each relation.
 
 ### Legacy Relations
 
