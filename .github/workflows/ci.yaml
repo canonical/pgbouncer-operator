@@ -26,6 +26,9 @@ jobs:
         run: tox -e unit
 
   integration-standalone:
+    strategy:
+      matrix:
+        series: [focal, jammy]
     name: Integration tests for standalone charm
     needs:
       - lint
@@ -43,6 +46,9 @@ jobs:
         run: tox -e standalone-integration
 
   integration-backend:
+    strategy:
+      matrix:
+        series: [focal, jammy]
     name: Integration tests for backend relation
     needs:
       - lint
@@ -60,6 +66,9 @@ jobs:
         run: tox -e backend-integration
 
   integration-legacy-relations:
+    strategy:
+      matrix:
+        series: [focal, jammy]
     name: Integration tests for legacy relations
     needs:
       - lint
@@ -78,6 +87,9 @@ jobs:
 
 
   integration-scaling:
+    strategy:
+      matrix:
+        series: [focal, jammy]
     name: Integration tests for scaling pgbouncer (microk8s)
     needs:
       - lint
