@@ -19,7 +19,6 @@ maintainers:
 
 series:
   - jammy
-  - focal
 
 peers:
   pgb-peers:
