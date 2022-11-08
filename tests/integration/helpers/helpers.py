@@ -20,6 +20,21 @@ PGB = METADATA["name"]
 PG = "postgresql"
 
 
+def get_backend_relation(ops_test: OpsTest):
+    """Gets the backend-database relation used to connect pgbouncer to the backend."""
+    return get_joining_relations(ops_test, PGB, PG)[0]
+
+
+def get_joining_relations(ops_test: OpsTest, app_1: str, app_2: str):
+    """Gets every relation in this model that joins app_1 and app_2."""
+    relations = []
+    for rel in ops_test.model.relations:
+        apps = [endpoint["application-name"] for endpoint in rel.data["endpoints"]]
+        if app_1 in apps and app_2 in apps:
+            relations.append(rel)
+    return relations
+
+
 async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
     """Get unit IP address.
 
