@@ -38,7 +38,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.7/stable
+          lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e standalone-integration
 
@@ -55,7 +55,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.7/stable
+          lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e backend-integration
 
@@ -72,7 +72,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.7/stable
+          lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e legacy-client-relation-integration
 
@@ -89,7 +89,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.7/stable
+          lxd-channel: 5.4/stable
       - name: Run integration tests
         run: tox -e client-relation-integration
 
@@ -106,6 +106,6 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
          provider: lxd
-         lxd-channel: 5.7/stable
+         lxd-channel: 5.4/stable
       - name: Run scaling integration tests
         run: tox -e scaling-integration
