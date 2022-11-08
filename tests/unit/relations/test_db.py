@@ -228,7 +228,10 @@ class TestDb(unittest.TestCase):
         new_callable=PropertyMock,
         return_value={},
     )
-    @patch("relations.db.DbProvides._get_read_only_endpoint", return_value=None)
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.get_read_only_endpoints",
+        return_value=[],
+    )
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_update_postgres_endpoints(
@@ -247,7 +250,7 @@ class TestDb(unittest.TestCase):
         assert f"{database}_standby" not in cfg["databases"].keys()
         assert PG not in cfg["databases"].keys()
         _render_cfg.assert_called_with(cfg, reload_pgbouncer=reload_pgbouncer)
-        _read_only_endpoint.return_value = "readonly:endpoint"
+        _read_only_endpoint.return_value = ["readonly:endpoint"]
 
         self.db_relation.update_postgres_endpoints(relation, reload_pgbouncer)
         assert database in cfg["databases"].keys()

@@ -120,11 +120,11 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.read_pgb_config", side_effect=FileNotFoundError)
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.postgres",
+        "relations.backend_database.BackendDatabaseRequires.ready",
         new_callable=PropertyMock,
-        return_value=None,
+        return_value=False,
     )
-    def test_check_status(self, _postgres, _running, _read_cfg):
+    def test_check_status(self, _postgres_ready, _running, _read_cfg):
         # check fail on config not available
         self.assertIsInstance(self.charm.check_status(), WaitingStatus)
         _read_cfg.side_effect = None
@@ -132,7 +132,7 @@ class TestCharm(unittest.TestCase):
         # check fail on postgres not available
         # Testing charm blocks when the pgbouncer services aren't running
         self.assertIsInstance(self.charm.check_status(), BlockedStatus)
-        _postgres.return_value = True
+        _postgres_ready.return_value = True
 
         # check fail when services aren't all running
         self.assertIsInstance(self.charm.check_status(), BlockedStatus)

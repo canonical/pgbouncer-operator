@@ -368,12 +368,12 @@ class DbProvides(Object):
             "auth_user": self.charm.backend.auth_user,
         }
 
-        read_only_endpoint = self.charm.backend.get_read_only_endpoint()
-        if read_only_endpoint:
+        read_only_endpoints = self.charm.backend.get_read_only_endpoints()
+        if len(read_only_endpoints) > 0:
             cfg["databases"][f"{database}_standby"] = {
-                "host": read_only_endpoint.split(":")[0],
+                "host": ",".join([ep.split(":")[0] for ep in read_only_endpoints]),
                 "dbname": database,
-                "port": read_only_endpoint.split(":")[1],
+                "port": read_only_endpoints[0].split(":")[1],
                 "auth_user": self.charm.backend.auth_user,
             }
         else:
