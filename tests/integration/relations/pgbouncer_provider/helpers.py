@@ -8,8 +8,6 @@ import logging
 from typing import Optional
 
 import yaml
-from lightkube.core.client import AsyncClient
-from lightkube.resources.core_v1 import Pod
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_attempt, wait_exponential
 
@@ -154,11 +152,5 @@ async def build_connection_string(
     )
     host = endpoints.split(",")[0].split(":")[0]
 
-    # Translate the pod hostname to an IP address.
-    model = ops_test.model.info
-    client = AsyncClient(namespace=model.name)
-    pod = await client.get(Pod, name=host.split(".")[0])
-    ip = pod.status.podIP
-
     # Build the complete connection string to connect to the database.
-    return f"dbname='{database}' user='{username}' host='{ip}' password='{password}' connect_timeout=10"
+    return f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
