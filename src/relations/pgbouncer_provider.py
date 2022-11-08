@@ -106,10 +106,11 @@ class PgBouncerProvider(Object):
             self.charm.backend.postgres.create_user(
                 user, password, extra_user_roles=extra_user_roles
             )
-            for database in databases.split(","):
+            dblist = databases.split(",")
+            for database in dblist:
                 self.charm.backend.postgres.create_database(database, user)
-                # set up auth function
-                self.charm.backend.initialise_auth_function(dbname=database)
+            # set up auth function
+            self.charm.backend.initialise_auth_function(dbs=dblist)
         except (
             PostgreSQLCreateDatabaseError,
             PostgreSQLCreateUserError,
