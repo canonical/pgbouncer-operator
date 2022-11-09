@@ -86,6 +86,9 @@ async def test_scaled_relations(ops_test: OpsTest):
 @pytest.mark.scaling
 async def test_leader_deletion(ops_test: OpsTest):
     """Test that we can delete leaders with no consequences."""
+    await ops_test.model.wait_for_idle(status="active", timeout=600),
+    await ops_test.model.applications[PGB].destroy_units([f"{PGB}/leader"])
+    await ops_test.model.wait_for_idle(status="active", timeout=600),
 
 
 @pytest.mark.scaling
