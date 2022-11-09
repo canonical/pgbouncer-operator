@@ -180,8 +180,10 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        remote_app_databag = create_event.relation.data[create_event.app]
-        remote_unit_databag = create_event.relation.data[create_event.unit]
+        remote_app_databag = create_event.relation.data.get(create_event.app)
+        remote_unit_databag = create_event.relation.data.get(create_event.unit)
+        if not remote_app_databag and not remote_unit_databag:
+            create_event.defer()
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
