@@ -27,7 +27,6 @@ MAILMAN = "mailman3-core"
 
 @pytest.mark.scaling
 @pytest.mark.abort_on_fail
-@pytest.mark.run(order=1)
 # TODO order marks aren't behaving
 async def test_deploy_at_scale(ops_test):
     # Build, deploy, and relate charms.
@@ -41,7 +40,6 @@ async def test_deploy_at_scale(ops_test):
 
 @pytest.mark.scaling
 @pytest.mark.abort_on_fail
-@pytest.mark.run(order=2)
 async def test_scaled_relations(ops_test: OpsTest):
     """Test that the pgbouncer, postgres, and client charms can relate to one another."""
     # Build, deploy, and relate charms.
@@ -86,13 +84,16 @@ async def test_scaled_relations(ops_test: OpsTest):
 
 
 @pytest.mark.scaling
-@pytest.mark.run(order=3)
+async def test_leader_deletion(ops_test: OpsTest):
+    """Test that we can delete leaders with no consequences."""
+
+
+@pytest.mark.scaling
 async def test_scaling(ops_test: OpsTest):
     """Test data is replicated to new units after a scale up."""
     # Ensure the initial number of units in the application.
     initial_scale = 4
     async with ops_test.fast_forward():
-
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=600),
@@ -111,6 +112,8 @@ async def test_scaling(ops_test: OpsTest):
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=600, wait_for_exact_units=3
             ),
+            # TODO when this deletes the leader, the charm is stuck in blocked "waiting for
+            # backend-database relation"
             ops_test.model.wait_for_idle(
                 apps=[PGB], status="active", timeout=600, wait_for_exact_units=initial_scale - 1
             ),
@@ -118,7 +121,6 @@ async def test_scaling(ops_test: OpsTest):
 
 
 @pytest.mark.scaling
-@pytest.mark.run(order=4)
 async def test_exit_relations(ops_test: OpsTest):
     """Test that we can exit relations with multiple units without breaking anything."""
     async with ops_test.fast_forward():

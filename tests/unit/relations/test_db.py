@@ -76,7 +76,7 @@ class TestDb(unittest.TestCase):
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.check_status", return_value=ActiveStatus())
-    def test_on_relation_joined(
+    def test_on_relation_created(
         self,
         _,
         _render_cfg,
@@ -107,7 +107,7 @@ class TestDb(unittest.TestCase):
         _postgres.create_user = _create_user
         _postgres.create_database = _create_database
 
-        self.db_admin_relation._on_relation_joined(mock_event)
+        self.db_admin_relation._on_relation_created(mock_event)
 
         _create_user.assert_called_with(user, password, admin=True)
         _create_database.assert_called_with(database, user)
@@ -121,7 +121,7 @@ class TestDb(unittest.TestCase):
             assert dbag["password"] == password
 
         # Check admin permissions aren't present when we use db_relation
-        self.db_relation._on_relation_joined(mock_event)
+        self.db_relation._on_relation_created(mock_event)
         _create_user.assert_called_with(user, password, admin=False)
 
     @patch(

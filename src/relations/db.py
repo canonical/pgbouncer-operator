@@ -96,8 +96,8 @@ from ops.charm import (
     CharmBase,
     RelationBrokenEvent,
     RelationChangedEvent,
+    RelationCreatedEvent,
     RelationDepartedEvent,
-    RelationJoinedEvent,
 )
 from ops.framework import Object
 from ops.model import (
@@ -149,7 +149,7 @@ class DbProvides(Object):
         super().__init__(charm, self.relation_name)
 
         self.framework.observe(
-            charm.on[self.relation_name].relation_joined, self._on_relation_joined
+            charm.on[self.relation_name].relation_created, self._on_relation_created
         )
         self.framework.observe(
             charm.on[self.relation_name].relation_changed, self._on_relation_changed
@@ -164,24 +164,24 @@ class DbProvides(Object):
         self.charm = charm
         self.admin = admin
 
-    def _on_relation_joined(self, join_event: RelationJoinedEvent):
-        """Handle db-relation-joined event.
+    def _on_relation_created(self, create_event: RelationCreatedEvent):
+        """Handle db-relation-created event.
 
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
         self.charm.unit.status = self.charm.check_status()
         if not isinstance(self.charm.unit.status, ActiveStatus):
-            join_event.defer()
+            create_event.defer()
             return
 
-        logger.info(f"Setting up {self.relation_name} relation")
+        logger.info(f"Initialising {self.relation_name} relation")
         logger.warning(
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        remote_app_databag = join_event.relation.data[join_event.app]
-        remote_unit_databag = join_event.relation.data[join_event.unit]
+        remote_app_databag = create_event.relation.data[create_event.app]
+        remote_unit_databag = create_event.relation.data[create_event.unit]
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
@@ -189,7 +189,7 @@ class DbProvides(Object):
             no_db = "No database name provided in app or unit databag"
             logger.warning(no_db)
             self.charm.unit.status = WaitingStatus(no_db)
-            join_event.defer()
+            create_event.defer()
             return
 
         # Do not allow apps requesting extensions to be installed. Extensions should be installed
@@ -205,19 +205,19 @@ class DbProvides(Object):
             self.charm.unit.status = BlockedStatus(
                 "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
             )
-            join_event.fail()
+            create_event.fail()
             return
 
-        user = self._generate_username(join_event)
+        user = self._generate_username(create_event)
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
             self.charm.peers.add_user(user, password)
         else:
             if not (password := self.charm.peers.app_databag.get(user, None)):
-                join_event.defer()
+                create_event.defer()
 
         self.update_databags(
-            join_event.relation,
+            create_event.relation,
             {
                 "user": user,
                 "password": password,
@@ -243,7 +243,7 @@ class DbProvides(Object):
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
             logger.error(err_msg)
-            join_event.fail()
+            create_event.fail()
             self.charm.unit.status = BlockedStatus(err_msg)
             return
 
