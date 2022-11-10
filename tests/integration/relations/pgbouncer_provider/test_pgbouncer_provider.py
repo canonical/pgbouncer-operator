@@ -4,17 +4,18 @@
 import asyncio
 import json
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 from tests.integration.helpers.helpers import (
+    get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
+    run_sql,
     scale_application,
+    wait_for_relation_joined_between,
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
 from tests.integration.relations.pgbouncer_provider.helpers import (
@@ -27,16 +28,15 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
 logger = logging.getLogger(__name__)
 
 CLIENT_APP_NAME = "application"
+ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG = "postgresql"
 PG_2 = "another-postgresql"
-PGB_METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = "pgbouncer"
 PGB_2 = "another-pgbouncer"
 APP_NAMES = [CLIENT_APP_NAME, PG, PGB]
 FIRST_DATABASE_RELATION_NAME = "first-database"
 SECOND_DATABASE_RELATION_NAME = "second-database"
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
-ALIASED_MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "aliased-multiple-database-clusters"
 
 
 @pytest.mark.abort_on_fail
@@ -164,21 +164,20 @@ async def test_two_applications_doesnt_share_the_same_relation_data(
 ):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
-    another_application_app_name = "another-application"
-    all_app_names = [another_application_app_name]
+    all_app_names = [ANOTHER_APPLICATION_APP_NAME]
     all_app_names.extend(APP_NAMES)
 
     # Deploy another application.
     await ops_test.model.deploy(
         application_charm,
-        application_name=another_application_app_name,
+        application_name=ANOTHER_APPLICATION_APP_NAME,
     )
     await ops_test.model.wait_for_idle(status="active")
 
     # Relate the new application with the database
     # and wait for them exchanging some connection data.
     await ops_test.model.add_relation(
-        f"{another_application_app_name}:{FIRST_DATABASE_RELATION_NAME}", PGB
+        f"{ANOTHER_APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
     )
     await ops_test.model.wait_for_idle(status="active")
 
@@ -187,7 +186,7 @@ async def test_two_applications_doesnt_share_the_same_relation_data(
         ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME
     )
     another_application_connection_string = await build_connection_string(
-        ops_test, another_application_app_name, FIRST_DATABASE_RELATION_NAME
+        ops_test, ANOTHER_APPLICATION_APP_NAME, FIRST_DATABASE_RELATION_NAME
     )
 
     assert application_connection_string != another_application_connection_string
@@ -288,7 +287,6 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     async with ops_test.fast_forward():
-        # Scale up the database.
         await scale_application(ops_test, PGB, 3)
 
         # Try to get the connection string of the database using the read-only endpoint.
@@ -300,6 +298,47 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
             "read-only-endpoints",
             exists=True,
         )
+
+
+@pytest.mark.client_relation
+async def test_with_legacy_relation(ops_test: OpsTest):
+    psql = "psql"
+    # Deploy application.
+    await ops_test.model.deploy(
+        "postgresql-charmers-postgresql-client",
+        application_name=psql,
+    )
+
+    psql_relation = await ops_test.model.relate(f"{psql}:db", f"{PGB}:db-admin")
+    wait_for_relation_joined_between(ops_test, PGB, psql)
+    await ops_test.model.wait_for_idle(
+        apps=[psql, PG, PGB, CLIENT_APP_NAME, ANOTHER_APPLICATION_APP_NAME],
+        status="active",
+        timeout=600,
+    )
+
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    psql_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
+
+    pgpass = psql_databag.get("password")
+    user = psql_databag.get("user")
+    host = psql_databag.get("host")
+    port = psql_databag.get("port")
+    dbname = psql_databag.get("database")
+
+    assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
+
+    user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
+    rtn, _, err = await run_sql(
+        ops_test, pgb_unit_name, user_command, pgpass, user, host, port, dbname
+    )
+    assert rtn == 0, f"failed to run admin command {user_command}, {err}"
+
+    db_command = "CREATE DATABASE test_db;"
+    rtn, _, err = await run_sql(
+        ops_test, pgb_unit_name, db_command, pgpass, user, host, port, dbname
+    )
+    assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
 
 @pytest.mark.client_relation

@@ -2,13 +2,40 @@
 
 ## Description
 
-The PgBouncer Operator deploys and operates the [PgBouncer](https://www.pgbouncer.org) lightweight connection pooler for PostgreSQL.
+The PgBouncer Operator deploys and operates the [PgBouncer](https://www.pgbouncer.org) lightweight connection pooler for PostgreSQL. This charm is only compatible with the [data platform postgresql-operator charm](https://github.com/canonical/postgresql-operator).
 
 ## Usage
 
-As this charm is not yet published, you need to follow the build and deploy instructions from [CONTRIBUTING.md](https://github.com/canonical/pgbouncer-operator/CONTRIBUTING.md). This charm creates one pgbouncer application instance per CPU core on each machine it is deployed.
+To deploy pgbouncer in front of three units of postgres:
 
-### Config Options
+```bash
+# Deploy postgres
+juju deploy pgbouncer --channel=edge
+juju deploy postgresql --channel=edge -n 3
+juju add-relation pgbouncer:backend-database postgresql:database
+```
+
+To deploy and relate your application to the above cluster, using the updated [data platform relation](https://github.com/canonical/data-platform-libs/blob/main/lib/charms/data_platform_libs/v0/database_requires.py) (recommended):
+
+```bash
+juju deploy my-app
+juju add-relation pgbouncer:database my-app:pg-backend
+```
+
+To deploy and relate an application to the above cluster, using the legacy pgsql relation (not recommended - this will be deprecated in future):
+
+```bash
+juju deploy my-app
+juju add-relation pgbouncer:db my-app:db
+```
+
+Or, if my-app needs admin permissions:
+
+```bash
+juju add-relation pgbouncer:db-admin my-app:db
+```
+
+### Configuration Options
 
 Set these using the command `juju config <option>=<value>`.
 
@@ -53,11 +80,13 @@ The following config values are set as constants in the charm:
 
 ## Relations
 
-- `database:postgresql-client`
+- `database`
   - Provides a relation to client applications.
   - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_standby"`.
-- `backend-database-admin`
+- `backend-database`
   - Relates to backend postgresql database charm.
+- `backend-database`
+  - Relates to backend [postgresql-operator](https://github.com/canonical/postgresql-operator) database charm. Without a backend relation, this charm will enter BlockedStatus - if there's no Postgres backend, this charm has no purpose.
 
 The expected data presented in a relation interface is provided in the docstring at the top of the source files for each relation.
 
@@ -75,17 +104,6 @@ The following relations are legacy, and will be deprecated in a future release.
     - `master` field, for the primary postgresql unit.
     - `standbys` field, a \n-delimited list of standby data.
   - This legacy relation uses the unfortunate `master` term for postgresql primaries.
-  - This relation is to be deprecated in future.
-
-### Observability
-
-TODO update to match COS.
-
-The following relations provide support for the [LMA charm bundle](https://juju.is/docs/lma2), our expected observability stack.
-
-- `prometheus:prometheus_scrape`
-- `loki:loki_push_api`
-- `grafana:grafana_dashboards`
 
 ## License
 
