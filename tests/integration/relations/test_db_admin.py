@@ -63,6 +63,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     rtn, _, err = await run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
+
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
     async with ops_test.fast_forward():
