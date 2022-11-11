@@ -253,7 +253,7 @@ class BackendDatabaseRequires(Object):
             return None
 
         return PostgreSQL(
-            host=endpoint.split(":")[0], user=user, password=password, database=database
+            primary_host=endpoint.split(":")[0], user=user, password=password, database=database
         )
 
     @property

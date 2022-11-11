@@ -19,3 +19,4 @@ DB_ADMIN_RELATION_NAME = "db-admin"
 BACKEND_RELATION_NAME = "backend-database"
 PEERS = "pgb-peers"
 PEER_RELATION_NAME = PEERS
+CLIENT_RELATION_NAME = "database"
