@@ -143,7 +143,10 @@ class PgBouncerCharm(CharmBase):
         self.render_pgb_config(cfg, reload_pgbouncer=True)
 
     def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
-        """Checks that pgbouncer systemd service is running.
+        """Checks status of PgBouncer application.
+
+        Checks whether pgb config is available, backend is ready, and pgbouncer systemd service is
+        running.
 
         Returns:
             Recommended unit status. Can be active, blocked, or waiting.

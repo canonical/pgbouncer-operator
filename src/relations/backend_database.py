@@ -47,7 +47,7 @@ Example:
 """  # noqa: W505
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Set
 
 import psycopg2
 from charms.data_platform_libs.v0.database_requires import (
@@ -293,9 +293,9 @@ class BackendDatabaseRequires(Object):
 
         return True
 
-    def get_read_only_endpoints(self) -> List[str]:
+    def get_read_only_endpoints(self) -> Set[str]:
         """Get read-only-endpoints from backend relation."""
         read_only_endpoints = self.postgres_databag.get("read-only-endpoints", None)
         if not read_only_endpoints:
-            return []
-        return read_only_endpoints.split(",")
+            return set()
+        return set(read_only_endpoints.split(","))

@@ -211,9 +211,9 @@ class DbProvides(Object):
         user = self._generate_username(join_event)
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
-            self.charm.peers.add_user(user, password)
         else:
-            if not (password := self.charm.peers.app_databag.get(user, None)):
+            # If the relation isn't already initialised, and the password isn't available
+            if not (password := join_event.relation.data[self.charm.app].get("user", None)):
                 join_event.defer()
 
         self.update_databags(
@@ -373,7 +373,7 @@ class DbProvides(Object):
             cfg["databases"][f"{database}_standby"] = {
                 "host": ",".join([ep.split(":")[0] for ep in read_only_endpoints]),
                 "dbname": database,
-                "port": read_only_endpoints[0].split(":")[1],
+                "port": next(iter(read_only_endpoints)).split(":")[1],
                 "auth_user": self.charm.backend.auth_user,
             }
         else:
@@ -417,6 +417,16 @@ class DbProvides(Object):
         command.
         """
         # Only delete relation data if we're the leader, and we're the last unit to leave.
+        # TODO update to only delete relation data if this entire relation is being broken. We
+        # don't care if a single unit leaves the relation, only if the whole relation is dead.
+        # logger.error(broken_event)
+        # logger.error(dir(broken_event))
+        # for val in dir(broken_event):
+        #     logger.error(val)
+        #     try:
+        #         logger.error(dir(val))
+        #     except:
+        #         pass
         if not self.charm.unit.is_leader() or len(self.charm.peers.units_ips) > 1:
             self.charm.update_client_connection_info()
             return
@@ -459,7 +469,6 @@ class DbProvides(Object):
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
 
-        self.charm.peers.remove_user(user)
         try:
             self.charm.backend.postgres.delete_user(user)
         except PostgreSQLDeleteUserError as err:
@@ -542,17 +551,3 @@ class DbProvides(Object):
         for entry in relation.data.keys():
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry
-
-    def _check_backend(self) -> bool:
-        """Verifies backend is ready, defers event if not.
-
-        Returns:
-            bool signifying whether backend is ready or not
-        """
-        if not self.charm.backend.ready:
-            # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = "waiting for backend-database relation to connect"
-            logger.warning(wait_str)
-            self.charm.unit.status = WaitingStatus(wait_str)
-            return False
-        return True
