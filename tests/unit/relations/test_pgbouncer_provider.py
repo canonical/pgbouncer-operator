@@ -95,7 +95,6 @@ class TestPgbouncerProvider(unittest.TestCase):
             user, _password(), extra_user_roles=event.extra_user_roles
         )
         _pg().create_database.assert_called_with(database, user)
-        assert self.charm.peers.get_secret("app", user) == _password()
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
         _dbp_set_version.assert_called_with(rel_id, _pg().get_postgresql_version())
         _dbp_set_endpoints.assert_called_with(
@@ -129,7 +128,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         assert _cfg()["databases"][f"{database}_readonly"] == {
             "host": r_hosts,
             "dbname": database,
-            "port": read_only_endpoints[0].split(":")[1],
+            "port": next(iter(read_only_endpoints)).split(":")[1],
             "auth_user": self.charm.backend.auth_user,
         }
 

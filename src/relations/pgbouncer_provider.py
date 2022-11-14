@@ -122,8 +122,6 @@ class PgBouncerProvider(Object):
             )
             return
 
-        self.charm.peers.add_user(user, password)
-
         # Update pgbouncer config
         cfg = self.charm.read_pgb_config()
         cfg.add_user(user, admin=True if "SUPERUSER" in extra_user_roles else False)
@@ -136,7 +134,9 @@ class PgBouncerProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
-        if not self._check_backend():
+        # TODO check that the relation is being REMOVED, not that we're scaling down. Hopefully
+        # there's something in the event hook?
+        if not self._check_backend() or len(self.charm.peers.relation.units) > 1:
             event.defer()
             return
         if not self.charm.unit.is_leader():
@@ -208,11 +208,13 @@ class PgBouncerProvider(Object):
             # remove ports from endpoints, and convert to comma-separated list.
             # NOTE: comma-separated readonly hosts are only valid in pgbouncer v1.17. This will
             # enable load balancing once the snap is implemented.
+            for ep in read_only_endpoints:
+                break
             r_hosts = ",".join([host.split(":")[0] for host in read_only_endpoints])
             cfg["databases"][f"{database}_readonly"] = {
                 "host": r_hosts,
                 "dbname": database,
-                "port": read_only_endpoints[0].split(":")[1],
+                "port": ep.split(":")[1],
                 "auth_user": self.charm.backend.auth_user,
             }
         else:

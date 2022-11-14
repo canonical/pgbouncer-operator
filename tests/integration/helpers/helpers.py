@@ -248,20 +248,20 @@ async def deploy_postgres_bundle(
         libjuju Relation object describing the relation between pgbouncer and postgres.
     """
     charm = await ops_test.build_charm(".")
+    await asyncio.gather(
+        ops_test.model.deploy(
+            charm,
+            application_name=PGB,
+            config=pgb_config,
+        ),
+        ops_test.model.deploy(
+            PG,
+            channel="edge",
+            num_units=db_units,
+            config=pg_config,
+        ),
+    )
     async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.deploy(
-                charm,
-                application_name=PGB,
-                config=pgb_config,
-            ),
-            ops_test.model.deploy(
-                PG,
-                channel="edge",
-                num_units=db_units,
-                config=pg_config,
-            ),
-        )
         await asyncio.gather(
             ops_test.model.wait_for_idle(
                 apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
@@ -272,7 +272,7 @@ async def deploy_postgres_bundle(
         wait_for_relation_joined_between(ops_test, PG, PGB)
         await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
 
-        return relation
+    return relation
 
 
 async def deploy_and_relate_application_with_pgbouncer_bundle(
@@ -309,19 +309,21 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         num_units=number_of_units,
         config=config,
     )
-    await ops_test.model.wait_for_idle(
-        apps=[application_name],
-        timeout=600,
-    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[application_name],
+            timeout=600,
+        )
 
     # Relate application to pgbouncer.
     relation = await ops_test.model.relate(application_name, f"{PGB}:{relation}")
     wait_for_relation_joined_between(ops_test, PGB, application_name)
-    await ops_test.model.wait_for_idle(
-        apps=[application_name, PG, PGB],
-        status="active",
-        timeout=600,
-    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[application_name, PG, PGB],
+            status="active",
+            timeout=600,
+        )
 
     return relation
 
@@ -342,6 +344,7 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
             unit.name for unit in ops_test.model.applications[application_name].units[0:-change]
         ]
         await ops_test.model.applications[application_name].destroy_units(*units)
-    await ops_test.model.wait_for_idle(
-        apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
-    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
+        )
