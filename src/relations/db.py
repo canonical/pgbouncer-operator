@@ -212,8 +212,7 @@ class DbProvides(Object):
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
         else:
-            # If the relation isn't already initialised, and the password isn't available
-            if not (password := join_event.relation.data[self.charm.app].get("user", None)):
+            if not (password := self.charm.peers.app_databag.get(user, None)):
                 join_event.defer()
 
         self.update_databags(
@@ -249,6 +248,7 @@ class DbProvides(Object):
 
         # set up auth function
         self.charm.backend.initialise_auth_function([database])
+        self.charm.peers.add_user(user, password)
 
         # Create user in pgbouncer config
         cfg = self.charm.read_pgb_config()
@@ -419,15 +419,7 @@ class DbProvides(Object):
         # Only delete relation data if we're the leader, and we're the last unit to leave.
         # TODO update to only delete relation data if this entire relation is being broken. We
         # don't care if a single unit leaves the relation, only if the whole relation is dead.
-        # logger.error(broken_event)
-        # logger.error(dir(broken_event))
-        # for val in dir(broken_event):
-        #     logger.error(val)
-        #     try:
-        #         logger.error(dir(val))
-        #     except:
-        #         pass
-        if not self.charm.unit.is_leader() or len(self.charm.peers.units_ips) > 1:
+        if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             return
 
@@ -468,6 +460,7 @@ class DbProvides(Object):
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.charm.peers.remove_user(user)
 
         try:
             self.charm.backend.postgres.delete_user(user)

@@ -271,3 +271,17 @@ class Peers(Object):
 
         self.set_secret("app", AUTH_FILE_DATABAG_KEY, auth_file)
         logger.debug("updated auth file in peer databag")
+
+    def add_user(self, username: str, password: str):
+        """Adds user to app databag."""
+        if not self.charm.unit.is_leader():
+            return
+
+        self.set_secret("app", username, password)
+
+    def remove_user(self, username: str):
+        """Removes user from app databag."""
+        if not self.charm.unit.is_leader():
+            return
+
+        self.set_secret("app", username, None)
