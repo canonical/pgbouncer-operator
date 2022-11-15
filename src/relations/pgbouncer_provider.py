@@ -153,7 +153,7 @@ class PgBouncerProvider(Object):
             event.defer()
             return
         if not self.charm.unit.is_leader():
-            returnHey gang, I've got a couple of PRs I'd really appreciate some reviews on:
+            return
         if not self.charm.peers.app_databag.get(
             f"{self.relation_name}-{event.relation.id}-relation-breaking", None
         ):
