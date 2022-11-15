@@ -306,9 +306,7 @@ class DbProvides(Object):
             },
         )
 
-    def update_connection_info(
-        self, relation: Relation, port: str = None
-    ):
+    def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection info."""
         if not port:
             port = self.charm.config["listen_port"]
