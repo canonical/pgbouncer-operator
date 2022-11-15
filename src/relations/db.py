@@ -212,8 +212,7 @@ class DbProvides(Object):
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
         else:
-            # If the relation isn't already initialised, and the password isn't available
-            if not (password := join_event.relation.data[self.charm.app].get("user", None)):
+            if not (password := self.charm.peers.app_databag.get(user, None)):
                 join_event.defer()
 
         self.update_databags(
@@ -249,6 +248,7 @@ class DbProvides(Object):
 
         # set up auth function
         self.charm.backend.initialise_auth_function([database])
+        self.charm.peers.add_user(user, password)
 
         # Create user in pgbouncer config
         cfg = self.charm.read_pgb_config()
@@ -306,8 +306,11 @@ class DbProvides(Object):
             },
         )
 
-    def update_connection_info(self, relation: Relation, port: str):
+    def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection info."""
+        if not port:
+            port = self.charm.config["listen_port"]
+
         databag = self.get_databags(relation)[0]
         database = databag.get("database")
         user = databag.get("user")
@@ -407,6 +410,13 @@ class DbProvides(Object):
             {"allowed-units": self.get_allowed_units(departed_event.relation)},
         )
 
+        # If a departed event is dispatched to itself, this relation isn't being scaled down -
+        # it's being removed
+        if departed_event.app == self.charm.app:
+            self.charm.peers.app_databag[
+                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+            ] = "true"
+
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
 
@@ -417,18 +427,16 @@ class DbProvides(Object):
         command.
         """
         # Only delete relation data if we're the leader, and we're the last unit to leave.
-        # TODO update to only delete relation data if this entire relation is being broken. We
-        # don't care if a single unit leaves the relation, only if the whole relation is dead.
-        # logger.error(broken_event)
-        # logger.error(dir(broken_event))
-        # for val in dir(broken_event):
-        #     logger.error(val)
-        #     try:
-        #         logger.error(dir(val))
-        #     except:
-        #         pass
-        if not self.charm.unit.is_leader() or len(self.charm.peers.units_ips) > 1:
+        if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
+            return
+        if not self.charm.peers.app_databag.get(
+            f"{self.relation_name}-{broken_event.relation.id}-relation-breaking", None
+        ):
+            # This relation isn't being removed, so we don't need to do the relation teardown
+            # steps.
+            self.update_connection_info(broken_event.relation)
+            self.update_postgres_endpoints(broken_event.relation, reload_pgbouncer=True)
             return
 
         databag = self.get_databags(broken_event.relation)[0]
@@ -468,6 +476,7 @@ class DbProvides(Object):
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.charm.peers.remove_user(user)
 
         try:
             self.charm.backend.postgres.delete_user(user)

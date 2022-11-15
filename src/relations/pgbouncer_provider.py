@@ -7,28 +7,28 @@ Importantly, this relation doesn't handle scaling the same way others do. All Pg
 read/writes, and they expose the read/write nodes of the backend database through the database name
 f"{dbname}_standby".
 
-# TODO rewrite this doc
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ relation (id: 4) ┃ application                                                                                   ┃ pgbouncer-k8s                                                                                  ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ relation name    │ first-database                                                                                │ database                                                                                       │
-│ interface        │ postgresql_client                                                                             │ postgresql_client                                                                              │
-│ leader unit      │ 0                                                                                             │ 1                                                                                              │
-├──────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ application data │ ╭───────────────────────────────────────────────────────────────────────────────────────────╮ │ ╭────────────────────────────────────────────────────────────────────────────────────────────╮ │
-│                  │ │                                                                                           │ │ │                                                                                            │ │
-│                  │ │  data              {"endpoints":                                                          │ │ │  data                 {"database": "application_first_database", "extra-user-roles":       │ │
-│                  │ │                    "pgbouncer-k8s-1.pgbouncer-k8s-endpoints.test-pgbouncer-provider-5l5…  │ │ │                       "CREATEDB,CREATEROLE"}                                               │ │
-│                  │ │                    "password": "2LDDKswhH5DdMvjEAZ9igVET", "read-only-endpoints":         │ │ │  endpoints            pgbouncer-k8s-1.pgbouncer-k8s-endpoints.test-pgbouncer-provider-5l…  │ │
-│                  │ │                    "pgbouncer-k8s-2.pgbouncer-k8s-endpoints.test-pgbouncer-provider-5l5…  │ │ │  password             2LDDKswhH5DdMvjEAZ9igVET                                             │ │
-│                  │ │                    "username": "relation_id_4", "version": "14.5"}                        │ │ │  read-only-endpoints  pgbouncer-k8s-2.pgbouncer-k8s-endpoints.test-pgbouncer-provider-5l…  │ │
-│                  │ │  database          application_first_database                                             │ │ │  username             relation_id_4                                                        │ │
-│                  │ │  extra-user-roles  CREATEDB,CREATEROLE                                                    │ │ │  version              14.5                                                                 │ │
-│                  │ ╰───────────────────────────────────────────────────────────────────────────────────────────╯ │ ╰────────────────────────────────────────────────────────────────────────────────────────────╯ │
-│ unit data        │ ╭─ application/0* ─╮ ╭─ application/1 ─╮                                                      │ ╭─ pgbouncer-k8s/0 ─╮ ╭─ pgbouncer-k8s/1* ─╮ ╭─ pgbouncer-k8s/2 ─╮                             │
-│                  │ │ <empty>          │ │ <empty>         │                                                      │ │ <empty>           │ │ <empty>            │ │ <empty>           │                             │
-│                  │ ╰──────────────────╯ ╰─────────────────╯                                                      │ ╰───────────────────╯ ╰────────────────────╯ ╰───────────────────╯                             │
-└──────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ relation (id: 4) ┃ application                                                           ┃ pgbouncer-k8s                                                          ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ relation name    │ first-database                                                        │ database                                                               │
+│ interface        │ postgresql_client                                                     │ postgresql_client                                                      │
+│ leader unit      │ 0                                                                     │ 1                                                                      │
+├──────────────────┼───────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ application data │ ╭───────────────────────────────────────────────────────────────────╮ │ ╭────────────────────────────────────────────────────────────────────╮ │
+│                  │ │  data              {"endpoints":                                  │ │ │  data                 {"database": "application_first_database",   │ │
+│                  │ │                    "pgbouncer-k8s-1.pgbouncer-k8s-endpoints:6432" │ │ │                       "extra-user-roles": "CREATEDB,CREATEROLE"}   │ │
+│                  │ │                    "password": "2LDDKswhH5DdMvjEAZ9igVET",        │ │ │  endpoints            pgbouncer-k8s-1.pgbouncer-k8s-endpoints:6432 │ │
+│                  │ │                    "read-only-endpoints":                         │ │ │  password             2LDDKswhH5DdMvjEAZ9igVET                     │ │
+│                  │ │                    "pgbouncer-k8s-2.pgbouncer-k8s-endpoints:6432" │ │ │  read-only-endpoints  pgbouncer-k8s-2.pgbouncer-k8s-endpoints:6432 │ │
+│                  │ │                    "username": "relation_id_4",                   │ │ │  username             relation_id_4                                │ │
+│                  │ │                     "version": "14.5"}                            │ │ │  version              14.5                                         │ │
+│                  │ │  database          application_first_database                     │ │ ╰────────────────────────────────────────────────────────────────────╯ │
+│                  │ │  extra-user-roles  CREATEDB,CREATEROLE                            │ │                                                                        │
+│                  │ ╰───────────────────────────────────────────────────────────────────╯ │                                                                        │
+│ unit data        │ ╭─ application/0* ─╮ ╭─ application/1 ─╮                              │ ╭─ pgbouncer-k8s/0 ─╮ ╭─ pgbouncer-k8s/1* ─╮ ╭─ pgbouncer-k8s/2 ─╮     │
+│                  │ │ <empty>          │ │ <empty>         │                              │ │ <empty>           │ │ <empty>            │ │ <empty>           │     │
+│                  │ ╰──────────────────╯ ╰─────────────────╯                              │ ╰───────────────────╯ ╰────────────────────╯ ╰───────────────────╯     │
+└──────────────────┴───────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
 """  # noqa: W505
 
 
@@ -46,7 +46,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import Application, BlockedStatus, Relation, WaitingStatus
 
@@ -132,14 +132,35 @@ class PgBouncerProvider(Object):
         self.database_provides.set_credentials(rel_id, user, password)
         self.update_connection_info(event.relation)
 
+    def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
+        """Check if this relation is being removed, and update the peer databag accordingly."""
+        if not self.charm.unit.is_leader():
+            self.update_connection_info(event.relation)
+            return
+
+        # If a departed event is dispatched to itself, this relation isn't being scaled down -
+        # it's being removed
+        if event.app == self.charm.app:
+            self.charm.peers.app_databag[
+                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+            ] = "true"
+
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
         # TODO check that the relation is being REMOVED, not that we're scaling down. Hopefully
         # there's something in the event hook?
-        if not self._check_backend() or len(self.charm.peers.relation.units) > 1:
+        if not self._check_backend():
             event.defer()
             return
         if not self.charm.unit.is_leader():
+            return
+        if not self.charm.peers.app_databag.get(
+            f"{self.relation_name}-{event.relation.id}-relation-breaking", None
+        ):
+            # This relation isn't being removed, so we don't need to do the relation teardown
+            # steps.
+            self.update_connection_info(event.relation)
+            self.update_postgres_endpoints(event.relation, reload_pgbouncer=True)
             return
 
         cfg = self.charm.read_pgb_config()
