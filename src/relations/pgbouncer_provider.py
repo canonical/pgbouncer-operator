@@ -46,7 +46,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import Application, BlockedStatus, Relation, WaitingStatus
 
@@ -132,14 +132,35 @@ class PgBouncerProvider(Object):
         self.database_provides.set_credentials(rel_id, user, password)
         self.update_connection_info(event.relation)
 
+    def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
+        """Check if this relation is being removed, and update the peer databag accordingly."""
+        if not self.charm.unit.is_leader():
+            self.update_connection_info(event.relation)
+            return
+
+        # If a departed event is dispatched to itself, this relation isn't being scaled down -
+        # it's being removed
+        if event.app == self.charm.app:
+            self.charm.peers.app_databag[
+                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+            ] = "true"
+
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
         # TODO check that the relation is being REMOVED, not that we're scaling down. Hopefully
         # there's something in the event hook?
-        if not self._check_backend() or len(self.charm.peers.relation.units) > 1:
+        if not self._check_backend():
             event.defer()
             return
         if not self.charm.unit.is_leader():
+            return
+        if not self.charm.peers.app_databag.get(
+            f"{self.relation_name}-{event.relation.id}-relation-breaking", None
+        ):
+            # This relation isn't being removed, so we don't need to do the relation teardown
+            # steps.
+            self.update_connection_info(event.relation)
+            self.update_postgres_endpoints(event.relation, reload_pgbouncer=True)
             return
 
         cfg = self.charm.read_pgb_config()

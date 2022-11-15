@@ -144,6 +144,7 @@ class TestPgbouncerProvider(unittest.TestCase):
 
         event = MagicMock()
         rel_id = event.relation.id = 1
+        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         external_app = self.charm.client_relation.get_external_app(event.relation)
         event.relation.data = {external_app: {"database": "test_db"}}
         database = event.relation.data[external_app]["database"]
