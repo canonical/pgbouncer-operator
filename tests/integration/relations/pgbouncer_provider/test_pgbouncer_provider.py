@@ -326,7 +326,13 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     port = psql_databag.get("port")
     dbname = psql_databag.get("database")
 
-    assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
+    assert None not in [
+        pgpass,
+        user,
+        host,
+        port,
+        dbname,
+    ], f"databag incorrectly populated: {psql_databag}"
 
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
     rtn, _, err = await run_sql(
