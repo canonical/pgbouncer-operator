@@ -161,7 +161,7 @@ class PgBouncerProvider(Object):
             self.update_connection_info(event.relation)
             return
 
-        self.charm.peers.app_databag[break_flag] = None
+        del self.charm.peers.app_databag[break_flag]
 
         cfg = self.charm.read_pgb_config()
         database = self.get_database(event.relation)

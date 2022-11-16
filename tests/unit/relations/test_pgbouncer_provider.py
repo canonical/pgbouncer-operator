@@ -171,6 +171,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         event.defer.assert_called()
 
         _check_backend.return_value = True
+        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         self.client_relation._on_relation_broken(event)
         _cfg.assert_called()
         assert user not in _cfg()["pgbouncer"]["admin_users"]
@@ -187,6 +188,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             "port": "1111",
             "auth_user": self.charm.backend.auth_user,
         }
+        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         self.client_relation._on_relation_broken(event)
         assert not _cfg()["databases"].get(database)
         assert not _cfg()["databases"].get(f"{database}_readonly")

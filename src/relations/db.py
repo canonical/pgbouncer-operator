@@ -435,10 +435,9 @@ class DbProvides(Object):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.
             self.update_connection_info(broken_event.relation)
-            self.update_postgres_endpoints(broken_event.relation, reload_pgbouncer=True)
             return
 
-        self.charm.peers.app_databag[break_flag] = None
+        del self.charm.peers.app_databag[break_flag]
 
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
