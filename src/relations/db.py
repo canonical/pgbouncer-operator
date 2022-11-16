@@ -412,7 +412,7 @@ class DbProvides(Object):
 
         # If a departed event is dispatched to itself, this relation isn't being scaled down -
         # it's being removed
-        if departed_event.app == self.charm.app:
+        if departed_event.app == self.charm.app and self.charm.unit.is_leader():
             self.charm.peers.app_databag[
                 f"{self.relation_name}-{self.relation.id}-relation-breaking"
             ] = "true"
