@@ -154,14 +154,14 @@ class PgBouncerProvider(Object):
             return
         if not self.charm.unit.is_leader():
             return
-        if not self.charm.peers.app_databag.get(
-            f"{self.relation_name}-{event.relation.id}-relation-breaking", None
-        ):
+        break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
+        if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.
             self.update_connection_info(event.relation)
-            self.update_postgres_endpoints(event.relation, reload_pgbouncer=True)
             return
+
+        self.charm.peers.app_databag[break_flag] = None
 
         cfg = self.charm.read_pgb_config()
         database = self.get_database(event.relation)

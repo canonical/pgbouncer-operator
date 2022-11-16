@@ -430,14 +430,14 @@ class DbProvides(Object):
         if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             return
-        if not self.charm.peers.app_databag.get(
-            f"{self.relation_name}-{broken_event.relation.id}-relation-breaking", None
-        ):
+        break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
+        if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.
-            self.update_connection_info(broken_event.relation)
-            self.update_postgres_endpoints(broken_event.relation, reload_pgbouncer=True)
+            self.update_connection_info(event.relation)
             return
+
+        self.charm.peers.app_databag[break_flag] = None
 
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
