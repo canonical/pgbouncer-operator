@@ -28,6 +28,8 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
 logger = logging.getLogger(__name__)
 
 CLIENT_APP_NAME = "application"
+CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
+TEST_DBNAME = "application_first_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG = "postgresql"
 PG_2 = "another-postgresql"
@@ -39,6 +41,7 @@ SECOND_DATABASE_RELATION_NAME = "second-database"
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
+@pytest.mark.dev
 @pytest.mark.abort_on_fail
 @pytest.mark.client_relation
 async def test_database_relation_with_charm_libraries(
@@ -69,15 +72,17 @@ async def test_database_relation_with_charm_libraries(
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
         await ops_test.model.wait_for_idle()
         # Relate the charms and wait for them exchanging some connection data.
-        relation = await ops_test.model.add_relation(
+        global client_relation
+        client_relation = await ops_test.model.add_relation(
             f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
         )
 
     await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
 
-    client_unit_name = f"{CLIENT_APP_NAME}/0"
-    dbname = "application_first_database"
 
+@pytest.mark.dev
+@pytest.mark.client_relation
+async def test_database_usage(ops_test: OpsTest):
     # Check we can update and delete things
     update_query = (
         "DROP TABLE IF EXISTS test;"
@@ -87,21 +92,25 @@ async def test_database_relation_with_charm_libraries(
     )
     run_update_query = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=update_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
     )
     assert "some data" in json.loads(run_update_query["results"])[0]
 
+
+@pytest.mark.dev
+@pytest.mark.client_relation
+async def test_database_version(ops_test: OpsTest):
     # Check version is accurate
     version_query = "SELECT version();"
     run_version_query = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=version_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
     )
     # Get the version of the database and compare with the information that
     # was retrieved directly from the database.
@@ -112,54 +121,66 @@ async def test_database_relation_with_charm_libraries(
     logging.info(version)
     assert version in json.loads(run_version_query["results"])[0][0]
 
+
+@pytest.mark.dev
+@pytest.mark.client_relation
+async def test_readonly_reads(ops_test: OpsTest):
     # Check we can read things in readonly
     select_query = "SELECT data FROM test;"
     run_select_query_readonly = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=select_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
         readonly=True,
     )
     assert "some data" in json.loads(run_select_query_readonly["results"])[0]
 
+
+@pytest.mark.dev
+@pytest.mark.client_relation
+async def test_cant_write_in_readonly(ops_test: OpsTest):
     # check we can't write in readonly
     drop_query = "DROP TABLE test;"
     run_drop_query_readonly = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=drop_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
         readonly=True,
     )
     assert run_drop_query_readonly["Code"] == "1"
 
+
+@pytest.mark.dev
+@pytest.mark.client_relation
+async def test_database_admin_permissions(ops_test: OpsTest):
     # Test admin permissions
     create_database_query = "CREATE DATABASE another_database;"
     run_create_database_query = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=create_database_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
     )
     assert "no results to fetch" in json.loads(run_create_database_query["results"])
 
     create_user_query = "CREATE USER another_user WITH ENCRYPTED PASSWORD 'test-password';"
     run_create_user_query = await run_sql_on_application_charm(
         ops_test,
-        unit_name=client_unit_name,
+        unit_name=CLIENT_UNIT_NAME,
         query=create_user_query,
-        dbname=dbname,
-        relation_id=relation.id,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
     )
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
 @pytest.mark.client_relation
-async def test_two_applications_doesnt_share_the_same_relation_data(
+async def test_two_applications_dont_share_the_same_relation_data(
     ops_test: OpsTest, application_charm
 ):
     """Test that two different application connect to the database with different credentials."""
@@ -300,6 +321,7 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
         )
 
 
+@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_with_legacy_relation(ops_test: OpsTest):
     psql = "psql"
@@ -309,16 +331,25 @@ async def test_with_legacy_relation(ops_test: OpsTest):
         application_name=psql,
     )
 
+    # Testing with db-admin relation, since it encapsulates all the functionality of the db
+    # relation, with admin permissions.
     psql_relation = await ops_test.model.relate(f"{psql}:db", f"{PGB}:db-admin")
     wait_for_relation_joined_between(ops_test, PGB, psql)
     await ops_test.model.wait_for_idle(
-        apps=[psql, PG, PGB, CLIENT_APP_NAME, ANOTHER_APPLICATION_APP_NAME],
+        apps=[
+            psql,
+            PG,
+            PGB,
+            CLIENT_APP_NAME,
+        ],  # ANOTHER_APPLICATION_APP_NAME], # TODO add back in once test is functional and off dev
         status="active",
         timeout=600,
     )
 
     pgb_unit_name = ops_test.model.applications[PGB].units[0].name
-    psql_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
+    psql_databag = await get_app_relation_databag(ops_test, "psql/0", psql_relation.id)
+    logger.error(psql_databag)
+    logger.error(await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id))
 
     pgpass = psql_databag.get("password")
     user = psql_databag.get("user")
@@ -346,7 +377,24 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     )
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
+    #  Check new relation still works
+    update_query = (
+        "DROP TABLE IF EXISTS legacy_test;"
+        "CREATE TABLE legacy_test(data TEXT);"
+        "INSERT INTO legacy_test(data) VALUES('some data');"
+        "SELECT data FROM legacy_test;"
+    )
+    run_update_query = await run_sql_on_application_charm(
+        ops_test,
+        unit_name=CLIENT_UNIT_NAME,
+        query=update_query,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
+    )
+    assert "some data" in json.loads(run_update_query["results"])[0]
 
+
+@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""

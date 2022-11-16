@@ -70,13 +70,11 @@ async def get_application_relation_data(
         relation_id: id of the relation to get connection data from
 
     Returns:
-        the that that was requested or None
-            if no data in the relation
+        the relation data that was requested, or None if no data in the relation
 
     Raises:
         ValueError if it's not possible to get application unit data
-            or if there is no data for the particular relation endpoint
-            and/or alias.
+            or if there is no data for the particular relation endpoint.
     """
     unit_name = f"{application_name}/0"
     raw_data = (await ops_test.juju("show-unit", unit_name))[1]
