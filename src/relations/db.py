@@ -434,7 +434,7 @@ class DbProvides(Object):
         if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.
-            self.update_connection_info(event.relation)
+            self.update_connection_info(broken_event.relation)
             return
 
         del self.charm.peers.app_databag[break_flag]
