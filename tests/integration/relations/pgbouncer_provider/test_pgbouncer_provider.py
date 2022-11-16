@@ -80,7 +80,6 @@ async def test_database_relation_with_charm_libraries(
     await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_database_usage(ops_test: OpsTest):
     # Check we can update and delete things
@@ -100,7 +99,6 @@ async def test_database_usage(ops_test: OpsTest):
     assert "some data" in json.loads(run_update_query["results"])[0]
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_database_version(ops_test: OpsTest):
     # Check version is accurate
@@ -122,7 +120,6 @@ async def test_database_version(ops_test: OpsTest):
     assert version in json.loads(run_version_query["results"])[0][0]
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_readonly_reads(ops_test: OpsTest):
     # Check we can read things in readonly
@@ -138,7 +135,6 @@ async def test_readonly_reads(ops_test: OpsTest):
     assert "some data" in json.loads(run_select_query_readonly["results"])[0]
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_cant_write_in_readonly(ops_test: OpsTest):
     # check we can't write in readonly
@@ -154,7 +150,6 @@ async def test_cant_write_in_readonly(ops_test: OpsTest):
     assert run_drop_query_readonly["Code"] == "1"
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_database_admin_permissions(ops_test: OpsTest):
     # Test admin permissions
@@ -346,8 +341,8 @@ async def test_with_legacy_relation(ops_test: OpsTest):
         timeout=600,
     )
 
-    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
-    psql_databag = await get_app_relation_databag(ops_test, "psql/0", psql_relation.id)
+    pgb_unit_name = ops_test.model.applications[psql].units[0].name
+    psql_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
     logger.error(psql_databag)
     logger.error(await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id))
 
