@@ -312,6 +312,7 @@ class TestDb(unittest.TestCase):
         mock_event.relation.data = {}
         mock_event.relation.data[self.charm.app] = mock_databag
         mock_event.relation.data[self.charm.unit] = dict(mock_databag)
+        self.charm.peers.app_databag[f"db-{mock_event.relation.id}-relation-breaking"] = "true"
 
         self.db_relation._on_relation_broken(mock_event)
 

@@ -306,8 +306,11 @@ class DbProvides(Object):
             },
         )
 
-    def update_connection_info(self, relation: Relation, port: str):
+    def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection info."""
+        if not port:
+            port = self.charm.config["listen_port"]
+
         databag = self.get_databags(relation)[0]
         database = databag.get("database")
         user = databag.get("user")
@@ -407,6 +410,13 @@ class DbProvides(Object):
             {"allowed-units": self.get_allowed_units(departed_event.relation)},
         )
 
+        # If a departed event is dispatched to itself, this relation isn't being scaled down -
+        # it's being removed
+        if departed_event.app == self.charm.app and self.charm.unit.is_leader():
+            self.charm.peers.app_databag[
+                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+            ] = "true"
+
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
 
@@ -417,11 +427,17 @@ class DbProvides(Object):
         command.
         """
         # Only delete relation data if we're the leader, and we're the last unit to leave.
-        # TODO update to only delete relation data if this entire relation is being broken. We
-        # don't care if a single unit leaves the relation, only if the whole relation is dead.
         if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             return
+        break_flag = f"{self.relation_name}-{broken_event.relation.id}-relation-breaking"
+        if not self.charm.peers.app_databag.get(break_flag, None):
+            # This relation isn't being removed, so we don't need to do the relation teardown
+            # steps.
+            self.update_connection_info(broken_event.relation)
+            return
+
+        del self.charm.peers.app_databag[break_flag]
 
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
