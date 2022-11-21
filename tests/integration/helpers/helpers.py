@@ -225,7 +225,11 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
 
 
 async def deploy_postgres_bundle(
-    ops_test: OpsTest, pgb_config: dict = {}, pg_config: dict = {}, db_units=3
+    ops_test: OpsTest,
+    pgb_config: dict = {},
+    pgb_series: str = "jammy",
+    pg_config: dict = {},
+    db_units=3,
 ):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
 
@@ -236,9 +240,7 @@ async def deploy_postgres_bundle(
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                charm,
-                application_name=PGB,
-                config=pgb_config,
+                charm, application_name=PGB, config=pgb_config, series=pgb_series
             ),
             ops_test.model.deploy(
                 PG,

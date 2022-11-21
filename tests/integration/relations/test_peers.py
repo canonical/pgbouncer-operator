@@ -32,7 +32,7 @@ async def test_deploy_at_scale(ops_test):
     # Build, deploy, and relate charms.
     charm = await ops_test.build_charm(".")
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(charm, application_name=PGB, num_units=3)
+        await ops_test.model.deploy(charm, application_name=PGB, num_units=3, series="jammy")
         await ops_test.model.wait_for_idle(
             apps=[PGB], status="blocked", timeout=600, wait_for_exact_units=3
         ),
