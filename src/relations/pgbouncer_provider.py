@@ -141,8 +141,9 @@ class PgBouncerProvider(Object):
         # it's being removed
         logger.error(event)
         logger.error(dir(event))
-        # TODO figure out how we can make sure we're only triggering removal when this relation is dead, not on scale-down.
-        #assert 1==2
+        # TODO figure out how we can make sure we're only triggering removal when this relation is
+        # dead, not on scale-down.
+        # assert 1==2
         logger.error(event.app)
         logger.error(event.unit)
         logger.error(event.departing_unit)
@@ -214,7 +215,7 @@ class PgBouncerProvider(Object):
         self.update_read_only_endpoints()
 
         # Set the database version.
-        if self.backend.postgres:
+        if self.charm.backend.postgres:
             self.database_provides.set_version(
                 relation.id, self.charm.backend.postgres.get_postgresql_version()
             )
