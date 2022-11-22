@@ -9,48 +9,6 @@ from typing import Optional
 
 import yaml
 from pytest_operator.plugin import OpsTest
-from tenacity import RetryError, Retrying, stop_after_attempt, wait_exponential
-
-
-async def check_relation_data_existence(
-    ops_test: OpsTest,
-    application_name: str,
-    relation_name: str,
-    key: str,
-    exists: bool = True,
-) -> bool:
-    """Checks for the existence of a key in the relation data.
-
-    Args:
-        ops_test: The ops test framework instance
-        application_name: The name of the application
-        relation_name: Name of the relation to get relation data from
-        key: Key of data to be checked
-        exists: Whether to check for the existence or non-existence
-
-    Returns:
-        whether the key exists in the relation data
-    """
-    try:
-        # Retry mechanism used to wait for some events to be triggered,
-        # like the relation departed event.
-        for attempt in Retrying(
-            stop=stop_after_attempt(10), wait=wait_exponential(multiplier=1, min=2, max=30)
-        ):
-            with attempt:
-                data = await get_application_relation_data(
-                    ops_test,
-                    application_name,
-                    relation_name,
-                    key,
-                )
-                if exists:
-                    assert data is not None
-                else:
-                    assert data is None
-        return True
-    except RetryError:
-        return False
 
 
 async def get_application_relation_data(
@@ -76,7 +34,7 @@ async def get_application_relation_data(
         ValueError if it's not possible to get application unit data
             or if there is no data for the particular relation endpoint.
     """
-    unit_name = f"{application_name}/0"
+    unit_name = ops_test.model.applications[application_name].units[0].name
     raw_data = (await ops_test.juju("show-unit", unit_name))[1]
     if not raw_data:
         raise ValueError(f"no unit info could be grabbed for {unit_name}")

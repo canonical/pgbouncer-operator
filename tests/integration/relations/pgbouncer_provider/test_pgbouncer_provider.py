@@ -20,8 +20,6 @@ from tests.integration.helpers.helpers import (
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
 from tests.integration.relations.pgbouncer_provider.helpers import (
     build_connection_string,
-    check_relation_data_existence,
-    get_application_relation_data,
     run_sql_on_application_charm,
 )
 
@@ -281,16 +279,22 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, PGB, 1)
-    databag = await get_app_relation_databag(ops_test, pgb_unit_name, client_relation.id)
-    assert not databag.get("read_only_endpoints", None), f"read_only_endpoints in pgb databag: {databag}"
+    pgb_unit = ops_test.model.applications[PGB].units[0]
+    databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
+    assert not databag.get(
+        "read_only_endpoints", None
+    ), f"read_only_endpoints in pgb databag: {databag}"
 
 
 @pytest.mark.client_relation
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, PG, 3)
-    databag = await get_app_relation_databag(ops_test, pgb_unit_name, client_relation.id)
-    assert databag.get("read_only_endpoints", None), f"read_only_endpoints not in pgb databag: {databag}"
+    pgb_unit = ops_test.model.applications[PGB].units[0]
+    databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
+    assert databag.get(
+        "read_only_endpoints", None
+    ), f"read_only_endpoints not in pgb databag: {databag}"
 
 
 @pytest.mark.client_relation
@@ -307,25 +311,19 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     psql_relation = await ops_test.model.relate(f"{psql}:db", f"{PGB}:db-admin")
     wait_for_relation_joined_between(ops_test, PGB, psql)
     await ops_test.model.wait_for_idle(
-        apps=[
-            psql,
-            PG,
-            PGB,
-            CLIENT_APP_NAME,
-            ANOTHER_APPLICATION_APP_NAME
-        ],
+        apps=[psql, PG, PGB, CLIENT_APP_NAME, ANOTHER_APPLICATION_APP_NAME],
         status="active",
         timeout=600,
     )
 
-    pgb_unit_name = ops_test.model.applications[psql].units[0].name
-    pgb_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
+    psql_unit_name = ops_test.model.applications[psql].units[0].name
+    psql_databag = await get_app_relation_databag(ops_test, psql_unit_name, psql_relation.id)
 
-    pgpass = pgb_databag.get("password")
-    user = pgb_databag.get("user")
-    host = pgb_databag.get("host")
-    port = pgb_databag.get("port")
-    dbname = pgb_databag.get("database")
+    pgpass = psql_databag.get("password")
+    user = psql_databag.get("user")
+    host = psql_databag.get("host")
+    port = psql_databag.get("port")
+    dbname = psql_databag.get("database")
 
     assert None not in [
         pgpass,
@@ -333,17 +331,17 @@ async def test_with_legacy_relation(ops_test: OpsTest):
         host,
         port,
         dbname,
-    ], f"databag incorrectly populated: {pgb_databag}"
+    ], f"databag incorrectly populated: {psql_databag}"
 
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
     rtn, _, err = await run_sql(
-        ops_test, pgb_unit_name, user_command, pgpass, user, host, port, dbname
+        ops_test, psql_unit_name, user_command, pgpass, user, host, port, dbname
     )
     assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
     db_command = "CREATE DATABASE test_db;"
     rtn, _, err = await run_sql(
-        ops_test, pgb_unit_name, db_command, pgpass, user, host, port, dbname
+        ops_test, psql_unit_name, db_command, pgpass, user, host, port, dbname
     )
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
@@ -369,13 +367,13 @@ async def test_with_legacy_relation(ops_test: OpsTest):
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Scale to 1, to see what hooks fire
-    scale_application(ops_test, PGB, 1)
-    scale_application(ops_test, CLIENT_APP_NAME, 2)
-    scale_application(ops_test, CLIENT_APP_NAME, 1)
+    await scale_application(ops_test, PGB, 1)
+    await scale_application(ops_test, CLIENT_APP_NAME, 2)
+    await scale_application(ops_test, CLIENT_APP_NAME, 1)
     # Retrieve the relation user.
-    relation_user = await get_application_relation_data(
-        ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, "username"
-    )
+    databag = await get_app_relation_databag(ops_test, f"{PGB}/0", client_relation.id)
+    relation_user = databag.get("username", None)
+    assert relation_user
     logging.error(relation_user)
 
     # Break the relation.

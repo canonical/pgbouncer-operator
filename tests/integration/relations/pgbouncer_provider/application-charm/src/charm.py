@@ -128,6 +128,7 @@ class ApplicationCharm(CharmBase):
         query = event.params["query"]
         user = databag.get("username")
         password = databag.get("password")
+
         if event.params["readonly"]:
             host = databag.get("read-only-endpoints").split(",")[0]
             dbname = f"{dbname}_readonly"
@@ -142,6 +143,7 @@ class ApplicationCharm(CharmBase):
             database=dbname, user=user, password=password, host=endpoint, port=port
         )
         cursor = connection.cursor()
+        cursor.autocommit = True
         cursor.execute(query)
 
         try:
