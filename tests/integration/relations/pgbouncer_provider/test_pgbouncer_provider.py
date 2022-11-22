@@ -70,19 +70,19 @@ async def test_database_relation_with_charm_libraries(
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
-        await ops_test.model.wait_for_idle()
+        await ops_test.model.wait_for_idle(timeout=1200)
         # Relate the charms and wait for them exchanging some connection data.
         global client_relation
         client_relation = await ops_test.model.add_relation(
             f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
         )
 
-    await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
+    await ops_test.model.wait_for_idle(status="active", raise_on_blocked=True)
 
 
 @pytest.mark.client_relation
 async def test_database_usage(ops_test: OpsTest):
-    # Check we can update and delete things
+    """Check we can update and delete things."""
     update_query = (
         "DROP TABLE IF EXISTS test;"
         "CREATE TABLE test(data TEXT);"
@@ -101,7 +101,7 @@ async def test_database_usage(ops_test: OpsTest):
 
 @pytest.mark.client_relation
 async def test_database_version(ops_test: OpsTest):
-    # Check version is accurate
+    """Check version is accurate."""
     version_query = "SELECT version();"
     run_version_query = await run_sql_on_application_charm(
         ops_test,
@@ -112,9 +112,9 @@ async def test_database_version(ops_test: OpsTest):
     )
     # Get the version of the database and compare with the information that
     # was retrieved directly from the database.
-    version = await get_application_relation_data(
-        ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, "version"
-    )
+    databag = await get_app_relation_databag(ops_test, f"{PGB}/0", client_relation.id)
+    version = databag.get("version", None)
+    assert version, "Version is not available in databag."
     logging.info(run_version_query)
     logging.info(version)
     assert version in json.loads(run_version_query["results"])[0][0]
@@ -122,7 +122,7 @@ async def test_database_version(ops_test: OpsTest):
 
 @pytest.mark.client_relation
 async def test_readonly_reads(ops_test: OpsTest):
-    # Check we can read things in readonly
+    """Check we can read things in readonly."""
     select_query = "SELECT data FROM test;"
     run_select_query_readonly = await run_sql_on_application_charm(
         ops_test,
@@ -137,7 +137,7 @@ async def test_readonly_reads(ops_test: OpsTest):
 
 @pytest.mark.client_relation
 async def test_cant_write_in_readonly(ops_test: OpsTest):
-    # check we can't write in readonly
+    """Check we can't write in readonly."""
     drop_query = "DROP TABLE test;"
     run_drop_query_readonly = await run_sql_on_application_charm(
         ops_test,
@@ -152,7 +152,7 @@ async def test_cant_write_in_readonly(ops_test: OpsTest):
 
 @pytest.mark.client_relation
 async def test_database_admin_permissions(ops_test: OpsTest):
-    # Test admin permissions
+    """Test admin permissions."""
     create_database_query = "CREATE DATABASE another_database;"
     run_create_database_query = await run_sql_on_application_charm(
         ops_test,
@@ -277,46 +277,22 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
     assert first_database_connection_string != second_database_connection_string
 
 
-# TODO revisit readonly function
-@pytest.mark.skip
 @pytest.mark.client_relation
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
-    async with ops_test.fast_forward():
-        # Scale down the database.
-        await scale_application(ops_test, PGB, 1)
-
-        # Try to get the connection string of the database using the read-only endpoint.
-        # It should not be available anymore.
-        assert await check_relation_data_existence(
-            ops_test,
-            CLIENT_APP_NAME,
-            FIRST_DATABASE_RELATION_NAME,
-            "read-only-endpoints",
-            exists=False,
-        )
+    await scale_application(ops_test, PGB, 1)
+    databag = await get_app_relation_databag(ops_test, pgb_unit_name, client_relation.id)
+    assert not databag.get("read_only_endpoints", None), f"read_only_endpoints in pgb databag: {databag}"
 
 
-# TODO revisit readonly function
-@pytest.mark.skip
 @pytest.mark.client_relation
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
-    async with ops_test.fast_forward():
-        await scale_application(ops_test, PGB, 3)
-
-        # Try to get the connection string of the database using the read-only endpoint.
-        # It should be available again.
-        assert await check_relation_data_existence(
-            ops_test,
-            CLIENT_APP_NAME,
-            FIRST_DATABASE_RELATION_NAME,
-            "read-only-endpoints",
-            exists=True,
-        )
+    await scale_application(ops_test, PG, 3)
+    databag = await get_app_relation_databag(ops_test, pgb_unit_name, client_relation.id)
+    assert databag.get("read_only_endpoints", None), f"read_only_endpoints not in pgb databag: {databag}"
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_with_legacy_relation(ops_test: OpsTest):
     psql = "psql"
@@ -336,21 +312,20 @@ async def test_with_legacy_relation(ops_test: OpsTest):
             PG,
             PGB,
             CLIENT_APP_NAME,
-        ],  # ANOTHER_APPLICATION_APP_NAME], # TODO add back in once test is functional and off dev
+            ANOTHER_APPLICATION_APP_NAME
+        ],
         status="active",
         timeout=600,
     )
 
     pgb_unit_name = ops_test.model.applications[psql].units[0].name
-    psql_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
-    logger.error(psql_databag)
-    logger.error(await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id))
+    pgb_databag = await get_app_relation_databag(ops_test, pgb_unit_name, psql_relation.id)
 
-    pgpass = psql_databag.get("password")
-    user = psql_databag.get("user")
-    host = psql_databag.get("host")
-    port = psql_databag.get("port")
-    dbname = psql_databag.get("database")
+    pgpass = pgb_databag.get("password")
+    user = pgb_databag.get("user")
+    host = pgb_databag.get("host")
+    port = pgb_databag.get("port")
+    dbname = pgb_databag.get("database")
 
     assert None not in [
         pgpass,
@@ -358,7 +333,7 @@ async def test_with_legacy_relation(ops_test: OpsTest):
         host,
         port,
         dbname,
-    ], f"databag incorrectly populated: {psql_databag}"
+    ], f"databag incorrectly populated: {pgb_databag}"
 
     user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
     rtn, _, err = await run_sql(
@@ -393,22 +368,27 @@ async def test_with_legacy_relation(ops_test: OpsTest):
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
+    # Scale to 1, to see what hooks fire
+    scale_application(ops_test, PGB, 1)
+    scale_application(ops_test, CLIENT_APP_NAME, 2)
+    scale_application(ops_test, CLIENT_APP_NAME, 1)
+    # Retrieve the relation user.
+    relation_user = await get_application_relation_data(
+        ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, "username"
+    )
+    logging.error(relation_user)
+
+    # Break the relation.
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
+    )
     async with ops_test.fast_forward():
-        # Retrieve the relation user.
-        relation_user = await get_application_relation_data(
-            ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, "username"
-        )
-
-        # Break the relation.
-        await ops_test.model.applications[PGB].remove_relation(
-            f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
-        )
         await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
-        backend_rel = get_backend_relation(ops_test)
-        pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
+    backend_rel = get_backend_relation(ops_test)
+    pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
 
-        # Check that the relation user was removed from the database.
-        await check_database_users_existence(
-            ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
-        )
-        # TODO check relation data was correctly removed from config
+    # Check that the relation user was removed from the database.
+    await check_database_users_existence(
+        ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
+    )
+    # TODO check relation data was correctly removed from config
