@@ -143,7 +143,6 @@ class ApplicationCharm(CharmBase):
             database=dbname, user=user, password=password, host=endpoint, port=port
         )
         cursor = connection.cursor()
-        cursor.autocommit = True
         cursor.execute(query)
 
         try:

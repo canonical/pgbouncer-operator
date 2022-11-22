@@ -141,6 +141,8 @@ class PgBouncerProvider(Object):
         # it's being removed
         logger.error(event)
         logger.error(dir(event))
+        # TODO figure out how we can make sure we're only triggering removal when this relation is dead, not on scale-down.
+        #assert 1==2
         logger.error(event.app)
         logger.error(event.unit)
         logger.error(event.departing_unit)
@@ -170,9 +172,8 @@ class PgBouncerProvider(Object):
         logger.error(event)
         logger.error(dir(event))
         logger.error(event.app)
-        # for item in dir(event):
-        #     logger.error(item)
-        #     logger.error(dir(item))
+        logger.error(event.unit)
+
         if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.
@@ -213,9 +214,10 @@ class PgBouncerProvider(Object):
         self.update_read_only_endpoints()
 
         # Set the database version.
-        self.database_provides.set_version(
-            relation.id, self.charm.backend.postgres.get_postgresql_version()
-        )
+        if self.backend.postgres:
+            self.database_provides.set_version(
+                relation.id, self.charm.backend.postgres.get_postgresql_version()
+            )
 
     def update_postgres_endpoints(
         self,
