@@ -5,7 +5,7 @@
 
 Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are
 read/writes, and they expose the read/write nodes of the backend database through the database name
-f"{dbname}_standby".
+f"{dbname}_readonly".
 
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ relation (id: 4) ┃ application                                                           ┃ pgbouncer-k8s                                                          ┃

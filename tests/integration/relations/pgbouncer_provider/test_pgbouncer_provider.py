@@ -22,6 +22,7 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
     build_connection_string,
     run_sql_on_application_charm,
 )
+import psycopg2
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,7 @@ async def test_readonly_reads(ops_test: OpsTest):
         relation_id=client_relation.id,
         readonly=True,
     )
+    # "some data" is added in test_database_usage()
     assert "some data" in json.loads(run_select_query_readonly["results"])[0]
 
 
@@ -255,7 +257,10 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
 
 @pytest.mark.client_relation
 async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, application_charm):
-    """Test that an application can request additional databases using the same interface."""
+    """Test that an application can request additional databases using the same interface.
+
+    This occurs using a new relation per interface (for now).
+    """
     # Relate the charms using another relation and wait for them exchanging some connection data.
     await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}", PGB)
     async with ops_test.fast_forward():
@@ -297,6 +302,7 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
 
 @pytest.mark.client_relation
 async def test_with_legacy_relation(ops_test: OpsTest):
+    """Test that this relation and the legacy relation can be used simultaneously."""
     psql = "psql"
     # Deploy application.
     await ops_test.model.deploy(
@@ -388,3 +394,7 @@ async def test_relation_broken(ops_test: OpsTest):
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
     )
     # TODO check relation data was correctly removed from config
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    cfg = await get_cfg(ops_test, pgb_unit_name)
+    assert "first-database" not in cfg["databases"].keys()
+    assert "first-database_readonly" not in cfg["databases"].keys()
