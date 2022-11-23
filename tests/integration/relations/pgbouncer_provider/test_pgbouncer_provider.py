@@ -110,11 +110,9 @@ async def test_database_version(ops_test: OpsTest):
     )
     # Get the version of the database and compare with the information that
     # was retrieved directly from the database.
-    databag = await get_app_relation_databag(ops_test, f"{PGB}/0", client_relation.id)
+    databag = await get_app_relation_databag(ops_test, f"{CLIENT_UNIT_NAME}/0", client_relation.id)
     version = databag.get("version", None)
-    assert version, "Version is not available in databag."
-    logging.info(run_version_query)
-    logging.info(version)
+    assert version, f"Version is not available in databag: {databag}"
     assert version in json.loads(run_version_query["results"])[0][0]
 
 
@@ -282,8 +280,8 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     pgb_unit = ops_test.model.applications[PGB].units[0]
     databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
     assert not databag.get(
-        "read_only_endpoints", None
-    ), f"read_only_endpoints in pgb databag: {databag}"
+        "read-only-endpoints", None
+    ), f"read-only-endpoints in pgb databag: {databag}"
 
 
 @pytest.mark.client_relation
@@ -293,8 +291,8 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     pgb_unit = ops_test.model.applications[PGB].units[0]
     databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
     assert databag.get(
-        "read_only_endpoints", None
-    ), f"read_only_endpoints not in pgb databag: {databag}"
+        "read-only-endpoints", None
+    ), f"read-only-endpoints not in pgb databag: {databag}"
 
 
 @pytest.mark.client_relation

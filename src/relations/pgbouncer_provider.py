@@ -142,7 +142,7 @@ class PgBouncerProvider(Object):
         logger.error(event)
         logger.error(dir(event))
         # TODO figure out how we can make sure we're only triggering removal when this relation is dead, not on scale-down.
-        #assert 1==2
+        assert 1==2
         logger.error(event.app)
         logger.error(event.unit)
         logger.error(event.departing_unit)
@@ -157,7 +157,7 @@ class PgBouncerProvider(Object):
 
         if event.departing_unit.app == self.charm.app:
             self.charm.peers.app_databag[
-                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+                f"{self.relation_name}-{event.relation.id}-relation-breaking"
             ] = "true"
             logger.error("added relation-breaking flag to peer databag")
 
