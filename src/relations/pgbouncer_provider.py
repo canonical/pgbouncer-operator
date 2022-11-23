@@ -141,7 +141,8 @@ class PgBouncerProvider(Object):
         # it's being removed
         logger.error(event)
         logger.error(dir(event))
-        # TODO figure out how we can make sure we're only triggering removal when this relation is dead, not on scale-down.
+        # TODO figure out how we can make sure we're only triggering removal when this relation
+        # is dead, not on scale-down.
         logger.error(event.app)
         logger.error(event.unit)
         logger.error(event.departing_unit)
