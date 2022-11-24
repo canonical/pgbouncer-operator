@@ -20,12 +20,13 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import AUTH_FILE_PATH, INI_PATH, PEERS
+from constants import AUTH_FILE_PATH, CLIENT_RELATION_NAME, INI_PATH, PEERS
 from constants import PG as PG_USER
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
+from relations.pgbouncer_provider import PgBouncerProvider
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class PgBouncerCharm(CharmBase):
 
         self.peers = Peers(self)
         self.backend = BackendDatabaseRequires(self)
+        self.client_relation = PgBouncerProvider(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
 
@@ -141,7 +143,10 @@ class PgBouncerCharm(CharmBase):
         self.render_pgb_config(cfg, reload_pgbouncer=True)
 
     def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
-        """Checks that pgbouncer systemd service is running.
+        """Checks status of PgBouncer application.
+
+        Checks whether pgb config is available, backend is ready, and pgbouncer systemd service is
+        running.
 
         Returns:
             Recommended unit status. Can be active, blocked, or waiting.
@@ -153,7 +158,7 @@ class PgBouncerCharm(CharmBase):
             logger.warning(wait_str)
             return WaitingStatus(wait_str)
 
-        if not self.backend.postgres:
+        if not self.backend.ready:
             # We can't relate an app to the backend database without a backend postgres relation
             backend_wait_msg = "waiting for backend database relation to connect"
             logger.warning(backend_wait_msg)
@@ -337,6 +342,9 @@ class PgBouncerCharm(CharmBase):
         for relation in self.model.relations.get("db-admin", []):
             self.legacy_db_admin_relation.update_connection_info(relation, port)
 
+        for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
+            self.client_relation.update_connection_info(relation)
+
     def update_postgres_endpoints(self, reload_pgbouncer):
         """Update postgres endpoints in relation config values."""
         # Skip updates if backend.postgres doesn't exist yet.
@@ -351,8 +359,16 @@ class PgBouncerCharm(CharmBase):
                 relation, reload_pgbouncer=False
             )
 
+        for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
+            self.client_relation.update_postgres_endpoints(relation, reload_pgbouncer=False)
+
         if reload_pgbouncer:
             self.reload_pgbouncer()
+
+    @property
+    def leader_ip(self) -> str:
+        """Gets leader ip."""
+        return self.peers.leader_ip
 
 
 if __name__ == "__main__":

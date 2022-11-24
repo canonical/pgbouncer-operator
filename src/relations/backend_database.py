@@ -47,7 +47,7 @@ Example:
 """  # noqa: W505
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Set
 
 import psycopg2
 from charms.data_platform_libs.v0.database_requires import (
@@ -182,6 +182,7 @@ class BackendDatabaseRequires(Object):
         cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
+        cfg["pgbouncer"].pop("auth_file", None)
         self.charm.render_pgb_config(cfg)
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
@@ -279,3 +280,22 @@ class BackendDatabaseRequires(Object):
                 if isinstance(key, Application) and key != self.charm.app:
                     return databag
         return None
+
+    @property
+    def ready(self) -> bool:
+        """A boolean signifying whether the backend relation is fully initialised & ready."""
+        if not self.postgres:
+            return False
+
+        cfg = self.charm.read_pgb_config()
+        if "auth_query" not in cfg["pgbouncer"].keys():
+            return False
+
+        return True
+
+    def get_read_only_endpoints(self) -> Set[str]:
+        """Get read-only-endpoints from backend relation."""
+        read_only_endpoints = self.postgres_databag.get("read-only-endpoints", None)
+        if not read_only_endpoints:
+            return set()
+        return set(read_only_endpoints.split(","))
