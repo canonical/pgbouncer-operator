@@ -13,6 +13,7 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
+    get_cfg,
     run_sql,
     scale_application,
     wait_for_relation_joined_between,
@@ -22,7 +23,8 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
     build_connection_string,
     run_sql_on_application_charm,
 )
-import psycopg2
+
+# import psycopg2
 
 logger = logging.getLogger(__name__)
 
@@ -393,7 +395,8 @@ async def test_relation_broken(ops_test: OpsTest):
     await check_database_users_existence(
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
     )
-    # TODO check relation data was correctly removed from config
+
+    # check relation data was correctly removed from config
     pgb_unit_name = ops_test.model.applications[PGB].units[0].name
     cfg = await get_cfg(ops_test, pgb_unit_name)
     assert "first-database" not in cfg["databases"].keys()

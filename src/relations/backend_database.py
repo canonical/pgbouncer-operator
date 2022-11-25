@@ -149,12 +149,16 @@ class BackendDatabaseRequires(Object):
         pgbouncer-uninstall doesn't actually uninstall anything - it actually removes permissions
         for the auth user.
         """
-        if event.departing_unit != self.charm.unit or not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
             return
 
         logger.info("removing auth user")
 
         # TODO remove all databases that were created for client applications
+        self.charm.peers.app_databag[
+            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        ] = "true"
+        logger.error("added relation-breaking flag to peer databag")
 
         try:
             # TODO de-authorise all databases
@@ -167,6 +171,7 @@ class BackendDatabaseRequires(Object):
             return
 
         self.postgres.delete_user(self.auth_user)
+        self.charm.peers.remove_user(self.auth_user)
         logger.info("auth user removed")
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
@@ -174,11 +179,20 @@ class BackendDatabaseRequires(Object):
 
         Removes all traces of this relation from pgbouncer config.
         """
+        break_flag = f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        if (
+            not self.charm.peers.app_databag.get(break_flag, None)
+            or not self.charm.unit.is_leader()
+        ):
+            return
+
         try:
             cfg = self.charm.read_pgb_config()
         except FileNotFoundError:
             event.defer()
             return
+
+        self.charm.peers.app_databag.pop(break_flag, None)
         cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
@@ -186,6 +200,7 @@ class BackendDatabaseRequires(Object):
         self.charm.render_pgb_config(cfg)
 
         self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
+        self.charm.peers.update_auth_file(auth_file=None)
 
     def initialise_auth_function(self, dbs: List[str]):
         """Runs an SQL script to initialise the auth function.
@@ -223,7 +238,7 @@ class BackendDatabaseRequires(Object):
             with self.postgres.connect_to_database(dbname) as conn, conn.cursor() as cursor:
                 cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
             conn.close()
-        logger.info("auth function remove")
+        logger.info("auth function removed")
 
     @property
     def relation(self) -> Relation:

@@ -91,12 +91,11 @@ class Peers(Object):
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_joined, self._on_changed)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_departed, self._on_departed)
-        self.framework.observe(charm.on.leader_elected, self._on_leader_elected)
 
     @property
     def relation(self) -> Relation:
         """Returns the relations in this model , or None if peer is not initialised."""
-        return self.model.get_relation(PEER_RELATION_NAME)
+        return self.charm.model.get_relation(PEER_RELATION_NAME)
 
     @property
     def app_databag(self):
@@ -195,12 +194,10 @@ class Peers(Object):
                 event.defer()
 
     def _on_departed(self, _):
-        self._update_connection()
+        self.update_connection()
 
-    def _on_leader_elected(self, _):
-        self._update_connection()
-
-    def _update_connection(self):
+    def update_connection(self):
+        """Updates available leader in app databag."""
         self.charm.update_client_connection_info()
         if self.charm.unit.is_leader():
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip

@@ -125,8 +125,13 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         cfg.add_user(postgres.user, admin=True)
         cfg["pgbouncer"]["auth_user"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
+        event = MagicMock()
+        self.harness.set_leader()
+        self.charm.peers.app_databag[
+            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        ] = "true"
 
-        self.backend._on_relation_broken(MagicMock())
+        self.backend._on_relation_broken(event)
 
         assert "test_user" not in cfg["pgbouncer"]
         assert "auth_user" not in cfg["pgbouncer"]
