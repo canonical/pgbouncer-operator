@@ -4,6 +4,7 @@
 
 import asyncio
 import json
+import logging
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -105,6 +106,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
         unit_name,
         "--format=json",
     )
+    logging.error(get_databag)
     return json.loads(get_databag[1])[unit_name]
 
 

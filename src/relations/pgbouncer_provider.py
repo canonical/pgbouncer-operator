@@ -170,11 +170,6 @@ class PgBouncerProvider(Object):
             return
 
         break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
-        logger.error(event)
-        logger.error(dir(event))
-        logger.error(event.app)
-        logger.error(event.unit)
-
         if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
             # steps.

@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import time
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -111,9 +112,10 @@ async def test_database_version(ops_test: OpsTest):
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
     )
-    # Get the version of the database and compare with the information that
-    # was retrieved directly from the database.
-    databag = await get_app_relation_databag(ops_test, f"{CLIENT_UNIT_NAME}/0", client_relation.id)
+    # Get the version of the database and compare with the information that was retrieved directly
+    # from the database.
+    app_unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
+    databag = await get_app_relation_databag(ops_test, app_unit, client_relation.id)
     version = databag.get("version", None)
     assert version, f"Version is not available in databag: {databag}"
     assert version in json.loads(run_version_query["results"])[0][0]
@@ -284,8 +286,8 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, PGB, 1)
-    pgb_unit = ops_test.model.applications[PGB].units[0]
-    databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
+    app_unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
+    databag = await get_app_relation_databag(ops_test, app_unit.name, client_relation.id)
     assert not databag.get(
         "read-only-endpoints", None
     ), f"read-only-endpoints in pgb databag: {databag}"
@@ -295,11 +297,10 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, PG, 3)
-    pgb_unit = ops_test.model.applications[PGB].units[0]
-    databag = await get_app_relation_databag(ops_test, pgb_unit.name, client_relation.id)
-    assert databag.get(
-        "read-only-endpoints", None
-    ), f"read-only-endpoints not in pgb databag: {databag}"
+    app_unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
+    databag = await get_app_relation_databag(ops_test, app_unit.name, client_relation.id)
+    read_only_endpoints = databag.get("read-only-endpoints", None)
+    assert read_only_endpoints, f"read-only-endpoints not in pgb databag: {databag}"
 
 
 @pytest.mark.client_relation
@@ -381,8 +382,8 @@ async def test_relation_broken(ops_test: OpsTest):
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
     relation_user = databag.get("username", None)
+    logging.error(f"relation user: {relation_user}")
     assert relation_user, f"no relation user in client databag: {databag}"
-    logging.error(relation_user)
 
     # Break the relation.
     await ops_test.model.applications[PGB].remove_relation(
@@ -393,6 +394,7 @@ async def test_relation_broken(ops_test: OpsTest):
     backend_rel = get_backend_relation(ops_test)
     pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
 
+    time.sleep(10)
     # Check that the relation user was removed from the database.
     await check_database_users_existence(
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
