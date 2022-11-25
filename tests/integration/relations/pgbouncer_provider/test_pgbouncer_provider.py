@@ -376,10 +376,12 @@ async def test_relation_broken(ops_test: OpsTest):
     await scale_application(ops_test, PGB, 1)
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
+
+    client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.
-    databag = await get_app_relation_databag(ops_test, f"{PGB}/0", client_relation.id)
+    databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
     relation_user = databag.get("username", None)
-    assert relation_user
+    assert relation_user, f"no relation user in client databag: {databag}"
     logging.error(relation_user)
 
     # Break the relation.
