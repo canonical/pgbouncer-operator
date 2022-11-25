@@ -163,7 +163,8 @@ class PgBouncerProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
-        # TODO check that the relation is being REMOVED, not that we're scaling down.
+        # TODO check that the relation is being REMOVED, not that we're scaling down. Hopefully
+        # there's something in the event hook?
         if not self._check_backend():
             event.defer()
             return

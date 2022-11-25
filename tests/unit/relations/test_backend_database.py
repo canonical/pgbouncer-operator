@@ -119,17 +119,18 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.delete_file")
     def test_relation_broken(self, _delete_file, _render, _cfg, _postgres):
+        event = MagicMock()
+        self.harness.set_leader()
+        self.charm.peers.app_databag[
+            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        ] = "true"
+
         postgres = _postgres.return_value
         postgres.user = "test_user"
         cfg = _cfg.return_value
         cfg.add_user(postgres.user, admin=True)
         cfg["pgbouncer"]["auth_user"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
-        event = MagicMock()
-        self.harness.set_leader()
-        self.charm.peers.app_databag[
-            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
-        ] = "true"
 
         self.backend._on_relation_broken(event)
 
