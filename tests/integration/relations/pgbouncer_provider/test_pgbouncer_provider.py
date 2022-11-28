@@ -293,15 +293,23 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
         "read-only-endpoints", None
     ), f"read-only-endpoints in pgb databag: {databag}"
 
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    cfg = await get_cfg(ops_test, pgb_unit_name)
+    assert "application_first_database_readonly" not in cfg["databases"].keys()
+
 
 @pytest.mark.client_relation
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
-    await scale_application(ops_test, PG, 3)
+    await scale_application(ops_test, PG, 2)
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     read_only_endpoints = databag.get("read-only-endpoints", None)
     assert read_only_endpoints, f"read-only-endpoints not in pgb databag: {databag}"
+
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    cfg = await get_cfg(ops_test, pgb_unit_name)
+    assert "application_first_database_readonly" not in cfg["databases"].keys()
 
 
 @pytest.mark.client_relation
