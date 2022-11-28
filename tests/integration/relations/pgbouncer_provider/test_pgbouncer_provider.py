@@ -181,7 +181,9 @@ async def test_database_admin_permissions(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, PG, 1)
-    await ops_test.model.wait_for_idle(status="active")
+    await ops_test.model.wait_for_idle(apps=[PGB], status="active")
+    await check_new_relation(ops_test)
+
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     assert not databag.get(
@@ -197,7 +199,9 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, PG, 2)
-    await ops_test.model.wait_for_idle(status="active")
+    await ops_test.model.wait_for_idle(apps=[PGB], status="active")
+    await check_new_relation(ops_test)
+
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     read_only_endpoints = databag.get("read-only-endpoints", None)
