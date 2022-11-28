@@ -96,9 +96,9 @@ class BackendDatabaseRequires(Object):
         )
 
         self.framework.observe(self.database.on.database_created, self._on_database_created)
-        # self.framework.observe(
-        #     charm.on[BACKEND_RELATION_NAME].relation_changed, self._on_relation_changed
-        # )
+        self.framework.observe(
+            charm.on[BACKEND_RELATION_NAME].relation_changed, self._on_relation_changed
+        )
         self.framework.observe(self.database.on.endpoints_changed, self._on_endpoints_changed)
         self.framework.observe(
             self.database.on.read_only_endpoints_changed, self._on_endpoints_changed
@@ -146,8 +146,8 @@ class BackendDatabaseRequires(Object):
     def _on_endpoints_changed(self, _):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
-    # def _on_relation_changed(self, _):
-    #     self.charm.update_postgres_endpoints(reload_pgbouncer=True)
+    def _on_relation_changed(self, _):
+        self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
     def _on_relation_departed(self, event: RelationDepartedEvent):
         """Runs pgbouncer-uninstall.sql and removes auth user.
