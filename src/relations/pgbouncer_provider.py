@@ -137,13 +137,23 @@ class PgBouncerProvider(Object):
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Check if this relation is being removed, and update the peer databag accordingly."""
-        if not self.charm.unit.is_leader():
-            self.update_connection_info(event.relation)
-            return
+        self.update_connection_info(event.relation)
+        if event.departing_unit == self.charm.unit:
+            self.charm.peers.unit_databag.update(
+                {f"{self.relation_name}_{event.relation.id}_departing": "true"}
+            )
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
         if not self._check_backend() or not self.charm.unit.is_leader():
+            return
+
+        if (
+            self.charm.peers.unit_databag.get(
+                f"{self.relation_name}_{event.relation.id}_departing", None
+            )
+            == "true"
+        ):
             return
 
         cfg = self.charm.read_pgb_config()

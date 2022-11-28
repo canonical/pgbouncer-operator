@@ -178,6 +178,37 @@ async def test_database_admin_permissions(ops_test: OpsTest):
 
 
 @pytest.mark.client_relation
+async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
+    """Test that there is no read-only endpoint in a standalone cluster."""
+    await scale_application(ops_test, PG, 1)
+    await ops_test.model.wait_for_idle(status="active")
+    unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
+    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
+    assert not databag.get(
+        "read-only-endpoints", None
+    ), f"read-only-endpoints in pgb databag: {databag}"
+
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    cfg = await get_cfg(ops_test, pgb_unit_name)
+    assert "application_first_database_readonly" not in cfg["databases"].keys()
+
+
+@pytest.mark.client_relation
+async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
+    """Test that there is read-only endpoint in a scaled up cluster."""
+    await scale_application(ops_test, PG, 2)
+    await ops_test.model.wait_for_idle(status="active")
+    unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
+    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
+    read_only_endpoints = databag.get("read-only-endpoints", None)
+    assert read_only_endpoints, f"read-only-endpoints not in pgb databag: {databag}"
+
+    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
+    cfg = await get_cfg(ops_test, pgb_unit_name)
+    assert "application_first_database_readonly" not in cfg["databases"].keys()
+
+
+@pytest.mark.client_relation
 async def test_two_applications_dont_share_the_same_relation_data(
     ops_test: OpsTest, application_charm
 ):
@@ -284,35 +315,6 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
 
 
 @pytest.mark.client_relation
-async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
-    """Test that there is no read-only endpoint in a standalone cluster."""
-    await scale_application(ops_test, PG, 1)
-    unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
-    assert not databag.get(
-        "read-only-endpoints", None
-    ), f"read-only-endpoints in pgb databag: {databag}"
-
-    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
-    cfg = await get_cfg(ops_test, pgb_unit_name)
-    assert "application_first_database_readonly" not in cfg["databases"].keys()
-
-
-@pytest.mark.client_relation
-async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
-    """Test that there is read-only endpoint in a scaled up cluster."""
-    await scale_application(ops_test, PG, 2)
-    unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
-    read_only_endpoints = databag.get("read-only-endpoints", None)
-    assert read_only_endpoints, f"read-only-endpoints not in pgb databag: {databag}"
-
-    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
-    cfg = await get_cfg(ops_test, pgb_unit_name)
-    assert "application_first_database_readonly" not in cfg["databases"].keys()
-
-
-@pytest.mark.client_relation
 async def test_with_legacy_relation(ops_test: OpsTest):
     """Test that this relation and the legacy relation can be used simultaneously."""
     psql = "psql"
@@ -380,6 +382,19 @@ async def test_with_legacy_relation(ops_test: OpsTest):
 
 @pytest.mark.dev
 @pytest.mark.client_relation
+async def test_scaling(ops_test: OpsTest):
+    """Check these relations all work when scaling pgbouncer."""
+    await scale_application(ops_test, PGB, 1)
+    await ops_test.model.wait_for_idle(status="active")
+    await check_new_relation(ops_test)
+
+    await scale_application(ops_test, PGB, 2)
+    await ops_test.model.wait_for_idle(status="active")
+    await check_new_relation(ops_test)
+
+
+@pytest.mark.dev
+@pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
@@ -409,3 +424,22 @@ async def test_relation_broken(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, pgb_unit_name)
     assert "first-database" not in cfg["databases"].keys()
     assert "first-database_readonly" not in cfg["databases"].keys()
+
+
+async def check_new_relation(ops_test: OpsTest):
+    """Smoke test to check relation is online."""
+    table_name = "quick_test"
+    smoke_query = (
+        f"DROP TABLE IF EXISTS {table_name};"
+        f"CREATE TABLE {table_name}(data TEXT);"
+        f"INSERT INTO {table_name}(data) VALUES('some data');"
+        f"SELECT data FROM {table_name};"
+    )
+    run_update_query = await run_sql_on_application_charm(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        query=smoke_query,
+        dbname=TEST_DBNAME,
+        relation_id=client_relation.id,
+    )
+    assert "some data" in json.loads(run_update_query["results"])[0]

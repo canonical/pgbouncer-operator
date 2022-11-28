@@ -355,6 +355,8 @@ class PgBouncerCharm(CharmBase):
         if not self.backend.postgres or not self.unit.is_leader():
             return
 
+        self.unit.status = MaintenanceStatus("Model changed - updating postgres endpoints")
+
         for relation in self.model.relations.get("db", []):
             self.legacy_db_relation.update_postgres_endpoints(relation, reload_pgbouncer=False)
 
