@@ -375,9 +375,9 @@ async def test_with_legacy_relation(ops_test: OpsTest):
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Scale to 1, to see what hooks fire
-    await scale_application(ops_test, PGB, 1)
-    await scale_application(ops_test, CLIENT_APP_NAME, 2)
-    await scale_application(ops_test, CLIENT_APP_NAME, 1)
+    # await scale_application(ops_test, PGB, 1)
+    # await scale_application(ops_test, CLIENT_APP_NAME, 2)
+    # await scale_application(ops_test, CLIENT_APP_NAME, 1)
 
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.

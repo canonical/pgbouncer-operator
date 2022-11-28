@@ -141,27 +141,10 @@ class PgBouncerProvider(Object):
             self.update_connection_info(event.relation)
             return
 
-        # if event.departing_unit.app == self.charm.app:
-        #     self.charm.peers.app_databag[
-        #         f"{self.relation_name}-{event.relation.id}-relation-breaking"
-        #     ] = "true"
-        #     logger.error("added relation-breaking flag to peer databag")
-
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
-        if not self._check_backend():
+        if not self._check_backend() or not self.charm.unit.is_leader():
             return
-
-        # break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
-        # if not self.charm.peers.app_databag.get(break_flag, None):
-        #     # This relation isn't being removed, so we don't need to do the relation teardown
-        #     # steps.
-        #     self.update_connection_info(event.relation)
-        #     return
-        if not self.charm.unit.is_leader():
-            return
-
-        # self.charm.peers.app_databag.pop(break_flag, None)
 
         cfg = self.charm.read_pgb_config()
         database = self.get_database(event.relation)
@@ -251,8 +234,8 @@ class PgBouncerProvider(Object):
         if not self.charm.unit.is_leader():
             return
 
-        # Get the current relation or all the relations
-        # if this is triggered by another type of event.
+        # Get the current relation or all the relations if this is triggered by another type of
+        # event.
         relations = [event.relation] if event else self.model.relations[self.relation_name]
 
         port = self.charm.config["listen_port"]
