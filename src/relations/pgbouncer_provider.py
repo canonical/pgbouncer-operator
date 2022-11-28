@@ -137,48 +137,31 @@ class PgBouncerProvider(Object):
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Check if this relation is being removed, and update the peer databag accordingly."""
-        # If a departed event is dispatched to itself, this relation isn't being scaled down -
-        # it's being removed
-        logger.error(event)
-        logger.error(dir(event))
-        # TODO figure out how we can make sure we're only triggering removal when this relation
-        # is dead, not on scale-down.
-        logger.error(event.app)
-        logger.error(event.unit)
-        logger.error(event.departing_unit)
-
-        # for item in dir(event):
-        #     logger.error(item)
-        #     logger.error(dir(item))
-
         if not self.charm.unit.is_leader():
             self.update_connection_info(event.relation)
             return
 
-        if event.departing_unit.app == self.charm.app:
-            self.charm.peers.app_databag[
-                f"{self.relation_name}-{event.relation.id}-relation-breaking"
-            ] = "true"
-            logger.error("added relation-breaking flag to peer databag")
+        # if event.departing_unit.app == self.charm.app:
+        #     self.charm.peers.app_databag[
+        #         f"{self.relation_name}-{event.relation.id}-relation-breaking"
+        #     ] = "true"
+        #     logger.error("added relation-breaking flag to peer databag")
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
-        # TODO check that the relation is being REMOVED, not that we're scaling down. Hopefully
-        # there's something in the event hook?
         if not self._check_backend():
-            event.defer()
             return
 
-        break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
-        if not self.charm.peers.app_databag.get(break_flag, None):
-            # This relation isn't being removed, so we don't need to do the relation teardown
-            # steps.
-            self.update_connection_info(event.relation)
-            return
+        # break_flag = f"{self.relation_name}-{event.relation.id}-relation-breaking"
+        # if not self.charm.peers.app_databag.get(break_flag, None):
+        #     # This relation isn't being removed, so we don't need to do the relation teardown
+        #     # steps.
+        #     self.update_connection_info(event.relation)
+        #     return
         if not self.charm.unit.is_leader():
             return
 
-        self.charm.peers.app_databag.pop(break_flag, None)
+        # self.charm.peers.app_databag.pop(break_flag, None)
 
         cfg = self.charm.read_pgb_config()
         database = self.get_database(event.relation)
