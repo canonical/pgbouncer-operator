@@ -286,7 +286,7 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
 @pytest.mark.client_relation
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
-    await scale_application(ops_test, PGB, 1)
+    await scale_application(ops_test, PG, 1)
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     assert not databag.get(
@@ -374,11 +374,6 @@ async def test_with_legacy_relation(ops_test: OpsTest):
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
-    # Scale to 1, to see what hooks fire
-    # await scale_application(ops_test, PGB, 1)
-    # await scale_application(ops_test, CLIENT_APP_NAME, 2)
-    # await scale_application(ops_test, CLIENT_APP_NAME, 1)
-
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
