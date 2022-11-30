@@ -148,12 +148,10 @@ class PgBouncerProvider(Object):
         if not self._check_backend() or not self.charm.unit.is_leader():
             return
 
-        if (
-            self.charm.peers.unit_databag.get(
-                f"{self.relation_name}_{event.relation.id}_departing", None
-            )
-            == "true"
-        ):
+        depart_flag = f"{self.relation_name}_{event.relation.id}_departing"
+        if self.charm.peers.unit_databag.get(depart_flag, None) == "true":
+            # This is being removed, so do nothing that relates to the relation.
+            self.charm.peers.app_databag.pop(depart_flag, None)
             return
 
         cfg = self.charm.read_pgb_config()

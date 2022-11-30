@@ -209,7 +209,7 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
 
     pgb_unit_name = ops_test.model.applications[PGB].units[0].name
     cfg = await get_cfg(ops_test, pgb_unit_name)
-    assert "application_first_database_readonly" not in cfg["databases"].keys()
+    assert "application_first_database_readonly" in cfg["databases"].keys()
 
 
 @pytest.mark.client_relation

@@ -145,9 +145,11 @@ class BackendDatabaseRequires(Object):
 
     def _on_endpoints_changed(self, _):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
+        self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
+        self.charm.update_client_connection_info()
 
     def _on_relation_departed(self, event: RelationDepartedEvent):
         """Runs pgbouncer-uninstall.sql and removes auth user.
@@ -155,20 +157,20 @@ class BackendDatabaseRequires(Object):
         pgbouncer-uninstall doesn't actually uninstall anything - it actually removes permissions
         for the auth user.
         """
+        self.charm.update_client_connection_info()
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
             return
 
-        logger.info("removing auth user")
-
-        # TODO remove all databases that were created for client applications
-        self.charm.peers.app_databag[
-            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
-        ] = "true"
-        logger.error("added relation-breaking flag to peer databag")
+        if event.departing_unit == self.charm.unit:
+            self.charm.peers.unit_databag.update(
+                {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
+            )
+            logger.error("added relation-departing flag to peer databag")
 
         try:
             # TODO de-authorise all databases
+            logger.info("removing auth user")
             self.remove_auth_function([PGB, PG])
         except psycopg2.Error:
             self.charm.unit.status = BlockedStatus(
@@ -179,16 +181,16 @@ class BackendDatabaseRequires(Object):
 
         self.postgres.delete_user(self.auth_user)
         self.charm.peers.remove_user(self.auth_user)
-        logger.info("auth user removed")
+        logger.info("pgbouncer auth user removed")
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle backend-database-relation-broken event.
 
         Removes all traces of this relation from pgbouncer config.
         """
-        break_flag = f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         if (
-            not self.charm.peers.app_databag.get(break_flag, None)
+            self.charm.peers.app_databag.get(depart_flag, None) == "true"
             or not self.charm.unit.is_leader()
         ):
             return
@@ -199,7 +201,7 @@ class BackendDatabaseRequires(Object):
             event.defer()
             return
 
-        self.charm.peers.app_databag.pop(break_flag, None)
+        self.charm.peers.app_databag.pop(depart_flag, None)
         cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
