@@ -9,7 +9,6 @@ The PgBouncer Operator deploys and operates the [PgBouncer](https://www.pgbounce
 To deploy pgbouncer in front of three units of postgres:
 
 ```bash
-# Deploy postgres
 juju deploy pgbouncer --channel=edge
 juju deploy postgresql --channel=edge -n 3
 juju add-relation pgbouncer:backend-database postgresql:database
@@ -82,7 +81,8 @@ The following config values are set as constants in the charm:
 
 - `database`
   - Provides a relation to client applications.
-  - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_standby"`.
+  - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_readonly"`.
+  - However, the leader node is the only node in the `"endpoints"` field, and the follower nodes are stored in the `"read-only-endpoints"` field of the relation databag. This is to preserve interoperability with the postgres charm.
 - `backend-database`
   - Relates to backend [postgresql-operator](https://github.com/canonical/postgresql-operator) database charm. Without a backend relation, this charm will enter BlockedStatus - if there's no Postgres backend, this charm has no purpose.
 
