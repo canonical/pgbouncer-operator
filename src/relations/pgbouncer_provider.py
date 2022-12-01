@@ -7,28 +7,32 @@ Importantly, this relation doesn't handle scaling the same way others do. All Pg
 read/writes, and they expose the read/write nodes of the backend database through the database name
 f"{dbname}_readonly".
 
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ relation (id: 4) ┃ application                                                           ┃ pgbouncer-k8s                                                          ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ relation name    │ first-database                                                        │ database                                                               │
-│ interface        │ postgresql_client                                                     │ postgresql_client                                                      │
-│ leader unit      │ 0                                                                     │ 1                                                                      │
-├──────────────────┼───────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ application data │ ╭───────────────────────────────────────────────────────────────────╮ │ ╭────────────────────────────────────────────────────────────────────╮ │
-│                  │ │  data              {"endpoints":                                  │ │ │  data                 {"database": "application_first_database",   │ │
-│                  │ │                    "pgbouncer-k8s-1.pgbouncer-k8s-endpoints:6432" │ │ │                       "extra-user-roles": "CREATEDB,CREATEROLE"}   │ │
-│                  │ │                    "password": "2LDDKswhH5DdMvjEAZ9igVET",        │ │ │  endpoints            pgbouncer-k8s-1.pgbouncer-k8s-endpoints:6432 │ │
-│                  │ │                    "read-only-endpoints":                         │ │ │  password             2LDDKswhH5DdMvjEAZ9igVET                     │ │
-│                  │ │                    "pgbouncer-k8s-2.pgbouncer-k8s-endpoints:6432" │ │ │  read-only-endpoints  pgbouncer-k8s-2.pgbouncer-k8s-endpoints:6432 │ │
-│                  │ │                    "username": "relation_id_4",                   │ │ │  username             relation_id_4                                │ │
-│                  │ │                     "version": "14.5"}                            │ │ │  version              14.5                                         │ │
-│                  │ │  database          application_first_database                     │ │ ╰────────────────────────────────────────────────────────────────────╯ │
-│                  │ │  extra-user-roles  CREATEDB,CREATEROLE                            │ │                                                                        │
-│                  │ ╰───────────────────────────────────────────────────────────────────╯ │                                                                        │
-│ unit data        │ ╭─ application/0* ─╮ ╭─ application/1 ─╮                              │ ╭─ pgbouncer-k8s/0 ─╮ ╭─ pgbouncer-k8s/1* ─╮ ╭─ pgbouncer-k8s/2 ─╮     │
-│                  │ │ <empty>          │ │ <empty>         │                              │ │ <empty>           │ │ <empty>            │ │ <empty>           │     │
-│                  │ ╰──────────────────╯ ╰─────────────────╯                              │ ╰───────────────────╯ ╰────────────────────╯ ╰───────────────────╯     │
-└──────────────────┴───────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ relation (id: 4) ┃ application                                         ┃ pgbouncer                                            ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ relation name    │ first-database                                      │ database                                             │
+│ interface        │ postgresql_client                                   │ postgresql_client                                    │
+│ leader unit      │ 0                                                   │ 1                                                    │
+├──────────────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────────┤
+│ application data │ ╭─────────────────────────────────────────────────╮ │ ╭──────────────────────────────────────────────────╮ │
+│                  │ │                                                 │ │ │                                                  │ │
+│                  │ │  data              {"endpoints":                │ │ │  data                 {"database":               │ │
+│                  │ │                    "10.180.162.135:6432",       │ │ │                       "application_first_datab…  │ │
+│                  │ │                    "password":                  │ │ │                       "extra-user-roles":        │ │
+│                  │ │                    "Zw6WZEgvDvZIAh5fk0tGlRYE",  │ │ │                       "CREATEDB,CREATEROLE"}     │ │
+│                  │ │                    "read-only-endpoints":       │ │ │  endpoints            10.180.162.135:6432        │ │
+│                  │ │                    "10.180.162.135:6432",       │ │ │  password             Zw6WZEgvDvZIAh5fk0tGlRYE   │ │
+│                  │ │                    "username":                  │ │ │  read-only-endpoints  10.180.162.135:6432        │ │
+│                  │ │                    "relation_id_4", "version":  │ │ │  username             relation_id_4              │ │
+│                  │ │                    "12.12"}                     │ │ │  version              12.12                      │ │
+│                  │ │  database          application_first_database   │ │ ╰──────────────────────────────────────────────────╯ │
+│                  │ │  extra-user-roles  CREATEDB,CREATEROLE          │ │                                                      │
+│                  │ ╰─────────────────────────────────────────────────╯ │                                                      │
+│ unit data        │ ╭─ application/0* ─╮                                │ ╭─ pgbouncer/1* ─╮ ╭─ pgbouncer/2 ─╮                 │
+│                  │ │ <empty>          │                                │ │ <empty>        │ │ <empty>       │                 │
+│                  │ ╰──────────────────╯                                │ ╰────────────────╯ ╰───────────────╯                 │
+└──────────────────┴─────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┘
+
 """  # noqa: W505
 
 

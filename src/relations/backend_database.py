@@ -131,7 +131,6 @@ class BackendDatabaseRequires(Object):
         self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
 
         cfg = self.charm.read_pgb_config()
-        # adds user to pgb config
         cfg.add_user(user=event.username, admin=True)
         cfg["pgbouncer"][
             "auth_query"
@@ -160,6 +159,7 @@ class BackendDatabaseRequires(Object):
         self.charm.update_client_connection_info()
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
+            # this doesn't trigger if we're scaling the other app.
             return
 
         if event.departing_unit == self.charm.unit:
@@ -167,6 +167,11 @@ class BackendDatabaseRequires(Object):
                 {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
             )
             logger.error("added relation-departing flag to peer databag")
+            return
+
+        # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
+        # relation. Therefore, we should add something to the peer-relation-departed hook as a flag
+        # to verify we're scaling down.
 
         try:
             # TODO de-authorise all databases
@@ -252,7 +257,6 @@ class BackendDatabaseRequires(Object):
     def relation(self) -> Relation:
         """Relation object for postgres backend-database relation."""
         backend_relation = self.model.get_relation(BACKEND_RELATION_NAME)
-
         if not backend_relation:
             return None
         else:
@@ -286,7 +290,6 @@ class BackendDatabaseRequires(Object):
         username = self.postgres_databag.get("username")
         if username is None:
             return None
-
         return f"pgbouncer_auth_{username}".replace("-", "_")
 
     @property
