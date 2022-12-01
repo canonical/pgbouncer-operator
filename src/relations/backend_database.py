@@ -171,7 +171,7 @@ class BackendDatabaseRequires(Object):
 
         # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
         # relation. Therefore, we should add something to the peer-relation-departed hook as a flag
-        # to verify we're scaling down.
+        # to verify we're scaling down. This may be solved by the return on line 170
 
         try:
             # TODO de-authorise all databases
