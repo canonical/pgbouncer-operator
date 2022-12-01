@@ -22,10 +22,9 @@ from tests.integration.helpers.helpers import (
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
 from tests.integration.relations.pgbouncer_provider.helpers import (
     build_connection_string,
+    check_new_relation,
     run_sql_on_application_charm,
 )
-
-# import psycopg2
 
 logger = logging.getLogger(__name__)
 
@@ -177,12 +176,18 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
+@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, PG, 1)
     await ops_test.model.wait_for_idle(apps=[PGB])
-    await check_new_relation(ops_test)
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=client_relation.id,
+        dbname=TEST_DBNAME,
+    )
 
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
@@ -195,12 +200,18 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     assert "application_first_database_readonly" not in cfg["databases"].keys()
 
 
+@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, PG, 2)
     await ops_test.model.wait_for_idle(apps=[PGB])
-    await check_new_relation(ops_test)
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=client_relation.id,
+        dbname=TEST_DBNAME,
+    )
 
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
@@ -384,20 +395,28 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     assert "some data" in json.loads(run_update_query["results"])[0]
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
     await scale_application(ops_test, PGB, 1)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(ops_test)
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=client_relation.id,
+        dbname=TEST_DBNAME,
+    )
 
     await scale_application(ops_test, PGB, 2)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(ops_test)
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=client_relation.id,
+        dbname=TEST_DBNAME,
+    )
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
@@ -428,22 +447,3 @@ async def test_relation_broken(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, pgb_unit_name)
     assert "first-database" not in cfg["databases"].keys()
     assert "first-database_readonly" not in cfg["databases"].keys()
-
-
-async def check_new_relation(ops_test: OpsTest):
-    """Smoke test to check relation is online."""
-    table_name = "quick_test"
-    smoke_query = (
-        f"DROP TABLE IF EXISTS {table_name};"
-        f"CREATE TABLE {table_name}(data TEXT);"
-        f"INSERT INTO {table_name}(data) VALUES('some data');"
-        f"SELECT data FROM {table_name};"
-    )
-    run_update_query = await run_sql_on_application_charm(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        query=smoke_query,
-        dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
-    )
-    assert "some data" in json.loads(run_update_query["results"])[0]

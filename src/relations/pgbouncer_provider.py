@@ -151,7 +151,7 @@ class PgBouncerProvider(Object):
         depart_flag = f"{self.relation_name}_{event.relation.id}_departing"
         if self.charm.peers.unit_databag.get(depart_flag, None) == "true":
             # This is being removed, so do nothing that relates to the relation.
-            self.charm.peers.app_databag.pop(depart_flag, None)
+            self.charm.peers.unit_databag.pop(depart_flag, None)
             return
 
         cfg = self.charm.read_pgb_config()
@@ -184,7 +184,7 @@ class PgBouncerProvider(Object):
         self.update_read_only_endpoints()
 
         # Set the database version.
-        if self.charm.backend.postgres:
+        if self._check_backend():
             self.database_provides.set_version(
                 relation.id, self.charm.backend.postgres.get_postgresql_version()
             )

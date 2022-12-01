@@ -133,9 +133,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         cfg["pgbouncer"]["auth_query"] = "test"
 
         self.backend._on_relation_broken(event)
-        import logging
-
-        logging.error(cfg.render())
 
         assert "test_user" not in cfg["pgbouncer"]
         assert "auth_user" not in cfg["pgbouncer"]

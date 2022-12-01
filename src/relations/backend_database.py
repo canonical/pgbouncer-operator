@@ -190,7 +190,7 @@ class BackendDatabaseRequires(Object):
         """
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         if (
-            self.charm.peers.app_databag.get(depart_flag, None) == "true"
+            self.charm.peers.unit_databag.get(depart_flag, None) == "true"
             or not self.charm.unit.is_leader()
         ):
             return
@@ -201,7 +201,6 @@ class BackendDatabaseRequires(Object):
             event.defer()
             return
 
-        self.charm.peers.app_databag.pop(depart_flag, None)
         cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)

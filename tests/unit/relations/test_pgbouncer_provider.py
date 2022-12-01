@@ -165,12 +165,6 @@ class TestPgbouncerProvider(unittest.TestCase):
         _cfg.return_value["pgbouncer"]["admin_users"].add(user)
         _cfg.return_value["pgbouncer"]["stats_users"].add(user)
 
-        # check we exit immediately if backend doesn't exist.
-        _check_backend.return_value = False
-        self.client_relation._on_relation_broken(event)
-        # TODO replace with something like assert_not_called()
-        # event.defer.assert_called()
-
         _check_backend.return_value = True
         self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         self.client_relation._on_relation_broken(event)
