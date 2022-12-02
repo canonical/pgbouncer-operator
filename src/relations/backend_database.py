@@ -158,20 +158,24 @@ class BackendDatabaseRequires(Object):
         """
         self.charm.update_client_connection_info()
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
-        if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
-            # this doesn't trigger if we're scaling the other app.
-            return
 
-        if event.departing_unit == self.charm.unit:
+        if (
+            event.departing_unit == self.charm.unit
+        ):  # and self.charm.planned_units < current_units? test that we're scaling down?
             self.charm.peers.unit_databag.update(
                 {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
             )
             logger.error("added relation-departing flag to peer databag")
+
+        if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
+            # this doesn't trigger if we're scaling the other app.
             return
 
         # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
-        # relation. Therefore, we should add something to the peer-relation-departed hook as a flag
-        # to verify we're scaling down. This may be solved by the return on line 170
+        # relation. Therefore, we should add something to verify we're scaling down.
+        if self.charm.app.planned_units() < len(self.charm.peers.relation.units):
+            # We're just scaling down, no need to remove everything here.
+            return
 
         try:
             # TODO de-authorise all databases
@@ -193,9 +197,10 @@ class BackendDatabaseRequires(Object):
 
         Removes all traces of this relation from pgbouncer config.
         """
+        logging.error(self.charm.peers.unit_databag)
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         if (
-            self.charm.peers.unit_databag.get(depart_flag, None) == "true"
+            self.charm.peers.unit_databag.get(depart_flag, False)
             or not self.charm.unit.is_leader()
         ):
             return
