@@ -176,7 +176,6 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
@@ -195,7 +194,6 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
@@ -411,6 +409,7 @@ async def test_scaling(ops_test: OpsTest):
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
+    logger.info(await ops_test.juju("debug-log", "--replay", "--no-tail"))
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)

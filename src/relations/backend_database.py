@@ -104,6 +104,9 @@ class BackendDatabaseRequires(Object):
             self.database.on.read_only_endpoints_changed, self._on_endpoints_changed
         )
         self.framework.observe(
+            charm.on[BACKEND_RELATION_NAME].relation_departed, self._on_relation_departed
+        )
+        self.framework.observe(
             charm.on[BACKEND_RELATION_NAME].relation_broken, self._on_relation_broken
         )
 
@@ -153,19 +156,19 @@ class BackendDatabaseRequires(Object):
     def _on_relation_departed(self, event: RelationDepartedEvent):
         """Runs pgbouncer-uninstall.sql and removes auth user.
 
-        pgbouncer-uninstall doesn't actually uninstall anything - it actually removes permissions
-        for the auth user.
+        This hook has to run user removal hooks before relation-broken events are fired, because
+        the postgres relation-broken hook removes the user needed to remove authentication for the
+        users we create.
         """
         self.charm.update_client_connection_info()
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
-        if (
-            event.departing_unit == self.charm.unit
-        ):  # and self.charm.planned_units < current_units? test that we're scaling down?
+        if event.departing_unit == self.charm.unit:
             self.charm.peers.unit_databag.update(
                 {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
             )
             logger.error("added relation-departing flag to peer databag")
+            return
 
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
             # this doesn't trigger if we're scaling the other app.
@@ -173,8 +176,13 @@ class BackendDatabaseRequires(Object):
 
         # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
         # relation. Therefore, we should add something to verify we're scaling down.
-        if self.charm.app.planned_units() < len(self.charm.peers.relation.units):
-            # We're just scaling down, no need to remove everything here.
+        planned_units = self.charm.app.planned_units()
+        logger.error(planned_units)
+        logger.error(self.charm.peers.relation.units)
+        logger.error(self.charm.peers.relation)
+        if planned_units < len(self.charm.peers.relation.units):  # and planned_units != 0:
+            # check that we're scaling down, but remove the relation if we're removing pgbouncer
+            # entirely.
             return
 
         try:
@@ -182,10 +190,11 @@ class BackendDatabaseRequires(Object):
             logger.info("removing auth user")
             self.remove_auth_function([PGB, PG])
         except psycopg2.Error:
-            self.charm.unit.status = BlockedStatus(
+            remove_auth_fail_msg = (
                 "failed to remove auth user when disconnecting from postgres application."
             )
-            event.fail()
+            self.charm.unit.status = BlockedStatus(remove_auth_fail_msg)
+            logger.error(remove_auth_fail_msg)
             return
 
         self.postgres.delete_user(self.auth_user)
@@ -197,12 +206,12 @@ class BackendDatabaseRequires(Object):
 
         Removes all traces of this relation from pgbouncer config.
         """
-        logging.error(self.charm.peers.unit_databag)
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         if (
             self.charm.peers.unit_databag.get(depart_flag, False)
             or not self.charm.unit.is_leader()
         ):
+            logging.info("exiting relation-broken hook - nothing to do")
             return
 
         try:
@@ -243,6 +252,9 @@ class BackendDatabaseRequires(Object):
 
     def remove_auth_function(self, dbs: List[str]):
         """Runs an SQL script to remove auth function.
+
+        pgbouncer-uninstall doesn't actually uninstall anything - it actually removes permissions
+        for the auth user.
 
         Args:
             dbs: a list of database names to connect to.
@@ -315,11 +327,23 @@ class BackendDatabaseRequires(Object):
     @property
     def ready(self) -> bool:
         """A boolean signifying whether the backend relation is fully initialised & ready."""
+        # Check we have connection information
         if not self.postgres:
             return False
 
+        # Check we can authenticate
         cfg = self.charm.read_pgb_config()
         if "auth_query" not in cfg["pgbouncer"].keys():
+            return False
+
+        # Check we can actually connect to backend database by running a command.
+        try:
+            with self.postgres.connect_to_database(PGB) as conn, conn.cursor() as cursor:
+                # TODO find a better smoke check
+                cursor.execute("SELECT version();")
+            conn.close()
+        except psycopg2.Error:
+            logger.error("PostgreSQL connection failed")
             return False
 
         return True
