@@ -174,13 +174,8 @@ class BackendDatabaseRequires(Object):
             # this doesn't trigger if we're scaling the other app.
             return
 
-        # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
-        # relation. Therefore, we should add something to verify we're scaling down.
         planned_units = self.charm.app.planned_units()
-        logger.error(planned_units)
-        logger.error(self.charm.peers.relation.units)
-        logger.error(self.charm.peers.relation)
-        if planned_units < len(self.charm.peers.relation.units):  # and planned_units != 0:
+        if planned_units < len(self.charm.peers.relation.units) and planned_units != 0:
             # check that we're scaling down, but remove the relation if we're removing pgbouncer
             # entirely.
             return
