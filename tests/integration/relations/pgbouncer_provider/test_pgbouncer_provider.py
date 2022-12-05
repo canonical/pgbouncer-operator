@@ -397,7 +397,6 @@ async def test_scaling(ops_test: OpsTest):
 @pytest.mark.client_relation
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
-    logger.info(await ops_test.juju("debug-log", "--replay", "--no-tail"))
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
