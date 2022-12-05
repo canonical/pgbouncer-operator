@@ -245,6 +245,7 @@ async def test_two_applications_dont_share_the_same_relation_data(
     assert application_connection_string != another_application_connection_string
 
 
+@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_an_application_can_connect_to_multiple_database_clusters(
     ops_test: OpsTest, pgb_charm
@@ -266,7 +267,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
             ),
         )
         await ops_test.model.add_relation(f"{PGB_2}:{BACKEND_RELATION_NAME}", f"{PG_2}:database")
-        await ops_test.model.wait_for_idle(status="active")
+        await ops_test.model.wait_for_idle(status="active", timeout=1200)
     # Relate the application with both database clusters
     # and wait for them exchanging some connection data.
     first_cluster_relation = await ops_test.model.add_relation(
@@ -383,7 +384,6 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     assert "some data" in json.loads(run_update_query["results"])[0]
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
