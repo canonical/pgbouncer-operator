@@ -42,7 +42,6 @@ SECOND_DATABASE_RELATION_NAME = "second-database"
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
-@pytest.mark.dev
 @pytest.mark.abort_on_fail
 @pytest.mark.client_relation
 async def test_database_relation_with_charm_libraries(
@@ -111,7 +110,6 @@ async def test_database_version(ops_test: OpsTest):
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
     )
-    time.sleep(10)
     # Get the version of the database and compare with the information that was retrieved directly
     # from the database.
     app_unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
@@ -245,7 +243,6 @@ async def test_two_applications_dont_share_the_same_relation_data(
     assert application_connection_string != another_application_connection_string
 
 
-@pytest.mark.dev
 @pytest.mark.client_relation
 async def test_an_application_can_connect_to_multiple_database_clusters(
     ops_test: OpsTest, pgb_charm
@@ -267,7 +264,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
             ),
         )
         await ops_test.model.add_relation(f"{PGB_2}:{BACKEND_RELATION_NAME}", f"{PG_2}:database")
-        await ops_test.model.wait_for_idle(status="active", timeout=1200)
+        await ops_test.model.wait_for_idle(status="active", timeout=1400)
     # Relate the application with both database clusters
     # and wait for them exchanging some connection data.
     first_cluster_relation = await ops_test.model.add_relation(
@@ -367,21 +364,12 @@ async def test_with_legacy_relation(ops_test: OpsTest):
     )
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
-    #  Check new relation still works
-    update_query = (
-        "DROP TABLE IF EXISTS legacy_test;"
-        "CREATE TABLE legacy_test(data TEXT);"
-        "INSERT INTO legacy_test(data) VALUES('some data');"
-        "SELECT data FROM legacy_test;"
-    )
-    run_update_query = await run_sql_on_application_charm(
+    await check_new_relation(
         ops_test,
-        unit_name=CLIENT_UNIT_NAME,
-        query=update_query,
-        dbname=TEST_DBNAME,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        dbname=TEST_DBNAME,
     )
-    assert "some data" in json.loads(run_update_query["results"])[0]
 
 
 @pytest.mark.client_relation

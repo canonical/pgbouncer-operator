@@ -154,7 +154,7 @@ class PgBouncerProvider(Object):
 
         depart_flag = f"{self.relation_name}_{event.relation.id}_departing"
         if self.charm.peers.unit_databag.get(depart_flag, None) == "true":
-            # This is being removed, so do nothing that relates to the relation.
+            # This unit is being removed, so don't update the relation.
             self.charm.peers.unit_databag.pop(depart_flag, None)
             return
 
