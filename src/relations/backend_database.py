@@ -160,6 +160,7 @@ class BackendDatabaseRequires(Object):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
             # this doesn't trigger if we're scaling the other app.
+            logger.error("exiting departed-event - nothing to do")
             return
 
         if event.departing_unit == self.charm.unit:
@@ -169,19 +170,16 @@ class BackendDatabaseRequires(Object):
             logger.error("added relation-departing flag to peer databag")
             return
 
-        # TODO if we delete the leader unit when scaling, this runs and we effectively remove the
-        # relation. Therefore, we should add something to the peer-relation-departed hook as a flag
-        # to verify we're scaling down. This may be solved by the return on line 170
-
         try:
             # TODO de-authorise all databases
             logger.info("removing auth user")
             self.remove_auth_function([PGB, PG])
         except psycopg2.Error:
-            self.charm.unit.status = BlockedStatus(
+            fail_auth_remove = (
                 "failed to remove auth user when disconnecting from postgres application."
             )
-            event.fail()
+            self.charm.unit.status = BlockedStatus(fail_auth_remove)
+            logger.error(fail_auth_remove)
             return
 
         self.postgres.delete_user(self.auth_user)
