@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 
 MAILMAN3_CORE_APP_NAME = "mailman3-core"
 APPLICATION_UNITS = 1
-DATABASE_UNITS = 1
+DATABASE_UNITS = 2
 RELATION_NAME = "db"
+PG = "postgresql"
 
 
 @pytest.mark.legacy_relation
@@ -87,3 +88,12 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         # Delete the domain and check that the change was persisted.
         domain.delete()
         assert domain_name not in [domain.mail_host for domain in client.domains]
+
+
+@pytest.mark.legacy_relation
+async def test_remove_relation(ops_test: OpsTest):
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:db", f"{MAILMAN3_CORE_APP_NAME}:db"
+    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle([PGB, PG], status="active", timeout=300)

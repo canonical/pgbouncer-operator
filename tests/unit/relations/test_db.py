@@ -228,7 +228,10 @@ class TestDb(unittest.TestCase):
         new_callable=PropertyMock,
         return_value={},
     )
-    @patch("relations.db.DbProvides._get_read_only_endpoint", return_value=None)
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.get_read_only_endpoints",
+        return_value=[],
+    )
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_update_postgres_endpoints(
@@ -247,7 +250,7 @@ class TestDb(unittest.TestCase):
         assert f"{database}_standby" not in cfg["databases"].keys()
         assert PG not in cfg["databases"].keys()
         _render_cfg.assert_called_with(cfg, reload_pgbouncer=reload_pgbouncer)
-        _read_only_endpoint.return_value = "readonly:endpoint"
+        _read_only_endpoint.return_value = ["readonly:endpoint"]
 
         self.db_relation.update_postgres_endpoints(relation, reload_pgbouncer)
         assert database in cfg["databases"].keys()
@@ -309,6 +312,7 @@ class TestDb(unittest.TestCase):
         mock_event.relation.data = {}
         mock_event.relation.data[self.charm.app] = mock_databag
         mock_event.relation.data[self.charm.unit] = dict(mock_databag)
+        self.charm.peers.app_databag[f"db-{mock_event.relation.id}-relation-breaking"] = "true"
 
         self.db_relation._on_relation_broken(mock_event)
 

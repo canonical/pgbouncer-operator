@@ -31,7 +31,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
         "postgresql-charmers-postgresql-client",
         application_name=PSQL,
     )
-    await deploy_postgres_bundle(ops_test, db_units=1)
+    await deploy_postgres_bundle(ops_test, db_units=2)
 
     psql_relation = await ops_test.model.relate(f"{PSQL}:db", f"{PGB}:{RELATION}")
     wait_for_relation_joined_between(ops_test, PGB, PSQL)
@@ -61,3 +61,10 @@ async def test_db_admin_with_psql(ops_test: OpsTest) -> None:
     db_command = "CREATE DATABASE test_db;"
     rtn, _, err = await run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
+
+
+@pytest.mark.legacy_relation
+async def test_remove_relation(ops_test: OpsTest):
+    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle([PGB, PG], status="active", timeout=300)

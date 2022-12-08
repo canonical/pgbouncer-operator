@@ -103,14 +103,39 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
+    @patch("relations.peers.Peers.remove_user")
     @patch("charm.PgBouncerCharm.update_postgres_endpoints")
+    @patch("charm.PgBouncerCharm.update_client_connection_info")
     @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
-    def test_relation_departed(self, _remove_auth, _update_endpoints, _postgres, _auth_user):
+    def test_relation_departed(
+        self,
+        _remove_auth,
+        _update_conn_info,
+        _update_endpoints,
+        _remove_user,
+        _postgres,
+        _auth_user,
+    ):
         self.harness.set_leader()
         depart_event = MagicMock()
+
+        depart_event.departing_unit.app = self.charm.app
+        self.backend._on_relation_departed(depart_event)
+        _update_endpoints.assert_called()
+        _update_endpoints.reset_mock()
+        _update_conn_info.assert_called()
+        _update_conn_info.reset_mock()
+        _remove_auth.assert_called()
+        _remove_auth.reset_mock()
+        _postgres().delete_user.assert_called()
+        _remove_user.assert_called()
+
+        # Check departing when we're just scaling down this
         depart_event.departing_unit = self.charm.unit
         self.backend._on_relation_departed(depart_event)
-        _remove_auth.assert_called()
+        _update_endpoints.assert_called()
+        _update_conn_info.assert_called()
+        _remove_auth.assert_not_called()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -119,6 +144,12 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.delete_file")
     def test_relation_broken(self, _delete_file, _render, _cfg, _postgres):
+        event = MagicMock()
+        self.harness.set_leader()
+        self.charm.peers.app_databag[
+            f"{BACKEND_RELATION_NAME}-{event.relation.id}-relation-breaking"
+        ] = "true"
+
         postgres = _postgres.return_value
         postgres.user = "test_user"
         cfg = _cfg.return_value
@@ -126,7 +157,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         cfg["pgbouncer"]["auth_user"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
 
-        self.backend._on_relation_broken(MagicMock())
+        self.backend._on_relation_broken(event)
 
         assert "test_user" not in cfg["pgbouncer"]
         assert "auth_user" not in cfg["pgbouncer"]

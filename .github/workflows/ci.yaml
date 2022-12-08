@@ -60,8 +60,8 @@ jobs:
       - name: Run integration tests
         run: tox -e backend-integration
 
-  integration-legacy-relations:
-    name: Integration tests for legacy relations
+  integration-client-relations:
+    name: Integration tests for client relations
     needs:
       - lint
       - unit-test
@@ -75,8 +75,24 @@ jobs:
           provider: lxd
           lxd-channel: 5.7/stable
       - name: Run integration tests
-        run: tox -e legacy-relation-integration
+        run: tox -e client-relation-integration
 
+  integration-legacy-client-relations:
+    name: Integration tests for legacy client relations
+    needs:
+      - lint
+      - unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: lxd
+          lxd-channel: 5.7/stable
+      - name: Run integration tests
+        run: tox -e legacy-client-relation-integration
 
   integration-scaling:
     name: Integration tests for scaling pgbouncer (microk8s)

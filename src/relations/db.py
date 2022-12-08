@@ -83,6 +83,7 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
 └──────────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────┘
 """  # noqa: W505
+
 import logging
 from typing import Dict, Iterable
 
@@ -211,7 +212,6 @@ class DbProvides(Object):
         user = self._generate_username(join_event)
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
-            self.charm.peers.add_user(user, password)
         else:
             if not (password := self.charm.peers.app_databag.get(user, None)):
                 join_event.defer()
@@ -249,6 +249,7 @@ class DbProvides(Object):
 
         # set up auth function
         self.charm.backend.initialise_auth_function([database])
+        self.charm.peers.add_user(user, password)
 
         # Create user in pgbouncer config
         cfg = self.charm.read_pgb_config()
@@ -306,8 +307,11 @@ class DbProvides(Object):
             },
         )
 
-    def update_connection_info(self, relation: Relation, port: str):
+    def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection info."""
+        if not port:
+            port = self.charm.config["listen_port"]
+
         databag = self.get_databags(relation)[0]
         database = databag.get("database")
         user = databag.get("user")
@@ -318,7 +322,7 @@ class DbProvides(Object):
             return
 
         master_dbconnstr = {
-            "host": self.charm.peers.leader_ip,
+            "host": self.charm.leader_ip,
             "dbname": database,
             "port": port,
             "user": user,
@@ -332,7 +336,7 @@ class DbProvides(Object):
             "host": self.charm.unit_ip,
         }
 
-        standby_ips = self.charm.peers.units_ips - {self.charm.peers.leader_ip}
+        standby_ips = self.charm.peers.units_ips - {self.charm.leader_ip}
         # Only one standby value in legacy relation on pgbouncer. There are multiple standbys on
         # postgres, but not on the legacy pgbouncer charm.
         if len(standby_ips) > 0:
@@ -368,12 +372,12 @@ class DbProvides(Object):
             "auth_user": self.charm.backend.auth_user,
         }
 
-        read_only_endpoint = self._get_read_only_endpoint()
-        if read_only_endpoint:
+        read_only_endpoints = self.charm.backend.get_read_only_endpoints()
+        if len(read_only_endpoints) > 0:
             cfg["databases"][f"{database}_standby"] = {
-                "host": read_only_endpoint.split(":")[0],
+                "host": ",".join([ep.split(":")[0] for ep in read_only_endpoints]),
                 "dbname": database,
-                "port": read_only_endpoint.split(":")[1],
+                "port": next(iter(read_only_endpoints)).split(":")[1],
                 "auth_user": self.charm.backend.auth_user,
             }
         else:
@@ -407,6 +411,13 @@ class DbProvides(Object):
             {"allowed-units": self.get_allowed_units(departed_event.relation)},
         )
 
+        # If a departed event is dispatched to itself, this relation isn't being scaled down -
+        # it's being removed
+        if departed_event.app == self.charm.app and self.charm.unit.is_leader():
+            self.charm.peers.app_databag[
+                f"{self.relation_name}-{self.relation.id}-relation-breaking"
+            ] = "true"
+
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
 
@@ -417,9 +428,17 @@ class DbProvides(Object):
         command.
         """
         # Only delete relation data if we're the leader, and we're the last unit to leave.
-        if not self.charm.unit.is_leader() or len(self.charm.peers.units_ips) > 1:
+        if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             return
+        break_flag = f"{self.relation_name}-{broken_event.relation.id}-relation-breaking"
+        if not self.charm.peers.app_databag.get(break_flag, None):
+            # This relation isn't being removed, so we don't need to do the relation teardown
+            # steps.
+            self.update_connection_info(broken_event.relation)
+            return
+
+        del self.charm.peers.app_databag[break_flag]
 
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
@@ -458,8 +477,8 @@ class DbProvides(Object):
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
-
         self.charm.peers.remove_user(user)
+
         try:
             self.charm.backend.postgres.delete_user(user)
         except PostgreSQLDeleteUserError as err:
@@ -492,17 +511,6 @@ class DbProvides(Object):
         relation_id = event.relation.id
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
-
-    def _get_read_only_endpoint(self):
-        """Get a read-only-endpoint from backend relation.
-
-        Though multiple readonly endpoints can be provided by the new backend relation, only one
-        can be consumed by this legacy relation.
-        """
-        read_only_endpoints = self.charm.backend.postgres_databag.get("read-only-endpoints")
-        if read_only_endpoints is None or len(read_only_endpoints) == 0:
-            return None
-        return read_only_endpoints.split(",")[0]
 
     def _get_state(self) -> str:
         """Gets the given state for this unit.
