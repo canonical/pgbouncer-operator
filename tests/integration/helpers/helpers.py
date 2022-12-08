@@ -242,7 +242,11 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
 
 
 async def deploy_postgres_bundle(
-    ops_test: OpsTest, pgb_config: dict = {}, pg_config: dict = {}, db_units=3
+    ops_test: OpsTest,
+    pgb_config: dict = {},
+    pgb_series: str = "jammy",
+    pg_config: dict = {},
+    db_units=3,
 ):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
 

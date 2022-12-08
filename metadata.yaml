@@ -18,6 +18,7 @@ maintainers:
   "Will Fitch <will.fitch@canonical.com>"
 
 series:
+  - jammy
   - focal
 
 peers:
