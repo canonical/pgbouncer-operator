@@ -83,6 +83,7 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
 └──────────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────┘
 """  # noqa: W505
+
 import logging
 from typing import Dict, Iterable
 

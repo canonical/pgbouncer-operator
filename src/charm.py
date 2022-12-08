@@ -43,6 +43,7 @@ class PgBouncerCharm(CharmBase):
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
+        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
@@ -112,6 +113,9 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
+
+    def _on_leader_elected(self, _):
+        self.peers.update_connection()
 
     def _on_update_status(self, _) -> None:
         """Update Status hook."""
@@ -350,6 +354,8 @@ class PgBouncerCharm(CharmBase):
         # Skip updates if backend.postgres doesn't exist yet.
         if not self.backend.postgres or not self.unit.is_leader():
             return
+
+        self.unit.status = MaintenanceStatus("Model changed - updating postgres endpoints")
 
         for relation in self.model.relations.get("db", []):
             self.legacy_db_relation.update_postgres_endpoints(relation, reload_pgbouncer=False)

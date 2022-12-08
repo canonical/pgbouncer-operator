@@ -14,6 +14,13 @@ juju deploy postgresql --channel=edge -n 3
 juju add-relation pgbouncer:backend-database postgresql:database
 ```
 
+To deploy and relate your application to the above cluster, using the updated [data platform relation](https://github.com/canonical/data-platform-libs/blob/main/lib/charms/data_platform_libs/v0/database_requires.py) (recommended):
+
+```bash
+juju deploy my-app
+juju add-relation pgbouncer:database my-app:pg-backend
+```
+
 To deploy and relate an application to the above cluster, using the legacy pgsql relation (not recommended - this will be deprecated in future):
 
 ```bash
@@ -72,9 +79,10 @@ The following config values are set as constants in the charm:
 
 ## Relations
 
-- `database:postgresql-client`
+- `database`
   - Provides a relation to client applications.
-  - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_standby"`.
+  - Importantly, this relation doesn't handle scaling the same way others do. All PgBouncer nodes are read/writes, and they expose the read/write nodes of the backend database through the database name `f"{dbname}_readonly"`.
+  - However, the leader node is the only node in the `"endpoints"` field, and the follower nodes are stored in the `"read-only-endpoints"` field of the relation databag. This is to preserve interoperability with the postgres charm.
 - `backend-database`
   - Relates to backend [postgresql-operator](https://github.com/canonical/postgresql-operator) database charm. Without a backend relation, this charm will enter BlockedStatus - if there's no Postgres backend, this charm has no purpose.
 

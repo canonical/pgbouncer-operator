@@ -90,6 +90,7 @@ async def test_mailman3_core_db(ops_test: OpsTest) -> None:
         assert domain_name not in [domain.mail_host for domain in client.domains]
 
 
+@pytest.mark.legacy_relation
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:db", f"{MAILMAN3_CORE_APP_NAME}:db"
