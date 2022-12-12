@@ -8,6 +8,8 @@ options:
     description: |
       The port on which pgbouncer listens for traffic. Corresponds to
       listen_port in pgbouncer config.
+
+      Updating this will cause service interruption.
     type: int
 
   pool_mode:

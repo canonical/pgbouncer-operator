@@ -28,6 +28,8 @@ from relations.db import DbProvides
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 
+from configparser import ConfigParser, ParsingError
+
 logger = logging.getLogger(__name__)
 
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
@@ -86,9 +88,10 @@ class PgBouncerCharm(CharmBase):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
-        # Copy pgbouncer service file and reload systemd
+        # Copy pgbouncer service & socket systemd files, and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
-        systemd.daemon_reload()
+        self.update_systemd_socket()
+
         # Apt package starts its own pgbouncer service. Disable this so we can start and control
         # our own.
         systemd.service_stop(PGB)
@@ -139,10 +142,9 @@ class PgBouncerCharm(CharmBase):
         )
 
         if cfg["pgbouncer"]["listen_port"] != self.config["listen_port"]:
-            # This emits relation-changed events to every client relation, so only do it when
-            # necessary
             self.update_client_connection_info(self.config["listen_port"])
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
+            self.update_systemd_socket()
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
 
@@ -278,6 +280,14 @@ class PgBouncerCharm(CharmBase):
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
+
+    def update_systemd_socket(self):
+        """Updates pgbouncer systemd socket, and reloads systemd."""
+        with open("src/pgbouncer@.socket", "r") as file:
+            socket_cfg = file.read()
+        socket_cfg.replace("PORT_PLACEHOLDER", self.config["listen_port"])
+        self.render_file("/etc/systemd/system/pgbouncer@.socket", socket_cfg, perms=0o664)
+        systemd.daemon_reload()
 
     # =================
     #  Charm Utilities

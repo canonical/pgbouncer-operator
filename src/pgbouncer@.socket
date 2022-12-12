@@ -1,0 +1,12 @@
+[Unit]
+Description=sockets for PgBouncer
+
+[Socket]
+ListenStream=PORT_PLACEHOLDER
+ListenStream=%i
+ListenStream=/tmp/.s.PGSQL.%i
+
+ReusePort=true
+
+[Install]
+WantedBy=sockets.target
