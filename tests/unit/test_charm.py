@@ -61,10 +61,6 @@ class TestCharm(unittest.TestCase):
         _mkdir.assert_any_call(PGB_DIR, 0o700)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
 
-        for service_id in self.charm.service_ids:
-            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o700)
-            _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
-
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         _render_configs.assert_called_once_with(initial_cfg)

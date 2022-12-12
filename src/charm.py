@@ -73,12 +73,6 @@ class PgBouncerCharm(CharmBase):
         os.mkdir(PGB_DIR, 0o700)
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
 
-        # Make a directory for each service to store logs, configs, pidfiles and sockets.
-        # TODO this can be removed once socket activation is implemented (JIRA-218)
-        for service_id in self.service_ids:
-            os.mkdir(f"{INSTANCE_PATH}{service_id}", 0o700)
-            os.chown(f"{INSTANCE_PATH}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
