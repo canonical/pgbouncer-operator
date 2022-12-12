@@ -219,22 +219,18 @@ class PgBouncerCharm(CharmBase):
 
         self.peers.update_cfg(config)
 
-        # create a copy of the config so the original reference is unchanged.
-        primary_config = deepcopy(config)
-
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
-        self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=INI_PATH)
+        self._render_pgb_config(config, config_path=INI_PATH)
 
         # Modify & render config files for each service instance
         for service_id in self.service_ids:
             instance_dir = f"{INSTANCE_PATH}{service_id}"  # Generated in on_install hook
 
-            primary_config[PGB]["unix_socket_dir"] = instance_dir
-            primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            primary_config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
+            config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
+            config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
 
-            self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
+            self._render_pgb_config(config, config_path=f"{instance_dir}/pgbouncer.ini")
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
