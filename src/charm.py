@@ -28,8 +28,6 @@ from relations.db import DbProvides
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 
-from configparser import ConfigParser, ParsingError
-
 logger = logging.getLogger(__name__)
 
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
@@ -285,7 +283,7 @@ class PgBouncerCharm(CharmBase):
         """Updates pgbouncer systemd socket, and reloads systemd."""
         with open("src/pgbouncer@.socket", "r") as file:
             socket_cfg = file.read()
-        socket_cfg.replace("PORT_PLACEHOLDER", self.config["listen_port"])
+        socket_cfg.replace("PORT_PLACEHOLDER", str(self.config["listen_port"]))
         self.render_file("/etc/systemd/system/pgbouncer@.socket", socket_cfg, perms=0o664)
         systemd.daemon_reload()
 
