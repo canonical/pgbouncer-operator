@@ -3,8 +3,7 @@ Description=sockets for PgBouncer
 
 [Socket]
 ListenStream=PORT_PLACEHOLDER
-ListenStream=%i
-ListenStream=/tmp/.s.PGSQL.%i
+ListenStream=/var/lib/postgresql/pgbouncer/.s.PGSQL.PORT_PLACEHOLDER
 
 ReusePort=true
 
