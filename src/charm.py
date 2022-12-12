@@ -154,21 +154,19 @@ class PgBouncerCharm(CharmBase):
             wait_str = "waiting for pgbouncer to start"
             logger.warning(wait_str)
             return WaitingStatus(wait_str)
+        try:
+            for service in self.pgb_services:
+                if not systemd.service_running(f"{service}"):
+                    return BlockedStatus(f"{service} is not running")
+        except systemd.SystemdError as e:
+            logger.error(e)
+            return BlockedStatus("failed to get pgbouncer status")
 
         if not self.backend.ready:
             # We can't relate an app to the backend database without a backend postgres relation
             backend_wait_msg = "waiting for backend database relation to connect"
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
-
-        try:
-            for service in self.pgb_services:
-                if not systemd.service_running(f"{service}"):
-                    return BlockedStatus(f"{service} is not running")
-
-        except systemd.SystemdError as e:
-            logger.error(e)
-            return BlockedStatus("failed to get pgbouncer status")
 
         return ActiveStatus()
 
@@ -236,7 +234,7 @@ class PgBouncerCharm(CharmBase):
         """Updates pgbouncer systemd socket, and reloads systemd."""
         with open("src/pgbouncer@.socket", "r") as file:
             socket_cfg = file.read()
-        socket_cfg.replace("PORT_PLACEHOLDER", str(self.config["listen_port"]))
+        socket_cfg = socket_cfg.replace("PORT_PLACEHOLDER", str(self.config["listen_port"]))
         self.render_file("/etc/systemd/system/pgbouncer@.socket", socket_cfg, perms=0o664)
         systemd.daemon_reload()
 

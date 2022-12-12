@@ -65,12 +65,11 @@ async def test_change_config(ops_test: OpsTest):
 
     assert existing_cfg.render() == primary_cfg.render()
 
-    # Validating service config files are correctly written is handled by render_pgb_config and its
-    # tests, but we need to make sure they at least exist in the right places.
-    for service_id in range(cores):
-        path = f"{PGB_DIR}/pgbouncer.ini"
-        service_cfg = await helpers.get_cfg(ops_test, unit.name, path=path)
-        assert service_cfg is not f"cat: {path}: No such file or directory"
+    # Validating service config file is correctly written is handled by render_pgb_config and its
+    # tests, but we need to make sure it at least exists in the right places.
+    path = f"{PGB_DIR}/pgbouncer.ini"
+    service_cfg = await helpers.get_cfg(ops_test, unit.name, path=path)
+    assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
 @pytest.mark.standalone

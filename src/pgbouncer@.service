@@ -4,11 +4,11 @@ After=network.target
 Requires=pgbouncer@%i.socket
 
 [Service]
-Type=simple
+Type=notify
 User=postgres
 # -R flag lets separate pgbouncer instances reuse sockets from previous instances, so on restart
 # they'll reuse the same sockets, preserving connections.
-ExecStart=/sbin/pgbouncer -R /var/lib/postgresql/pgbouncer/pgbouncer.ini
+ExecStart=/sbin/pgbouncer /var/lib/postgresql/pgbouncer/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 Restart=on-failure
