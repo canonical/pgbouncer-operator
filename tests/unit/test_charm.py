@@ -235,29 +235,15 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
     def test_render_pgb_config(self, _render, _reload):
-        self.charm.service_ids = [0, 1]
         default_cfg = pgb.PgbConfig(DEFAULT_CFG)
-        cfg_list = [default_cfg.render()]
-
-        for service_id in self.charm.service_ids:
-            cfg = pgb.PgbConfig(DEFAULT_CFG)
-            instance_dir = f"{PGB_DIR}/instance_{service_id}"
-
-            cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
-            cfg["pgbouncer"]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            cfg["pgbouncer"]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
-
-            cfg_list.append(cfg.render())
 
         self.charm.render_pgb_config(default_cfg, reload_pgbouncer=False)
-
-        _render.assert_any_call(INI_PATH, cfg_list[0], 0o700)
-        _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o700)
-        _render.assert_any_call(f"{PGB_DIR}/instance_1/pgbouncer.ini", cfg_list[2], 0o700)
-
+        _render.assert_any_call(INI_PATH, default_cfg.render(), 0o700)
         _reload.assert_not_called()
         # MaintenanceStatus will exit once pgbouncer reloads.
         self.assertIsInstance(self.harness.model.unit.status, MaintenanceStatus)
 
-        self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.charm.render_pgb_config(default_cfg, reload_pgbouncer=True)
+        _render.assert_any_call(INI_PATH, default_cfg.render(), 0o700)
         _reload.assert_called_once()
+        self.assertIsInstance(self.harness.model.unit.status, MaintenanceStatus)

@@ -9,7 +9,6 @@ import os
 import pwd
 import shutil
 import subprocess
-from copy import deepcopy
 from typing import List, Optional, Union
 
 from charms.operator_libs_linux.v0 import apt
@@ -206,54 +205,18 @@ class PgBouncerCharm(CharmBase):
         return config
 
     def render_pgb_config(self, config: pgb.PgbConfig, reload_pgbouncer=False):
-        """Derives config files for the number of required services from given config.
-
-        This method takes a primary config and generates one unique config for each intended
-        instance of pgbouncer, implemented as a templated systemd service.
-
-        TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
-             https://warthogs.atlassian.net/browse/DPE-218. This is available in Ubuntu 22.04, but
-             not 20.04.
-        """
-        self.unit.status = MaintenanceStatus("updating PgBouncer config")
-
-        self.peers.update_cfg(config)
-
-        # Render primary config. This config is the only copy that the charm reads from to create
-        # PgbConfig objects, and is modified below to implement individual services.
-        self._render_pgb_config(config, config_path=INI_PATH)
-
-        # Modify & render config files for each service instance
-        for service_id in self.service_ids:
-            instance_dir = f"{INSTANCE_PATH}{service_id}"  # Generated in on_install hook
-
-            config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
-
-            self._render_pgb_config(config, config_path=f"{instance_dir}/pgbouncer.ini")
-
-        if reload_pgbouncer:
-            self.reload_pgbouncer()
-
-    def _render_pgb_config(
-        self,
-        pgbouncer_ini: pgb.PgbConfig,
-        reload_pgbouncer: bool = False,
-        config_path: str = INI_PATH,
-    ) -> None:
-        """Render config object to pgbouncer.ini file.
+        """Renders PGB config object to pgbouncer.ini file.
 
         Args:
-            pgbouncer_ini: PgbConfig object containing pgbouncer config.
+            config: PgbConfig object containing pgbouncer config.
             reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
                 application. When config files are updated, pgbouncer must be restarted for the
                 changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
-            config_path: intended location for the config.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
-        self.render_file(config_path, pgbouncer_ini.render(), 0o700)
-
+        self.peers.update_cfg(config)
+        self.render_file(INI_PATH, config.render(), 0o700)
         if reload_pgbouncer:
             self.reload_pgbouncer()
 
