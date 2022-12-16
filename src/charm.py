@@ -87,9 +87,10 @@ class PgBouncerCharm(CharmBase):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
-        # Copy pgbouncer service file and reload systemd
+        # Copy pgbouncer service files and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
         with open("src/pgbouncer.target") as target_file:
+            # Since pgb is single-threaded, we want as many pgb services as there are cpu cores.
             target_cfg = target_file.read().replace("PGB_SERVICES", " ".join(self.pgb_services))
         self.render_file("/etc/systemd/system/pgbouncer.target", target_cfg, perms=0o664)
         systemd.daemon_reload()
@@ -172,11 +173,9 @@ class PgBouncerCharm(CharmBase):
             return BlockedStatus(backend_wait_msg)
 
         try:
+            # systemd target file should ensure the required pgb services are online.
             if not systemd.service_running(SYSTEMD_TARGET):
                 return BlockedStatus(f"{SYSTEMD_TARGET} is not running")
-            # for service in self.pgb_services:
-            #     if not systemd.service_running(f"{service}"):
-            #         return BlockedStatus(f"{service} is not running")
 
         except systemd.SystemdError as e:
             logger.error(e)

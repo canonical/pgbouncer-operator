@@ -1,6 +1,6 @@
 [Unit]
 Description=pgbouncer service target
-Requires=PGB_SERVICES
+BindsTo=PGB_SERVICES
 
 [Install]
 WantedBy=multi-user.target
