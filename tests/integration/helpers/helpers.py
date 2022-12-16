@@ -9,9 +9,9 @@ from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
 
-from juju import Unit
 import yaml
 from charms.pgbouncer_k8s.v0 import pgb
+from juju import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 

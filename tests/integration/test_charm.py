@@ -84,7 +84,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(pgrep pgbouncer)")
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=(3*60))
+        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=(3 * 60))
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # verify all processes start again
