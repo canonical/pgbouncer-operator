@@ -1,7 +1,6 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import os
 import subprocess
 import unittest
 from copy import deepcopy
@@ -73,12 +72,11 @@ class TestCharm(unittest.TestCase):
 
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.postgres",
+        "relations.backend_database.BackendDatabaseRequires.ready",
         new_callable=PropertyMock,
-        return_value=None,
+        return_value=False,
     )
-    def test_on_start(self, _has_relation, _start):
-        intended_instances = self._cores = os.cpu_count()
+    def test_on_start(self, _backend_ready, _start):
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
         # Charm should fail out after calling _start once
@@ -89,27 +87,23 @@ class TestCharm(unittest.TestCase):
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
-        _start.assert_has_calls(calls)
+        _start.assert_has_calls([call("pgbouncer.target")])
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
         # Testing charm starts the correct amount of pgbouncer instances and enters activestatus if
         # everything's working fine.
         _start.reset_mock()
         _start.side_effect = None
-        _has_relation.return_value = True
+        _backend_ready.return_value = True
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
-        _start.assert_has_calls(calls)
+        _start.assert_has_calls([call("pgbouncer.target")])
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
     @patch("charm.PgBouncerCharm.check_status", return_value=BlockedStatus())
     def test_reload_pgbouncer(self, _running, _restart):
-        intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
-        _restart.assert_has_calls(calls)
+        _restart.assert_has_calls([call("pgbouncer.target")])
         _running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
@@ -136,8 +130,7 @@ class TestCharm(unittest.TestCase):
 
         # check fail when services aren't all running
         self.assertIsInstance(self.charm.check_status(), BlockedStatus)
-        calls = [call("pgbouncer@0")]
-        _running.assert_has_calls(calls)
+        _running.assert_has_calls([call("pgbouncer.target")])
         _running.return_value = True
 
         # check fail when we can't get service status
@@ -146,10 +139,8 @@ class TestCharm(unittest.TestCase):
         _running.side_effect = None
 
         # otherwise check all services and return activestatus
-        intended_instances = self._cores = os.cpu_count()
         self.assertIsInstance(self.charm.check_status(), ActiveStatus)
-        calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
-        _running.assert_has_calls(calls)
+        _running.assert_has_calls([call("pgbouncer.target")])
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
