@@ -90,7 +90,7 @@ class PgBouncerCharm(CharmBase):
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
         with open("src/pgbouncer.target") as target_file:
-            target_cfg = target_file.read().replace("PGB_SERVICES", "".join(self.pgb_services))
+            target_cfg = target_file.read().replace("PGB_SERVICES", " ".join(self.pgb_services))
         self.render_file("/etc/systemd/system/pgbouncer.target", target_cfg, perms=0o664)
         systemd.daemon_reload()
         # Apt package starts its own pgbouncer service. Disable this so we can start and control
