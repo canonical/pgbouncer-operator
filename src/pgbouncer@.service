@@ -10,6 +10,7 @@ User=postgres
 ExecStart=/sbin/pgbouncer -R /var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
+PIDFile=/var/lib/postgresql/pgbouncer/instance_%i/pgbouncer.pid
 Restart=on-failure
 RestartSec=5s
 
