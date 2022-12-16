@@ -166,20 +166,19 @@ class PgBouncerCharm(CharmBase):
             logger.warning(wait_str)
             return WaitingStatus(wait_str)
 
+        try:
+            # systemd target file should ensure the required pgb services are online.
+            if not systemd.service_running(SYSTEMD_TARGET):
+                return BlockedStatus(f"{SYSTEMD_TARGET} is not running")
+        except systemd.SystemdError as e:
+            logger.error(e)
+            return BlockedStatus("failed to get pgbouncer systemd status")
+
         if not self.backend.ready:
             # We can't relate an app to the backend database without a backend postgres relation
             backend_wait_msg = "waiting for backend database relation to connect"
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
-
-        try:
-            # systemd target file should ensure the required pgb services are online.
-            if not systemd.service_running(SYSTEMD_TARGET):
-                return BlockedStatus(f"{SYSTEMD_TARGET} is not running")
-
-        except systemd.SystemdError as e:
-            logger.error(e)
-            return BlockedStatus("failed to get pgbouncer status")
 
         return ActiveStatus()
 

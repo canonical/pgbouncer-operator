@@ -84,11 +84,8 @@ async def get_running_instances(unit: str, service: str) -> int:
     Returns:
         an integer defining the number of running instances.
     """
-    get_running_instances = await unit.run(f"ps aux | grep {service}")
-    ps_output = get_running_instances.results.get("Stdout")
-    num_of_ps_lines = len(ps_output.split("\n"))
-    # one extra for grep process, and one for a blank line at the end
-    return num_of_ps_lines - 2
+    get_running_instances = await unit.run(f"pgrep -c {service}")
+    return int(get_running_instances.results.get("Stdout"))
 
 
 async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
