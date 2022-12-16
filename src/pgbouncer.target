@@ -1,5 +1,5 @@
 [Unit]
-Description=pgbouncer service target
+Description=pgbouncer service target file. This file gathers the necessary pgbouncer services from the charm and deploys them in a single command. It also will fail if one of the services fails.
 BindsTo=PGB_SERVICES
 
 [Install]
