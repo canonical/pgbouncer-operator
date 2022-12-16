@@ -41,7 +41,7 @@ FIRST_DATABASE_RELATION_NAME = "first-database"
 SECOND_DATABASE_RELATION_NAME = "second-database"
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
-
+@pytest.mark.dev
 @pytest.mark.abort_on_fail
 @pytest.mark.client_relation
 async def test_database_relation_with_charm_libraries(

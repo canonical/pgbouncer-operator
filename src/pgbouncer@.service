@@ -1,6 +1,7 @@
 [Unit]
 Description=connection pooler for postgresql (%i)
 After=network.target
+PartOf=pgbouncer.target
 
 [Service]
 Type=simple

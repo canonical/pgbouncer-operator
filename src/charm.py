@@ -31,6 +31,7 @@ from relations.pgbouncer_provider import PgBouncerProvider
 logger = logging.getLogger(__name__)
 
 INSTANCE_PATH = f"{PGB_DIR}/instance_"
+SYSTEMD_TARGET = "pgbouncer.target"
 
 
 class PgBouncerCharm(CharmBase):
@@ -55,7 +56,7 @@ class PgBouncerCharm(CharmBase):
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
-        self.pgb_services = [f"{PGB}@{service_id}" for service_id in self.service_ids]
+        self.pgb_services = [f"{PGB}@{service_id}.service" for service_id in self.service_ids]
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -88,6 +89,9 @@ class PgBouncerCharm(CharmBase):
 
         # Copy pgbouncer service file and reload systemd
         shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
+        with open("src/pgbouncer.target") as target_file
+            target_cfg = target_file.read().replace("PGB_SERVICES", "".join(self.pgb_services))
+        self.render_file("/etc/systemd/system/pgbouncer.target", socket_cfg, perms=0o664)
         systemd.daemon_reload()
         # Apt package starts its own pgbouncer service. Disable this so we can start and control
         # our own.
@@ -98,21 +102,20 @@ class PgBouncerCharm(CharmBase):
     def _on_start(self, _) -> None:
         """On Start hook.
 
-        Runs pgbouncer through systemd (configured in src/pgbouncer.service)
+        Runs pgbouncer through systemd (configured in src/pgbouncer@.service and
+        src/pgbouncer.template)
         """
         try:
-            for service in self.pgb_services:
-                logger.info(f"starting {service}")
-                systemd.service_start(f"{service}")
-
-            if self.backend.postgres:
-                self.unit.status = ActiveStatus("pgbouncer started")
-            else:
-                # Wait for backend relation relation if it doesn't exist
-                self.unit.status = BlockedStatus("waiting for backend database relation")
+            systemd.service_start(SYSTEMD_TARGET)
         except systemd.SystemdError as e:
             logger.error(e)
-            self.unit.status = BlockedStatus("failed to start pgbouncer")
+            self.unit.status = BlockedStatus("failed to start pgbouncer application")
+
+        if self.backend.ready:
+            self.unit.status = ActiveStatus("pgbouncer started")
+        else:
+            # Wait for backend relation relation if it doesn't exist
+            self.unit.status = BlockedStatus("waiting for backend database relation")
 
     def _on_leader_elected(self, _):
         self.peers.update_connection()
@@ -169,9 +172,11 @@ class PgBouncerCharm(CharmBase):
             return BlockedStatus(backend_wait_msg)
 
         try:
-            for service in self.pgb_services:
-                if not systemd.service_running(f"{service}"):
-                    return BlockedStatus(f"{service} is not running")
+            if not systemd.service_running(SYSTEMD_TARGET):
+                return BlockedStatus(f"{SYSTEMD_TARGET} is not running")
+            # for service in self.pgb_services:
+            #     if not systemd.service_running(f"{service}"):
+            #         return BlockedStatus(f"{service} is not running")
 
         except systemd.SystemdError as e:
             logger.error(e)
@@ -183,8 +188,7 @@ class PgBouncerCharm(CharmBase):
         """Restarts systemd pgbouncer service."""
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
-            for service in self.pgb_services:
-                systemd.service_restart(service)
+            systemd.service_restart(SYSTEMD_TARGET)
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
