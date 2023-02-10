@@ -29,6 +29,7 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
 logger = logging.getLogger(__name__)
 
 CLIENT_APP_NAME = "application"
+DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
 TEST_DBNAME = "application_first_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
@@ -424,3 +425,17 @@ async def test_relation_broken(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, pgb_unit_name)
     assert "first-database" not in cfg["databases"].keys()
     assert "first-database_readonly" not in cfg["databases"].keys()
+
+
+@pytest.mark.client_relation
+async def test_relation_with_data_integrator(ops_test: OpsTest):
+    """Test that the charm can be related to the data integrator without extra user roles."""
+    config = {"database-name": "test-database"}
+    await ops_test.model.deploy(
+        DATA_INTEGRATOR_APP_NAME,
+        channel="edge",
+        config=config,
+    )
+    await ops_test.model.add_relation(f"{PGB}:database", DATA_INTEGRATOR_APP_NAME)
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(status="active")
