@@ -92,7 +92,6 @@ async def test_scaling(ops_test: OpsTest):
     # Ensure the initial number of units in the application.
     initial_scale = 4
     async with ops_test.fast_forward():
-
         await scale_application(ops_test, PGB, initial_scale)
         await asyncio.gather(
             ops_test.model.wait_for_idle(apps=[MAILMAN], status="active", timeout=600),
