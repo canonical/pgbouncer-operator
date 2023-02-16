@@ -1,6 +1,11 @@
 name: Tests
 on:
   pull_request:
+    paths-ignore:
+      - '.gitignore'
+      - '.jujuignore'
+      - 'LICENSE'
+      - '**.md'
   workflow_call:
 
 jobs:
@@ -26,9 +31,24 @@ jobs:
       - name: Run tests
         run: tox -e unit
 
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@2.2.2
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
   integration-standalone:
     name: Integration tests for standalone charm
     needs:
+      - lib-check
       - lint
       - unit-test
     runs-on: ubuntu-22.04
@@ -46,6 +66,7 @@ jobs:
   integration-backend:
     name: Integration tests for backend relation
     needs:
+      - lib-check
       - lint
       - unit-test
     runs-on: ubuntu-22.04
@@ -63,6 +84,7 @@ jobs:
   integration-client-relations:
     name: Integration tests for client relations
     needs:
+      - lib-check
       - lint
       - unit-test
     runs-on: ubuntu-22.04
@@ -80,6 +102,7 @@ jobs:
   integration-legacy-client-relations:
     name: Integration tests for legacy client relations
     needs:
+      - lib-check
       - lint
       - unit-test
     runs-on: ubuntu-latest
@@ -97,6 +120,7 @@ jobs:
   integration-scaling:
     name: Integration tests for scaling pgbouncer (microk8s)
     needs:
+      - lib-check
       - lint
       - unit-test
     runs-on: ubuntu-22.04
