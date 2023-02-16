@@ -23,8 +23,6 @@ WAIT_MSG = "waiting for backend database relation to connect"
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.smoke
-@pytest.mark.standalone
 async def test_build_and_deploy(ops_test: OpsTest):
     """Build and deploy the charm-under-test.
 
@@ -38,8 +36,6 @@ async def test_build_and_deploy(ops_test: OpsTest):
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
 
-@pytest.mark.standalone
-@pytest.mark.smoke
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     async with ops_test.fast_forward():
@@ -73,7 +69,6 @@ async def test_change_config(ops_test: OpsTest):
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
-@pytest.mark.standalone
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
     expected_processes = await helpers.get_unit_cores(unit)
