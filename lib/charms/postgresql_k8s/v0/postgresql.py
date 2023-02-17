@@ -32,18 +32,10 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 5
+LIBPATCH = 7
 
 
 logger = logging.getLogger(__name__)
-
-
-class PostgreSQLListUsersError(Exception):
-    """Exception raised when retrieving PostgreSQL users list fails."""
-
-
-class PostgreSQLUpdateUserPasswordError(Exception):
-    """Exception raised when updating a user password fails."""
 
 
 class PostgreSQLCreateDatabaseError(Exception):
@@ -62,33 +54,48 @@ class PostgreSQLGetPostgreSQLVersionError(Exception):
     """Exception raised when retrieving PostgreSQL version fails."""
 
 
+class PostgreSQLListUsersError(Exception):
+    """Exception raised when retrieving PostgreSQL users list fails."""
+
+
+class PostgreSQLUpdateUserPasswordError(Exception):
+    """Exception raised when updating a user password fails."""
+
+
 class PostgreSQL:
     """Class to encapsulate all operations related to interacting with PostgreSQL instance."""
 
     def __init__(
         self,
         primary_host: str,
+        current_host: str,
         user: str,
         password: str,
         database: str,
     ):
         self.primary_host = primary_host
+        self.current_host = current_host
         self.user = user
         self.password = password
         self.database = database
 
-    def connect_to_database(self, database: str = None) -> psycopg2.extensions.connection:
+    def _connect_to_database(
+        self, database: str = None, connect_to_current_host: bool = False
+    ) -> psycopg2.extensions.connection:
         """Creates a connection to the database.
 
         Args:
             database: database to connect to (defaults to the database
                 provided when the object for this class was created).
+            connect_to_current_host: whether to connect to the current host
+                instead of the primary host.
 
         Returns:
              psycopg2 connection object.
         """
+        host = self.current_host if connect_to_current_host else self.primary_host
         connection = psycopg2.connect(
-            f"dbname='{database if database else self.database}' user='{self.user}' host='{self.primary_host}'"
+            f"dbname='{database if database else self.database}' user='{self.user}' host='{host}'"
             f"password='{self.password}' connect_timeout=1"
         )
         connection.autocommit = True
@@ -102,7 +109,7 @@ class PostgreSQL:
             user: user that will have access to the database.
         """
         try:
-            connection = self.connect_to_database()
+            connection = self._connect_to_database()
             cursor = connection.cursor()
             cursor.execute(f"SELECT datname FROM pg_database WHERE datname='{database}';")
             if cursor.fetchone() is None:
@@ -112,6 +119,31 @@ class PostgreSQL:
                     sql.Identifier(database), sql.Identifier(user)
                 )
             )
+            with self._connect_to_database(database=database) as conn:
+                with conn.cursor() as curs:
+                    statements = []
+                    curs.execute(
+                        "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' and schema_name <> 'information_schema';"
+                    )
+                    for row in curs:
+                        schema = sql.Identifier(row[0])
+                        statements.append(
+                            sql.SQL(
+                                "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} TO {};"
+                            ).format(schema, sql.Identifier(user))
+                        )
+                        statements.append(
+                            sql.SQL(
+                                "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {} TO {};"
+                            ).format(schema, sql.Identifier(user))
+                        )
+                        statements.append(
+                            sql.SQL(
+                                "GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA {} TO {};"
+                            ).format(schema, sql.Identifier(user))
+                        )
+                    for statement in statements:
+                        curs.execute(statement)
         except psycopg2.Error as e:
             logger.error(f"Failed to create database: {e}")
             raise PostgreSQLCreateDatabaseError()
@@ -128,7 +160,7 @@ class PostgreSQL:
             extra_user_roles: additional roles to be assigned to the user.
         """
         try:
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute(f"SELECT TRUE FROM pg_roles WHERE rolname='{user}';")
                 user_definition = (
                     f"WITH LOGIN{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}'"
@@ -152,16 +184,21 @@ class PostgreSQL:
         Args:
             user: user to be deleted.
         """
+        # First of all, check whether the user exists. Otherwise, do nothing.
+        users = self.list_users()
+        if user not in users:
+            return
+
         # List all databases.
         try:
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false;")
                 databases = [row[0] for row in cursor.fetchall()]
 
             # Existing objects need to be reassigned in each database
             # before the user can be deleted.
             for database in databases:
-                with self.connect_to_database(
+                with self._connect_to_database(
                     database
                 ) as connection, connection.cursor() as cursor:
                     cursor.execute(
@@ -172,7 +209,7 @@ class PostgreSQL:
                     cursor.execute(sql.SQL("DROP OWNED BY {};").format(sql.Identifier(user)))
 
             # Delete the user.
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute(sql.SQL("DROP ROLE {};").format(sql.Identifier(user)))
         except psycopg2.Error as e:
             logger.error(f"Failed to delete user: {e}")
@@ -185,7 +222,7 @@ class PostgreSQL:
             PostgreSQL version number.
         """
         try:
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute("SELECT version();")
                 # Split to get only the version number.
                 return cursor.fetchone()[0].split(" ")[1]
@@ -193,14 +230,34 @@ class PostgreSQL:
             logger.error(f"Failed to get PostgreSQL version: {e}")
             raise PostgreSQLGetPostgreSQLVersionError()
 
+    def is_tls_enabled(self, check_current_host: bool = False) -> bool:
+        """Returns whether TLS is enabled.
+
+        Args:
+            check_current_host: whether to check the current host
+                instead of the primary host.
+
+        Returns:
+            whether TLS is enabled.
+        """
+        try:
+            with self._connect_to_database(
+                connect_to_current_host=check_current_host
+            ) as connection, connection.cursor() as cursor:
+                cursor.execute("SHOW ssl;")
+                return "on" in cursor.fetchone()[0]
+        except psycopg2.Error:
+            # Connection errors happen when PostgreSQL has not started yet.
+            return False
 
     def list_users(self) -> Set[str]:
         """Returns the list of PostgreSQL database users.
+
         Returns:
             List of PostgreSQL database users.
         """
         try:
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute("SELECT usename FROM pg_catalog.pg_user;")
                 usernames = cursor.fetchall()
                 return {username[0] for username in usernames}
@@ -210,14 +267,16 @@ class PostgreSQL:
 
     def update_user_password(self, username: str, password: str) -> None:
         """Update a user password.
+
         Args:
             username: the user to update the password.
             password: the new password for the user.
+
         Raises:
             PostgreSQLUpdateUserPasswordError if the password couldn't be changed.
         """
         try:
-            with self.connect_to_database() as connection, connection.cursor() as cursor:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute(
                     sql.SQL("ALTER USER {} WITH ENCRYPTED PASSWORD '" + password + "';").format(
                         sql.Identifier(username)

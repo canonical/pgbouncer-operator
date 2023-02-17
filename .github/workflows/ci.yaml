@@ -4,6 +4,11 @@ name: Tests
 
 on:
   pull_request:
+    paths-ignore:
+      - '.gitignore'
+      - '.jujuignore'
+      - 'LICENSE'
+      - '**.md'
   schedule:
     - cron: '53 0 * * *' # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
@@ -34,6 +39,22 @@ jobs:
       - name: Run tests
         run: tox run -e unit
 
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@2.2.2
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+
+
   build:
       name: Build charms
       uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@v1
@@ -51,6 +72,7 @@ jobs:
           - scaling-integration
     name: ${{ matrix.tox-environments }}
     needs:
+      - lib-check
       - lint
       - unit-test
       - build
