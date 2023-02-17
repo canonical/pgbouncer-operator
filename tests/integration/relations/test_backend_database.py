@@ -5,7 +5,6 @@ import asyncio
 import logging
 from pathlib import Path
 
-import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
@@ -35,7 +34,6 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-@pytest.mark.backend
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
@@ -80,7 +78,6 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest):
     logger.info(cfg.render())
 
 
-@pytest.mark.backend
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
