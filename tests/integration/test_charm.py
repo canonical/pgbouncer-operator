@@ -2,7 +2,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-
+import asyncio
 import logging
 from pathlib import Path
 
@@ -16,6 +16,8 @@ from tests.integration.helpers import helpers
 
 logger = logging.getLogger(__name__)
 
+CLIENT_APP_NAME = "application"
+FIRST_DATABASE_RELATION_NAME = "first-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 
@@ -23,14 +25,22 @@ WAIT_MSG = "waiting for backend database relation to connect"
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
+async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm):
     """Build and deploy the charm-under-test.
 
     Assert on the unit status before any relations/configurations take place.
     """
     async with ops_test.fast_forward():
-        charm = await ops_test.build_charm(".")
-        await ops_test.model.deploy(charm, application_name=PGB, series="jammy")
+        await asyncio.gather(
+            ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME),
+            ops_test.model.deploy(
+                pgb_charm,
+                application_name=PGB,
+                num_units=None,
+            ),
+        )
+        # Relate the charms and wait for them exchanging some connection data.
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
         # Pgbouncer enters a blocked status without a postgres backend database relation
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG

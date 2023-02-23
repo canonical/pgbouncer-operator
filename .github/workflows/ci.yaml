@@ -85,7 +85,6 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: lxd
-          lxd-channel: 5.7/stable
       - name: Download packed charm(s)
         uses: actions/download-artifact@v3
         with:
