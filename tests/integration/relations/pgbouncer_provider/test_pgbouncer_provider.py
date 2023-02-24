@@ -244,7 +244,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
             ops_test.model.deploy(
                 pgb_charm,
                 application_name=PGB_2,
-                num_units=2,
+                num_units=None,
             ),
             ops_test.model.deploy(
                 PG,

@@ -241,6 +241,7 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
 
 async def deploy_postgres_bundle(
     ops_test: OpsTest,
+    pgb_charm,
     pgb_config: dict = {},
     pgb_series: str = "jammy",
     pg_config: dict = {},
@@ -251,12 +252,12 @@ async def deploy_postgres_bundle(
     Returns:
         libjuju Relation object describing the relation between pgbouncer and postgres.
     """
-    charm = await ops_test.build_charm(".")
     await asyncio.gather(
         ops_test.model.deploy(
-            charm,
+            pgb_charm,
             application_name=PGB,
             config=pgb_config,
+            num_units=None,
         ),
         ops_test.model.deploy(
             PG,
@@ -266,15 +267,11 @@ async def deploy_postgres_bundle(
         ),
     )
     async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600),
+        await ops_test.model.wait_for_idle(
+            apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
-        wait_for_relation_joined_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
 
     return relation
 
@@ -287,6 +284,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: dict = {},
     channel: str = "stable",
     relation: str = "db",
+    series: str = "jammy",
+    force: bool = False,
 ):
     """Helper function to deploy and relate application with Pgbouncer cluster.
 
@@ -301,6 +300,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         channel: The channel to use for the charm.
         relation: Name of the pgbouncer relation to relate
             the application to.
+        series: The series on which to deploy.
+        force: force deployment.
 
     Returns:
         the id of the created relation.
@@ -312,6 +313,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         application_name=application_name,
         num_units=number_of_units,
         config=config,
+        series=series,
+        force=force,
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
