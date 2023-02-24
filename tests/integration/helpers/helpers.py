@@ -104,7 +104,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
         unit_name,
         "--format=json",
     )
-    logging.error(get_databag)
+    logging.info(get_databag)
     return json.loads(get_databag[1])[unit_name]
 
 

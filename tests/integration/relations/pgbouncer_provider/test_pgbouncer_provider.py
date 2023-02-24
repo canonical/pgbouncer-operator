@@ -59,7 +59,7 @@ async def test_database_relation_with_charm_libraries(
             ops_test.model.deploy(
                 pgb_charm,
                 application_name=PGB,
-                num_units=2,
+                num_units=None,
             ),
             ops_test.model.deploy(
                 PG,
@@ -70,14 +70,14 @@ async def test_database_relation_with_charm_libraries(
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
-        await ops_test.model.wait_for_idle(timeout=1200)
+        await ops_test.model.wait_for_idle(apps=[PG, CLIENT_APP_NAME], timeout=1200)
         # Relate the charms and wait for them exchanging some connection data.
         global client_relation
         client_relation = await ops_test.model.add_relation(
             f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
         )
 
-    await ops_test.model.wait_for_idle(status="active", raise_on_blocked=True)
+    await ops_test.model.wait_for_idle(status="active", timeout=600)
 
 
 async def test_database_usage(ops_test: OpsTest):
@@ -388,7 +388,7 @@ async def test_relation_broken(ops_test: OpsTest):
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
     relation_user = databag.get("username", None)
-    logging.error(f"relation user: {relation_user}")
+    logging.info(f"relation user: {relation_user}")
     assert relation_user, f"no relation user in client databag: {databag}"
 
     # Break the relation.
