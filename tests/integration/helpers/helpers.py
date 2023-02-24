@@ -285,7 +285,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     channel: str = "stable",
     relation: str = "db",
     series: str = "jammy",
-    force: bool = False,
 ):
     """Helper function to deploy and relate application with Pgbouncer cluster.
 
@@ -301,7 +300,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         relation: Name of the pgbouncer relation to relate
             the application to.
         series: The series on which to deploy.
-        force: force deployment.
 
     Returns:
         the id of the created relation.
@@ -314,7 +312,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         num_units=number_of_units,
         config=config,
         series=series,
-        force=force,
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
