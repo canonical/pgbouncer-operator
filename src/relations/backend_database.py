@@ -50,7 +50,7 @@ import logging
 from typing import Dict, List, Set
 
 import psycopg2
-from charms.data_platform_libs.v0.database_requires import (
+from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseCreatedEvent,
     DatabaseRequires,
 )
