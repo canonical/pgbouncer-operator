@@ -5,6 +5,7 @@
 import asyncio
 import json
 import logging
+import subprocess
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -285,6 +286,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     channel: str = "stable",
     relation: str = "db",
     series: str = "jammy",
+    force: bool = False,
 ):
     """Helper function to deploy and relate application with Pgbouncer cluster.
 
@@ -300,19 +302,44 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         relation: Name of the pgbouncer relation to relate
             the application to.
         series: The series on which to deploy.
+        force: Allow charm to be deployed to a machine running an unsupported series.
 
     Returns:
         the id of the created relation.
     """
     # Deploy application.
-    await ops_test.model.deploy(
-        charm,
-        channel=channel,
-        application_name=application_name,
-        num_units=number_of_units,
-        config=config,
-        series=series,
-    )
+    if not force:
+        await ops_test.model.deploy(
+            charm,
+            channel=channel,
+            application_name=application_name,
+            num_units=number_of_units,
+            config=config,
+            series=series,
+        )
+    else:
+        # Dirty hack to force the series
+        status = await ops_test.model.get_status()
+        args = [
+            "juju",
+            "deploy",
+            charm,
+            application_name,
+            "-m",
+            status.model.name,
+            "--force",
+            "-n",
+            str(number_of_units),
+            "--series",
+            series,
+            "--channel",
+            channel,
+        ]
+        if config:
+            for key, val in config.items():
+                args += ["--config", f"{key}={val}"]
+        subprocess.run(args)
+
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
             apps=[application_name],

@@ -31,10 +31,10 @@ RELATION_NAME = "db"
 PG = "postgresql"
 
 
-async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm) -> None:
+async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
     backend_relation = await deploy_postgres_bundle(
-        ops_test, pgb_charm, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
+        ops_test, pgb_charm_focal, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
     )
 
     async with ops_test.fast_forward():
@@ -47,6 +47,8 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm) -> None:
             MAILMAN3_CORE_APP_NAME,
             APPLICATION_UNITS,
             mailman_config,
+            series="focal",
+            force=True,
         )
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)

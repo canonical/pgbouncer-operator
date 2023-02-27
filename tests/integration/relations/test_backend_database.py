@@ -10,11 +10,11 @@ from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from tests.integration.helpers.helpers import (
+    deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_app_relation_databag,
     get_backend_user_pass,
     get_cfg,
-    wait_for_relation_joined_between,
     wait_for_relation_removed_between,
 )
 from tests.integration.helpers.postgresql_helpers import (
@@ -26,6 +26,8 @@ from tests.integration.helpers.postgresql_helpers import (
 
 logger = logging.getLogger(__name__)
 
+CLIENT_APP_NAME = "application"
+FIRST_DATABASE_RELATION_NAME = "first-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 MAILMAN3 = "mailman3-core"
 PGB = METADATA["name"]
@@ -34,10 +36,18 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm)
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy)
+    await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
+    await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[CLIENT_APP_NAME, PG, PGB],
+            status="active",
+            timeout=600,
+        )
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
@@ -47,7 +57,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm):
 
     await check_database_users_existence(ops_test, [pgb_user], [], pgb_user, pgb_password)
 
-    # Remove relation but keep pg application because we're going to need it for future tests.
+    # Remove relation
     await ops_test.model.applications[PG].remove_relation(f"{PGB}:{RELATION}", f"{PG}:database")
     pgb_unit = ops_test.model.applications[PGB].units[0]
     logger.info(await get_app_relation_databag(ops_test, pgb_unit.name, relation.id))
@@ -76,19 +86,24 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm):
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
+    await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)
+    await ops_test.model.remove_application(PGB, block_until_done=True)
 
 
-async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
+async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     async with ops_test.fast_forward():
+        await ops_test.model.deploy(
+            pgb_charm_focal,
+            application_name=PGB,
+            num_units=None,
+        )
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
-        wait_for_relation_joined_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PGB, PG], status="active", timeout=1000)
-        pgb_user, _ = await get_backend_user_pass(ops_test, relation)
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
 
         # Deploy TLS Certificates operator.
         config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-        await ops_test.model.deploy(TLS, channel="beta", config=config)
+        await ops_test.model.deploy(TLS, config=config)
         await ops_test.model.wait_for_idle(apps=[TLS], status="active", timeout=1000)
 
         # Relate it to the PostgreSQL to enable TLS.
@@ -99,11 +114,16 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
         # being used in a later step.
         enable_connections_logging(ops_test, f"{PG}/0")
 
-        # Deploy an app and relate it to PgBouncer to open a connection
-        # between PgBouncer and PostgreSQL.
-        await ops_test.model.deploy(MAILMAN3)
-        await ops_test.model.add_relation(f"{PGB}:db", f"{MAILMAN3}:db")
-        await ops_test.model.wait_for_idle(apps=[PG, PGB, MAILMAN3], status="active", timeout=1000)
+        # Deploy and test the deployment of Mailman3 Core.
+        await deploy_and_relate_application_with_pgbouncer_bundle(
+            ops_test,
+            MAILMAN3,
+            MAILMAN3,
+            series="focal",
+            force=True,
+        )
+
+        pgb_user, _ = await get_backend_user_pass(ops_test, relation)
 
         # Check the logs to ensure TLS is being used by PgBouncer.
         postgresql_primary_unit = await get_postgres_primary(ops_test)
