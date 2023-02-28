@@ -26,28 +26,25 @@ from tests.integration.helpers.postgresql_helpers import (
 
 logger = logging.getLogger(__name__)
 
-CLIENT_APP_NAME = "application"
-FIRST_DATABASE_RELATION_NAME = "first-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 MAILMAN3 = "mailman3-core"
+WEEBL = "weebl"
 PGB = METADATA["name"]
 PG = "postgresql"
 TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm_jammy):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy)
-    await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
-    await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(
-            apps=[CLIENT_APP_NAME, PG, PGB],
-            status="active",
-            timeout=600,
-        )
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_focal)
+    await deploy_and_relate_application_with_pgbouncer_bundle(
+        ops_test,
+        WEEBL,
+        WEEBL,
+        series="focal",
+    )
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
@@ -86,17 +83,11 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
-    await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)
-    await ops_test.model.remove_application(PGB, block_until_done=True)
+    await ops_test.model.remove_application(WEEBL, block_until_done=True)
 
 
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(
-            pgb_charm_focal,
-            application_name=PGB,
-            num_units=None,
-        )
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
