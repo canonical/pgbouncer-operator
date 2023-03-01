@@ -81,7 +81,9 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
         _render.assert_any_call(
-            f"{PGB_DIR}/userlist.txt", f'"{self.backend.auth_user}" "{hash_pw}"', perms=0o700
+            f"{PGB_DIR}/pgbouncer/userlist.txt",
+            f'"{self.backend.auth_user}" "{hash_pw}"',
+            perms=0o700,
         )
 
         cfg = _cfg.return_value
@@ -90,7 +92,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
             cfg["pgbouncer"]["auth_query"]
             == f"SELECT username, password FROM {self.backend.auth_user}.get_auth($1)"
         )
-        assert cfg["pgbouncer"]["auth_file"] == f"{PGB_DIR}/userlist.txt"
+        assert cfg["pgbouncer"]["auth_file"] == f"{PGB_DIR}/pgbouncer/userlist.txt"
 
         _update_endpoints.assert_called_once()
 
