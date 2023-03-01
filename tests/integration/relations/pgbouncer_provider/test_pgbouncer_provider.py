@@ -66,7 +66,6 @@ async def test_database_relation_with_charm_libraries(
                 application_name=PG,
                 num_units=2,
                 channel="edge",
-                trust=True,
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -245,6 +244,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
                 pgb_charm_jammy,
                 application_name=PGB_2,
                 num_units=None,
+                config={"listen_port": 7432},
             ),
             ops_test.model.deploy(
                 PG,
