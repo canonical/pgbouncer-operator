@@ -15,6 +15,7 @@ from typing import List, Optional, Union
 from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 from charms.pgbouncer_k8s.v0 import pgb
+from jinja2 import Template
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
@@ -56,7 +57,9 @@ class PgBouncerCharm(CharmBase):
 
         self._cores = os.cpu_count()
         self.service_ids = [service_id for service_id in range(self._cores)]
-        self.pgb_services = [f"{PGB}@{service_id}" for service_id in self.service_ids]
+        self.pgb_services = [
+            f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
+        ]
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -93,8 +96,15 @@ class PgBouncerCharm(CharmBase):
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         self.render_pgb_config(cfg)
 
-        # Copy pgbouncer service file and reload systemd
-        shutil.copy("src/pgbouncer@.service", "/etc/systemd/system/pgbouncer@.service")
+        # Render pgbouncer service file and reload systemd
+        with open("templates/pgbouncer.service.j2", "r") as file:
+            template = Template(file.read())
+        # Render the template file with the correct values.
+        rendered = template.render(app_name=self.app.name)
+
+        self.render_file(
+            f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
+        )
         systemd.daemon_reload()
         # Apt package starts its own pgbouncer service. Disable this so we can start and control
         # our own.
@@ -110,6 +120,7 @@ class PgBouncerCharm(CharmBase):
         for service in self.pgb_services:
             systemd.service_stop(service)
 
+        os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
         shutil.rmtree(f"{PGB_DIR}/{self.app.name}")
 
         systemd.daemon_reload()

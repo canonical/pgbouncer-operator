@@ -91,7 +91,7 @@ class TestCharm(unittest.TestCase):
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
@@ -101,7 +101,7 @@ class TestCharm(unittest.TestCase):
         _start.side_effect = None
         _has_relation.return_value = True
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
@@ -110,7 +110,7 @@ class TestCharm(unittest.TestCase):
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
         _running.assert_called_once()
 
@@ -138,7 +138,7 @@ class TestCharm(unittest.TestCase):
 
         # check fail when services aren't all running
         self.assertIsInstance(self.charm.check_status(), BlockedStatus)
-        calls = [call("pgbouncer@0")]
+        calls = [call("pgbouncer-pgbouncer@0")]
         _running.assert_has_calls(calls)
         _running.return_value = True
 
@@ -150,7 +150,9 @@ class TestCharm(unittest.TestCase):
         # otherwise check all services and return activestatus
         intended_instances = self._cores = os.cpu_count()
         self.assertIsInstance(self.charm.check_status(), ActiveStatus)
-        calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
+        calls = [
+            call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)
+        ]
         _running.assert_has_calls(calls)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
