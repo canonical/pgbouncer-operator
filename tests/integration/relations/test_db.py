@@ -38,7 +38,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         pgb_charm_focal,
         db_units=DATABASE_UNITS,
         pgb_config={"listen_port": "5432"},
-        series="focal",
+        pgb_series="focal",
     )
 
     async with ops_test.fast_forward():
