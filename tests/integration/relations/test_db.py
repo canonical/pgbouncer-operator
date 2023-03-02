@@ -34,7 +34,8 @@ PG = "postgresql"
 async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
     backend_relation = await deploy_postgres_bundle(
-        ops_test, pgb_charm_focal, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"}
+        ops_test, pgb_charm_focal, db_units=DATABASE_UNITS, pgb_config={"listen_port": "5432"},
+        series="focal",
     )
 
     async with ops_test.fast_forward():

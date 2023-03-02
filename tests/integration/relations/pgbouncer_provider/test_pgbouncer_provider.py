@@ -251,7 +251,6 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
                 application_name=PG_2,
                 num_units=2,
                 channel="edge",
-                trust=True,
             ),
         )
         await ops_test.model.add_relation(f"{PGB_2}:{BACKEND_RELATION_NAME}", f"{PG_2}:database")

@@ -38,7 +38,7 @@ RELATION = "backend-database"
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm_focal)
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_focal, pgb_series="focal")
     await deploy_and_relate_application_with_pgbouncer_bundle(
         ops_test,
         WEEBL,

@@ -258,6 +258,7 @@ async def deploy_postgres_bundle(
             application_name=PGB,
             config=pgb_config,
             num_units=None,
+            series=pgb_series,
         ),
         ops_test.model.deploy(
             PG,
