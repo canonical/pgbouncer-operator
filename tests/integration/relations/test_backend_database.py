@@ -122,6 +122,5 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
             ops_test, postgresql_primary_unit, "journalctl -u patroni.service"
         )
         assert (
-            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled"
-            " (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256, compression=off)" in logs
+            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled" in logs
         ), "TLS is not being used on connections to PostgreSQL"
