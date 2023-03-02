@@ -23,7 +23,7 @@ series:
   - bionic
 
 peers:
-  pgb_peers:
+  pgb-peers:
     interface: pgb_peers
 
 subordinate: true

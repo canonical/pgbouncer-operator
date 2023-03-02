@@ -20,7 +20,7 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import AUTH_FILE_NAME, CLIENT_RELATION_NAME, INI_NAME, PEERS
+from constants import AUTH_FILE_NAME, CLIENT_RELATION_NAME, INI_NAME, PEER_RELATION_NAME
 from constants import PG as PG_USER
 from constants import PGB, PGB_DIR
 from relations.backend_database import BackendDatabaseRequires
@@ -347,7 +347,7 @@ class PgBouncerCharm(CharmBase):
     @property
     def unit_ip(self) -> str:
         """Current unit IP."""
-        return str(self.model.get_binding(PEERS).network.bind_address)
+        return str(self.model.get_binding(PEER_RELATION_NAME).network.bind_address)
 
     # =====================
     #  Relation Utilities
