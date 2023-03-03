@@ -99,4 +99,4 @@ async def test_remove_relation(ops_test: OpsTest):
         f"{PGB}:db", f"{MAILMAN3_CORE_APP_NAME}:db"
     )
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle([PGB, PG], status="active", timeout=300)
+        await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
