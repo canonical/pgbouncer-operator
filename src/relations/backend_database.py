@@ -125,12 +125,12 @@ class BackendDatabaseRequires(Object):
             return
 
         plaintext_password = pgb.generate_password()
+        hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
-        self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
+        self.postgres.create_user(self.auth_user, hashed_password, admin=True)
         self.initialise_auth_function([self.database.database, PG])
 
-        hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
 
         cfg = self.charm.read_pgb_config()
