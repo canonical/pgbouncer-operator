@@ -265,7 +265,6 @@ async def deploy_postgres_bundle(
             channel="edge",
             num_units=db_units,
             config=pg_config,
-            series="jammy",
         ),
     )
     async with ops_test.fast_forward():
