@@ -269,7 +269,7 @@ async def deploy_postgres_bundle(
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
-            apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
+            apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)

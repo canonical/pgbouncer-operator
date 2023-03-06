@@ -25,7 +25,7 @@ WAIT_MSG = "waiting for backend database relation to connect"
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm_jammy):
+async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm):
     """Build and deploy the charm-under-test.
 
     Assert on the unit status before any relations/configurations take place.
@@ -34,7 +34,7 @@ async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm_
         await asyncio.gather(
             ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME),
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                pgb_charm,
                 application_name=PGB,
                 num_units=None,
             ),

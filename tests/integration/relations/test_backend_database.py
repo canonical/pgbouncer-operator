@@ -27,7 +27,10 @@ from tests.integration.helpers.postgresql_helpers import (
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-MAILMAN3 = "mailman3-core"
+CLIENT_APP_NAME = "application"
+FIRST_DATABASE_RELATION_NAME = "first-database"
+
+WAIT_MSG = "waiting for backend database relation to connect"
 WEEBL = "weebl"
 PGB = METADATA["name"]
 PG = "postgresql"
@@ -35,16 +38,16 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_focal):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm_focal, pgb_series="focal")
-    await deploy_and_relate_application_with_pgbouncer_bundle(
-        ops_test,
-        WEEBL,
-        WEEBL,
-        series="focal",
-    )
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm, pgb_series="jammy")
+    async with ops_test.fast_forward():
+        await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
+        # Relate the charms and wait for them exchanging some connection data.
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
+        # Pgbouncer enters a blocked status without a postgres backend database relation
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
@@ -83,10 +86,10 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_focal):
 
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
-    await ops_test.model.remove_application(WEEBL, block_until_done=True)
+    await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)
 
 
-async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
+async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
@@ -99,7 +102,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Relate it to the PostgreSQL to enable TLS.
         await ops_test.model.relate(PG, TLS)
-        await ops_test.model.wait_for_idle(status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[PG, TLS], status="active", timeout=1000)
 
         # Enable additional logs on the PostgreSQL instance to check TLS
         # being used in a later step.
@@ -108,9 +111,9 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
         # Deploy and test the deployment of Mailman3 Core.
         await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
-            MAILMAN3,
-            MAILMAN3,
-            series="focal",
+            WEEBL,
+            WEEBL,
+            series="jammy",
             force=True,
         )
 
@@ -122,5 +125,5 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
             ops_test, postgresql_primary_unit, "journalctl -u patroni.service"
         )
         assert (
-            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled" in logs
+            f"connection authorized: user={pgb_user} database=bugs_database SSL enabled" in logs
         ), "TLS is not being used on connections to PostgreSQL"

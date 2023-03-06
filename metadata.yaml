@@ -20,7 +20,6 @@ maintainers:
 series:
   - jammy
   - focal
-  - bionic
 
 peers:
   pgb-peers:
