@@ -322,7 +322,7 @@ class DbProvides(Object):
             return
 
         master_dbconnstr = {
-            "host": self.charm.leader_ip,
+            "host": "localhost",
             "dbname": database,
             "port": port,
             "user": user,
@@ -333,17 +333,8 @@ class DbProvides(Object):
         connection_updates = {
             "master": pgb.parse_dict_to_kv_string(master_dbconnstr),
             "port": str(port),
-            "host": self.charm.unit_ip,
+            "host": "localhost",
         }
-
-        standby_ips = self.charm.peers.units_ips - {self.charm.leader_ip}
-        # Only one standby value in legacy relation on pgbouncer. There are multiple standbys on
-        # postgres, but not on the legacy pgbouncer charm.
-        if len(standby_ips) > 0:
-            standby_ip = standby_ips.pop()
-            standby_dbconnstr = dict(master_dbconnstr)
-            standby_dbconnstr.update({"host": standby_ip, "dbname": f"{database}_standby"})
-            connection_updates["standbys"] = pgb.parse_dict_to_kv_string(standby_dbconnstr)
 
         self.update_databags(relation, connection_updates)
 

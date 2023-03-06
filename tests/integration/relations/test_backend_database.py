@@ -30,7 +30,6 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CLIENT_APP_NAME = "application"
 FIRST_DATABASE_RELATION_NAME = "first-database"
 
-WAIT_MSG = "waiting for backend database relation to connect"
 WEEBL = "weebl"
 PGB = METADATA["name"]
 PG = "postgresql"

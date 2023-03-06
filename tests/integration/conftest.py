@@ -22,9 +22,6 @@ async def application_charm(ops_test: OpsTest):
 @pytest.fixture(scope="module")
 async def pgb_charm(ops_test: OpsTest):
     """Build the pgbouncer charm."""
-    # Reduce bases_index to 1 once
-    # https://github.com/charmed-kubernetes/pytest-operator/issues/101
-    # is released and duplicate base is removed
     return await ops_test.build_charm(".", bases_index=0)
 
 

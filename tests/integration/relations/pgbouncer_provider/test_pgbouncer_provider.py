@@ -116,35 +116,6 @@ async def test_database_version(ops_test: OpsTest):
     assert version in json.loads(run_version_query["results"])[0][0]
 
 
-async def test_readonly_reads(ops_test: OpsTest):
-    """Check we can read things in readonly."""
-    select_query = "SELECT data FROM test;"
-    run_select_query_readonly = await run_sql_on_application_charm(
-        ops_test,
-        unit_name=CLIENT_UNIT_NAME,
-        query=select_query,
-        dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
-        readonly=True,
-    )
-    # "some data" is added in test_database_usage()
-    assert "some data" in json.loads(run_select_query_readonly["results"])[0]
-
-
-async def test_cant_write_in_readonly(ops_test: OpsTest):
-    """Check we can't write in readonly."""
-    drop_query = "DROP TABLE test;"
-    run_drop_query_readonly = await run_sql_on_application_charm(
-        ops_test,
-        unit_name=CLIENT_UNIT_NAME,
-        query=drop_query,
-        dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
-        readonly=True,
-    )
-    assert run_drop_query_readonly["Code"] == "1"
-
-
 async def test_database_admin_permissions(ops_test: OpsTest):
     """Test admin permissions."""
     create_database_query = "CREATE DATABASE another_database;"
