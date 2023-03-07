@@ -294,6 +294,11 @@ class PgBouncerCharm(CharmBase):
         if reload_pgbouncer:
             self.reload_pgbouncer()
 
+    def read_auth_file(self) -> str:
+        """Gets the auth file from the pgbouncer container filesystem."""
+        with open(f"{PGB_DIR}/{self.app.name}/{AUTH_FILE_NAME}", "r") as fd:
+            return fd.read()
+
     def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
         """Render user list (with encoded passwords) to pgbouncer.ini file.
 
