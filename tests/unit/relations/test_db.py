@@ -22,11 +22,6 @@ from lib.charms.pgbouncer_k8s.v0.pgb import (
 )
 from tests.helpers import patch_network_get
 
-TEST_UNIT = {
-    "master": "host=master port=1 dbname=testdatabase",
-    "standbys": "host=standby1 port=1 dbname=testdatabase",
-}
-
 
 class TestDb(unittest.TestCase):
     @patch_network_get(private_address="1.1.1.1")
