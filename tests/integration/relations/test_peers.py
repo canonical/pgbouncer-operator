@@ -10,7 +10,6 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import (
-    get_unit_info,
     scale_application,
     wait_for_relation_joined_between,
 )
@@ -118,9 +117,7 @@ async def test_scaling(ops_test: OpsTest):
 async def test_exit_relations(ops_test: OpsTest):
     """Test that we can exit relations with multiple units without breaking anything."""
     async with ops_test.fast_forward():
-        logging.info(await get_unit_info(ops_test, unit_name=f"{PGB}/2"))
         await ops_test.model.remove_application(PG, block_until_done=True)
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
 
-        logging.info(await get_unit_info(ops_test, unit_name=f"{PGB}/2"))
         await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)

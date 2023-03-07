@@ -141,7 +141,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
 
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
-    await scale_application(ops_test, PGB, 1)
+    await scale_application(ops_test, CLIENT_APP_NAME, 1)
     await check_new_relation(
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
@@ -156,9 +156,9 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
-async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
+async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
-    await scale_application(ops_test, PGB, 2)
+    await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await check_new_relation(
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
@@ -168,8 +168,9 @@ async def test_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
 
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
-    read_only_endpoints = databag.get("read-only-endpoints", None)
-    assert read_only_endpoints, f"read-only-endpoints not in pgb databag: {databag}"
+    assert not databag.get(
+        "read-only-endpoints", None
+    ), f"read-only-endpoints in pgb databag: {databag}"
 
 
 async def test_two_applications_dont_share_the_same_relation_data(
