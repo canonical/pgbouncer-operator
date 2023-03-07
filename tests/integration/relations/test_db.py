@@ -49,6 +49,6 @@ async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
 
 
 async def test_remove_relation(ops_test: OpsTest):
-    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{WEEBL}:db")
+    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{WEEBL}:database")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
