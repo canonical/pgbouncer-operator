@@ -3,27 +3,22 @@
 
 import asyncio
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 from pytest_operator.plugin import OpsTest
 
+from constants import BACKEND_RELATION_NAME
 from tests.integration.helpers.helpers import (
+    CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
+    PG,
+    PGB,
+    WAIT_MSG,
     scale_application,
     wait_for_relation_joined_between,
 )
 
 logger = logging.getLogger(__name__)
-
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-PGB = METADATA["name"]
-PG = "postgresql"
-BACKEND_RELATION = "backend-database"
-CLIENT_APP_NAME = "application"
-FIRST_DATABASE_RELATION_NAME = "first-database"
-
-WAIT_MSG = "waiting for backend database relation to connect"
 
 
 @pytest.mark.abort_on_fail
@@ -62,7 +57,7 @@ async def test_scaled_relations(ops_test: OpsTest):
             ),
         )
 
-        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION}", f"{PG}:database")
+        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
         wait_for_relation_joined_between(ops_test, PG, PGB)
 
         await asyncio.gather(

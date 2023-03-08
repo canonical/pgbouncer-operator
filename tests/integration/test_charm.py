@@ -4,24 +4,23 @@
 
 import asyncio
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
 from constants import PGB_DIR
-from tests.integration.helpers import helpers
+from tests.integration.helpers.helpers import (
+    CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
+    PGB,
+    WAIT_MSG,
+    get_cfg,
+    get_running_instances,
+    get_unit_cores,
+)
 
 logger = logging.getLogger(__name__)
-
-CLIENT_APP_NAME = "application"
-FIRST_DATABASE_RELATION_NAME = "first-database"
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-PGB = METADATA["name"]
-
-WAIT_MSG = "waiting for backend database relation to connect"
 
 
 @pytest.mark.abort_on_fail
@@ -60,13 +59,13 @@ async def test_change_config(ops_test: OpsTest):
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    cores = await helpers.get_unit_cores(unit)
+    cores = await get_unit_cores(unit)
 
     expected_cfg = PgbConfig(DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
     expected_cfg.set_max_db_connection_derivatives(44, cores)
 
-    primary_cfg = await helpers.get_cfg(ops_test, unit.name)
+    primary_cfg = await get_cfg(ops_test, unit.name)
     existing_cfg = PgbConfig(primary_cfg)
 
     assert existing_cfg.render() == primary_cfg.render()
@@ -75,16 +74,16 @@ async def test_change_config(ops_test: OpsTest):
     # tests, but we need to make sure they at least exist in the right places.
     for service_id in range(cores):
         path = f"{PGB_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
-        service_cfg = await helpers.get_cfg(ops_test, unit.name, path=path)
+        service_cfg = await get_cfg(ops_test, unit.name, path=path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
-    expected_processes = await helpers.get_unit_cores(unit)
+    expected_processes = await get_unit_cores(unit)
 
     # verify the correct amount of pgbouncer processes are running
-    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("kill $(pgrep pgbouncer)")
@@ -93,4 +92,4 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
     # verify all processes start again
-    assert await helpers.get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(unit, "pgbouncer") == expected_processes

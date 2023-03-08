@@ -2,30 +2,26 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from tests.integration.helpers.helpers import (
+    PG,
+    PGB,
+    WEEBL,
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_backend_user_pass,
 )
 from tests.integration.helpers.postgresql_helpers import check_databases_creation
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-PGB = METADATA["name"]
-
 logger = logging.getLogger(__name__)
 
-WEEBL = "weebl"
 APPLICATION_UNITS = 1
 DATABASE_UNITS = 2
 RELATION_NAME = "db"
-PG = "postgresql"
 
 
 @pytest.mark.abort_on_fail
@@ -38,17 +34,17 @@ async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
         pgb_series="jammy",
     )
 
-    async with ops_test.fast_forward():
-        # Deploy and test the deployment of Weebl.
-        await deploy_and_relate_application_with_pgbouncer_bundle(
-            ops_test,
-            WEEBL,
-            WEEBL,
-            series="jammy",
-            force=True,
-        )
-        pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
-        await check_databases_creation(ops_test, ["bugs_database"], pgb_user, pgb_pass)
+    # Deploy and test the deployment of Weebl.
+    await deploy_and_relate_application_with_pgbouncer_bundle(
+        ops_test,
+        WEEBL,
+        WEEBL,
+        series="jammy",
+        force=True,
+    )
+
+    pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
+    await check_databases_creation(ops_test, ["bugs_database"], pgb_user, pgb_pass)
 
 
 async def test_remove_relation(ops_test: OpsTest):

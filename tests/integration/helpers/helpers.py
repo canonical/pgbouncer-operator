@@ -6,6 +6,8 @@ import asyncio
 import json
 import logging
 import subprocess
+import tempfile
+import zipfile
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -18,9 +20,15 @@ from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import AUTH_FILE_NAME, INI_NAME, PGB_DIR
 
+CLIENT_APP_NAME = "application"
+FIRST_DATABASE_RELATION_NAME = "first-database"
+SECOND_DATABASE_RELATION_NAME = "second-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 PG = "postgresql"
+WEEBL = "weebl"
+
+WAIT_MSG = "waiting for backend database relation to connect"
 
 
 def get_backend_relation(ops_test: OpsTest):
@@ -379,3 +387,53 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
         await ops_test.model.wait_for_idle(
             apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
         )
+
+
+async def deploy_and_relate_bundle_with_pgbouncer(
+    ops_test: OpsTest,
+    bundle: str,
+    application_name: str,
+) -> str:
+    """Helper function to deploy and relate a bundle with PgBouncer.
+
+    Args:
+        ops_test: The ops test framework.
+        bundle: Bundle identifier.
+        application_name: The name of the application to check for
+            an active state after the deployment.
+    """
+    # Deploy the bundle.
+    with tempfile.NamedTemporaryFile() as original:
+        # Download the original bundle.
+        await ops_test.juju("download", bundle, "--filepath", original.name)
+
+        # Open the bundle compressed file and update the contents
+        # of the bundle.yaml file to deploy it.
+        with zipfile.ZipFile(original.name, "r") as archive:
+            bundle_yaml = archive.read("bundle.yaml")
+            data = yaml.load(bundle_yaml, Loader=yaml.FullLoader)
+
+            # Remove PostgreSQL and relations with it from the bundle.yaml file.
+            del data["services"]["postgresql"]
+            data["relations"] = [
+                relation
+                for relation in data["relations"]
+                if "postgresql:db" not in relation and "postgresql:db-admin" not in relation
+            ]
+
+            # Write the new bundle content to a temporary file and deploy it.
+            with tempfile.NamedTemporaryFile() as patched:
+                patched.write(yaml.dump(data).encode("utf_8"))
+                patched.seek(0)
+                await ops_test.juju("deploy", patched.name)
+
+    # Relate application to PostgreSQL.
+    async with ops_test.fast_forward(fast_interval="30s"):
+        relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:db-admin")
+        await ops_test.model.wait_for_idle(
+            apps=[application_name, PGB],
+            status="active",
+            timeout=1500,
+        )
+
+    return relation.id

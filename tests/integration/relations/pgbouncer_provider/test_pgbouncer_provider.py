@@ -12,12 +12,16 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 from tests.integration.helpers.helpers import (
+    CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
+    PG,
+    PGB,
+    SECOND_DATABASE_RELATION_NAME,
     get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
     get_cfg,
     scale_application,
-    wait_for_relation_joined_between,
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
 from tests.integration.relations.pgbouncer_provider.helpers import (
@@ -28,18 +32,13 @@ from tests.integration.relations.pgbouncer_provider.helpers import (
 
 logger = logging.getLogger(__name__)
 
-CLIENT_APP_NAME = "application"
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
 TEST_DBNAME = "application_first_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
-PG = "postgresql"
 PG_2 = "another-postgresql"
-PGB = "pgbouncer"
 PGB_2 = "another-pgbouncer"
 APP_NAMES = [CLIENT_APP_NAME, PG]
-FIRST_DATABASE_RELATION_NAME = "first-database"
-SECOND_DATABASE_RELATION_NAME = "second-database"
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
@@ -279,9 +278,6 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
 
     # Assert the two application have different relation (connection) data.
     assert first_database_connection_string != second_database_connection_string
-    await ops_test.model.applications[PGB_2].remove_relation(
-        f"{PGB_2}:database", f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}"
-    )
 
 
 async def test_scaling(ops_test: OpsTest):

@@ -3,13 +3,16 @@
 
 import asyncio
 import logging
-from pathlib import Path
 
-import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from tests.integration.helpers.helpers import (
+    CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
+    PG,
+    PGB,
+    WEEBL,
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_app_relation_databag,
@@ -26,13 +29,6 @@ from tests.integration.helpers.postgresql_helpers import (
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-CLIENT_APP_NAME = "application"
-FIRST_DATABASE_RELATION_NAME = "first-database"
-
-WEEBL = "weebl"
-PGB = METADATA["name"]
-PG = "postgresql"
 TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
