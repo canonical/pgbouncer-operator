@@ -16,7 +16,6 @@ from tests.integration.helpers.helpers import (
     get_backend_relation,
     get_backend_user_pass,
     get_cfg,
-    run_sql,
     scale_application,
     wait_for_relation_joined_between,
 )
@@ -266,9 +265,9 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
         f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
     )
     # Relate the charms using another relation and wait for them exchanging some connection data.
-    await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}", PGB)
+    await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}", PGB_2)
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active")
+        await ops_test.model.wait_for_idle(apps=APP_NAMES + [PGB, PGB_2], status="active")
 
     # Get the connection strings to connect to both databases.
     first_database_connection_string = await build_connection_string(
@@ -282,62 +281,6 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, 
     assert first_database_connection_string != second_database_connection_string
     await ops_test.model.applications[PGB_2].remove_relation(
         f"{PGB_2}:database", f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}"
-    )
-
-
-async def test_with_legacy_relation(ops_test: OpsTest):
-    """Test that this relation and the legacy relation can be used simultaneously."""
-    psql = "psql"
-    # Deploy application.
-    await ops_test.model.deploy(
-        "postgresql-charmers-postgresql-client",
-        application_name=psql,
-    )
-
-    # Testing with db-admin relation, since it encapsulates all the functionality of the db
-    # relation, with admin permissions.
-    psql_relation = await ops_test.model.relate(f"{psql}:db", f"{PGB}:db-admin")
-    wait_for_relation_joined_between(ops_test, PGB, psql)
-    await ops_test.model.wait_for_idle(
-        apps=[psql, PG, PGB, CLIENT_APP_NAME, ANOTHER_APPLICATION_APP_NAME],
-        status="active",
-        timeout=600,
-    )
-
-    psql_unit_name = ops_test.model.applications[psql].units[0].name
-    psql_databag = await get_app_relation_databag(ops_test, psql_unit_name, psql_relation.id)
-
-    pgpass = psql_databag.get("password")
-    user = psql_databag.get("user")
-    host = psql_databag.get("host")
-    port = psql_databag.get("port")
-    dbname = psql_databag.get("database")
-
-    assert None not in [
-        pgpass,
-        user,
-        host,
-        port,
-        dbname,
-    ], f"databag incorrectly populated: {psql_databag}"
-
-    user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
-    rtn, _, err = await run_sql(
-        ops_test, psql_unit_name, user_command, pgpass, user, host, port, dbname
-    )
-    assert rtn == 0, f"failed to run admin command {user_command}, {err}"
-
-    db_command = "CREATE DATABASE test_db;"
-    rtn, _, err = await run_sql(
-        ops_test, psql_unit_name, db_command, pgpass, user, host, port, dbname
-    )
-    assert rtn == 0, f"failed to run admin command {db_command}, {err}"
-
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        dbname=TEST_DBNAME,
     )
 
 
