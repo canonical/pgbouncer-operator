@@ -4,8 +4,10 @@
 import logging
 from pathlib import Path
 
+import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from tests.integration.helpers.helpers import (
     deploy_and_relate_application_with_pgbouncer_bundle,
@@ -26,8 +28,9 @@ RELATION_NAME = "db"
 PG = "postgresql"
 
 
+@pytest.mark.abort_on_fail
 async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
-    """Deploy Mailman3 Core to test the 'db' relation."""
+    """Deploy Weebl to test the 'db' relation."""
     backend_relation = await deploy_postgres_bundle(
         ops_test,
         pgb_charm,
@@ -36,7 +39,7 @@ async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
     )
 
     async with ops_test.fast_forward():
-        # Deploy and test the deployment of Mailman3 Core.
+        # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
             WEEBL,
@@ -52,3 +55,6 @@ async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{WEEBL}:database")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
+    for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(1), reraise=True):
+        with attempt:
+            assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"

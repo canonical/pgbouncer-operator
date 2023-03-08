@@ -215,7 +215,8 @@ class BackendDatabaseRequires(Object):
             event.defer()
             return
 
-        cfg.remove_user(self.postgres.user)
+        if self.postgres:
+            cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
         cfg["pgbouncer"].pop("auth_file", None)

@@ -252,6 +252,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
     await ops_test.model.applications[PGB_2].remove_relation(
         f"{PGB_2}:database", f"{CLIENT_APP_NAME}:{MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME}"
     )
+    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
 
 
 async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, application_charm):

@@ -107,7 +107,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
         # being used in a later step.
         enable_connections_logging(ops_test, f"{PG}/0")
 
-        # Deploy and test the deployment of Mailman3 Core.
+        # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
             WEEBL,
