@@ -6,8 +6,6 @@ import asyncio
 import json
 import logging
 import subprocess
-import tempfile
-import zipfile
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -295,6 +293,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     relation: str = "db",
     series: str = "jammy",
     force: bool = False,
+    wait: bool = True,
 ):
     """Helper function to deploy and relate application with Pgbouncer cluster.
 
@@ -311,6 +310,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
             the application to.
         series: The series on which to deploy.
         force: Allow charm to be deployed to a machine running an unsupported series.
+        wait: Wait for model to idle
 
     Returns:
         the id of the created relation.
@@ -357,12 +357,13 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     # Relate application to pgbouncer.
     relation = await ops_test.model.relate(application_name, f"{PGB}:{relation}")
     wait_for_relation_joined_between(ops_test, PGB, application_name)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(
-            apps=[application_name, PG, PGB],
-            status="active",
-            timeout=600,
-        )
+    if wait:
+        async with ops_test.fast_forward():
+            await ops_test.model.wait_for_idle(
+                apps=[application_name, PG, PGB],
+                status="active",
+                timeout=600,
+            )
 
     return relation
 
@@ -387,53 +388,3 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
         await ops_test.model.wait_for_idle(
             apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
         )
-
-
-async def deploy_and_relate_bundle_with_pgbouncer(
-    ops_test: OpsTest,
-    bundle: str,
-    application_name: str,
-) -> str:
-    """Helper function to deploy and relate a bundle with PgBouncer.
-
-    Args:
-        ops_test: The ops test framework.
-        bundle: Bundle identifier.
-        application_name: The name of the application to check for
-            an active state after the deployment.
-    """
-    # Deploy the bundle.
-    with tempfile.NamedTemporaryFile() as original:
-        # Download the original bundle.
-        await ops_test.juju("download", bundle, "--filepath", original.name)
-
-        # Open the bundle compressed file and update the contents
-        # of the bundle.yaml file to deploy it.
-        with zipfile.ZipFile(original.name, "r") as archive:
-            bundle_yaml = archive.read("bundle.yaml")
-            data = yaml.load(bundle_yaml, Loader=yaml.FullLoader)
-
-            # Remove PostgreSQL and relations with it from the bundle.yaml file.
-            del data["services"]["postgresql"]
-            data["relations"] = [
-                relation
-                for relation in data["relations"]
-                if "postgresql:db" not in relation and "postgresql:db-admin" not in relation
-            ]
-
-            # Write the new bundle content to a temporary file and deploy it.
-            with tempfile.NamedTemporaryFile() as patched:
-                patched.write(yaml.dump(data).encode("utf_8"))
-                patched.seek(0)
-                await ops_test.juju("deploy", patched.name)
-
-    # Relate application to PostgreSQL.
-    async with ops_test.fast_forward(fast_interval="30s"):
-        relation = await ops_test.model.relate(f"{application_name}", f"{PGB}:db-admin")
-        await ops_test.model.wait_for_idle(
-            apps=[application_name, PGB],
-            status="active",
-            timeout=1500,
-        )
-
-    return relation.id

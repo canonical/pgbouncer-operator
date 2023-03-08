@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
+import asyncio
 import logging
 
 import pytest
@@ -10,7 +11,7 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 from tests.integration.helpers.helpers import (
     PG,
     PGB,
-    deploy_and_relate_bundle_with_pgbouncer,
+    deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
 )
 from tests.integration.helpers.postgresql_helpers import (
@@ -21,19 +22,50 @@ from tests.integration.helpers.postgresql_helpers import (
 logger = logging.getLogger(__name__)
 
 LANDSCAPE_APP_NAME = "landscape-server"
-LANDSCAPE_SCALABLE_BUNDLE_NAME = "ch:landscape-scalable"
+HAPROXY = "haproxy"
+RABBITMQ = "rabbitmq-server"
 RELATION = "db-admin"
 
 
 @pytest.mark.abort_on_fail
 async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm) -> None:
+    await ops_test.model.set_config({"automatically-retry-hooks": "true"})
+
     # Deploy application.
     await deploy_postgres_bundle(ops_test, pgb_charm, db_units=2, pgb_series="jammy")
-    relation_id = await deploy_and_relate_bundle_with_pgbouncer(
+    relation = await deploy_and_relate_application_with_pgbouncer_bundle(
         ops_test,
-        LANDSCAPE_SCALABLE_BUNDLE_NAME,
         LANDSCAPE_APP_NAME,
+        LANDSCAPE_APP_NAME,
+        series="jammy",
+        relation=RELATION,
+        force=True,
+        wait=False,
     )
+    await asyncio.gather(
+        ops_test.model.deploy(
+            HAPROXY,
+            channel="stable",
+            application_name=HAPROXY,
+            num_units=1,
+            series="focal",
+        ),
+        ops_test.model.deploy(
+            RABBITMQ,
+            channel="stable",
+            application_name=RABBITMQ,
+            num_units=1,
+            series="focal",
+        ),
+    )
+    await asyncio.gather(
+        ops_test.model.relate(RABBITMQ, LANDSCAPE_APP_NAME),
+        ops_test.model.relate(HAPROXY, LANDSCAPE_APP_NAME),
+    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[LANDSCAPE_APP_NAME, PG, PGB], status="active", timeout=1000
+        )
 
     await check_databases_creation(
         ops_test,
@@ -47,7 +79,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm) -> None:
         ],
     )
 
-    landscape_users = [f"relation-{relation_id}"]
+    landscape_users = [f"relation-{relation.id}"]
 
     await check_database_users_existence(ops_test, landscape_users, [])
 
