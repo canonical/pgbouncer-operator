@@ -94,6 +94,7 @@ class PgBouncerCharm(CharmBase):
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
         self.render_pgb_config(cfg)
 
         # Render pgbouncer service file and reload systemd

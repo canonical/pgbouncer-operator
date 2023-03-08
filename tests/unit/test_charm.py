@@ -69,6 +69,7 @@ class TestCharm(unittest.TestCase):
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
+        initial_cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
         _render_configs.assert_called_once_with(initial_cfg)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
