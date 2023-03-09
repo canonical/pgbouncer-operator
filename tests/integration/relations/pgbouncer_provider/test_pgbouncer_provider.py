@@ -299,9 +299,23 @@ async def test_scaling(ops_test: OpsTest):
         dbname=TEST_DBNAME,
     )
 
+    # Break the relation so that test_relation_broken can be conditionally skipped
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
+    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
 
+
+@pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
+    client_relation = await ops_test.model.add_relation(
+        f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
+    )
+
+    await ops_test.model.wait_for_idle(status="active", timeout=600)
+
     client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
     # Retrieve the relation user.
     databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
