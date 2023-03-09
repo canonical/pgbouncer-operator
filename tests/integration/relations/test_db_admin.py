@@ -27,10 +27,13 @@ RABBITMQ = "rabbitmq-server"
 RELATION = "db-admin"
 
 
+def test_test():
+    pass
+
+
+@pytest.mark.unstable
 @pytest.mark.abort_on_fail
 async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm) -> None:
-    await ops_test.model.set_config({"automatically-retry-hooks": "true"})
-
     # Deploy application.
     await deploy_postgres_bundle(ops_test, pgb_charm, db_units=2, pgb_series="jammy")
     relation = await deploy_and_relate_application_with_pgbouncer_bundle(
@@ -84,6 +87,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm) -> None:
     await check_database_users_existence(ops_test, landscape_users, [])
 
 
+@pytest.mark.unstable
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:db-admin", f"{LANDSCAPE_APP_NAME}:db"

@@ -333,6 +333,11 @@ async def test_relation_broken(ops_test: OpsTest):
 
 async def test_relation_with_data_integrator(ops_test: OpsTest):
     """Test that the charm can be related to the data integrator without extra user roles."""
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
+    )
+    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active")
+
     config = {"database-name": "test-database"}
     await ops_test.model.deploy(
         DATA_INTEGRATOR_APP_NAME,
