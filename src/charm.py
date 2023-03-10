@@ -85,7 +85,6 @@ class PgBouncerCharm(CharmBase):
         os.chown(app_dir, pg_user.pw_uid, pg_user.pw_gid)
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
-        # TODO this can be removed once socket activation is implemented (JIRA-218)
         for service_id in self.service_ids:
             os.mkdir(f"{app_dir}/{INSTANCE_DIR}{service_id}", 0o700)
             os.chown(f"{app_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
@@ -241,10 +240,6 @@ class PgBouncerCharm(CharmBase):
 
         This method takes a primary config and generates one unique config for each intended
         instance of pgbouncer, implemented as a templated systemd service.
-
-        TODO JIRA-218: Once pgbouncer v1.14 is available, update to use socket activation:
-             https://warthogs.atlassian.net/browse/DPE-218. This is available in Ubuntu 22.04, but
-             not 20.04.
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
