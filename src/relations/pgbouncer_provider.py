@@ -183,11 +183,8 @@ class PgBouncerProvider(Object):
         # Set the read/write endpoint.
         self.database_provides.set_endpoints(
             relation.id,
-            f"{self.charm.leader_ip}:{self.charm.config['listen_port']}",
+            f"localhost:{self.charm.config['listen_port']}",
         )
-
-        # Update the read-only endpoint.
-        self.update_read_only_endpoints()
 
         # Set the database version.
         if self._check_backend():
@@ -242,24 +239,6 @@ class PgBouncerProvider(Object):
         # Write config data to charm filesystem
         if render_cfg:
             self.charm.render_pgb_config(cfg, reload_pgbouncer=reload_pgbouncer)
-
-    def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
-        """Set the read-only endpoint only if there are replicas."""
-        if not self.charm.unit.is_leader():
-            return
-
-        # Get the current relation or all the relations if this is triggered by another type of
-        # event.
-        relations = [event.relation] if event else self.model.relations[self.relation_name]
-
-        port = self.charm.config["listen_port"]
-        ips = set(self.charm.peers.units_ips)
-        ips.discard(self.charm.peers.leader_ip)
-        for relation in relations:
-            self.database_provides.set_read_only_endpoints(
-                relation.id,
-                ",".join([f"{host}:{port}" for host in ips]),
-            )
 
     def get_database(self, relation):
         """Gets database name from relation."""

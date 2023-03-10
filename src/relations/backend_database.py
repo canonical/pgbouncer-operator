@@ -66,7 +66,7 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_PATH, BACKEND_RELATION_NAME, PG, PGB, PGB_DIR
+from constants import AUTH_FILE_NAME, BACKEND_RELATION_NAME, PG, PGB, PGB_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class BackendDatabaseRequires(Object):
         cfg["pgbouncer"][
             "auth_query"
         ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
-        cfg["pgbouncer"]["auth_file"] = AUTH_FILE_PATH
+        cfg["pgbouncer"]["auth_file"] = f"{PGB_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
         self.charm.render_pgb_config(cfg)
 
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
@@ -215,7 +215,8 @@ class BackendDatabaseRequires(Object):
             event.defer()
             return
 
-        cfg.remove_user(self.postgres.user)
+        if self.postgres:
+            cfg.remove_user(self.postgres.user)
         cfg["pgbouncer"].pop("auth_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
         cfg["pgbouncer"].pop("auth_file", None)

@@ -52,7 +52,6 @@ class TestPgbouncerProvider(unittest.TestCase):
         return_value="test_auth_user",
     )
     @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test_pass")
-    @patch("relations.pgbouncer_provider.PgBouncerProvider.update_read_only_endpoints")
     @patch("relations.pgbouncer_provider.PgBouncerProvider.get_database", return_value="test-db")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_credentials")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
@@ -67,7 +66,6 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_endpoints,
         _dbp_set_credentials,
         _get_database,
-        _update_read_only_endpoints,
         _password,
         _auth_user,
         _pg_databag,
@@ -98,9 +96,8 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
         _dbp_set_version.assert_called_with(rel_id, _pg().get_postgresql_version())
         _dbp_set_endpoints.assert_called_with(
-            rel_id, f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
+            rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
-        _update_read_only_endpoints.assert_called()
         _render_cfg.assert_called_with(_cfg(), reload_pgbouncer=True)
 
         # Verify config contains what we want
@@ -187,10 +184,3 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_relation._on_relation_broken(event)
         assert not _cfg()["databases"].get(database)
         assert not _cfg()["databases"].get(f"{database}_readonly")
-
-    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
-    def test_update_read_only_endpoints(self, _set_read_only_endpoints):
-        self.harness.set_leader()
-        event = MagicMock()
-        self.client_relation.update_read_only_endpoints(event)
-        _set_read_only_endpoints.assert_called()
