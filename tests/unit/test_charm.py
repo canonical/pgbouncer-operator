@@ -15,7 +15,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, INI_PATH, PGB_DIR
+from constants import BACKEND_RELATION_NAME, INI_NAME, PGB_DIR
 from tests.helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
@@ -59,14 +59,17 @@ class TestCharm(unittest.TestCase):
 
         _install.assert_called_with(["pgbouncer"])
         _mkdir.assert_any_call(PGB_DIR, 0o700)
+        _mkdir.assert_any_call(f"{PGB_DIR}/pgbouncer", 0o700)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
+        _chown.assert_any_call(f"{PGB_DIR}/pgbouncer", 1100, 120)
 
         for service_id in self.charm.service_ids:
-            _mkdir.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 0o700)
-            _chown.assert_any_call(f"{PGB_DIR}/instance_{service_id}", 1100, 120)
+            _mkdir.assert_any_call(f"{PGB_DIR}/pgbouncer/instance_{service_id}", 0o700)
+            _chown.assert_any_call(f"{PGB_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
+        initial_cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
         _render_configs.assert_called_once_with(initial_cfg)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
@@ -89,7 +92,7 @@ class TestCharm(unittest.TestCase):
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
@@ -99,7 +102,7 @@ class TestCharm(unittest.TestCase):
         _start.side_effect = None
         _has_relation.return_value = True
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
@@ -108,7 +111,7 @@ class TestCharm(unittest.TestCase):
     def test_reload_pgbouncer(self, _running, _restart):
         intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
-        calls = [call(f"pgbouncer@{instance}") for instance in range(intended_instances)]
+        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
         _running.assert_called_once()
 
@@ -136,7 +139,7 @@ class TestCharm(unittest.TestCase):
 
         # check fail when services aren't all running
         self.assertIsInstance(self.charm.check_status(), BlockedStatus)
-        calls = [call("pgbouncer@0")]
+        calls = [call("pgbouncer-pgbouncer@0")]
         _running.assert_has_calls(calls)
         _running.return_value = True
 
@@ -148,7 +151,9 @@ class TestCharm(unittest.TestCase):
         # otherwise check all services and return activestatus
         intended_instances = self._cores = os.cpu_count()
         self.assertIsInstance(self.charm.check_status(), ActiveStatus)
-        calls = [call(f"pgbouncer@{instance}") for instance in range(0, intended_instances)]
+        calls = [
+            call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)
+        ]
         _running.assert_has_calls(calls)
 
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
@@ -239,7 +244,7 @@ class TestCharm(unittest.TestCase):
 
         for service_id in self.charm.service_ids:
             cfg = pgb.PgbConfig(DEFAULT_CFG)
-            instance_dir = f"{PGB_DIR}/instance_{service_id}"
+            instance_dir = f"{PGB_DIR}/pgbouncer/instance_{service_id}"
 
             cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
             cfg["pgbouncer"]["logfile"] = f"{instance_dir}/pgbouncer.log"
@@ -249,9 +254,13 @@ class TestCharm(unittest.TestCase):
 
         self.charm.render_pgb_config(default_cfg, reload_pgbouncer=False)
 
-        _render.assert_any_call(INI_PATH, cfg_list[0], 0o700)
-        _render.assert_any_call(f"{PGB_DIR}/instance_0/pgbouncer.ini", cfg_list[1], 0o700)
-        _render.assert_any_call(f"{PGB_DIR}/instance_1/pgbouncer.ini", cfg_list[2], 0o700)
+        _render.assert_any_call(f"{PGB_DIR}/pgbouncer/{INI_NAME}", cfg_list[0], 0o700)
+        _render.assert_any_call(
+            f"{PGB_DIR}/pgbouncer/instance_0/pgbouncer.ini", cfg_list[1], 0o700
+        )
+        _render.assert_any_call(
+            f"{PGB_DIR}/pgbouncer/instance_1/pgbouncer.ini", cfg_list[2], 0o700
+        )
 
         _reload.assert_not_called()
         # MaintenanceStatus will exit once pgbouncer reloads.

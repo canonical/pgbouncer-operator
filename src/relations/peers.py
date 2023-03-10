@@ -8,7 +8,7 @@ Example:
 ┃ relation (id: 2) ┃ pgbouncer                                                                                                                               ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │ relation name    │ pgb-peers                                                                                                                               │
-│ interface        │ pgb-peers                                                                                                                               │
+│ interface        │ pgb_peers                                                                                                                               │
 │ leader unit      │ 0                                                                                                                                       │
 │ type             │ peer                                                                                                                                    │
 ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
@@ -158,7 +158,12 @@ class Peers(Object):
             # The backend relation creates the userlist, so only upload userlist to databag if
             # backend relation is initialised. If not, it'll be added when that relation first
             # writes it to the filesystem, so no need to add it now.
-            self.update_auth_file(self.charm.read_auth_file())
+            try:
+                self.update_auth_file(self.charm.read_auth_file())
+            except FileNotFoundError:
+                # Subordinate leader got recreated
+                if auth_file := self.get_secret("app", AUTH_FILE_DATABAG_KEY):
+                    self.charm.render_auth_file(auth_file)
 
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""

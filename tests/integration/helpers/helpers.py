@@ -5,6 +5,7 @@
 import asyncio
 import json
 import logging
+import subprocess
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -15,11 +16,17 @@ from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
-from constants import AUTH_FILE_PATH, INI_PATH, LOG_PATH
+from constants import AUTH_FILE_NAME, INI_NAME, PGB_DIR
 
+CLIENT_APP_NAME = "application"
+FIRST_DATABASE_RELATION_NAME = "first-database"
+SECOND_DATABASE_RELATION_NAME = "second-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 PG = "postgresql"
+WEEBL = "weebl"
+
+WAIT_MSG = "waiting for backend database relation to connect"
 
 
 def get_backend_relation(ops_test: OpsTest):
@@ -104,7 +111,7 @@ async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
         unit_name,
         "--format=json",
     )
-    logging.error(get_databag)
+    logging.info(get_databag)
     return json.loads(get_databag[1])[unit_name]
 
 
@@ -123,20 +130,19 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
     return output
 
 
-async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = INI_PATH) -> pgb.PgbConfig:
+async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> pgb.PgbConfig:
     """Gets pgbouncer config from unit filesystem."""
+    if path is None:
+        app_name = unit_name.split("/")[0]
+        path = f"{PGB_DIR}/{app_name}/{INI_NAME}"
     cat = await cat_file_from_unit(ops_test, path, unit_name)
     return pgb.PgbConfig(cat)
 
 
-async def get_pgb_log(ops_test: OpsTest, unit_name) -> str:
-    """Gets pgbouncer logs from unit filesystem."""
-    return await cat_file_from_unit(ops_test, LOG_PATH, unit_name)
-
-
 async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
     """Gets pgbouncer auth file from unit filesystem."""
-    return await cat_file_from_unit(ops_test, AUTH_FILE_PATH, unit_name)
+    app_name = unit_name.split("/")[0]
+    return await cat_file_from_unit(ops_test, f"{PGB_DIR}/{app_name}/{AUTH_FILE_NAME}", unit_name)
 
 
 async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):
@@ -241,6 +247,7 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
 
 async def deploy_postgres_bundle(
     ops_test: OpsTest,
+    pgb_charm,
     pgb_config: dict = {},
     pgb_series: str = "jammy",
     pg_config: dict = {},
@@ -251,12 +258,13 @@ async def deploy_postgres_bundle(
     Returns:
         libjuju Relation object describing the relation between pgbouncer and postgres.
     """
-    charm = await ops_test.build_charm(".")
     await asyncio.gather(
         ops_test.model.deploy(
-            charm,
+            pgb_charm,
             application_name=PGB,
             config=pgb_config,
+            num_units=None,
+            series=pgb_series,
         ),
         ops_test.model.deploy(
             PG,
@@ -266,15 +274,11 @@ async def deploy_postgres_bundle(
         ),
     )
     async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[PG], status="active", timeout=600, wait_for_exact_units=db_units
-            ),
-            ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600),
+        await ops_test.model.wait_for_idle(
+            apps=[PG], status="active", timeout=1000, wait_for_exact_units=db_units
         )
         relation = await ops_test.model.add_relation(f"{PGB}:backend-database", f"{PG}:database")
-        wait_for_relation_joined_between(ops_test, PG, PGB)
-        await ops_test.model.wait_for_idle(apps=[PG, PGB], status="active", timeout=600)
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
 
     return relation
 
@@ -287,6 +291,9 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: dict = {},
     channel: str = "stable",
     relation: str = "db",
+    series: str = "jammy",
+    force: bool = False,
+    wait: bool = True,
 ):
     """Helper function to deploy and relate application with Pgbouncer cluster.
 
@@ -301,18 +308,46 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         channel: The channel to use for the charm.
         relation: Name of the pgbouncer relation to relate
             the application to.
+        series: The series on which to deploy.
+        force: Allow charm to be deployed to a machine running an unsupported series.
+        wait: Wait for model to idle
 
     Returns:
         the id of the created relation.
     """
     # Deploy application.
-    await ops_test.model.deploy(
-        charm,
-        channel=channel,
-        application_name=application_name,
-        num_units=number_of_units,
-        config=config,
-    )
+    if not force:
+        await ops_test.model.deploy(
+            charm,
+            channel=channel,
+            application_name=application_name,
+            num_units=number_of_units,
+            config=config,
+            series=series,
+        )
+    else:
+        # Dirty hack to force the series
+        status = await ops_test.model.get_status()
+        args = [
+            "juju",
+            "deploy",
+            charm,
+            application_name,
+            "-m",
+            status.model.name,
+            "--force",
+            "-n",
+            str(number_of_units),
+            "--series",
+            series,
+            "--channel",
+            channel,
+        ]
+        if config:
+            for key, val in config.items():
+                args += ["--config", f"{key}={val}"]
+        subprocess.run(args)
+
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
             apps=[application_name],
@@ -322,12 +357,13 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     # Relate application to pgbouncer.
     relation = await ops_test.model.relate(application_name, f"{PGB}:{relation}")
     wait_for_relation_joined_between(ops_test, PGB, application_name)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(
-            apps=[application_name, PG, PGB],
-            status="active",
-            timeout=600,
-        )
+    if wait:
+        async with ops_test.fast_forward():
+            await ops_test.model.wait_for_idle(
+                apps=[application_name, PG, PGB],
+                status="active",
+                timeout=600,
+            )
 
     return relation
 

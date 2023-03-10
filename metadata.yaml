@@ -23,23 +23,33 @@ series:
 
 peers:
   pgb-peers:
-    interface: pgb-peers
+    interface: pgb_peers
+
+subordinate: true
 
 provides:
   database:
     interface: postgresql_client
+    limit: 1
     optional: true
+    scope: container
 
   # Legacy relations - these will be deprecated in a future release
   db:
     interface: pgsql
+    limit: 1
     optional: true
+    scope: container
   db-admin:
     interface: pgsql
+    limit: 1
     optional: true
+    scope: container
 
 requires:
   backend-database:
     interface: postgresql_client
     optional: false
-
+  juju-info:
+    interface: juju-info
+    scope: container
