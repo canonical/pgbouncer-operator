@@ -125,6 +125,17 @@ class PgBouncerCharm(CharmBase):
 
         systemd.daemon_reload()
 
+    @property
+    def version(self) -> str:
+        """Returns the version Pgbouncer."""
+        try:
+            output = subprocess.check_output(["pgbouncer", "--version"])
+            if output:
+                return output.decode().split("\n")[0].split(" ")[1]
+        except Exception:
+            logger.exception("Unable to get Pgbouncer version")
+            return ""
+
     def _on_start(self, _) -> None:
         """On Start hook.
 
@@ -143,6 +154,8 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
+
+        self.unit.set_workload_version(self.version)
 
     def _on_leader_elected(self, _):
         self.peers.update_connection()
