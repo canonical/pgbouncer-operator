@@ -117,7 +117,9 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
         # Check the logs to ensure TLS is being used by PgBouncer.
         postgresql_primary_unit = await get_postgres_primary(ops_test)
         logs = await run_command_on_unit(
-            ops_test, postgresql_primary_unit, "journalctl -u patroni.service"
+            ops_test,
+            postgresql_primary_unit,
+            "journalctl -u snap.charmed-postgresql.patroni.service",
         )
         assert (
             f"connection authorized: user={pgb_user} database=bugs_database SSL enabled" in logs
