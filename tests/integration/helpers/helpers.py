@@ -268,7 +268,7 @@ async def deploy_postgres_bundle(
         ),
         ops_test.model.deploy(
             PG,
-            channel="edge",
+            channel="14/edge",
             num_units=db_units,
             config=pg_config,
         ),
