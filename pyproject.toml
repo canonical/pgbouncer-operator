@@ -41,17 +41,17 @@ codespell = "2.2.4"
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = {extras = ["toml"], version = "7.2.2"}
-pytest = "7.2.2"
-pytest-asyncio = "0.20.3"
-psycopg2 = {version = "2.9.5", extras = ["binary"]}
+coverage = {extras = ["toml"], version = "7.2.3"}
+pytest = "7.3.1"
+pytest-asyncio = "0.21.0"
+psycopg2 = {version = "2.9.6", extras = ["binary"]}
 jinja2 = "3.1.2"
 
 [tool.poetry.group.integration]
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-pytest = "7.2.2"
+pytest = "7.3.1"
 pytest-operator = "0.26.0"
 juju = "2.9.42.1" # Latest juju 2
 tenacity = "8.2.2"
