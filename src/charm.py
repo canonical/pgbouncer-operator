@@ -12,8 +12,7 @@ import subprocess
 from copy import deepcopy
 from typing import List, Optional, Union
 
-from charms.operator_libs_linux.v0 import apt
-from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v1 import snap, systemd
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
 from ops.charm import CharmBase
@@ -21,9 +20,17 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import AUTH_FILE_NAME, CLIENT_RELATION_NAME, INI_NAME, PEER_RELATION_NAME
-from constants import PG as PG_USER
-from constants import PGB, PGB_DIR
+from constants import (
+    AUTH_FILE_NAME,
+    CLIENT_RELATION_NAME,
+    INI_NAME,
+    PEER_RELATION_NAME,
+    PG_USER,
+    PGB,
+    PGB_DIR,
+    PGBOUNCER_EXECUTABLE,
+    SNAP_PACKAGES,
+)
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
@@ -72,13 +79,14 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
-        self._install_apt_packages([PGB])
+        # Install the charmed PostgreSQL snap.
+        try:
+            self._install_snap_packages(packages=SNAP_PACKAGES)
+        except snap.SnapError:
+            self.unit.status = BlockedStatus("failed to install snap packages")
+            return
 
         pg_user = pwd.getpwnam(PG_USER)
-        try:
-            os.mkdir(PGB_DIR, 0o700)
-        except FileExistsError:
-            pass
         app_dir = f"{PGB_DIR}/{self.app.name}"
         os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
         os.mkdir(app_dir, 0o700)
@@ -94,6 +102,7 @@ class PgBouncerCharm(CharmBase):
         # throw a fit.
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
+        cfg["pgbouncer"]["user"] = "snap_daemon"
         self.render_pgb_config(cfg)
 
         # Render pgbouncer service file and reload systemd
@@ -106,9 +115,6 @@ class PgBouncerCharm(CharmBase):
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
         )
         systemd.daemon_reload()
-        # Apt package starts its own pgbouncer service. Disable this so we can start and control
-        # our own.
-        systemd.service_stop(PGB)
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -129,7 +135,7 @@ class PgBouncerCharm(CharmBase):
     def version(self) -> str:
         """Returns the version Pgbouncer."""
         try:
-            output = subprocess.check_output(["pgbouncer", "--version"])
+            output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
             if output:
                 return output.decode().split("\n")[0].split(" ")[1]
         except Exception:
@@ -330,22 +336,31 @@ class PgBouncerCharm(CharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_apt_packages(self, packages: List[str]):
-        """Simple wrapper around 'apt-get install -y."""
-        try:
-            logger.debug("updating apt cache")
-            apt.update()
-        except subprocess.CalledProcessError as e:
-            logger.exception("failed to update apt cache, CalledProcessError", exc_info=e)
-            self.unit.status = BlockedStatus("failed to update apt cache")
-            return
+    def _install_snap_packages(self, packages: List[str]) -> None:
+        """Installs package(s) to container.
 
-        try:
-            logger.debug(f"installing apt packages: {', '.join(packages)}")
-            apt.add_package(packages)
-        except (apt.PackageNotFoundError, apt.PackageError, TypeError) as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("failed to install packages")
+        Args:
+            packages: list of packages to install.
+        """
+        for snap_name, snap_version in packages:
+            try:
+                snap_cache = snap.SnapCache()
+                snap_package = snap_cache[snap_name]
+
+                if not snap_package.present:
+                    if snap_version.get("revision"):
+                        snap_package.ensure(
+                            snap.SnapState.Latest, revision=snap_version["revision"]
+                        )
+                        snap_package.hold()
+                    else:
+                        snap_package.ensure(snap.SnapState.Latest, channel=snap_version["channel"])
+
+            except (snap.SnapError, snap.SnapNotFoundError) as e:
+                logger.error(
+                    "An exception occurred when installing %s. Reason: %s", snap_name, str(e)
+                )
+                raise
 
     def render_file(self, path: str, content: str, perms: int) -> None:
         """Write content rendered from a template to a file.

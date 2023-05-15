@@ -2,20 +2,18 @@
 # See LICENSE file for licensing details.
 
 import os
-import subprocess
 import unittest
 from copy import deepcopy
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import ops.testing
-from charms.operator_libs_linux.v0 import apt
-from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v1 import snap, systemd
 from charms.pgbouncer_k8s.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, INI_NAME, PGB_DIR
+from constants import BACKEND_RELATION_NAME, INI_NAME, PGB_DIR, SNAP_PACKAGES
 from tests.helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
@@ -34,7 +32,7 @@ class TestCharm(unittest.TestCase):
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
-    @patch("charm.PgBouncerCharm._install_apt_packages")
+    @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
     @patch("os.mkdir")
     @patch("os.chown")
@@ -57,8 +55,7 @@ class TestCharm(unittest.TestCase):
     ):
         self.charm.on.install.emit()
 
-        _install.assert_called_with(["pgbouncer"])
-        _mkdir.assert_any_call(PGB_DIR, 0o700)
+        _install.assert_called_once_with(packages=SNAP_PACKAGES)
         _mkdir.assert_any_call(f"{PGB_DIR}/pgbouncer", 0o700)
         _chown.assert_any_call(PGB_DIR, 1100, 120)
         _chown.assert_any_call(f"{PGB_DIR}/pgbouncer", 1100, 120)
@@ -70,6 +67,7 @@ class TestCharm(unittest.TestCase):
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
         initial_cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
+        initial_cfg["pgbouncer"]["user"] = "snap_daemon"
         _render_configs.assert_called_once_with(initial_cfg)
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
@@ -191,24 +189,48 @@ class TestCharm(unittest.TestCase):
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
         self.assertDictEqual(dict(_read.return_value), dict(test_config))
 
-    @patch("charms.operator_libs_linux.v0.apt.add_package")
-    @patch("charms.operator_libs_linux.v0.apt.update")
-    def test_install_apt_packages(self, _update, _add_package):
-        self.charm._install_apt_packages(["test_package"])
-        _update.assert_called_once()
-        _add_package.assert_called_with(["test_package"])
+    @patch("charm.snap.SnapCache")
+    def test_install_snap_packages(self, _snap_cache):
+        _snap_package = _snap_cache.return_value.__getitem__.return_value
+        _snap_package.ensure.side_effect = snap.SnapError
+        _snap_package.present = False
 
-        _add_package.side_effect = apt.PackageNotFoundError()
-        self.charm._install_apt_packages(["fail_to_install"])
-        self.assertEqual(
-            self.harness.model.unit.status, BlockedStatus("failed to install packages")
-        )
+        # Test for problem with snap update.
+        with self.assertRaises(snap.SnapError):
+            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+        _snap_cache.assert_called_once_with()
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
 
-        _update.side_effect = subprocess.CalledProcessError(returncode=999, cmd="fail to update")
-        self.charm._install_apt_packages(["fail_to_update_apt_cache"])
-        self.assertEqual(
-            self.harness.model.unit.status, BlockedStatus("failed to update apt cache")
-        )
+        # Test with a not found package.
+        _snap_cache.reset_mock()
+        _snap_package.reset_mock()
+        _snap_package.ensure.side_effect = snap.SnapNotFoundError
+        with self.assertRaises(snap.SnapNotFoundError):
+            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+        _snap_cache.assert_called_once_with()
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+
+        # Then test a valid one.
+        _snap_cache.reset_mock()
+        _snap_package.reset_mock()
+        _snap_package.ensure.side_effect = None
+        self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
+        _snap_cache.assert_called_once_with()
+        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_package.hold.assert_not_called()
+
+        # Test revision
+        _snap_cache.reset_mock()
+        _snap_package.reset_mock()
+        _snap_package.ensure.side_effect = None
+        self.charm._install_snap_packages([("postgresql", {"revision": 42})])
+        _snap_cache.assert_called_once_with()
+        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, revision=42)
+        _snap_package.hold.assert_called_once_with()
 
     @patch("os.chmod")
     @patch("os.chown")
@@ -221,7 +243,7 @@ class TestCharm(unittest.TestCase):
             self.charm.render_file(path, content, mode)
 
         _chmod.assert_called_with(path, mode)
-        _getpwnam.assert_called_with("postgres")
+        _getpwnam.assert_called_with("snap_daemon")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
     def test_read_pgb_config(self):
