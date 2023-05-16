@@ -27,7 +27,8 @@ from constants import (
     PEER_RELATION_NAME,
     PG_USER,
     PGB,
-    PGB_DIR,
+    PGB_CONF_DIR,
+    PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
     SNAP_PACKAGES,
 )
@@ -87,15 +88,24 @@ class PgBouncerCharm(CharmBase):
             return
 
         pg_user = pwd.getpwnam(PG_USER)
-        app_dir = f"{PGB_DIR}/{self.app.name}"
-        os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
-        os.mkdir(app_dir, 0o700)
-        os.chown(app_dir, pg_user.pw_uid, pg_user.pw_gid)
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+        app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
+        app_temp_dir = f"/tmp/{self.app.name}"
+        os.mkdir(app_conf_dir, 0o700)
+        os.chown(app_conf_dir, pg_user.pw_uid, pg_user.pw_gid)
+        os.mkdir(app_log_dir, 0o700)
+        os.chown(app_log_dir, pg_user.pw_uid, pg_user.pw_gid)
+        os.mkdir(app_temp_dir, 0o700)
+        os.chown(app_temp_dir, pg_user.pw_uid, pg_user.pw_gid)
 
         # Make a directory for each service to store logs, configs, pidfiles and sockets.
         for service_id in self.service_ids:
-            os.mkdir(f"{app_dir}/{INSTANCE_DIR}{service_id}", 0o700)
-            os.chown(f"{app_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+            os.mkdir(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700)
+            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+            os.mkdir(f"{app_log_dir}/{INSTANCE_DIR}{service_id}", 0o700)
+            os.chown(f"{app_log_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+            os.mkdir(f"{app_temp_dir}/{INSTANCE_DIR}{service_id}", 0o700)
+            os.chown(f"{app_temp_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
@@ -109,7 +119,7 @@ class PgBouncerCharm(CharmBase):
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
-        rendered = template.render(app_name=self.app.name)
+        rendered = template.render(app_name=self.app.name, conf_dir=PGB_CONF_DIR)
 
         self.render_file(
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
@@ -127,7 +137,9 @@ class PgBouncerCharm(CharmBase):
             systemd.service_stop(service)
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
-        shutil.rmtree(f"{PGB_DIR}/{self.app.name}")
+        shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
+        shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
+        shutil.rmtree(f"/tmp/{self.app.name}")
 
         systemd.daemon_reload()
 
@@ -250,7 +262,7 @@ class PgBouncerCharm(CharmBase):
         Returns:
             PgbConfig object containing pgbouncer config.
         """
-        with open(f"{PGB_DIR}/{self.app.name}/{INI_NAME}", "r") as file:
+        with open(f"{PGB_CONF_DIR}/{self.app.name}/{INI_NAME}", "r") as file:
             config = pgb.PgbConfig(file.read())
         return config
 
@@ -269,18 +281,27 @@ class PgBouncerCharm(CharmBase):
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
-        app_dir = f"{PGB_DIR}/{self.app.name}"
-        self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=f"{app_dir}/{INI_NAME}")
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+        app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
+        app_temp_dir = f"/tmp/{self.app.name}"
+        self._render_pgb_config(
+            pgb.PgbConfig(primary_config), config_path=f"{app_conf_dir}/{INI_NAME}"
+        )
 
         # Modify & render config files for each service instance
         for service_id in self.service_ids:
-            instance_dir = f"{app_dir}/{INSTANCE_DIR}{service_id}"  # Generated in on_install hook
+            primary_config[PGB]["unix_socket_dir"] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}"
+            primary_config[PGB][
+                "logfile"
+            ] = f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log"
+            primary_config[PGB][
+                "pidfile"
+            ] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid"
 
-            primary_config[PGB]["unix_socket_dir"] = instance_dir
-            primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            primary_config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
-
-            self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
+            self._render_pgb_config(
+                primary_config,
+                config_path=f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
+            )
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
@@ -302,7 +323,7 @@ class PgBouncerCharm(CharmBase):
             config_path: intended location for the config.
         """
         if config_path is None:
-            config_path = f"{PGB_DIR}/{self.app.name}/{INI_NAME}"
+            config_path = f"{PGB_CONF_DIR}/{self.app.name}/{INI_NAME}"
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
         self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
@@ -311,7 +332,7 @@ class PgBouncerCharm(CharmBase):
 
     def read_auth_file(self) -> str:
         """Gets the auth file from the pgbouncer container filesystem."""
-        with open(f"{PGB_DIR}/{self.app.name}/{AUTH_FILE_NAME}", "r") as fd:
+        with open(f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", "r") as fd:
             return fd.read()
 
     def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
@@ -327,7 +348,9 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
 
         self.peers.update_auth_file(auth_file)
-        self.render_file(f"{PGB_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700)
+        self.render_file(
+            f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
+        )
 
         if reload_pgbouncer:
             self.reload_pgbouncer()

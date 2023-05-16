@@ -66,7 +66,7 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_NAME, BACKEND_RELATION_NAME, PG, PGB, PGB_DIR
+from constants import AUTH_FILE_NAME, BACKEND_RELATION_NAME, PG, PGB, PGB_CONF_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class BackendDatabaseRequires(Object):
         cfg["pgbouncer"][
             "auth_query"
         ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
-        cfg["pgbouncer"]["auth_file"] = f"{PGB_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
+        cfg["pgbouncer"]["auth_file"] = f"{PGB_CONF_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
         self.charm.render_pgb_config(cfg)
 
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
@@ -222,7 +222,7 @@ class BackendDatabaseRequires(Object):
         cfg["pgbouncer"].pop("auth_file", None)
         self.charm.render_pgb_config(cfg)
 
-        self.charm.delete_file(f"{PGB_DIR}/userlist.txt")
+        self.charm.delete_file(f"{PGB_CONF_DIR}/userlist.txt")
         self.charm.peers.update_auth_file(auth_file=None)
 
     def initialise_auth_function(self, dbs: List[str]):

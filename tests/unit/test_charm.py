@@ -13,7 +13,13 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, INI_NAME, PGB_DIR, SNAP_PACKAGES
+from constants import (
+    BACKEND_RELATION_NAME,
+    INI_NAME,
+    PGB_CONF_DIR,
+    PGB_LOG_DIR,
+    SNAP_PACKAGES,
+)
 from tests.helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
@@ -56,13 +62,20 @@ class TestCharm(unittest.TestCase):
         self.charm.on.install.emit()
 
         _install.assert_called_once_with(packages=SNAP_PACKAGES)
-        _mkdir.assert_any_call(f"{PGB_DIR}/pgbouncer", 0o700)
-        _chown.assert_any_call(PGB_DIR, 1100, 120)
-        _chown.assert_any_call(f"{PGB_DIR}/pgbouncer", 1100, 120)
+        _mkdir.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer", 0o700)
+        _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer", 1100, 120)
+        _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 0o700)
+        _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 1100, 120)
+        _mkdir.assert_any_call("/tmp/pgbouncer", 0o700)
+        _chown.assert_any_call("/tmp/pgbouncer", 1100, 120)
 
         for service_id in self.charm.service_ids:
-            _mkdir.assert_any_call(f"{PGB_DIR}/pgbouncer/instance_{service_id}", 0o700)
-            _chown.assert_any_call(f"{PGB_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
+            _mkdir.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 0o700)
+            _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
+            _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 0o700)
+            _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
+            _mkdir.assert_any_call(f"/tmp/pgbouncer/instance_{service_id}", 0o700)
+            _chown.assert_any_call(f"/tmp/pgbouncer/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
@@ -266,22 +279,22 @@ class TestCharm(unittest.TestCase):
 
         for service_id in self.charm.service_ids:
             cfg = pgb.PgbConfig(DEFAULT_CFG)
-            instance_dir = f"{PGB_DIR}/pgbouncer/instance_{service_id}"
-
-            cfg["pgbouncer"]["unix_socket_dir"] = instance_dir
-            cfg["pgbouncer"]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            cfg["pgbouncer"]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
+            cfg["pgbouncer"]["unix_socket_dir"] = f"/tmp/pgbouncer/instance_{service_id}"
+            cfg["pgbouncer"][
+                "logfile"
+            ] = f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}/pgbouncer.log"
+            cfg["pgbouncer"]["pidfile"] = f"/tmp/pgbouncer/instance_{service_id}/pgbouncer.pid"
 
             cfg_list.append(cfg.render())
 
         self.charm.render_pgb_config(default_cfg, reload_pgbouncer=False)
 
-        _render.assert_any_call(f"{PGB_DIR}/pgbouncer/{INI_NAME}", cfg_list[0], 0o700)
+        _render.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/{INI_NAME}", cfg_list[0], 0o700)
         _render.assert_any_call(
-            f"{PGB_DIR}/pgbouncer/instance_0/pgbouncer.ini", cfg_list[1], 0o700
+            f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", cfg_list[1], 0o700
         )
         _render.assert_any_call(
-            f"{PGB_DIR}/pgbouncer/instance_1/pgbouncer.ini", cfg_list[2], 0o700
+            f"{PGB_CONF_DIR}/pgbouncer/instance_1/pgbouncer.ini", cfg_list[2], 0o700
         )
 
         _reload.assert_not_called()

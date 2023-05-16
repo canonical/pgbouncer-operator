@@ -6,14 +6,19 @@
 PGB = "pgbouncer"
 PG = "postgres"
 PG_USER = "snap_daemon"
-PGB_DIR = "/var/snap/charmed-postgresql/common/var/lib/pgbouncer"
 INI_NAME = "pgbouncer.ini"
 AUTH_FILE_NAME = "userlist.txt"
 
 # Snap constants.
 PGBOUNCER_EXECUTABLE = "charmed-postgresql.pgbouncer"
 POSTGRESQL_SNAP_NAME = "charmed-postgresql"
-SNAP_PACKAGES = [(POSTGRESQL_SNAP_NAME, {"revision": 43})]
+SNAP_PACKAGES = [(POSTGRESQL_SNAP_NAME, {"revision": 44})]
+
+SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
+SNAP_CURRENT_PATH = "/var/snap/charmed-postgresql/current"
+
+PGB_CONF_DIR = f"{SNAP_CURRENT_PATH}/etc/pgbouncer"
+PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
 # PGB config
 DATABASES = "databases"

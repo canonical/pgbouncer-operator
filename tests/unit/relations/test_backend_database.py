@@ -8,7 +8,7 @@ from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig, get_hashed_pa
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME, PGB, PGB_DIR
+from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME, PGB, PGB_CONF_DIR
 from tests.helpers import patch_network_get
 
 
@@ -76,7 +76,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
         _render.assert_any_call(
-            f"{PGB_DIR}/pgbouncer/userlist.txt",
+            f"{PGB_CONF_DIR}/pgbouncer/userlist.txt",
             f'"{self.backend.auth_user}" "{hash_pw}"',
             perms=0o700,
         )
@@ -87,7 +87,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
             cfg["pgbouncer"]["auth_query"]
             == f"SELECT username, password FROM {self.backend.auth_user}.get_auth($1)"
         )
-        assert cfg["pgbouncer"]["auth_file"] == f"{PGB_DIR}/pgbouncer/userlist.txt"
+        assert cfg["pgbouncer"]["auth_file"] == f"{PGB_CONF_DIR}/pgbouncer/userlist.txt"
 
         _update_endpoints.assert_called_once()
 
@@ -161,7 +161,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         assert "auth_query" not in cfg["pgbouncer"]
 
         _render.assert_called_with(cfg)
-        _delete_file.assert_called_with(f"{PGB_DIR}/userlist.txt")
+        _delete_file.assert_called_with(f"{PGB_CONF_DIR}/userlist.txt")
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
