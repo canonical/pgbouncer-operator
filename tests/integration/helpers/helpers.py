@@ -16,7 +16,7 @@ from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
-from constants import AUTH_FILE_NAME, INI_NAME, PGB_DIR
+from constants import AUTH_FILE_NAME, INI_NAME, PGB_CONF_DIR
 
 CLIENT_APP_NAME = "application"
 FIRST_DATABASE_RELATION_NAME = "first-database"
@@ -134,7 +134,7 @@ async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> pgb.Pg
     """Gets pgbouncer config from unit filesystem."""
     if path is None:
         app_name = unit_name.split("/")[0]
-        path = f"{PGB_DIR}/{app_name}/{INI_NAME}"
+        path = f"{PGB_CONF_DIR}/{app_name}/{INI_NAME}"
     cat = await cat_file_from_unit(ops_test, path, unit_name)
     return pgb.PgbConfig(cat)
 
@@ -142,7 +142,9 @@ async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> pgb.Pg
 async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
     """Gets pgbouncer auth file from unit filesystem."""
     app_name = unit_name.split("/")[0]
-    return await cat_file_from_unit(ops_test, f"{PGB_DIR}/{app_name}/{AUTH_FILE_NAME}", unit_name)
+    return await cat_file_from_unit(
+        ops_test, f"{PGB_CONF_DIR}/{app_name}/{AUTH_FILE_NAME}", unit_name
+    )
 
 
 async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):

@@ -9,7 +9,7 @@ import pytest
 from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
-from constants import PGB_DIR
+from constants import PGB_CONF_DIR
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
@@ -73,7 +73,7 @@ async def test_change_config(ops_test: OpsTest):
     # Validating service config files are correctly written is handled by render_pgb_config and its
     # tests, but we need to make sure they at least exist in the right places.
     for service_id in range(cores):
-        path = f"{PGB_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
+        path = f"{PGB_CONF_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
         service_cfg = await get_cfg(ops_test, unit.name, path=path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
