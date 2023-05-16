@@ -90,7 +90,7 @@ class PgBouncerCharm(CharmBase):
         pg_user = pwd.getpwnam(PG_USER)
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
         app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
-        app_temp_dir = f"/tmp/{self.app.name}"
+        app_temp_dir = f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}"
         os.mkdir(app_conf_dir, 0o700)
         os.chown(app_conf_dir, pg_user.pw_uid, pg_user.pw_gid)
         os.mkdir(app_log_dir, 0o700)

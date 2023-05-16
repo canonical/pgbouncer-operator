@@ -66,16 +66,27 @@ class TestCharm(unittest.TestCase):
         _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer", 1100, 120)
         _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 0o700)
         _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 1100, 120)
-        _mkdir.assert_any_call("/tmp/pgbouncer", 0o700)
-        _chown.assert_any_call("/tmp/pgbouncer", 1100, 120)
+        _mkdir.assert_any_call(
+            "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer", 0o700
+        )
+        _chown.assert_any_call(
+            "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer", 1100, 120
+        )
 
         for service_id in self.charm.service_ids:
             _mkdir.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 0o700)
             _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
             _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 0o700)
             _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
-            _mkdir.assert_any_call(f"/tmp/pgbouncer/instance_{service_id}", 0o700)
-            _chown.assert_any_call(f"/tmp/pgbouncer/instance_{service_id}", 1100, 120)
+            _mkdir.assert_any_call(
+                f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_{service_id}",
+                0o700,
+            )
+            _chown.assert_any_call(
+                f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_{service_id}",
+                1100,
+                120,
+            )
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
