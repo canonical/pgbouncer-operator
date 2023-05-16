@@ -92,7 +92,7 @@ async def get_running_instances(unit: Unit, service: str) -> int:
     Returns:
         an integer defining the number of running instances.
     """
-    get_running_instances = await unit.run(f"pgrep -c {service}")
+    get_running_instances = await unit.run(f"pgrep -cx {service}")
     return int(get_running_instances.results.get("Stdout"))
 
 
