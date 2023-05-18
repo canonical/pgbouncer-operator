@@ -7,7 +7,8 @@ Type=simple
 # -R flag lets separate pgbouncer instances reuse sockets from previous instances, so on restart
 # they'll reuse the same sockets, preserving connections.
 ExecStart=/snap/bin/charmed-postgresql.pgbouncer-server -R {{ conf_dir }}/{{ app_name }}/instance_%i/pgbouncer.ini
-ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=pkill -INT -F /tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{{ app_name }}/instance_%i/pgbouncer.pid
+ExecReload=pkill -HUP -F /tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{{ app_name }}/instance_%i/pgbouncer.pid
 Restart=on-failure
 RestartSec=5s
 
