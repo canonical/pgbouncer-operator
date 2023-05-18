@@ -8,7 +8,6 @@ Type=simple
 # they'll reuse the same sockets, preserving connections.
 ExecStart=/snap/bin/charmed-postgresql.pgbouncer-server -R {{ conf_dir }}/{{ app_name }}/instance_%i/pgbouncer.ini
 ExecReload=/bin/kill -HUP $MAINPID
-KillSignal=SIGINT
 Restart=on-failure
 RestartSec=5s
 

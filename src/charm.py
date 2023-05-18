@@ -240,7 +240,7 @@ class PgBouncerCharm(CharmBase):
 
         try:
             for service in self.pgb_services:
-                if not systemd.service_running(f"{service}"):
+                if not systemd.service_running(service):
                     return BlockedStatus(f"{service} is not running")
 
         except systemd.SystemdError as e:
