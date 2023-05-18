@@ -87,6 +87,15 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to install snap packages")
             return
 
+        # Try to disable pgbackrest service
+        try:
+            cache = snap.SnapCache()
+            selected_snap = cache["charmed-postgresql"]
+            selected_snap.stop(services=["pgbackrest-service"], disable=True)
+        except snap.SnapError as e:
+            error_message = "Failed to start patroni snap service"
+            logger.exception(error_message, exc_info=e)
+
         pg_user = pwd.getpwnam(PG_USER)
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
         app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
@@ -139,7 +148,7 @@ class PgBouncerCharm(CharmBase):
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
-        shutil.rmtree(f"/tmp/{self.app.name}")
+        shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
 
         systemd.daemon_reload()
 
@@ -162,7 +171,7 @@ class PgBouncerCharm(CharmBase):
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")
-                systemd.service_start(f"{service}")
+                systemd.service_start(service)
 
             if self.backend.postgres:
                 self.unit.status = ActiveStatus("pgbouncer started")
