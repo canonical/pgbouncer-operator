@@ -93,7 +93,7 @@ class PgBouncerCharm(CharmBase):
             selected_snap = cache["charmed-postgresql"]
             selected_snap.stop(services=["pgbackrest-service"], disable=True)
         except snap.SnapError as e:
-            error_message = "Failed to start patroni snap service"
+            error_message = "Failed to stop and disable pgbackrest snap service"
             logger.exception(error_message, exc_info=e)
 
         pg_user = pwd.getpwnam(PG_USER)
