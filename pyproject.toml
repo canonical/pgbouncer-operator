@@ -12,10 +12,12 @@ homepage = "https://charmhub.io/pgbouncer"
 repository = "https://github.com/canonical/pgbouncer-operator"
 
 [tool.poetry.dependencies]
-python = "^3.8.10"
+python = "^3.10.6"
 ops = "2.2.0"
 pgconnstr = "1.0.1"
 tenacity = "8.2.2"
+cosl = "0.0.5"
+pydantic = "1.10.7"
 # psycopg2 = "2.9.5" # Injected in charmcraft.yaml
 
 [tool.poetry.group.format]

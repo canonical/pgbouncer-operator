@@ -12,6 +12,7 @@ import subprocess
 from copy import deepcopy
 from typing import List, Optional, Union
 
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import snap, systemd
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
@@ -24,12 +25,14 @@ from constants import (
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
     INI_NAME,
+    METRICS_PORT,
     PEER_RELATION_NAME,
     PG_USER,
     PGB,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
+    POSTGRESQL_SNAP_NAME,
     SNAP_PACKAGES,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -68,6 +71,14 @@ class PgBouncerCharm(CharmBase):
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
+
+        self._grafana_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[
+                {"path": "/metrics", "port": METRICS_PORT},
+            ],
+            log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
+        )
 
     # =======================
     #  Charm Lifecycle Hooks
