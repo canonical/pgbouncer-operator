@@ -15,6 +15,7 @@ from tests.integration.helpers.helpers import (
     FIRST_DATABASE_RELATION_NAME,
     PG,
     PGB,
+    WAIT_MSG,
     get_cfg,
     get_running_instances,
     get_unit_cores,
@@ -45,6 +46,10 @@ async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm)
         )
         # Relate the charms and wait for them exchanging some connection data.
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
+        # Pgbouncer enters a blocked status without a postgres backend database relation
+        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
+        assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
+
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
 
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)

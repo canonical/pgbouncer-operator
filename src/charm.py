@@ -98,23 +98,11 @@ class PgBouncerCharm(CharmBase):
 
         pg_user = pwd.getpwnam(PG_USER)
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
-        app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
-        app_temp_dir = f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}"
-        os.mkdir(app_conf_dir, 0o700)
-        os.chown(app_conf_dir, pg_user.pw_uid, pg_user.pw_gid)
-        os.mkdir(app_log_dir, 0o700)
-        os.chown(app_log_dir, pg_user.pw_uid, pg_user.pw_gid)
-        os.mkdir(app_temp_dir, 0o700)
-        os.chown(app_temp_dir, pg_user.pw_uid, pg_user.pw_gid)
 
-        # Make a directory for each service to store logs, configs, pidfiles and sockets.
+        # Make a directory for each service to store configs.
         for service_id in self.service_ids:
-            os.mkdir(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700)
+            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
             os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-            os.mkdir(f"{app_log_dir}/{INSTANCE_DIR}{service_id}", 0o700)
-            os.chown(f"{app_log_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-            os.mkdir(f"{app_temp_dir}/{INSTANCE_DIR}{service_id}", 0o700)
-            os.chown(f"{app_temp_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't

@@ -40,7 +40,7 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
-    @patch("os.mkdir")
+    @patch("os.makedirs")
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("charm.PgBouncerCharm.render_file")
@@ -55,38 +55,19 @@ class TestCharm(unittest.TestCase):
         _render_file,
         _getpwnam,
         _chown,
-        _mkdir,
+        _makedirs,
         _stop,
         _install,
     ):
         self.charm.on.install.emit()
 
         _install.assert_called_once_with(packages=SNAP_PACKAGES)
-        _mkdir.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer", 0o700)
-        _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer", 1100, 120)
-        _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 0o700)
-        _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer", 1100, 120)
-        _mkdir.assert_any_call(
-            "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer", 0o700
-        )
-        _chown.assert_any_call(
-            "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer", 1100, 120
-        )
 
         for service_id in self.charm.service_ids:
-            _mkdir.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 0o700)
+            _makedirs.assert_any_call(
+                f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 0o700, exist_ok=True
+            )
             _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
-            _mkdir.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 0o700)
-            _chown.assert_any_call(f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
-            _mkdir.assert_any_call(
-                f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_{service_id}",
-                0o700,
-            )
-            _chown.assert_any_call(
-                f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_{service_id}",
-                1100,
-                120,
-            )
 
         # Check config files are rendered, including correct permissions
         initial_cfg = pgb.PgbConfig(DEFAULT_CFG)
