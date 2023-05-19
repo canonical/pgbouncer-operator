@@ -12,8 +12,7 @@ import subprocess
 from copy import deepcopy
 from typing import List, Optional, Union
 
-from charms.operator_libs_linux.v0 import apt
-from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v1 import snap, systemd
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
 from ops.charm import CharmBase
@@ -21,9 +20,18 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from constants import AUTH_FILE_NAME, CLIENT_RELATION_NAME, INI_NAME, PEER_RELATION_NAME
-from constants import PG as PG_USER
-from constants import PGB, PGB_DIR
+from constants import (
+    AUTH_FILE_NAME,
+    CLIENT_RELATION_NAME,
+    INI_NAME,
+    PEER_RELATION_NAME,
+    PG_USER,
+    PGB,
+    PGB_CONF_DIR,
+    PGB_LOG_DIR,
+    PGBOUNCER_EXECUTABLE,
+    SNAP_PACKAGES,
+)
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
@@ -72,43 +80,48 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
-        self._install_apt_packages([PGB])
+        # Install the charmed PostgreSQL snap.
+        try:
+            self._install_snap_packages(packages=SNAP_PACKAGES)
+        except snap.SnapError:
+            self.unit.status = BlockedStatus("failed to install snap packages")
+            return
+
+        # Try to disable pgbackrest service
+        try:
+            cache = snap.SnapCache()
+            selected_snap = cache["charmed-postgresql"]
+            selected_snap.stop(services=["pgbackrest-service"], disable=True)
+        except snap.SnapError as e:
+            error_message = "Failed to stop and disable pgbackrest snap service"
+            logger.exception(error_message, exc_info=e)
 
         pg_user = pwd.getpwnam(PG_USER)
-        try:
-            os.mkdir(PGB_DIR, 0o700)
-        except FileExistsError:
-            pass
-        app_dir = f"{PGB_DIR}/{self.app.name}"
-        os.chown(PGB_DIR, pg_user.pw_uid, pg_user.pw_gid)
-        os.mkdir(app_dir, 0o700)
-        os.chown(app_dir, pg_user.pw_uid, pg_user.pw_gid)
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
 
-        # Make a directory for each service to store logs, configs, pidfiles and sockets.
+        # Make a directory for each service to store configs.
         for service_id in self.service_ids:
-            os.mkdir(f"{app_dir}/{INSTANCE_DIR}{service_id}", 0o700)
-            os.chown(f"{app_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
+            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
         cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
         cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
+        cfg["pgbouncer"]["user"] = "snap_daemon"
         self.render_pgb_config(cfg)
 
         # Render pgbouncer service file and reload systemd
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
-        rendered = template.render(app_name=self.app.name)
+        rendered = template.render(app_name=self.app.name, conf_dir=PGB_CONF_DIR)
 
         self.render_file(
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
         )
         systemd.daemon_reload()
-        # Apt package starts its own pgbouncer service. Disable this so we can start and control
-        # our own.
-        systemd.service_stop(PGB)
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -121,7 +134,9 @@ class PgBouncerCharm(CharmBase):
             systemd.service_stop(service)
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
-        shutil.rmtree(f"{PGB_DIR}/{self.app.name}")
+        shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
+        shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
+        shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
 
         systemd.daemon_reload()
 
@@ -129,7 +144,7 @@ class PgBouncerCharm(CharmBase):
     def version(self) -> str:
         """Returns the version Pgbouncer."""
         try:
-            output = subprocess.check_output(["pgbouncer", "--version"])
+            output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
             if output:
                 return output.decode().split("\n")[0].split(" ")[1]
         except Exception:
@@ -144,7 +159,7 @@ class PgBouncerCharm(CharmBase):
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")
-                systemd.service_start(f"{service}")
+                systemd.service_start(service)
 
             if self.backend.postgres:
                 self.unit.status = ActiveStatus("pgbouncer started")
@@ -213,7 +228,7 @@ class PgBouncerCharm(CharmBase):
 
         try:
             for service in self.pgb_services:
-                if not systemd.service_running(f"{service}"):
+                if not systemd.service_running(service):
                     return BlockedStatus(f"{service} is not running")
 
         except systemd.SystemdError as e:
@@ -244,7 +259,7 @@ class PgBouncerCharm(CharmBase):
         Returns:
             PgbConfig object containing pgbouncer config.
         """
-        with open(f"{PGB_DIR}/{self.app.name}/{INI_NAME}", "r") as file:
+        with open(f"{PGB_CONF_DIR}/{self.app.name}/{INI_NAME}", "r") as file:
             config = pgb.PgbConfig(file.read())
         return config
 
@@ -263,18 +278,27 @@ class PgBouncerCharm(CharmBase):
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
-        app_dir = f"{PGB_DIR}/{self.app.name}"
-        self._render_pgb_config(pgb.PgbConfig(primary_config), config_path=f"{app_dir}/{INI_NAME}")
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+        app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
+        app_temp_dir = f"/tmp/{self.app.name}"
+        self._render_pgb_config(
+            pgb.PgbConfig(primary_config), config_path=f"{app_conf_dir}/{INI_NAME}"
+        )
 
         # Modify & render config files for each service instance
         for service_id in self.service_ids:
-            instance_dir = f"{app_dir}/{INSTANCE_DIR}{service_id}"  # Generated in on_install hook
+            primary_config[PGB]["unix_socket_dir"] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}"
+            primary_config[PGB][
+                "logfile"
+            ] = f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log"
+            primary_config[PGB][
+                "pidfile"
+            ] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid"
 
-            primary_config[PGB]["unix_socket_dir"] = instance_dir
-            primary_config[PGB]["logfile"] = f"{instance_dir}/pgbouncer.log"
-            primary_config[PGB]["pidfile"] = f"{instance_dir}/pgbouncer.pid"
-
-            self._render_pgb_config(primary_config, config_path=f"{instance_dir}/pgbouncer.ini")
+            self._render_pgb_config(
+                primary_config,
+                config_path=f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
+            )
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
@@ -296,7 +320,7 @@ class PgBouncerCharm(CharmBase):
             config_path: intended location for the config.
         """
         if config_path is None:
-            config_path = f"{PGB_DIR}/{self.app.name}/{INI_NAME}"
+            config_path = f"{PGB_CONF_DIR}/{self.app.name}/{INI_NAME}"
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
         self.render_file(config_path, pgbouncer_ini.render(), 0o700)
 
@@ -305,7 +329,7 @@ class PgBouncerCharm(CharmBase):
 
     def read_auth_file(self) -> str:
         """Gets the auth file from the pgbouncer container filesystem."""
-        with open(f"{PGB_DIR}/{self.app.name}/{AUTH_FILE_NAME}", "r") as fd:
+        with open(f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", "r") as fd:
             return fd.read()
 
     def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
@@ -321,7 +345,9 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
 
         self.peers.update_auth_file(auth_file)
-        self.render_file(f"{PGB_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700)
+        self.render_file(
+            f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
+        )
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
@@ -330,22 +356,31 @@ class PgBouncerCharm(CharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_apt_packages(self, packages: List[str]):
-        """Simple wrapper around 'apt-get install -y."""
-        try:
-            logger.debug("updating apt cache")
-            apt.update()
-        except subprocess.CalledProcessError as e:
-            logger.exception("failed to update apt cache, CalledProcessError", exc_info=e)
-            self.unit.status = BlockedStatus("failed to update apt cache")
-            return
+    def _install_snap_packages(self, packages: List[str]) -> None:
+        """Installs package(s) to container.
 
-        try:
-            logger.debug(f"installing apt packages: {', '.join(packages)}")
-            apt.add_package(packages)
-        except (apt.PackageNotFoundError, apt.PackageError, TypeError) as e:
-            logger.error(e)
-            self.unit.status = BlockedStatus("failed to install packages")
+        Args:
+            packages: list of packages to install.
+        """
+        for snap_name, snap_version in packages:
+            try:
+                snap_cache = snap.SnapCache()
+                snap_package = snap_cache[snap_name]
+
+                if not snap_package.present:
+                    if snap_version.get("revision"):
+                        snap_package.ensure(
+                            snap.SnapState.Latest, revision=snap_version["revision"]
+                        )
+                        snap_package.hold()
+                    else:
+                        snap_package.ensure(snap.SnapState.Latest, channel=snap_version["channel"])
+
+            except (snap.SnapError, snap.SnapNotFoundError) as e:
+                logger.error(
+                    "An exception occurred when installing %s. Reason: %s", snap_name, str(e)
+                )
+                raise
 
     def render_file(self, path: str, content: str, perms: int) -> None:
         """Write content rendered from a template to a file.

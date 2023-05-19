@@ -9,10 +9,11 @@ import pytest
 from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
-from constants import PGB_DIR
+from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
+    PG,
     PGB,
     WAIT_MSG,
     get_cfg,
@@ -37,12 +38,21 @@ async def test_build_and_deploy(ops_test: OpsTest, application_charm, pgb_charm)
                 application_name=PGB,
                 num_units=None,
             ),
+            ops_test.model.deploy(
+                PG,
+                application_name=PG,
+                channel="14/edge",
+            ),
         )
         # Relate the charms and wait for them exchanging some connection data.
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
         # Pgbouncer enters a blocked status without a postgres backend database relation
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
-    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
+        assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
+
+        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
+
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
 
 async def test_change_config(ops_test: OpsTest):
@@ -55,8 +65,7 @@ async def test_change_config(ops_test: OpsTest):
                 "max_db_connections": "44",
             }
         )
-        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=600)
-    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await get_unit_cores(unit)
@@ -73,7 +82,7 @@ async def test_change_config(ops_test: OpsTest):
     # Validating service config files are correctly written is handled by render_pgb_config and its
     # tests, but we need to make sure they at least exist in the right places.
     for service_id in range(cores):
-        path = f"{PGB_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
+        path = f"{PGB_CONF_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
         service_cfg = await get_cfg(ops_test, unit.name, path=path)
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
@@ -86,10 +95,9 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     assert await get_running_instances(unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
-    await unit.run("kill $(pgrep pgbouncer)")
+    await unit.run("pkill -SIGTERM -x pgbouncer")
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=(3 * 60))
-    assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
 
     # verify all processes start again
     assert await get_running_instances(unit, "pgbouncer") == expected_processes
