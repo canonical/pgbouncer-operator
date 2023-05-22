@@ -131,15 +131,26 @@ class BackendDatabaseRequires(Object):
         self.postgres.create_user(self.auth_user, hashed_password, admin=True)
         self.initialise_auth_function([self.database.database, PG])
 
-        self.charm.render_auth_file(f'"{self.auth_user}" "{hashed_password}"')
+        # TODO do it properly
+        # Create the monitoring user.
+        self.postgres.create_user(
+            self.stats_user,
+            "qweqwe",
+            extra_user_roles="pg_monitor",
+        )
+
+        self.charm.render_auth_file(
+            f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "qweqwe"'
+        )
 
         cfg = self.charm.read_pgb_config()
-        cfg.add_user(user=event.username, admin=True)
+        cfg.add_user(user=self.stats_user, stats=True)
         cfg["pgbouncer"][
             "auth_query"
         ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
         cfg["pgbouncer"]["auth_file"] = f"{PGB_CONF_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
         self.charm.render_pgb_config(cfg)
+        self.charm.render_prometheus_service()
 
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
@@ -308,6 +319,14 @@ class BackendDatabaseRequires(Object):
         if username is None:
             return None
         return f"pgbouncer_auth_{username}".replace("-", "_")
+
+    @property
+    def stats_user(self):
+        """Username for stats."""
+        username = self.postgres_databag.get("username")
+        if username is None:
+            return None
+        return f"pgbouncer_stats_{username}".replace("-", "_")
 
     @property
     def postgres_databag(self) -> Dict:

@@ -10,6 +10,12 @@ options:
       listen_port in pgbouncer config.
     type: int
 
+  metrics_port:
+    default: 9127
+    description: |
+      The port on which the pgbouncer prometheus exporter serves metrics.
+    type: int
+
   pool_mode:
     default: session
     description: |

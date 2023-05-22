@@ -143,8 +143,11 @@ class PgBouncerCharm(CharmBase):
         """
         for service in self.pgb_services:
             systemd.service_stop(service)
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        systemd.service_stop(prom_service)
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
+        os.remove(f"/etc/systemd/system/{prom_service}.service")
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
         shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
@@ -337,6 +340,29 @@ class PgBouncerCharm(CharmBase):
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
+
+    def render_prometheus_service(self):
+        """Render a unit file for the prometheus exporter and restarts the service."""
+        # Render prometheus exporter service file
+        with open("templates/prometheus-exporter.service.j2", "r") as file:
+            template = Template(file.read())
+        # Render the template file with the correct values.
+        rendered = template.render(
+            stats_user=self.backend.stats_user,
+            listen_port=self.config["listen_port"],
+            metrics_port=self.config["metrics_port"],
+        )
+
+        service = f"{PGB}-{self.app.name}-prometheus"
+        self.render_file(f"/etc/systemd/system/{service}.service", rendered, perms=0o644)
+
+        systemd.daemon_reload()
+
+        try:
+            systemd.service_restart(service)
+        except systemd.SystemdError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("Failed to restart prometheus exporter")
 
     def read_auth_file(self) -> str:
         """Gets the auth file from the pgbouncer container filesystem."""
