@@ -144,10 +144,14 @@ class PgBouncerCharm(CharmBase):
         for service in self.pgb_services:
             systemd.service_stop(service)
         prom_service = f"{PGB}-{self.app.name}-prometheus"
-        systemd.service_stop(prom_service)
+        if systemd.service_running(prom_service):
+            systemd.service_stop(prom_service)
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
-        os.remove(f"/etc/systemd/system/{prom_service}.service")
+        try:
+            os.remove(f"/etc/systemd/system/{prom_service}.service")
+        except FileNotFoundError:
+            pass
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
         shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
