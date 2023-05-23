@@ -30,4 +30,4 @@ BACKEND_RELATION_NAME = "backend-database"
 PEER_RELATION_NAME = "pgb-peers"
 CLIENT_RELATION_NAME = "database"
 
-METRICS_PORT = "9187"
+METRICS_PORT = "9127"
