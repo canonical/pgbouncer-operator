@@ -146,7 +146,7 @@ class PgBouncerCharm(CharmBase):
         prom_service = f"{PGB}-{self.app.name}-prometheus"
         try:
             systemd.service_stop(prom_service)
-        except SnapError:
+        except snap.SnapError:
             pass
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
