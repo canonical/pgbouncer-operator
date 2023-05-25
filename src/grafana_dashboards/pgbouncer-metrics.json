@@ -1079,7 +1079,7 @@
   ],
   "schemaVersion": 26,
   "style": "dark",
-  "tags": [],
+  "tags": ["pgbouncer"],
   "templating": {
     "list": [
       {

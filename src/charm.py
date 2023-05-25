@@ -25,7 +25,6 @@ from constants import (
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
     INI_NAME,
-    METRICS_PORT,
     PEER_RELATION_NAME,
     PG_USER,
     PGB,
@@ -75,9 +74,10 @@ class PgBouncerCharm(CharmBase):
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
-                {"path": "/metrics", "port": METRICS_PORT},
+                {"path": "/metrics", "port": self.config["metrics_port"]},
             ],
             log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
+            refresh_events=[self.on.config_changed],
         )
 
     # =======================
@@ -144,8 +144,10 @@ class PgBouncerCharm(CharmBase):
         for service in self.pgb_services:
             systemd.service_stop(service)
         prom_service = f"{PGB}-{self.app.name}-prometheus"
-        if systemd.service_running(prom_service):
+        try:
             systemd.service_stop(prom_service)
+        except SnapError:
+            pass
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
         try:
@@ -221,6 +223,7 @@ class PgBouncerCharm(CharmBase):
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.render_prometheus_service()
 
     def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
         """Checks status of PgBouncer application.
