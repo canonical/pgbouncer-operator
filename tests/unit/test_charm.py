@@ -159,12 +159,11 @@ class TestCharm(unittest.TestCase):
         ]
         _running.assert_has_calls(calls)
 
-    @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
     @patch_network_get(private_address="1.1.1.1")
-    def test_on_config_changed(self, _app_databag, _render, _read, _render_prometheus):
+    def test_on_config_changed(self, _app_databag, _render, _read):
         self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
         self.harness.set_leader()
         mock_cores = 1
@@ -193,7 +192,6 @@ class TestCharm(unittest.TestCase):
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
         _render.assert_called_with(_read.return_value, reload_pgbouncer=True)
-        _render_prometheus.assert_called_once_with()
         self.assertDictEqual(dict(_read.return_value), dict(test_config))
 
     @patch("charm.snap.SnapCache")
