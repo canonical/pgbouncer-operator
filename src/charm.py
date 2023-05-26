@@ -223,7 +223,8 @@ class PgBouncerCharm(CharmBase):
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
-        self.render_prometheus_service()
+        if self.backend.postgres:
+            self.render_prometheus_service()
 
     def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
         """Checks status of PgBouncer application.
