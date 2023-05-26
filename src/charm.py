@@ -25,6 +25,8 @@ from constants import (
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
     INI_NAME,
+    MONITORING_PASSWORD_KEY,
+    MONITORING_USER_KEY,
     PEER_RELATION_NAME,
     PG_USER,
     PGB,
@@ -367,7 +369,8 @@ class PgBouncerCharm(CharmBase):
             template = Template(file.read())
         # Render the template file with the correct values.
         rendered = template.render(
-            stats_user=self.backend.stats_user,
+            stats_user=self.peers.get_secret("app", MONITORING_USER_KEY),
+            stats_password=self.peers.get_secret("app", MONITORING_PASSWORD_KEY),
             listen_port=self.config["listen_port"],
             metrics_port=self.config["metrics_port"],
         )

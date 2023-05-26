@@ -32,6 +32,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
         self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
+    @patch("charm.Peers.get_secret", return_value=None)
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
@@ -66,6 +67,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _stats_user,
         _auth_user,
         _render_prometheus_service,
+        _,
     ):
         self.harness.set_leader()
         pw = _gen_pw.return_value
@@ -79,18 +81,15 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         mock_event.username = "mock_user"
         self.backend._on_database_created(mock_event)
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
+        hash_mon_pw = get_hashed_password(self.backend.stats_user, pw)
 
-        assert postgres.create_user.call_count == 2
-        postgres.create_user.assert_any_call(self.backend.auth_user, hash_pw, admin=True)
-        postgres.create_user.assert_any_call(
-            self.backend.stats_user, "qweqwe", extra_user_roles="pg_monitor"
-        )
+        postgres.create_user.assert_called_once_with(self.backend.auth_user, hash_pw, admin=True)
 
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
         _render.assert_any_call(
             f"{PGB_CONF_DIR}/pgbouncer/userlist.txt",
-            f'"{self.backend.auth_user}" "{hash_pw}"\n"{self.backend.stats_user}" "qweqwe"',
+            f'"{self.backend.auth_user}" "{hash_pw}"\n"{self.backend.stats_user}" "{hash_mon_pw}"',
             perms=0o700,
         )
         _render_prometheus_service.assert_called_once_with()

@@ -66,7 +66,15 @@ from ops.model import (
     Relation,
 )
 
-from constants import AUTH_FILE_NAME, BACKEND_RELATION_NAME, PG, PGB, PGB_CONF_DIR
+from constants import (
+    AUTH_FILE_NAME,
+    BACKEND_RELATION_NAME,
+    MONITORING_PASSWORD_KEY,
+    MONITORING_USER_KEY,
+    PG,
+    PGB,
+    PGB_CONF_DIR,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -131,16 +139,19 @@ class BackendDatabaseRequires(Object):
         self.postgres.create_user(self.auth_user, hashed_password, admin=True)
         self.initialise_auth_function([self.database.database, PG])
 
-        # TODO do it properly
-        # Create the monitoring user.
-        self.postgres.create_user(
-            self.stats_user,
-            "qweqwe",
-            extra_user_roles="pg_monitor",
-        )
+        # Add the monitoring user.
+        if not (
+            monitoring_password := self.charm.peers.get_secret("app", MONITORING_PASSWORD_KEY)
+        ):
+            monitoring_password = pgb.generate_password()
+            self.charm.peers.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
+        if not (monitoring_user := self.charm.peers.get_secret("app", MONITORING_USER_KEY)):
+            monitoring_user = self.stats_user
+            self.charm.peers.set_secret("app", MONITORING_USER_KEY, monitoring_user)
+        hashed_monitoring_password = pgb.get_hashed_password(monitoring_user, monitoring_password)
 
         self.charm.render_auth_file(
-            f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "qweqwe"'
+            f'"{self.auth_user}" "{hashed_password}"\n"{monitoring_user}" "{hashed_monitoring_password}"'
         )
 
         cfg = self.charm.read_pgb_config()
