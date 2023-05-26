@@ -20,6 +20,8 @@ SNAP_CURRENT_PATH = "/var/snap/charmed-postgresql/current"
 PGB_CONF_DIR = f"{SNAP_CURRENT_PATH}/etc/pgbouncer"
 PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
+SNAP_TMP_DIR = "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp"
+
 # PGB config
 DATABASES = "databases"
 

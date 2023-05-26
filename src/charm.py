@@ -33,6 +33,7 @@ from constants import (
     PGBOUNCER_EXECUTABLE,
     POSTGRESQL_SNAP_NAME,
     SNAP_PACKAGES,
+    SNAP_TMP_DIR,
 )
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
@@ -127,7 +128,9 @@ class PgBouncerCharm(CharmBase):
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
-        rendered = template.render(app_name=self.app.name, conf_dir=PGB_CONF_DIR)
+        rendered = template.render(
+            app_name=self.app.name, conf_dir=PGB_CONF_DIR, snap_tmp_dir=SNAP_TMP_DIR
+        )
 
         self.render_file(
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
@@ -146,7 +149,7 @@ class PgBouncerCharm(CharmBase):
         prom_service = f"{PGB}-{self.app.name}-prometheus"
         try:
             systemd.service_stop(prom_service)
-        except snap.SnapError:
+        except systemd.SystemdError:
             pass
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
@@ -156,7 +159,7 @@ class PgBouncerCharm(CharmBase):
             pass
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
-        shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
+        shutil.rmtree(f"{SNAP_TMP_DIR}/{self.app.name}")
 
         systemd.daemon_reload()
 
@@ -176,6 +179,9 @@ class PgBouncerCharm(CharmBase):
 
         Runs pgbouncer through systemd (configured in src/pgbouncer.service)
         """
+        # Done first to instantiate the snap's private tmp
+        self.unit.set_workload_version(self.version)
+
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")
@@ -189,8 +195,13 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
-
-        self.unit.set_workload_version(self.version)
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        if os.path.exists(f"/etc/systemd/system/{prom_service}.service"):
+            try:
+                systemd.service_start(service)
+            except systemd.SystemdError as e:
+                logger.error(e)
+                self.unit.status = BlockedStatus("failed to start pgbouncer exporter")
 
     def _on_leader_elected(self, _):
         self.peers.update_connection()
