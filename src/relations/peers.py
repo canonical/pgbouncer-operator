@@ -189,6 +189,9 @@ class Peers(Object):
         if auth_file := self.get_secret("app", AUTH_FILE_DATABAG_KEY):
             self.charm.render_auth_file(auth_file)
 
+        if self.charm.backend.postgres:
+            self.charm.render_prometheus_service()
+
         if cfg is not None or auth_file is not None:
             try:
                 # raises an error if this is fired before on_pebble_ready.
