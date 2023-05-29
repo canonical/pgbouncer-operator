@@ -147,13 +147,14 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _update_conn_info.assert_called()
         _remove_auth.assert_not_called()
 
+    @patch("charm.PgBouncerCharm.remove_exporter_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.delete_file")
-    def test_relation_broken(self, _delete_file, _render, _cfg, _postgres):
+    def test_relation_broken(self, _delete_file, _render, _cfg, _postgres, _remove_exporter):
         event = MagicMock()
         self.harness.set_leader()
         self.charm.peers.app_databag[
@@ -164,17 +165,18 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         postgres.user = "test_user"
         cfg = _cfg.return_value
         cfg.add_user(postgres.user, admin=True)
-        cfg["pgbouncer"]["auth_user"] = "test"
+        cfg["pgbouncer"]["stats_user"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
 
         self.backend._on_relation_broken(event)
 
         assert "test_user" not in cfg["pgbouncer"]
-        assert "auth_user" not in cfg["pgbouncer"]
+        assert "stats_user" not in cfg["pgbouncer"]
         assert "auth_query" not in cfg["pgbouncer"]
 
         _render.assert_called_with(cfg)
         _delete_file.assert_called_with(f"{PGB_CONF_DIR}/userlist.txt")
+        _remove_exporter.assert_called_once_with()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",

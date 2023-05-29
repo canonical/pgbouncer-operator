@@ -141,6 +141,19 @@ class PgBouncerCharm(CharmBase):
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
+    def remove_exporter_service(self) -> None:
+        """Stops and removes the pgbouncer_exporter service if it exists."""
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        try:
+            systemd.service_stop(prom_service)
+        except systemd.SystemdError:
+            pass
+
+        try:
+            os.remove(f"/etc/systemd/system/{prom_service}.service")
+        except FileNotFoundError:
+            pass
+
     def _on_remove(self, _) -> None:
         """On Remove hook.
 
@@ -148,17 +161,10 @@ class PgBouncerCharm(CharmBase):
         """
         for service in self.pgb_services:
             systemd.service_stop(service)
-        prom_service = f"{PGB}-{self.app.name}-prometheus"
-        try:
-            systemd.service_stop(prom_service)
-        except systemd.SystemdError:
-            pass
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
-        try:
-            os.remove(f"/etc/systemd/system/{prom_service}.service")
-        except FileNotFoundError:
-            pass
+        self.remove_exporter_service()
+
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
         shutil.rmtree(f"{SNAP_TMP_DIR}/{self.app.name}")
@@ -261,8 +267,14 @@ class PgBouncerCharm(CharmBase):
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
 
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        services = [*self.pgb_services]
+
+        if self.backend.postgres:
+            services.append(prom_service)
+
         try:
-            for service in self.pgb_services:
+            for service in services:
                 if not systemd.service_running(service):
                     return BlockedStatus(f"{service} is not running")
 

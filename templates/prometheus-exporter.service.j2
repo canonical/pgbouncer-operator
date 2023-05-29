@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/snap/bin/charmed-postgresql.prometheus-pgbouncer-exporter --web.listen-address=:{{ metrics_port }} --pgBouncer.connectionString="postgres://{{ stats_user }}:{{ stats_password }}@localhost:{{ listen_port }}/pgbouncer?sslmode=disable"
-Restart=on-failure
+Restart=always
 RestartSec=5s
 
 [Install]

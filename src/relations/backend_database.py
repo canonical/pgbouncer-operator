@@ -239,13 +239,15 @@ class BackendDatabaseRequires(Object):
 
         if self.postgres:
             cfg.remove_user(self.postgres.user)
-        cfg["pgbouncer"].pop("auth_user", None)
+        cfg["pgbouncer"].pop("stats_user", None)
         cfg["pgbouncer"].pop("auth_query", None)
         cfg["pgbouncer"].pop("auth_file", None)
         self.charm.render_pgb_config(cfg)
 
         self.charm.delete_file(f"{PGB_CONF_DIR}/userlist.txt")
         self.charm.peers.update_auth_file(auth_file=None)
+
+        self.charm.remove_exporter_service()
 
     def initialise_auth_function(self, dbs: List[str]):
         """Runs an SQL script to initialise the auth function.
