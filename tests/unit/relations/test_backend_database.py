@@ -165,13 +165,13 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         postgres.user = "test_user"
         cfg = _cfg.return_value
         cfg.add_user(postgres.user, admin=True)
-        cfg["pgbouncer"]["stats_user"] = "test"
+        cfg["pgbouncer"]["stats_users"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
 
         self.backend._on_relation_broken(event)
 
         assert "test_user" not in cfg["pgbouncer"]
-        assert "stats_user" not in cfg["pgbouncer"]
+        assert "stats_users" not in cfg["pgbouncer"]
         assert "auth_query" not in cfg["pgbouncer"]
 
         _render.assert_called_with(cfg)

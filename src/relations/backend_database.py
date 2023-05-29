@@ -239,7 +239,7 @@ class BackendDatabaseRequires(Object):
 
         if self.postgres:
             cfg.remove_user(self.postgres.user)
-        cfg["pgbouncer"].pop("stats_user", None)
+        cfg["pgbouncer"].pop("stats_users", None)
         cfg["pgbouncer"].pop("auth_query", None)
         cfg["pgbouncer"].pop("auth_file", None)
         self.charm.render_pgb_config(cfg)
