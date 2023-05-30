@@ -70,7 +70,6 @@ from constants import (
     AUTH_FILE_NAME,
     BACKEND_RELATION_NAME,
     MONITORING_PASSWORD_KEY,
-    MONITORING_USER_KEY,
     PG,
     PGB,
     PGB_CONF_DIR,
@@ -145,13 +144,10 @@ class BackendDatabaseRequires(Object):
         ):
             monitoring_password = pgb.generate_password()
             self.charm.peers.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
-        if not (monitoring_user := self.charm.peers.get_secret("app", MONITORING_USER_KEY)):
-            monitoring_user = self.stats_user
-            self.charm.peers.set_secret("app", MONITORING_USER_KEY, monitoring_user)
-        hashed_monitoring_password = pgb.get_hashed_password(monitoring_user, monitoring_password)
+        hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
         self.charm.render_auth_file(
-            f'"{self.auth_user}" "{hashed_password}"\n"{monitoring_user}" "{hashed_monitoring_password}"'
+            f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
         )
 
         cfg = self.charm.read_pgb_config()
@@ -336,10 +332,7 @@ class BackendDatabaseRequires(Object):
     @property
     def stats_user(self):
         """Username for stats."""
-        username = self.postgres_databag.get("username")
-        if username is None:
-            return None
-        return f"pgbouncer_stats_{username}".replace("-", "_")
+        return f"pgbouncer_stats_{self.charm.app.name}".replace("-", "_")
 
     @property
     def postgres_databag(self) -> Dict:
