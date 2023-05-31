@@ -1,9 +1,9 @@
 cosl==0.0.5 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
     --hash=sha256:31c131d1f04c061d3fbef49a4e0a175d4cb481deeb06d0cb3c7b242e4c5416be \
     --hash=sha256:84666fde29b792299827d65a1b9b2e3c56029c769e892c8244b50ce793458894
-ops==2.2.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
-    --hash=sha256:14d4c43f4a4dc0830af1b2cb21313ef93308d3c389f7bedecc14a70b69000b64 \
-    --hash=sha256:90fa55249f5c3a7bcb7cc73731227eac867f9bb8426100d10724fe461de142a8
+ops==2.3.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
+    --hash=sha256:24a5c6e985d3f08cb3dfccfd1adb93ca9247dc867b192baaf3265fe5736fd992 \
+    --hash=sha256:438c217be75f641948114bc24ecbb2adca2b5e407b401401e1b7dbc0f912731b
 pgconnstr==1.0.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
     --hash=sha256:0656129961ae879675d0842f5237db82d31ce59c7b3211b051c33e37a864826e \
     --hash=sha256:0f65830e7e3b76adf4390a8592ee52343171a17caef7436257e7bc81c44e21a7
