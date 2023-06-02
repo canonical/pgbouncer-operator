@@ -16,6 +16,8 @@ python = "^3.8.10"
 ops = "2.3.0"
 pgconnstr = "1.0.1"
 tenacity = "8.2.2"
+cosl = "0.0.5"
+pydantic = "1.10.7"
 # psycopg2 = "2.9.5" # Injected in charmcraft.yaml
 
 [tool.poetry.group.format]
@@ -56,7 +58,7 @@ pytest-operator = "0.27.0"
 juju = "2.9.42.4" # Latest juju 2
 tenacity = "8.2.2"
 requests = "2.31.0"
-psycopg2 = {version = "^2.9.5", extras = ["binary"]}
+psycopg2 = {version = "^2.9.6", extras = ["binary"]}
 
 [tool.poetry.group.relation_charm]
 optional = true

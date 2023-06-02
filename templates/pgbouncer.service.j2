@@ -8,11 +8,10 @@ Type=simple
 # they'll reuse the same sockets, preserving connections.
 ExecStartPre=-/usr/bin/install -o snap_daemon -g snap_daemon -m 700 -d \
         /var/snap/charmed-postgresql/common/var/log/pgbouncer/{{ app_name }}/instance_%i/ \
-        /tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{{ app_name }}/instance_%i/
+        {{ snap_tmp_dir }}/{{ app_name }}/instance_%i/
 ExecStart=/snap/bin/charmed-postgresql.pgbouncer-server -R {{ conf_dir }}/{{ app_name }}/instance_%i/pgbouncer.ini
-ExecStop=pkill -INT -F /tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{{ app_name }}/instance_%i/pgbouncer.pid
-ExecReload=pkill -HUP -F /tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{{ app_name }}/instance_%i/pgbouncer.pid
-Restart=on-failure
+KillSignal=SIGINT
+Restart=always
 RestartSec=5s
 
 [Install]

@@ -47,7 +47,6 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
     pgb_user, pgb_password = await get_backend_user_pass(ops_test, relation)
-    assert pgb_user in cfg["pgbouncer"]["admin_users"]
     assert cfg["pgbouncer"]["auth_query"]
 
     await check_database_users_existence(ops_test, [pgb_user], [], pgb_user, pgb_password)

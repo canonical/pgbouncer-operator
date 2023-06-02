@@ -204,7 +204,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
                 pgb_charm,
                 application_name=PGB_2,
                 num_units=None,
-                config={"listen_port": 7432},
+                config={"listen_port": 7432, "metrics_port": 9128},
             ),
             ops_test.model.deploy(
                 PG,

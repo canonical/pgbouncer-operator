@@ -32,10 +32,17 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
         self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
+    @patch("charm.Peers.get_secret", return_value=None)
+    @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
         new_callable=PropertyMock,
         return_value="user",
+    )
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.stats_user",
+        new_callable=PropertyMock,
+        return_value="stats_user",
     )
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -57,7 +64,10 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _gen_pw,
         _relation,
         _postgres,
+        _stats_user,
         _auth_user,
+        _render_prometheus_service,
+        _,
     ):
         self.harness.set_leader()
         pw = _gen_pw.return_value
@@ -71,18 +81,21 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         mock_event.username = "mock_user"
         self.backend._on_database_created(mock_event)
         hash_pw = get_hashed_password(self.backend.auth_user, pw)
+        hash_mon_pw = get_hashed_password(self.backend.stats_user, pw)
 
-        postgres.create_user.assert_called_with(self.backend.auth_user, hash_pw, admin=True)
+        postgres.create_user.assert_called_once_with(self.backend.auth_user, hash_pw, admin=True)
+
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
         _render.assert_any_call(
             f"{PGB_CONF_DIR}/pgbouncer/userlist.txt",
-            f'"{self.backend.auth_user}" "{hash_pw}"',
+            f'"{self.backend.auth_user}" "{hash_pw}"\n"{self.backend.stats_user}" "{hash_mon_pw}"',
             perms=0o700,
         )
+        _render_prometheus_service.assert_called_once_with()
 
         cfg = _cfg.return_value
-        assert mock_event.username in cfg["pgbouncer"]["admin_users"]
+        assert self.backend.stats_user in cfg["pgbouncer"]["stats_users"]
         assert (
             cfg["pgbouncer"]["auth_query"]
             == f"SELECT username, password FROM {self.backend.auth_user}.get_auth($1)"
@@ -134,13 +147,14 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _update_conn_info.assert_called()
         _remove_auth.assert_not_called()
 
+    @patch("charm.PgBouncerCharm.remove_exporter_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.delete_file")
-    def test_relation_broken(self, _delete_file, _render, _cfg, _postgres):
+    def test_relation_broken(self, _delete_file, _render, _cfg, _postgres, _remove_exporter):
         event = MagicMock()
         self.harness.set_leader()
         self.charm.peers.app_databag[
@@ -151,17 +165,18 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         postgres.user = "test_user"
         cfg = _cfg.return_value
         cfg.add_user(postgres.user, admin=True)
-        cfg["pgbouncer"]["auth_user"] = "test"
+        cfg["pgbouncer"]["stats_users"] = "test"
         cfg["pgbouncer"]["auth_query"] = "test"
 
         self.backend._on_relation_broken(event)
 
         assert "test_user" not in cfg["pgbouncer"]
-        assert "auth_user" not in cfg["pgbouncer"]
+        assert "stats_users" not in cfg["pgbouncer"]
         assert "auth_query" not in cfg["pgbouncer"]
 
         _render.assert_called_with(cfg)
         _delete_file.assert_called_with(f"{PGB_CONF_DIR}/userlist.txt")
+        _remove_exporter.assert_called_once_with()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",

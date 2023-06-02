@@ -12,6 +12,7 @@ import subprocess
 from copy import deepcopy
 from typing import List, Optional, Union
 
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import snap, systemd
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
@@ -24,13 +25,16 @@ from constants import (
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
     INI_NAME,
+    MONITORING_PASSWORD_KEY,
     PEER_RELATION_NAME,
     PG_USER,
     PGB,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
+    POSTGRESQL_SNAP_NAME,
     SNAP_PACKAGES,
+    SNAP_TMP_DIR,
 )
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
@@ -68,6 +72,15 @@ class PgBouncerCharm(CharmBase):
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
+
+        self._grafana_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[
+                {"path": "/metrics", "port": self.config["metrics_port"]},
+            ],
+            log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
+            refresh_events=[self.on.config_changed],
+        )
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -116,7 +129,9 @@ class PgBouncerCharm(CharmBase):
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
-        rendered = template.render(app_name=self.app.name, conf_dir=PGB_CONF_DIR)
+        rendered = template.render(
+            app_name=self.app.name, conf_dir=PGB_CONF_DIR, snap_tmp_dir=SNAP_TMP_DIR
+        )
 
         self.render_file(
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
@@ -124,6 +139,19 @@ class PgBouncerCharm(CharmBase):
         systemd.daemon_reload()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
+
+    def remove_exporter_service(self) -> None:
+        """Stops and removes the pgbouncer_exporter service if it exists."""
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        try:
+            systemd.service_stop(prom_service)
+        except systemd.SystemdError:
+            pass
+
+        try:
+            os.remove(f"/etc/systemd/system/{prom_service}.service")
+        except FileNotFoundError:
+            pass
 
     def _on_remove(self, _) -> None:
         """On Remove hook.
@@ -134,9 +162,11 @@ class PgBouncerCharm(CharmBase):
             systemd.service_stop(service)
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
+        self.remove_exporter_service()
+
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
-        shutil.rmtree(f"/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/{self.app.name}")
+        shutil.rmtree(f"{SNAP_TMP_DIR}/{self.app.name}")
 
         systemd.daemon_reload()
 
@@ -156,6 +186,9 @@ class PgBouncerCharm(CharmBase):
 
         Runs pgbouncer through systemd (configured in src/pgbouncer.service)
         """
+        # Done first to instantiate the snap's private tmp
+        self.unit.set_workload_version(self.version)
+
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")
@@ -169,8 +202,13 @@ class PgBouncerCharm(CharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
-
-        self.unit.set_workload_version(self.version)
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        if os.path.exists(f"/etc/systemd/system/{prom_service}.service"):
+            try:
+                systemd.service_start(service)
+            except systemd.SystemdError as e:
+                logger.error(e)
+                self.unit.status = BlockedStatus("failed to start pgbouncer exporter")
 
     def _on_leader_elected(self, _):
         self.peers.update_connection()
@@ -203,6 +241,8 @@ class PgBouncerCharm(CharmBase):
             cfg["pgbouncer"]["listen_port"] = self.config["listen_port"]
 
         self.render_pgb_config(cfg, reload_pgbouncer=True)
+        if self.backend.postgres:
+            self.render_prometheus_service()
 
     def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
         """Checks status of PgBouncer application.
@@ -226,8 +266,14 @@ class PgBouncerCharm(CharmBase):
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
 
+        prom_service = f"{PGB}-{self.app.name}-prometheus"
+        services = [*self.pgb_services]
+
+        if self.backend.postgres:
+            services.append(prom_service)
+
         try:
-            for service in self.pgb_services:
+            for service in services:
                 if not systemd.service_running(service):
                     return BlockedStatus(f"{service} is not running")
 
@@ -326,6 +372,30 @@ class PgBouncerCharm(CharmBase):
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
+
+    def render_prometheus_service(self):
+        """Render a unit file for the prometheus exporter and restarts the service."""
+        # Render prometheus exporter service file
+        with open("templates/prometheus-exporter.service.j2", "r") as file:
+            template = Template(file.read())
+        # Render the template file with the correct values.
+        rendered = template.render(
+            stats_user=self.backend.stats_user,
+            stats_password=self.peers.get_secret("app", MONITORING_PASSWORD_KEY),
+            listen_port=self.config["listen_port"],
+            metrics_port=self.config["metrics_port"],
+        )
+
+        service = f"{PGB}-{self.app.name}-prometheus"
+        self.render_file(f"/etc/systemd/system/{service}.service", rendered, perms=0o644)
+
+        systemd.daemon_reload()
+
+        try:
+            systemd.service_restart(service)
+        except systemd.SystemdError as e:
+            logger.error(e)
+            self.unit.status = BlockedStatus("Failed to restart prometheus exporter")
 
     def read_auth_file(self) -> str:
         """Gets the auth file from the pgbouncer container filesystem."""

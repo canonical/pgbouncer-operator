@@ -95,9 +95,24 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     assert await get_running_instances(unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
-    await unit.run("pkill -SIGTERM -x pgbouncer")
+    await unit.run("pkill -SIGINT -x pgbouncer")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
 
     # verify all processes start again
     assert await get_running_instances(unit, "pgbouncer") == expected_processes
+
+
+async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
+    unit = ops_test.model.units[f"{PGB}/0"]
+
+    # verify the correct amount of pgbouncer_exporter processes are running
+    assert await get_running_instances(unit, "pgbouncer_expor") == 1
+
+    # Kill pgbouncer_exporter process and wait for it to restart
+    await unit.run("pkill -SIGTERM -x pgbouncer_expor")
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
+
+    # verify all processes start again
+    assert await get_running_instances(unit, "pgbouncer_expor") == 1
