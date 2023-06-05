@@ -30,7 +30,8 @@ Juju CLI:
 Juju agent: 
 
 <!-- App revision from `juju status` or (advanced) commit hash -->
-Charm revision: 
+postgresql charm revision: 
+pgbouncer charm revision: 
 
 <!-- Run `lxd version` -->
 LXD: 
