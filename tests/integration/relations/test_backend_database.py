@@ -70,10 +70,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
             for attempt in Retrying(stop=stop_after_delay(3 * 60), wait=wait_fixed(3)):
                 with attempt:
                     cfg = await get_cfg(ops_test, f"{PGB}/0")
-                    if (
-                        pgb_user not in cfg["pgbouncer"]["admin_users"]
-                        and "auth_query" not in cfg["pgbouncer"].keys()
-                    ):
+                    if "auth_query" not in cfg["pgbouncer"].keys():
                         break
         except RetryError:
             assert False, "pgbouncer config files failed to update in 3 minutes"

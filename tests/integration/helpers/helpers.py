@@ -5,7 +5,6 @@
 import asyncio
 import json
 import logging
-import subprocess
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
@@ -318,37 +317,15 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         the id of the created relation.
     """
     # Deploy application.
-    if not force:
-        await ops_test.model.deploy(
-            charm,
-            channel=channel,
-            application_name=application_name,
-            num_units=number_of_units,
-            config=config,
-            series=series,
-        )
-    else:
-        # Dirty hack to force the series
-        status = await ops_test.model.get_status()
-        args = [
-            "juju",
-            "deploy",
-            charm,
-            application_name,
-            "-m",
-            status.model.name,
-            "--force",
-            "-n",
-            str(number_of_units),
-            "--series",
-            series,
-            "--channel",
-            channel,
-        ]
-        if config:
-            for key, val in config.items():
-                args += ["--config", f"{key}={val}"]
-        subprocess.run(args)
+    await ops_test.model.deploy(
+        charm,
+        channel=channel,
+        application_name=application_name,
+        num_units=number_of_units,
+        config=config,
+        series=series,
+        force=force,
+    )
 
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(

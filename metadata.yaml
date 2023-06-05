@@ -53,6 +53,8 @@ requires:
   backend-database:
     interface: postgresql_client
     optional: false
+    limit: 1
   juju-info:
     interface: juju-info
     scope: container
+    limit: 1
