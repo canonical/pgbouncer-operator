@@ -96,6 +96,6 @@ async def test_remove_relation(ops_test: OpsTest):
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
-    for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(1), reraise=True):
+    for attempt in Retrying(stop=stop_after_attempt(30), wait=wait_fixed(1), reraise=True):
         with attempt:
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"

@@ -78,10 +78,13 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
     await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)
+    await ops_test.model.remove_application(PGB, block_until_done=True)
 
 
-async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
+async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     async with ops_test.fast_forward():
+        # Deploy focal PGB
+        await ops_test.model.deploy(pgb_charm_focal, num_units=None, series="focal")
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
@@ -104,8 +107,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
             ops_test,
             WEEBL,
             WEEBL,
-            series="jammy",
-            force=True,
+            series="focal",
         )
 
         pgb_user, _ = await get_backend_user_pass(ops_test, relation)
