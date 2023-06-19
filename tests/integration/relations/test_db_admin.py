@@ -27,16 +27,11 @@ RABBITMQ = "rabbitmq-server"
 RELATION = "db-admin"
 
 
-# Placeholder test, remove when viable admin tests are around
-def test_test():
-    pass
-
-
 @pytest.mark.unstable
 @pytest.mark.abort_on_fail
-async def test_db_admin_with_landscape(ops_test: OpsTest, pgb_charm) -> None:
+async def test_db_admin_with_landscape(ops_test: OpsTest, pgb_charm_jammy) -> None:
     # Deploy application.
-    await deploy_postgres_bundle(ops_test, pgb_charm, db_units=2, pgb_series="jammy")
+    await deploy_postgres_bundle(ops_test, pgb_charm_jammy, db_units=2, pgb_series="jammy")
     relation = await deploy_and_relate_application_with_pgbouncer_bundle(
         ops_test,
         LANDSCAPE_APP_NAME,

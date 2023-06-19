@@ -25,11 +25,11 @@ RELATION_NAME = "db"
 
 
 @pytest.mark.abort_on_fail
-async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
+async def test_weebl_db(ops_test: OpsTest, pgb_charm_focal) -> None:
     """Deploy Weebl to test the 'db' relation."""
     backend_relation = await deploy_postgres_bundle(
         ops_test,
-        pgb_charm,
+        pgb_charm_focal,
         db_units=DATABASE_UNITS,
         pgb_series="jammy",
     )
@@ -39,8 +39,7 @@ async def test_weebl_db(ops_test: OpsTest, pgb_charm) -> None:
         ops_test,
         WEEBL,
         WEEBL,
-        series="jammy",
-        force=True,
+        series="focal",
     )
 
     pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
