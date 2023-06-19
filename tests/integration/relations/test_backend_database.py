@@ -33,10 +33,10 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm, pgb_series="jammy")
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_series="jammy")
     async with ops_test.fast_forward():
         await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
         # Relate the charms and wait for them exchanging some connection data.

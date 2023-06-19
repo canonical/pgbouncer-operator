@@ -195,13 +195,13 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, a
 
 
 async def test_an_application_can_connect_to_multiple_database_clusters(
-    ops_test: OpsTest, pgb_charm
+    ops_test: OpsTest, pgb_charm_jammy
 ):
     """Test that an application can connect to different clusters of the same database."""
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                pgb_charm,
+                pgb_charm_jammy,
                 application_name=PGB_2,
                 num_units=None,
                 config={"listen_port": 7432, "metrics_port": 9128},

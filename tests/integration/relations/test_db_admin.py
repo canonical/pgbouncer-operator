@@ -27,7 +27,6 @@ RABBITMQ = "rabbitmq-server"
 RELATION = "db-admin"
 
 
-@pytest.mark.unstable
 @pytest.mark.abort_on_fail
 async def test_db_admin_with_landscape(ops_test: OpsTest, pgb_charm_jammy) -> None:
     # Deploy application.
@@ -83,7 +82,6 @@ async def test_db_admin_with_landscape(ops_test: OpsTest, pgb_charm_jammy) -> No
     await check_database_users_existence(ops_test, landscape_users, [])
 
 
-@pytest.mark.unstable
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:db-admin", f"{LANDSCAPE_APP_NAME}:db"
