@@ -10,9 +10,9 @@ from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
+    MAILMAN3,
     PG,
     PGB,
-    WEEBL,
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_app_relation_databag,
@@ -82,13 +82,10 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
 
 
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
+    await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, series="focal")
     async with ops_test.fast_forward():
-        # Deploy focal PGB
-        await ops_test.model.deploy(
-            pgb_charm_focal, f"{PGB}-focal", num_units=None, series="focal"
-        )
         # Relate PgBouncer to PostgreSQL.
-        relation = await ops_test.model.add_relation(f"{PGB}-focal:{RELATION}", f"{PG}:database")
+        relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
 
         # Deploy TLS Certificates operator.
@@ -106,10 +103,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
-            ops_test,
-            WEEBL,
-            WEEBL,
-            series="focal",
+            ops_test, MAILMAN3, MAILMAN3, series="focal"
         )
 
         pgb_user, _ = await get_backend_user_pass(ops_test, relation)
@@ -122,5 +116,5 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
             "journalctl -u snap.charmed-postgresql.patroni.service",
         )
         assert (
-            f"connection authorized: user={pgb_user} database=bugs_database SSL enabled" in logs
+            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled" in logs
         ), "TLS is not being used on connections to PostgreSQL"

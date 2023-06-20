@@ -9,6 +9,7 @@ from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from tests.integration.helpers.helpers import (
+    MAILMAN3,
     PG,
     PGB,
     deploy_and_relate_application_with_pgbouncer_bundle,
@@ -26,7 +27,6 @@ logger = logging.getLogger(__name__)
 APPLICATION_UNITS = 1
 DATABASE_UNITS = 2
 RELATION_NAME = "db"
-MAILMAN3_CORE_APP_NAME = "mailman3-core"
 
 
 @pytest.mark.abort_on_fail
@@ -45,8 +45,8 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         )
         db_relation = await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
-            MAILMAN3_CORE_APP_NAME,
-            MAILMAN3_CORE_APP_NAME,
+            MAILMAN3,
+            MAILMAN3,
             config=mailman_config,
             series="focal",
         )
@@ -60,7 +60,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         )
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
-        mailman_unit = ops_test.model.applications[MAILMAN3_CORE_APP_NAME].units[0]
+        mailman_unit = ops_test.model.applications[MAILMAN3].units[0]
         action = await mailman_unit.run("mailman info")
         result = action.results.get("Stdout", action.results.get("Stderr", None))
         assert "db url: postgres://" in result, f"no postgres db url, Stderr: {result}"
@@ -91,9 +91,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
 
 
 async def test_remove_relation(ops_test: OpsTest):
-    await ops_test.model.applications[PGB].remove_relation(
-        f"{PGB}:db", f"{MAILMAN3_CORE_APP_NAME}:db"
-    )
+    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{MAILMAN3}:db")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
     for attempt in Retrying(stop=stop_after_attempt(60), wait=wait_fixed(1), reraise=True):
