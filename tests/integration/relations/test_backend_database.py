@@ -84,9 +84,11 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     async with ops_test.fast_forward():
         # Deploy focal PGB
-        await ops_test.model.deploy(pgb_charm_focal, num_units=None, series="focal")
+        await ops_test.model.deploy(
+            pgb_charm_focal, f"{PGB}-focal", num_units=None, series="focal"
+        )
         # Relate PgBouncer to PostgreSQL.
-        relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
+        relation = await ops_test.model.add_relation(f"{PGB}-focal:{RELATION}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
 
         # Deploy TLS Certificates operator.
