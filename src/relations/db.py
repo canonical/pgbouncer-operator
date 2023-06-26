@@ -537,7 +537,7 @@ class DbProvides(Object):
 
     def get_allowed_units(self, relation: Relation) -> str:
         """Gets the external units from this relation that can be allowed into the network."""
-        return ",".join(
+        return " ".join(
             sorted(
                 [
                     unit.name
