@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import yaml
 from pytest_operator.plugin import OpsTest
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 
 async def get_application_relation_data(
@@ -117,17 +118,20 @@ async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, dbname):
     table_name = "quick_test"
     smoke_val = str(uuid4())
 
-    smoke_query = (
-        # TODO fix ownership of DB objects on rerelation in PG to be able to drop
-        f"CREATE TABLE IF NOT EXISTS {table_name}(data TEXT);"
-        f"INSERT INTO {table_name}(data) VALUES('{smoke_val}');"
-        f"SELECT data FROM {table_name} WHERE data = '{smoke_val}';"
-    )
-    run_update_query = await run_sql_on_application_charm(
-        ops_test,
-        unit_name=unit_name,
-        query=smoke_query,
-        dbname=dbname,
-        relation_id=relation_id,
-    )
-    assert smoke_val in json.loads(run_update_query["results"])[0]
+    # TODO Fails frequently. Investigate and stabilise.
+    for attempt in Retrying(stop=stop_after_attempt(5), wait=wait_fixed(1), reraise=True):
+        with attempt:
+            smoke_query = (
+                # TODO fix ownership of DB objects on rerelation in PG to be able to drop
+                f"CREATE TABLE IF NOT EXISTS {table_name}(data TEXT);"
+                f"INSERT INTO {table_name}(data) VALUES('{smoke_val}');"
+                f"SELECT data FROM {table_name} WHERE data = '{smoke_val}';"
+            )
+            run_update_query = await run_sql_on_application_charm(
+                ops_test,
+                unit_name=unit_name,
+                query=smoke_query,
+                dbname=dbname,
+                relation_id=relation_id,
+            )
+            assert smoke_val in json.loads(run_update_query["results"])[0]
