@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_at_scale(ops_test, application_charm, pgb_charm):
+async def test_deploy_at_scale(ops_test, application_charm, pgb_charm_jammy):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
                 application_charm, application_name=CLIENT_APP_NAME, num_units=3
             ),
             ops_test.model.deploy(
-                pgb_charm,
+                pgb_charm_jammy,
                 application_name=PGB,
                 num_units=None,
             ),

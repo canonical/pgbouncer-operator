@@ -10,9 +10,9 @@ from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
+    MAILMAN3,
     PG,
     PGB,
-    WEEBL,
     deploy_and_relate_application_with_pgbouncer_bundle,
     deploy_postgres_bundle,
     get_app_relation_databag,
@@ -33,10 +33,10 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm, pgb_series="jammy")
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_series="jammy")
     async with ops_test.fast_forward():
         await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
         # Relate the charms and wait for them exchanging some connection data.
@@ -78,9 +78,11 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm
     cfg = await get_cfg(ops_test, f"{PGB}/0")
     logger.info(cfg.render())
     await ops_test.model.remove_application(CLIENT_APP_NAME, block_until_done=True)
+    await ops_test.model.remove_application(PGB, block_until_done=True)
 
 
-async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
+async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
+    await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, series="focal")
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
@@ -101,11 +103,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
-            ops_test,
-            WEEBL,
-            WEEBL,
-            series="jammy",
-            force=True,
+            ops_test, MAILMAN3, MAILMAN3, series="focal"
         )
 
         pgb_user, _ = await get_backend_user_pass(ops_test, relation)
@@ -118,5 +116,5 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest):
             "journalctl -u snap.charmed-postgresql.patroni.service",
         )
         assert (
-            f"connection authorized: user={pgb_user} database=bugs_database SSL enabled" in logs
+            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled" in logs
         ), "TLS is not being used on connections to PostgreSQL"
