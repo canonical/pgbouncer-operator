@@ -33,3 +33,5 @@ PEER_RELATION_NAME = "pgb-peers"
 CLIENT_RELATION_NAME = "database"
 
 MONITORING_PASSWORD_KEY = "monitoring_password"
+
+EXTENSIONS_BLOCKING_MESSAGE = "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."

@@ -961,6 +961,22 @@ PyYAML = "==6.*"
 websocket-client = "==1.*"
 
 [[package]]
+name = "ops-lib-pgsql"
+version = "1.4"
+description = "PostgreSQL database relation for Juju Operator Framework Charms"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "ops-lib-pgsql-1.4.zip", hash = "sha256:3ea802a1a9e6be4457dbe49959a76c50d63b689abc1b803c127bd24e5bd98654"},
+    {file = "ops_lib_pgsql-1.4-py2.py3-none-any.whl", hash = "sha256:85b07a364339da2423c2631680f03aab8f9b4d8a6493efc66303224ff9ab34af"},
+]
+
+[package.dependencies]
+ops = ">=0.8.0"
+pgconnstr = "*"
+PyYAML = "*"
+
+[[package]]
 name = "packaging"
 version = "23.1"
 description = "Core utilities for Python packages"
@@ -1925,4 +1941,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "aace740335c5e5184fd00a8ca487059d5556fdc4edc9d2fe0caca1d5f5a0be2f"
+content-hash = "5a7406b4804e689387cf361499410681609750d0b07f21c36000548d95d242c9"
