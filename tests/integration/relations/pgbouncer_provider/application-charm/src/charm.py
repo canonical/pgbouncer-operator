@@ -193,9 +193,6 @@ class ApplicationCharm(CharmBase):
         if self.model.unit.is_leader():
             event.database = "db_with_extensions"
             event.extensions = ["pg_trgm:public", "unaccent:public"]
-        elif event.database != "db_with_extensions":
-            event.defer()
-            return
 
 
 if __name__ == "__main__":

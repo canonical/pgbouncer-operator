@@ -2,13 +2,16 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
+from asyncio import gather
 
 import pytest
 from mailmanclient import Client
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
+from constants import EXTENSIONS_BLOCKING_MESSAGE
 from tests.integration.helpers.helpers import (
+    CLIENT_APP_NAME,
     MAILMAN3,
     PG,
     PGB,
@@ -98,3 +101,45 @@ async def test_remove_relation(ops_test: OpsTest):
         with attempt:
             await ops_test.model.applications[PGB].get_status()
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
+
+
+async def test_extensions(ops_test: OpsTest, pgb_charm_jammy, application_charm):
+    """Test that PGB blocks on disabled extension request and allows enabled ones."""
+    async with ops_test.fast_forward():
+        logger.info("Deploying test app")
+        pgb_jammy = f"{PGB}-jammy"
+        await gather(
+            ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME),
+            ops_test.model.deploy(
+                pgb_charm_jammy,
+                application_name=pgb_jammy,
+                num_units=None,
+            ),
+        )
+        logger.info("Relating without enabling extensions")
+        # Relate the charms and wait for them exchanging some connection data.
+        await ops_test.model.add_relation(PG, pgb_jammy)
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db")
+        # Pgbouncer enters a blocked status without a postgres backend database relation
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
+        await ops_test.model.wait_for_idle(apps=[pgb_jammy], status="blocked", timeout=600)
+        assert (
+            ops_test.model.units[f"{pgb_jammy}/0"].workload_status_message
+            == EXTENSIONS_BLOCKING_MESSAGE
+        )
+
+        logger.info("Rekatung with enabled extensions")
+        await ops_test.model.applications[pgb_jammy].remove_relation(
+            f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db"
+        )
+        for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(1), reraise=True):
+            with attempt:
+                assert (
+                    len(ops_test.model.applications[PGB].units) == 0
+                ), "pgb units were not removed"
+
+        config = {"plugin_pg_trgm_enable": "True", "plugin_unaccent_enable": "True"}
+        await ops_test.model.applications[PG].set_config(config)
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", idle_period=15)
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db")
+        await ops_test.model.wait_for_idle(apps=[PG, pgb_jammy], status="active", timeout=600)
