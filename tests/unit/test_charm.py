@@ -7,7 +7,8 @@ from copy import deepcopy
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import ops.testing
-from charms.operator_libs_linux.v1 import snap, systemd
+from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0 import pgb
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness

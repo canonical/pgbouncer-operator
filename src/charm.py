@@ -13,7 +13,8 @@ from copy import deepcopy
 from typing import List, Optional, Union
 
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
-from charms.operator_libs_linux.v1 import snap, systemd
+from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
 from ops.charm import CharmBase
