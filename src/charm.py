@@ -13,7 +13,8 @@ from copy import deepcopy
 from typing import List, Optional, Union
 
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
-from charms.operator_libs_linux.v1 import snap, systemd
+from charms.operator_libs_linux.v1 import systemd
+from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
 from ops.charm import CharmBase
@@ -24,6 +25,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from constants import (
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
+    EXTENSIONS_BLOCKING_MESSAGE,
     INI_NAME,
     MONITORING_PASSWORD_KEY,
     PEER_RELATION_NAME,
@@ -265,6 +267,9 @@ class PgBouncerCharm(CharmBase):
             backend_wait_msg = "waiting for backend database relation to connect"
             logger.warning(backend_wait_msg)
             return BlockedStatus(backend_wait_msg)
+
+        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
+            return BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
 
         prom_service = f"{PGB}-{self.app.name}-prometheus"
         services = [*self.pgb_services]

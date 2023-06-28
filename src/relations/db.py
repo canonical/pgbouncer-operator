@@ -85,7 +85,7 @@ Some example relation data is below. All values are examples, generated in a run
 """  # noqa: W505
 
 import logging
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
@@ -111,7 +111,7 @@ from ops.model import (
     WaitingStatus,
 )
 
-from constants import PG
+from constants import EXTENSIONS_BLOCKING_MESSAGE, PG
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +165,34 @@ class DbProvides(Object):
         self.charm = charm
         self.admin = admin
 
+    def _check_extensions(self, extensions: List) -> bool:
+        """Checks if requested extensions are enabled."""
+        for extension in extensions:
+            extension_name = extension.split(":")[0]
+            if not self.charm.backend.database.is_postgresql_plugin_enabled(extension_name):
+                return False
+        return True
+
+    def _block_on_extensions(self, relation, remote_app_databag: Dict) -> bool:
+        """Verifies that extensions are enabled or blocks the charm."""
+        if "extensions" in remote_app_databag:
+            self.update_databags(
+                relation,
+                {
+                    "extensions": remote_app_databag["extensions"],
+                },
+            )
+            extensions = remote_app_databag["extensions"].split(",")
+            if not self._check_extensions(extensions):
+                # Do not allow apps requesting extensions to be installed.
+                logger.error(
+                    f"ERROR - `extensions` ({', '.join(extensions)}) cannot be requested through relations"
+                    " - Please enable extensions through `juju config` and add the relation again."
+                )
+                self.charm.unit.status = BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
+                return True
+        return False
+
     def _on_relation_joined(self, join_event: RelationJoinedEvent):
         """Handle db-relation-joined event.
 
@@ -193,20 +221,7 @@ class DbProvides(Object):
             join_event.defer()
             return
 
-        # Do not allow apps requesting extensions to be installed. Extensions should be installed
-        # through db charm config
-        if (
-            remote_app_databag.get("extensions") is not None
-            or remote_unit_databag.get("extensions") is not None
-        ):
-            logger.error(
-                "ERROR - `extensions` cannot be requested through relations"
-                " - they should be installed through a database charm config in the future"
-            )
-            self.charm.unit.status = BlockedStatus(
-                "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
-            )
-            join_event.fail()
+        if self._block_on_extensions(join_event.relation, remote_app_databag):
             return
 
         user = self._generate_username(join_event)
