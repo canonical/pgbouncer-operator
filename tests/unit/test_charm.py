@@ -39,6 +39,7 @@ class TestCharm(unittest.TestCase):
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
+    @patch("builtins.open", unittest.mock.mock_open())
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
     @patch("os.makedirs")

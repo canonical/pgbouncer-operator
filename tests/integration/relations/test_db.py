@@ -128,7 +128,7 @@ async def test_extensions(ops_test: OpsTest, pgb_charm_jammy, application_charm)
             == EXTENSIONS_BLOCKING_MESSAGE
         )
 
-        logger.info("Rekatung with enabled extensions")
+        logger.info("Relating with enabled extensions")
         await ops_test.model.applications[pgb_jammy].remove_relation(
             f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db"
         )
