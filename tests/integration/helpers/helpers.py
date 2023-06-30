@@ -24,6 +24,7 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PGB = METADATA["name"]
 PG = "postgresql"
 WEEBL = "weebl"
+MAILMAN3 = "mailman3-core"
 
 WAIT_MSG = "waiting for backend database relation to connect"
 

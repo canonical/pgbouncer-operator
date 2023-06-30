@@ -11,6 +11,7 @@ of the libraries in this repository.
 import json
 import logging
 
+import ops.lib
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseCreatedEvent,
@@ -22,6 +23,8 @@ from ops.main import main
 from ops.model import ActiveStatus
 
 logger = logging.getLogger(__name__)
+
+pgsql = ops.lib.use("pgsql", 1, "postgresql-charmers@lists.launchpad.net")
 
 # Extra roles that this application needs when interacting with the database.
 EXTRA_USER_ROLES = "CREATEDB,CREATEROLE"
@@ -76,6 +79,11 @@ class ApplicationCharm(CharmBase):
         )
 
         self.framework.observe(self.on.run_sql_action, self._on_run_sql_action)
+
+        self.db = pgsql.PostgreSQLClient(self, "db")
+        self.framework.observe(
+            self.db.on.database_relation_joined, self._on_database_relation_joined
+        )
 
     def _on_start(self, _) -> None:
         """Only sets an Active status."""
@@ -173,6 +181,18 @@ class ApplicationCharm(CharmBase):
         connection = psycopg2.connect(connstr)
         connection.autocommit = True
         return connection
+
+    def _on_database_relation_joined(
+        self, event: pgsql.DatabaseRelationJoinedEvent  # type: ignore
+    ) -> None:
+        """Handle db-relation-joined.
+
+        Args:
+            event: Event triggering the database relation joined handler.
+        """
+        if self.model.unit.is_leader():
+            event.database = "db_with_extensions"
+            event.extensions = ["pg_trgm:public", "unaccent:public"]
 
 
 if __name__ == "__main__":

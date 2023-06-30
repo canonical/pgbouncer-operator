@@ -44,7 +44,7 @@ optional = true
 
 [tool.poetry.group.unit.dependencies]
 coverage = {extras = ["toml"], version = "7.2.7"}
-pytest = "7.3.2"
+pytest = "7.4.0"
 pytest-asyncio = "0.21.0"
 psycopg2 = {version = "2.9.6", extras = ["binary"]}
 jinja2 = "3.1.2"
@@ -53,11 +53,12 @@ jinja2 = "3.1.2"
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-pytest = "7.3.2"
-pytest-operator = "0.27.0"
+pytest = "7.4.0"
+pytest-operator = "0.28.0"
 juju = "2.9.42.4" # Latest juju 2
 tenacity = "8.2.2"
 requests = "2.31.0"
+mailmanclient = "3.3.5"
 psycopg2 = {version = "^2.9.6", extras = ["binary"]}
 
 [tool.poetry.group.relation_charm]
@@ -65,6 +66,7 @@ optional = true
 
 [tool.poetry.group.relation_charm.dependencies]
 ops = "2.3.0"
+ops-lib-pgsql = "1.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
