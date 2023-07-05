@@ -400,7 +400,7 @@ class PgBouncerCharm(CharmBase):
         # Render the template file with the correct values.
         rendered = template.render(
             stats_user=self.backend.stats_user,
-            pgb_service=f"{PGB}={self.app.name}",
+            pgb_service=f"{PGB}-{self.app.name}",
             stats_password=self.peers.get_secret("app", MONITORING_PASSWORD_KEY),
             listen_port=self.config["listen_port"],
             metrics_port=self.config["metrics_port"],
