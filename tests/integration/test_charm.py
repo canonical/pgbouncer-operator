@@ -9,7 +9,7 @@ import pytest
 from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
-from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR
+from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR, PGB_LOG_DIR
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
@@ -116,3 +116,16 @@ async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
 
     # verify all processes start again
     assert await get_running_instances(unit, "pgbouncer_expor") == 1
+
+
+async def test_logrotate(ops_test: OpsTest):
+    """Verify that logs will be rotated."""
+    unit = ops_test.model.units[f"{PGB}/0"]
+    await unit.run("logrotate -f /etc/logrotate.conf")
+
+    cmd = f"ssh {PGB}/0 sudo ls {PGB_LOG_DIR}/{PGB}/instance_0"
+    return_code, output, _ = await ops_test.juju(*cmd.split(" "))
+    assert return_code == 0
+    logs = output.strip().split()
+    logs.remove("pgbouncer.log")
+    assert len(logs), "Log not rotated"

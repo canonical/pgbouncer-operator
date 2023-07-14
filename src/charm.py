@@ -139,6 +139,19 @@ class PgBouncerCharm(CharmBase):
             f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
         )
         systemd.daemon_reload()
+        # Render the logrotate config
+        with open("templates/logrotate.j2", "r") as file:
+            template = Template(file.read())
+        # Logrotate expects the file to be owned by root
+        with open(f"/etc/logrotate.d/{PGB}-{self.app.name}", "w+") as file:
+            file.write(
+                template.render(
+                    log_dir=PGB_LOG_DIR,
+                    app_name=self.app.name,
+                    service_ids=self.service_ids,
+                    prefix=PGB,
+                )
+            )
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -165,6 +178,7 @@ class PgBouncerCharm(CharmBase):
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
         self.remove_exporter_service()
+        os.remove(f"/etc/logrotate.d/{PGB}-{self.app.name}")
 
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
@@ -386,6 +400,7 @@ class PgBouncerCharm(CharmBase):
         # Render the template file with the correct values.
         rendered = template.render(
             stats_user=self.backend.stats_user,
+            pgb_service=f"{PGB}-{self.app.name}",
             stats_password=self.peers.get_secret("app", MONITORING_PASSWORD_KEY),
             listen_port=self.config["listen_port"],
             metrics_port=self.config["metrics_port"],
