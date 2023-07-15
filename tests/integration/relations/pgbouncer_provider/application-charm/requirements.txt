@@ -1,9 +1,9 @@
 ops-lib-pgsql==1.4 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
     --hash=sha256:3ea802a1a9e6be4457dbe49959a76c50d63b689abc1b803c127bd24e5bd98654 \
     --hash=sha256:85b07a364339da2423c2631680f03aab8f9b4d8a6493efc66303224ff9ab34af
-ops==2.3.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
-    --hash=sha256:24a5c6e985d3f08cb3dfccfd1adb93ca9247dc867b192baaf3265fe5736fd992 \
-    --hash=sha256:438c217be75f641948114bc24ecbb2adca2b5e407b401401e1b7dbc0f912731b
+ops==2.4.1; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
+    --hash=sha256:9cd1a25c6ae30dc9f9afcbe87250f5349ff9a05d5b06632ad8111700c5f0db04 \
+    --hash=sha256:b5762bea03049ec150c6266833925d0bb36237b26b006ca878e74e24d162f981
 pgconnstr==1.0.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0" \
     --hash=sha256:0656129961ae879675d0842f5237db82d31ce59c7b3211b051c33e37a864826e \
     --hash=sha256:0f65830e7e3b76adf4390a8592ee52343171a17caef7436257e7bc81c44e21a7
