@@ -21,3 +21,4 @@ parts:
     charm-binary-python-packages:
       - psycopg2-binary==2.9.6  # renovate
       - psycopg[binary]==3.1.9  # renovate
+      - PyYAML==6.0.1  # renovate
