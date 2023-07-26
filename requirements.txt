@@ -1,6 +1,4 @@
-ops==2.4.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 pgconnstr==1.0.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
-pydantic==1.10.11 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 pyyaml==6.0.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 tenacity==8.2.2 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 typing-extensions==4.6.3 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
