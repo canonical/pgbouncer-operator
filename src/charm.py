@@ -211,7 +211,7 @@ class PgBouncerCharm(CharmBase):
                 systemd.service_start(service)
 
             if self.backend.postgres:
-                self.unit.status = ActiveStatus("pgbouncer started")
+                self.unit.status = self.check_status()
             else:
                 # Wait for backend relation relation if it doesn't exist
                 self.unit.status = BlockedStatus("waiting for backend database relation")
