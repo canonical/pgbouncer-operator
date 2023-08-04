@@ -14,6 +14,8 @@ source: |
   https://github.com/canonical/pgbouncer-operator
 issues: |
   https://github.com/canonical/pgbouncer-operator/issues
+maintainers:
+  - "Canonical Data Platform <data-platform@lists.launchpad.net>"
 
 series:
   - jammy
