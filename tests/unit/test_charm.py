@@ -79,13 +79,20 @@ class TestCharm(unittest.TestCase):
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.ready",
+        new_callable=PropertyMock,
+        return_value=True,
+    )
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.systemd.service_running")
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres",
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_start(self, _has_relation, _start):
+    def test_on_start(self, _has_relation, _start, _, __, ___):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
