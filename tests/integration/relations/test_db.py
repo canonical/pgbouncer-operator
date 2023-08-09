@@ -19,6 +19,7 @@ from tests.integration.helpers.helpers import (
     deploy_postgres_bundle,
     get_backend_user_pass,
     get_legacy_relation_username,
+    run_command_on_unit,
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
@@ -64,8 +65,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3].units[0]
-        action = await mailman_unit.run("mailman info")
-        result = action.results.get("Stdout", action.results.get("Stderr", None))
+        result = await run_command_on_unit(ops_test, mailman_unit.name, "mailman info")
         assert "db url: postgres://" in result, f"no postgres db url, Stderr: {result}"
 
         # Do some CRUD operations using Mailman3 Core client.

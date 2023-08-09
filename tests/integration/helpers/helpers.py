@@ -145,7 +145,7 @@ async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
 
 
 async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):
-    run_cmd = f"run --unit {unit_name} --"
+    run_cmd = f"exec --unit {unit_name} --"
     connstr = f"--username={user} -h {host} -p {port} --dbname={dbname}"
     cmd = f'PGPASSWORD={pgpass} psql {connstr} --command="{command}"'
     return await ops_test.juju(*run_cmd.split(" "), cmd)
