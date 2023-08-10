@@ -68,7 +68,7 @@ async def test_change_config(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    cores = await get_unit_cores(unit)
+    cores = await get_unit_cores(ops_test, unit)
 
     expected_cfg = PgbConfig(DEFAULT_CONFIG)
     expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
@@ -89,10 +89,10 @@ async def test_change_config(ops_test: OpsTest):
 
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
-    expected_processes = await get_unit_cores(unit)
+    expected_processes = await get_unit_cores(ops_test, unit)
 
     # verify the correct amount of pgbouncer processes are running
-    assert await get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(ops_test, unit, "pgbouncer") == expected_processes
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("pkill -SIGINT -x pgbouncer")
@@ -100,14 +100,14 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
 
     # verify all processes start again
-    assert await get_running_instances(unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(ops_test, unit, "pgbouncer") == expected_processes
 
 
 async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
 
     # verify the correct amount of pgbouncer_exporter processes are running
-    assert await get_running_instances(unit, "pgbouncer_expor") == 1
+    assert await get_running_instances(ops_test, unit, "pgbouncer_expor") == 1
 
     # Kill pgbouncer_exporter process and wait for it to restart
     await unit.run("pkill -SIGTERM -x pgbouncer_expor")
@@ -115,7 +115,7 @@ async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
 
     # verify all processes start again
-    assert await get_running_instances(unit, "pgbouncer_expor") == 1
+    assert await get_running_instances(ops_test, unit, "pgbouncer_expor") == 1
 
 
 async def test_logrotate(ops_test: OpsTest):

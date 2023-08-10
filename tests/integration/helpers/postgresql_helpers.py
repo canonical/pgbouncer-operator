@@ -192,23 +192,3 @@ def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
         IP address of the unit
     """
     return ops_test.model.units.get(unit_name).public_address
-
-
-async def run_command_on_unit(ops_test: OpsTest, unit_name: str, command: str) -> str:
-    """Run a command on a specific unit.
-
-    Args:
-        ops_test: The ops test framework instance
-        unit_name: The name of the unit to run the command on
-        command: The command to run
-
-    Returns:
-        the command output if it succeeds, otherwise raises an exception.
-    """
-    complete_command = f"run --unit {unit_name} -- {command}"
-    return_code, stdout, _ = await ops_test.juju(*complete_command.split())
-    if return_code != 0:
-        raise Exception(
-            "Expected command %s to succeed instead it failed: %s", command, return_code
-        )
-    return stdout

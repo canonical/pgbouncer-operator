@@ -18,13 +18,13 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_user_pass,
     get_cfg,
+    run_command_on_unit,
     wait_for_relation_removed_between,
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
     enable_connections_logging,
     get_postgres_primary,
-    run_command_on_unit,
 )
 
 logger = logging.getLogger(__name__)

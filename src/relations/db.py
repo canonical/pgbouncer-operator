@@ -258,7 +258,6 @@ class DbProvides(Object):
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
             logger.error(err_msg)
-            join_event.fail()
             self.charm.unit.status = BlockedStatus(err_msg)
             return
 
