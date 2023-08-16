@@ -4,7 +4,7 @@
 import os
 import unittest
 from copy import deepcopy
-from unittest.mock import Mock, MagicMock, PropertyMock, call, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 
 import ops.testing
 from charms.operator_libs_linux.v1 import systemd
@@ -17,9 +17,9 @@ from charm import PgBouncerCharm
 from constants import (
     BACKEND_RELATION_NAME,
     INI_NAME,
+    PEER_RELATION_NAME,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
-    PEER_RELATION_NAME,
     SECRET_CACHE_LABEL,
     SECRET_DELETED_LABEL,
     SECRET_INTERNAL_LABEL,

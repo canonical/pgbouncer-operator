@@ -111,7 +111,7 @@ from ops.model import (
     WaitingStatus,
 )
 
-from constants import EXTENSIONS_BLOCKING_MESSAGE, PG
+from constants import APP_SCOPE, EXTENSIONS_BLOCKING_MESSAGE, PG
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class DbProvides(Object):
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
         else:
-            if not (password := self.charm.peers.app_databag.get(user, None)):
+            if not (password := self.charm.get_secret(APP_SCOPE, user)):
                 join_event.defer()
 
         self.update_databags(
