@@ -67,6 +67,7 @@ from ops.model import (
 )
 
 from constants import (
+    APP_SCOPE,
     AUTH_FILE_NAME,
     BACKEND_RELATION_NAME,
     MONITORING_PASSWORD_KEY,
@@ -139,11 +140,9 @@ class BackendDatabaseRequires(Object):
         self.initialise_auth_function([self.database.database, PG])
 
         # Add the monitoring user.
-        if not (
-            monitoring_password := self.charm.peers.get_secret("app", MONITORING_PASSWORD_KEY)
-        ):
+        if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
             monitoring_password = pgb.generate_password()
-            self.charm.peers.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
+            self.charm.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
         hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
         self.charm.render_auth_file(
