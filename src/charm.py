@@ -286,7 +286,7 @@ class PgBouncerCharm(CharmBase):
         if juju_version.has_secrets:
             return self._juju_secret_get_key(scope, key)
 
-    def _juju_secret_set(self, scope: str, key: str, value: str) -> str:
+    def _juju_secret_set(self, scope: str, key: str, value: str) -> Optional[str]:
         """Helper function setting Juju secret."""
         if scope == UNIT_SCOPE:
             peer_data = self.peers.unit_databag
@@ -314,6 +314,7 @@ class PgBouncerCharm(CharmBase):
                         f"Error in attempt to set {scope}:{key}. "
                         f"Existing keys were: {list(secret_cache.keys())}. {error}"
                     )
+                    return
                 logging.debug(f"Secret {scope}:{key} was {key} set")
 
         # We need to create a brand-new secret for this scope
