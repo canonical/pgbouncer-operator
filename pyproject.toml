@@ -10,6 +10,9 @@ license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://charmhub.io/pgbouncer"
 repository = "https://github.com/canonical/pgbouncer-operator"
+packages = [
+    { include = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.8.10"
@@ -69,7 +72,7 @@ ops = "2.5.0"
 ops-lib-pgsql = "1.4"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # Testing tools configuration
