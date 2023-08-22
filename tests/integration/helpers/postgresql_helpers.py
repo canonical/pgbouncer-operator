@@ -152,7 +152,8 @@ async def execute_query_on_unit(
 
     Args:
         unit_address: The public IP address of the unit to execute the query on.
-        password: The PostgreSQL superuser password.
+        user: The user to execute as.
+        password: The PostgreSQL user password.
         query: Query to execute.
         database: Optional database to connect to (defaults to postgres database).
 
