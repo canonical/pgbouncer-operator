@@ -86,7 +86,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
 
         self._cores = os.cpu_count()
-        self.service_ids = [service_id for service_id in range(self._cores)]
+        self.service_ids = list(range(self._cores))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
