@@ -16,7 +16,7 @@ python = "^3.8.10"
 ops = "2.5.1"
 pgconnstr = "1.0.1"
 tenacity = "8.2.3"
-cosl = "0.0.5"
+cosl = "0.0.6"
 pydantic = "1.10.12"
 # psycopg2 = "2.9.5" # Injected in charmcraft.yaml
 
@@ -25,7 +25,7 @@ optional = true
 
 [tool.poetry.group.format.dependencies]
 black = "23.7.0"
-ruff = "0.0.284"
+ruff = "0.0.286"
 
 [tool.poetry.group.lint]
 optional = true
@@ -48,7 +48,7 @@ optional = true
 
 [tool.poetry.group.integration.dependencies]
 pytest = "7.4.0"
-pytest-operator = "0.28.0"
+pytest-operator = "0.29.0"
 juju = "2.9.44.0 || 3.2.0.1"  # renovate libjuju
 tenacity = "8.2.3"
 requests = "2.31.0"
