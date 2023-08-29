@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
-TEST_DBNAME = "application_first_database"
+TEST_DBNAME = "postgresql_test_app_first_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG_2 = "another-postgresql"
 PGB_2 = "another-pgbouncer"
@@ -91,6 +91,7 @@ async def test_database_usage(ops_test: OpsTest):
         query=update_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "some data" in json.loads(run_update_query["results"])[0]
 
@@ -104,6 +105,7 @@ async def test_database_version(ops_test: OpsTest):
         query=version_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     # Get the version of the database and compare with the information that was retrieved directly
     # from the database.
@@ -123,6 +125,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         query=create_database_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_database_query["results"])
 
@@ -133,6 +136,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         query=create_user_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
@@ -171,7 +175,9 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
-async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, postgresql_test_app_charm):
+async def test_two_applications_cant_relate_to_the_same_pgb(
+    ops_test: OpsTest, postgresql_test_app_charm
+):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
     all_app_names = [ANOTHER_APPLICATION_APP_NAME]
