@@ -121,7 +121,7 @@ async def build_connection_string(
     return f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
 
 
-async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, dbname):
+async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, relation_name, dbname):
     """Smoke test to check relation is online."""
     table_name = "quick_test"
     smoke_val = str(uuid4())
@@ -141,5 +141,6 @@ async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, dbname):
                 query=smoke_query,
                 dbname=dbname,
                 relation_id=relation_id,
+                relation_name=relation_name,
             )
             assert smoke_val in json.loads(run_update_query["results"])[0]
