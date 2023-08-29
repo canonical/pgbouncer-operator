@@ -148,6 +148,7 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -165,6 +166,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -293,6 +295,7 @@ async def test_scaling(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -302,6 +305,7 @@ async def test_scaling(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
