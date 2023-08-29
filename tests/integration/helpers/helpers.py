@@ -17,7 +17,7 @@ from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import AUTH_FILE_NAME, INI_NAME, PGB_CONF_DIR
 
-CLIENT_APP_NAME = "application"
+CLIENT_APP_NAME = "postgresql-test-app"
 FIRST_DATABASE_RELATION_NAME = "first-database"
 SECOND_DATABASE_RELATION_NAME = "second-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())

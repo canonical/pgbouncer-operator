@@ -61,6 +61,7 @@ optional = true
 [tool.poetry.group.relation_charm.dependencies]
 ops = "2.5.1"
 ops-lib-pgsql = "1.4"
+tenacity = "8.2.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

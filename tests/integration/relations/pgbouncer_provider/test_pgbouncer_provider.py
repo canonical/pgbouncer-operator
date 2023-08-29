@@ -43,7 +43,7 @@ MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 @pytest.mark.abort_on_fail
 async def test_database_relation_with_charm_libraries(
-    ops_test: OpsTest, application_charm, pgb_charm_jammy
+    ops_test: OpsTest, postgresql_test_app_charm, pgb_charm_jammy
 ):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
@@ -51,7 +51,7 @@ async def test_database_relation_with_charm_libraries(
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                application_charm,
+                postgresql_test_app_charm,
                 application_name=CLIENT_APP_NAME,
             ),
             ops_test.model.deploy(
@@ -171,7 +171,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
-async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, application_charm):
+async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, postgresql_test_app_charm):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
     all_app_names = [ANOTHER_APPLICATION_APP_NAME]
@@ -179,7 +179,7 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, a
 
     # Deploy another application.
     await ops_test.model.deploy(
-        application_charm,
+        postgresql_test_app_charm,
         application_name=ANOTHER_APPLICATION_APP_NAME,
     )
     await ops_test.model.wait_for_idle(status="active")
