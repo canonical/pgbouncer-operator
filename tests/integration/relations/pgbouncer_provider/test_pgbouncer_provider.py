@@ -258,7 +258,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
 
 
-async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, application_charm):
+async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     """Test that an application can request additional databases using the same interface.
 
     This occurs using a new relation per interface (for now).
