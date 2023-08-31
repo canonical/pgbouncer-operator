@@ -55,14 +55,6 @@ requests = "2.31.0"
 mailmanclient = "3.3.5"
 psycopg2 = {version = "^2.9.6", extras = ["binary"]}
 
-[tool.poetry.group.relation_charm]
-optional = true
-
-[tool.poetry.group.relation_charm.dependencies]
-ops = "2.5.1"
-ops-lib-pgsql = "1.4"
-tenacity = "8.2.3"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

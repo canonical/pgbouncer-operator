@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_at_scale(ops_test, postgresql_test_app_charm, pgb_charm_jammy):
+async def test_deploy_at_scale(ops_test, pgb_charm_jammy):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                postgresql_test_app_charm, application_name=CLIENT_APP_NAME, num_units=3
+                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, num_units=3, channel="edge"
             ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
