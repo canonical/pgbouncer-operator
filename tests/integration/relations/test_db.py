@@ -103,13 +103,15 @@ async def test_remove_relation(ops_test: OpsTest):
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
 
 
-async def test_extensions(ops_test: OpsTest, pgb_charm_jammy, application_charm):
+async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
     """Test that PGB blocks on disabled extension request and allows enabled ones."""
     async with ops_test.fast_forward():
         logger.info("Deploying test app")
         pgb_jammy = f"{PGB}-jammy"
         await gather(
-            ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME),
+            ops_test.model.deploy(
+                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+            ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
                 application_name=pgb_jammy,

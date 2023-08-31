@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
-TEST_DBNAME = "application_first_database"
+TEST_DBNAME = "postgresql_test_app_first_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG_2 = "another-postgresql"
 PGB_2 = "another-pgbouncer"
@@ -42,17 +42,16 @@ MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
 @pytest.mark.abort_on_fail
-async def test_database_relation_with_charm_libraries(
-    ops_test: OpsTest, application_charm, pgb_charm_jammy
-):
+async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_charm_jammy):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                application_charm,
+                CLIENT_APP_NAME,
                 application_name=CLIENT_APP_NAME,
+                channel="edge",
             ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
@@ -91,6 +90,7 @@ async def test_database_usage(ops_test: OpsTest):
         query=update_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "some data" in json.loads(run_update_query["results"])[0]
 
@@ -104,6 +104,7 @@ async def test_database_version(ops_test: OpsTest):
         query=version_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     # Get the version of the database and compare with the information that was retrieved directly
     # from the database.
@@ -123,6 +124,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         query=create_database_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_database_query["results"])
 
@@ -133,6 +135,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         query=create_user_query,
         dbname=TEST_DBNAME,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
@@ -144,6 +147,7 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -161,6 +165,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -171,7 +176,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
-async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, application_charm):
+async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
     all_app_names = [ANOTHER_APPLICATION_APP_NAME]
@@ -179,8 +184,9 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest, a
 
     # Deploy another application.
     await ops_test.model.deploy(
-        application_charm,
+        CLIENT_APP_NAME,
         application_name=ANOTHER_APPLICATION_APP_NAME,
+        channel="edge",
     )
     await ops_test.model.wait_for_idle(status="active")
 
@@ -252,7 +258,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
 
 
-async def test_an_application_can_request_multiple_databases(ops_test: OpsTest, application_charm):
+async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     """Test that an application can request additional databases using the same interface.
 
     This occurs using a new relation per interface (for now).
@@ -287,6 +293,7 @@ async def test_scaling(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
@@ -296,6 +303,7 @@ async def test_scaling(ops_test: OpsTest):
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
         relation_id=client_relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
 
