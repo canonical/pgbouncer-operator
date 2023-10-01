@@ -13,11 +13,11 @@ repository = "https://github.com/canonical/pgbouncer-operator"
 
 [tool.poetry.dependencies]
 python = "^3.8.10"
-ops = "2.6.0"
+ops = "2.7.0"
 pgconnstr = "1.0.1"
 tenacity = "8.2.3"
 cosl = "0.0.7"
-pydantic = "1.10.12"
+pydantic = "1.10.13"
 # psycopg2 = "2.9.5" # Injected in charmcraft.yaml
 
 [tool.poetry.group.format]
@@ -40,7 +40,7 @@ optional = true
 coverage = {extras = ["toml"], version = "7.3.1"}
 pytest = "7.4.2"
 pytest-asyncio = "0.21.1"
-psycopg2 = {version = "2.9.7", extras = ["binary"]}
+psycopg2 = {version = "2.9.8", extras = ["binary"]}
 jinja2 = "3.1.2"
 
 [tool.poetry.group.integration]
