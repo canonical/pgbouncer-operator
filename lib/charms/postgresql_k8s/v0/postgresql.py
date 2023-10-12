@@ -19,7 +19,7 @@ The `postgresql` module provides methods for interacting with the PostgreSQL ins
 Any charm using this library should import the `psycopg2` or `psycopg2-binary` dependency.
 """
 import logging
-from typing import List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import psycopg2
 from psycopg2 import sql
@@ -32,7 +32,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 12
+LIBPATCH = 16
 
 INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE = "invalid role(s) for extra user roles"
 
@@ -406,6 +406,7 @@ class PostgreSQL:
         Raises:
             PostgreSQLUpdateUserPasswordError if the password couldn't be changed.
         """
+        connection = None
         try:
             with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -419,3 +420,53 @@ class PostgreSQL:
         finally:
             if connection is not None:
                 connection.close()
+
+    def is_restart_pending(self) -> bool:
+        """Query pg_settings for pending restart."""
+        connection = None
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM pg_settings WHERE pending_restart=True;")
+                return cursor.fetchone()[0] > 0
+        except psycopg2.OperationalError:
+            logger.warning("Failed to connect to PostgreSQL.")
+            return False
+        except psycopg2.Error as e:
+            logger.error(f"Failed to check if restart is pending: {e}")
+            return False
+        finally:
+            if connection:
+                connection.close()
+
+    @staticmethod
+    def build_postgresql_parameters(
+        profile: str, available_memory: int, limit_memory: Optional[int] = None
+    ) -> Optional[Dict[str, str]]:
+        """Builds the PostgreSQL parameters.
+
+        Args:
+            profile: the profile to use.
+            available_memory: available memory to use in calculation in bytes.
+            limit_memory: (optional) limit memory to use in calculation in bytes.
+
+        Returns:
+            Dictionary with the PostgreSQL parameters.
+        """
+        if limit_memory:
+            available_memory = min(available_memory, limit_memory)
+        logger.debug(f"Building PostgreSQL parameters for {profile=} and {available_memory=}")
+        if profile == "production":
+            # Use 25% of the available memory for shared_buffers.
+            # and the remaind as cache memory.
+            shared_buffers = int(available_memory * 0.25)
+            effective_cache_size = int(available_memory - shared_buffers)
+
+            parameters = {
+                "shared_buffers": f"{int(shared_buffers/10**6)}MB",
+                "effective_cache_size": f"{int(effective_cache_size/10**6)}MB",
+            }
+
+            return parameters
+        else:
+            # Return default
+            return {"shared_buffers": "128MB"}

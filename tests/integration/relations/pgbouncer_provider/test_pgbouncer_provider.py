@@ -26,6 +26,7 @@ from tests.integration.helpers.postgresql_helpers import check_database_users_ex
 from tests.integration.relations.pgbouncer_provider.helpers import (
     build_connection_string,
     check_new_relation,
+    get_application_relation_data,
     run_sql_on_application_charm,
 )
 
@@ -74,6 +75,26 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
         )
 
     await ops_test.model.wait_for_idle(status="active", timeout=600)
+
+    # Check that on juju 3 we have secrets and no username and password in the rel databag
+    if hasattr(ops_test.model, "list_secrets"):
+        logger.info("checking for secrets")
+        secret_uri, password = await asyncio.gather(
+            get_application_relation_data(
+                ops_test,
+                CLIENT_APP_NAME,
+                FIRST_DATABASE_RELATION_NAME,
+                "secret-user",
+            ),
+            get_application_relation_data(
+                ops_test,
+                CLIENT_APP_NAME,
+                FIRST_DATABASE_RELATION_NAME,
+                "password",
+            ),
+        )
+        assert secret_uri is not None
+        assert password is None
 
 
 async def test_database_usage(ops_test: OpsTest):

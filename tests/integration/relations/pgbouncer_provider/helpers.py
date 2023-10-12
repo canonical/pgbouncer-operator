@@ -11,6 +11,8 @@ import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
+from ...helpers.helpers import get_juju_secret
+
 
 async def get_application_relation_data(
     ops_test: OpsTest,
@@ -102,12 +104,24 @@ async def build_connection_string(
     """
     # Get the connection data exposed to the application through the relation.
     database = f'{application_name.replace("-", "_")}_{relation_name.replace("-", "_")}'
-    username = await get_application_relation_data(
-        ops_test, application_name, relation_name, "username", relation_id
-    )
-    password = await get_application_relation_data(
-        ops_test, application_name, relation_name, "password", relation_id
-    )
+
+    if secret_uri := await get_application_relation_data(
+        ops_test,
+        application_name,
+        relation_name,
+        "secret-user",
+        relation_id,
+    ):
+        secret_data = await get_juju_secret(ops_test, secret_uri)
+        username = secret_data["username"]
+        password = secret_data["password"]
+    else:
+        username = await get_application_relation_data(
+            ops_test, application_name, relation_name, "username", relation_id
+        )
+        password = await get_application_relation_data(
+            ops_test, application_name, relation_name, "password", relation_id
+        )
     endpoints = await get_application_relation_data(
         ops_test,
         application_name,
