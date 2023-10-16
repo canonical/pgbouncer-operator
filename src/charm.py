@@ -56,6 +56,7 @@ from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
+from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,13 @@ class PgBouncerCharm(CharmBase):
             ],
             log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
             refresh_events=[self.on.config_changed],
+        )
+
+        self.upgrade = PgbouncerUpgrade(
+            self,
+            model=get_pgbouncer_dependencies_model(),
+            relation_name="upgrade",
+            substrate="vm",
         )
 
     # =======================
@@ -632,18 +640,20 @@ class PgBouncerCharm(CharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_snap_packages(self, packages: List[str]) -> None:
+    def _install_snap_packages(self, packages: List[str], refresh: bool = False) -> None:
         """Installs package(s) to container.
 
         Args:
             packages: list of packages to install.
+            refresh: whether to refresh the snap if it's
+                already present.
         """
         for snap_name, snap_version in packages:
             try:
                 snap_cache = snap.SnapCache()
                 snap_package = snap_cache[snap_name]
 
-                if not snap_package.present:
+                if not snap_package.present or refresh:
                     if snap_version.get("revision"):
                         snap_package.ensure(
                             snap.SnapState.Latest, revision=snap_version["revision"]
