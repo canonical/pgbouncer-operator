@@ -49,12 +49,10 @@ class PgbouncerUpgrade(DataUpgrade):
     @override
     def build_upgrade_stack(self) -> List[int]:
         """Builds ordered iterable of all application unit.ids to upgrade in."""
-        upgrade_stack = []
-        units = set([self.charm.unit] + list(self.charm.peers.units))
-        for unit in units:
-            upgrade_stack.append(int(unit.name.split("/")[-1]))
-
-        return upgrade_stack
+        return [
+            int(unit.name.split("/")[-1])
+            for unit in [self.charm.unit] + list(self.charm.peers.units)
+        ]
 
     @override
     def log_rollback_instructions(self) -> None:
@@ -77,7 +75,7 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm.unit.status = MaintenanceStatus("stopping services")
         for service in self.charm.pgb_services:
             systemd.service_stop(service)
-        if self.backend.postgres:
+        if self.charm.backend.postgres:
             self.charm.remove_exporter_service()
 
         self.charm.unit.status = MaintenanceStatus("refreshing the snap")
@@ -86,7 +84,7 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm.unit.status = MaintenanceStatus("restarting services")
         self.charm.render_utility_files()
         self.charm.reload_pgbouncer()
-        if self.backend.postgres:
+        if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
 
         try:
