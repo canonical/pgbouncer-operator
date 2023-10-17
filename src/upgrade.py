@@ -12,6 +12,7 @@ from charms.data_platform_libs.v0.upgrade import (
     DependencyModel,
     UpgradeGrantedEvent,
 )
+from charms.operator_libs_linux.v1 import systemd
 from ops.model import ActiveStatus, MaintenanceStatus
 from pydantic import BaseModel
 from typing_extensions import override
@@ -49,7 +50,7 @@ class PgbouncerUpgrade(DataUpgrade):
     def build_upgrade_stack(self) -> List[int]:
         """Builds ordered iterable of all application unit.ids to upgrade in."""
         upgrade_stack = []
-        units = set([self.charm.unit] + list(self.charm.peer_relation.units))
+        units = set([self.charm.unit] + list(self.charm.peers.units))
         for unit in units:
             upgrade_stack.append(int(unit.name.split("/")[-1]))
 
@@ -64,13 +65,8 @@ class PgbouncerUpgrade(DataUpgrade):
 
     def _cluster_checks(self) -> None:
         """Check that the cluster is in healthy state."""
-        try:
-            if not self.charm.check_pgb_running():
-                raise ClusterNotReadyError(
-                    DEFAULT_MESSAGE, "Not all pgbouncer services are up yet."
-                )
-        except ConnectionError:
-            raise ClusterNotReadyError(DEFAULT_MESSAGE, "Not all pgbouncer services are missing.")
+        if not isinstance(self.charm.check_status(), ActiveStatus):
+            raise ClusterNotReadyError(DEFAULT_MESSAGE, "Not all pgbouncer services are up yet.")
 
         if self.charm.backend.postgres and not self.charm.backend.ready:
             raise ClusterNotReadyError(DEFAULT_MESSAGE, "Backend relation is still initialising.")
@@ -78,8 +74,20 @@ class PgbouncerUpgrade(DataUpgrade):
     @override
     def _on_upgrade_granted(self, event: UpgradeGrantedEvent) -> None:
         # Refresh the charmed PostgreSQL snap and restart the database.
+        self.charm.unit.status = MaintenanceStatus("stopping services")
+        for service in self.charm.pgb_services:
+            systemd.service_stop(service)
+        if self.backend.postgres:
+            self.charm.remove_exporter_service()
+
         self.charm.unit.status = MaintenanceStatus("refreshing the snap")
         self.charm._install_snap_packages(packages=SNAP_PACKAGES, refresh=True)
+
+        self.charm.unit.status = MaintenanceStatus("restarting services")
+        self.charm.render_utility_files()
+        self.charm.reload_pgbouncer()
+        if self.backend.postgres:
+            self.charm.render_prometheus_service()
 
         try:
             self._cluster_checks()

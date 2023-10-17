@@ -52,7 +52,7 @@ Example:
 """  # noqa: W505
 
 import logging
-from typing import Optional, Set
+from typing import List, Optional, Set
 
 from charms.pgbouncer_k8s.v0.pgb import PgbConfig
 from ops.charm import CharmBase, RelationChangedEvent, RelationCreatedEvent
@@ -130,6 +130,11 @@ class Peers(Object):
     def leader_ip(self) -> str:
         """Gets the IP of the leader unit."""
         return self.app_databag.get(LEADER_ADDRESS_KEY, None)
+
+    @property
+    def units(self) -> List[Unit]:
+        """Returns the peer relation units."""
+        return self.relation.units
 
     def _get_unit_ip(self, unit: Unit) -> Optional[str]:
         """Get the IP address of a specific unit."""
