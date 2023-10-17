@@ -135,9 +135,9 @@ jobs:
             echo "mark_expression=" >> $GITHUB_OUTPUT
           else
             echo Skipping unstable tests
-            echo "mark_expression=not unstable" >> $GITHUB_OUTPUT
+            echo "and mark_expression=not unstable" >> $GITHUB_OUTPUT
           fi
       - name: Run integration tests
-        run: tox run -e ${{ matrix.tox-environments }}-${{ env.libjuju }} -- -m 'not not${{ env.libjuju }} and ${{ steps.select-tests.outputs.mark_expression }}'
+        run: tox run -e ${{ matrix.tox-environments }}-${{ env.libjuju }} -- -m 'not not${{ env.libjuju }} ${{ steps.select-tests.outputs.mark_expression }}'
         env:
           CI_PACKED_CHARMS: ${{ needs.build.outputs.charms }}
