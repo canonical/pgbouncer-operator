@@ -53,6 +53,7 @@ async def test_in_place_upgrade(ops_test: OpsTest, pgb_charm_jammy):
                 application_name=PG,
                 num_units=2,
                 channel="14/edge",
+                config={"profile": "testing"},
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -87,11 +88,6 @@ async def test_in_place_upgrade(ops_test: OpsTest, pgb_charm_jammy):
 
     logger.info("Upgrading PGB...")
     await ops_test.model.applications[PGB].refresh(path=pgb_charm_jammy)
-    await ops_test.model.wait_for_idle(apps=[PGB], status="active", raise_on_blocked=True)
-
-    action = await leader.run_action("resume-upgrade")
-    await action.wait()
-
     await ops_test.model.wait_for_idle(apps=[PGB], status="active", raise_on_blocked=True)
 
     await check_new_relation(

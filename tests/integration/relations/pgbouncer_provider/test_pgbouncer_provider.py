@@ -64,6 +64,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
                 application_name=PG,
                 num_units=2,
                 channel="14/edge",
+                config={"profile": "testing"},
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -238,6 +239,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
                 application_name=PG_2,
                 num_units=2,
                 channel="14/edge",
+                config={"profile": "testing"},
             ),
         )
         await ops_test.model.add_relation(f"{PGB_2}:{BACKEND_RELATION_NAME}", f"{PG_2}:database")

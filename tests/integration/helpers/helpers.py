@@ -281,7 +281,7 @@ async def deploy_postgres_bundle(
             PG,
             channel="14/edge",
             num_units=db_units,
-            config=pg_config,
+            config={"profile": "testing", **pg_config},
         ),
     )
     async with ops_test.fast_forward():
