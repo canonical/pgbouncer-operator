@@ -15,6 +15,7 @@ from charms.data_platform_libs.v0.upgrade import (
 from charms.operator_libs_linux.v1 import systemd
 from ops.model import ActiveStatus, MaintenanceStatus
 from pydantic import BaseModel
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
 from constants import SNAP_PACKAGES
@@ -87,12 +88,9 @@ class PgbouncerUpgrade(DataUpgrade):
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
 
-        try:
-            self._cluster_checks()
-        except ClusterNotReadyError:
-            logger.exception("Deferring on_upgrade_granted: checks did not pass")
-            event.defer()
-            return
+        for attempt in Retrying(stop=stop_after_attempt(6), wait=wait_fixed(10), reraise=True):
+            with attempt:
+                self._cluster_checks()
 
         self.set_unit_completed()
         self.charm.unit.status = ActiveStatus()

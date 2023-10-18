@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
+import tenacity
 from charms.data_platform_libs.v0.upgrade import ClusterNotReadyError
 from ops.model import ActiveStatus, MaintenanceStatus
 from ops.testing import Harness
@@ -84,6 +85,7 @@ class TestUpgrade(unittest.TestCase):
 
         _on_upgrade_changed.assert_called_once_with(event)
 
+    @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
@@ -94,7 +96,7 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
     @patch("upgrade.systemd")
-    def test_on_upgrade_granted_defer(
+    def test_on_upgrade_granted_error(
         self,
         _systemd: Mock,
         _remove_exporter_service: Mock,
@@ -106,13 +108,12 @@ class TestUpgrade(unittest.TestCase):
         _set_unit_completed: Mock,
         _on_upgrade_changed: Mock,
         _,
+        __,
     ):
-        event = Mock()
         _cluster_checks.side_effect = ClusterNotReadyError("test", "test")
 
-        self.charm.upgrade._on_upgrade_granted(event)
-
-        event.defer.assert_called_once_with()
+        with pytest.raises(ClusterNotReadyError):
+            self.charm.upgrade._on_upgrade_granted(Mock())
 
     @patch("charm.PgBouncerCharm.check_status", return_value=ActiveStatus())
     def test_pre_upgrade_check(self, _check_status: Mock):
