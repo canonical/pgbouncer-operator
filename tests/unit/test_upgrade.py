@@ -17,8 +17,7 @@ class TestUpgrade(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
-        with patch("charm.systemd"):
-            self.harness.begin_with_initial_hooks()
+        self.harness.begin()
 
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
