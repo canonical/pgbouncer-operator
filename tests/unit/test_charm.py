@@ -39,13 +39,12 @@ class TestCharm(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
-        with patch("charm.systemd"):
-            self.harness.begin_with_initial_hooks()
+        self.harness.begin()
 
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
-        self.rel_id = self.harness.model.relations[PEER_RELATION_NAME][0].id
+        self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @patch("builtins.open", unittest.mock.mock_open())
     @patch("charm.PgBouncerCharm._install_snap_packages")

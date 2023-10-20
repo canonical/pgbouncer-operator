@@ -18,6 +18,7 @@ pgconnstr = "1.0.1"
 tenacity = "8.2.3"
 cosl = "0.0.7"
 pydantic = "1.10.13"
+poetry-core = "1.7.0"
 # psycopg2 = "2.9.5" # Injected in charmcraft.yaml
 
 [tool.poetry.group.format]

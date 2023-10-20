@@ -46,7 +46,9 @@ async def test_scaled_relations(ops_test: OpsTest):
     """Test that the pgbouncer, postgres, and client charms can relate to one another."""
     # Build, deploy, and relate charms.
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(PG, channel="14/edge", trust=True, num_units=3),
+        await ops_test.model.deploy(
+            PG, channel="14/edge", trust=True, num_units=3, config={"profile": "testing"}
+        )
 
         await asyncio.gather(
             ops_test.model.wait_for_idle(

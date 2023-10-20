@@ -56,6 +56,7 @@ from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
+from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
 logger = logging.getLogger(__name__)
 
@@ -100,41 +101,19 @@ class PgBouncerCharm(CharmBase):
             refresh_events=[self.on.config_changed],
         )
 
+        self.upgrade = PgbouncerUpgrade(
+            self,
+            model=get_pgbouncer_dependencies_model(),
+            relation_name="upgrade",
+            substrate="vm",
+        )
+
     # =======================
     #  Charm Lifecycle Hooks
     # =======================
 
-    def _on_install(self, _) -> None:
-        """On install hook.
-
-        This initialises local config files necessary for pgbouncer to run.
-        """
-        self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
-
-        # Install the charmed PostgreSQL snap.
-        try:
-            self._install_snap_packages(packages=SNAP_PACKAGES)
-        except snap.SnapError:
-            self.unit.status = BlockedStatus("failed to install snap packages")
-            return
-
-        # Try to disable pgbackrest service
-        try:
-            cache = snap.SnapCache()
-            selected_snap = cache["charmed-postgresql"]
-            selected_snap.stop(services=["pgbackrest-service"], disable=True)
-        except snap.SnapError as e:
-            error_message = "Failed to stop and disable pgbackrest snap service"
-            logger.exception(error_message, exc_info=e)
-
-        pg_user = pwd.getpwnam(PG_USER)
-        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
-
-        # Make a directory for each service to store configs.
-        for service_id in self.service_ids:
-            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
-            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-
+    def render_utility_files(self):
+        """Render charm utility services and configuration."""
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
@@ -168,6 +147,39 @@ class PgBouncerCharm(CharmBase):
                     prefix=PGB,
                 )
             )
+
+    def _on_install(self, _) -> None:
+        """On install hook.
+
+        This initialises local config files necessary for pgbouncer to run.
+        """
+        self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
+
+        # Install the charmed PostgreSQL snap.
+        try:
+            self._install_snap_packages(packages=SNAP_PACKAGES)
+        except snap.SnapError:
+            self.unit.status = BlockedStatus("failed to install snap packages")
+            return
+
+        # Try to disable pgbackrest service
+        try:
+            cache = snap.SnapCache()
+            selected_snap = cache["charmed-postgresql"]
+            selected_snap.stop(services=["pgbackrest-service"], disable=True)
+        except snap.SnapError as e:
+            error_message = "Failed to stop and disable pgbackrest snap service"
+            logger.exception(error_message, exc_info=e)
+
+        pg_user = pwd.getpwnam(PG_USER)
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+
+        # Make a directory for each service to store configs.
+        for service_id in self.service_ids:
+            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
+            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+
+        self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -632,18 +644,20 @@ class PgBouncerCharm(CharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_snap_packages(self, packages: List[str]) -> None:
+    def _install_snap_packages(self, packages: List[str], refresh: bool = False) -> None:
         """Installs package(s) to container.
 
         Args:
             packages: list of packages to install.
+            refresh: whether to refresh the snap if it's
+                already present.
         """
         for snap_name, snap_version in packages:
             try:
                 snap_cache = snap.SnapCache()
                 snap_package = snap_cache[snap_name]
 
-                if not snap_package.present:
+                if not snap_package.present or refresh:
                     if snap_version.get("revision"):
                         snap_package.ensure(
                             snap.SnapState.Latest, revision=snap_version["revision"]

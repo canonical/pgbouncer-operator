@@ -44,6 +44,7 @@ async def test_build_and_deploy(ops_test: OpsTest, pgb_charm_jammy):
                 PG,
                 application_name=PG,
                 channel="14/edge",
+                config={"profile": "testing"},
             ),
         )
         # Relate the charms and wait for them exchanging some connection data.
