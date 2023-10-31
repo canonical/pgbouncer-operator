@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tox
         # TODO: Consider replacing with custom image on self-hosted runner OR pinning version
         run: python3 -m pip install tox
@@ -39,29 +39,12 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tox
         # TODO: Consider replacing with custom image on self-hosted runner OR pinning version
         run: python3 -m pip install tox
       - name: Run tests
         run: tox run -e unit
-
-  lib-check:
-    name: Check libraries
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Check libs
-        uses: canonical/charming-actions/check-libraries@2.4.0
-        with:
-          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-
 
   build:
     name: Build charms
@@ -93,7 +76,6 @@ jobs:
             free-disk-space: true
     name: ${{ matrix.tox-environments }} | ${{ matrix.agent-versions }}
     needs:
-      - lib-check
       - lint
       - unit-test
       - build
@@ -101,7 +83,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Free disk space
         if: ${{ matrix.free-disk-space == true }}
         run: |

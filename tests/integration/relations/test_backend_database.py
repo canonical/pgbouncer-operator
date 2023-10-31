@@ -23,7 +23,6 @@ from tests.integration.helpers.helpers import (
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
-    enable_connections_logging,
     get_postgres_primary,
 )
 
@@ -101,7 +100,8 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Enable additional logs on the PostgreSQL instance to check TLS
         # being used in a later step.
-        enable_connections_logging(ops_test, f"{PG}/0")
+        await ops_test.model.applications[PG].set_config({"logging_log_connections": "True"})
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", idle_period=30)
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
