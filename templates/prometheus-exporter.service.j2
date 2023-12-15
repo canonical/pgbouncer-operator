@@ -1,6 +1,6 @@
 [Unit]
 Description=prometheus exporter for pgbouncer
-After=network.target
+After=network.target {{ pgb_service }}@.target
 
 [Service]
 Type=simple

@@ -4,7 +4,7 @@
 import os
 import unittest
 from copy import deepcopy
-from unittest.mock import MagicMock, PropertyMock, call, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 
 import ops.testing
 from charms.operator_libs_linux.v1 import systemd
@@ -17,8 +17,13 @@ from charm import PgBouncerCharm
 from constants import (
     BACKEND_RELATION_NAME,
     INI_NAME,
+    PEER_RELATION_NAME,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
+    SECRET_CACHE_LABEL,
+    SECRET_DELETED_LABEL,
+    SECRET_INTERNAL_LABEL,
+    SECRET_LABEL,
     SNAP_PACKAGES,
 )
 from tests.helpers import patch_network_get
@@ -39,6 +44,9 @@ class TestCharm(unittest.TestCase):
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
+        self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
+
+    @patch("builtins.open", unittest.mock.mock_open())
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
     @patch("os.makedirs")
@@ -78,13 +86,20 @@ class TestCharm(unittest.TestCase):
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.ready",
+        new_callable=PropertyMock,
+        return_value=True,
+    )
+    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=pgb.PgbConfig(DEFAULT_CFG))
+    @patch("charm.systemd.service_running")
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres",
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_start(self, _has_relation, _start):
+    def test_on_start(self, _has_relation, _start, _, __, ___):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
@@ -296,3 +311,102 @@ class TestCharm(unittest.TestCase):
 
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
         _reload.assert_called_once()
+
+    @patch_network_get(private_address="1.1.1.1")
+    def test_get_secret(self):
+        # Test application scope.
+        assert self.charm.get_secret("app", "password") is None
+        self.harness.update_relation_data(
+            self.rel_id, self.charm.app.name, {"password": "test-password"}
+        )
+        assert self.charm.get_secret("app", "password") == "test-password"
+
+        # Test unit scope.
+        assert self.charm.get_secret("unit", "password") is None
+        self.harness.update_relation_data(
+            self.rel_id, self.charm.unit.name, {"password": "test-password"}
+        )
+        assert self.charm.get_secret("unit", "password") == "test-password"
+
+    @patch("ops.charm.model.Model.get_secret")
+    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    @patch_network_get(private_address="1.1.1.1")
+    def test_get_secret_juju(self, _, _get_secret):
+        _get_secret.return_value.get_content.return_value = {"password": "test-password"}
+
+        # clean the caches
+        if SECRET_INTERNAL_LABEL in self.charm.peers.app_databag:
+            del self.charm.app_peer_data[SECRET_INTERNAL_LABEL]
+        self.charm.secrets["app"] = {}
+
+        # Test application scope.
+        assert self.charm.get_secret("app", "password") is None
+        self.harness.update_relation_data(
+            self.rel_id, self.charm.app.name, {SECRET_INTERNAL_LABEL: "secret_key"}
+        )
+        assert self.charm.get_secret("app", "password") == "test-password"
+        _get_secret.assert_called_once_with(id="secret_key")
+
+        _get_secret.reset_mock()
+
+        # Test unit scope.
+        assert self.charm.get_secret("unit", "password") is None
+        self.harness.update_relation_data(
+            self.rel_id, self.charm.unit.name, {SECRET_INTERNAL_LABEL: "secret_key"}
+        )
+        assert self.charm.get_secret("unit", "password") == "test-password"
+        _get_secret.assert_called_once_with(id="secret_key")
+
+    def test_set_secret(self):
+        # Test application scope.
+        assert "password" not in self.harness.get_relation_data(self.rel_id, self.charm.app.name)
+        self.charm.set_secret("app", "password", "test-password")
+        assert (
+            self.harness.get_relation_data(self.rel_id, self.charm.app.name)["password"]
+            == "test-password"
+        )
+        self.charm.set_secret("app", "password", None)
+        assert "password" not in self.harness.get_relation_data(self.rel_id, self.charm.app.name)
+
+        # Test unit scope.
+        assert "password" not in self.harness.get_relation_data(self.rel_id, self.charm.unit.name)
+        self.charm.set_secret("unit", "password", "test-password")
+        assert (
+            self.harness.get_relation_data(self.rel_id, self.charm.unit.name)["password"]
+            == "test-password"
+        )
+        self.charm.set_secret("unit", "password", None)
+        assert "password" not in self.harness.get_relation_data(self.rel_id, self.charm.unit.name)
+
+    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    def test_set_secret_juju(self, _):
+        secret_mock = Mock()
+        self.charm.secrets["app"][SECRET_LABEL] = secret_mock
+        self.charm.secrets["app"][SECRET_CACHE_LABEL] = {}
+        self.charm.secrets["unit"][SECRET_LABEL] = secret_mock
+        self.charm.secrets["unit"][SECRET_CACHE_LABEL] = {}
+
+        # Test application scope.
+        assert "password" not in self.charm.secrets["app"].get(SECRET_CACHE_LABEL, {})
+        self.charm.set_secret("app", "password", "test-password")
+        assert self.charm.secrets["app"][SECRET_CACHE_LABEL]["password"] == "test-password"
+        secret_mock.set_content.assert_called_once_with(
+            self.charm.secrets["app"][SECRET_CACHE_LABEL]
+        )
+        secret_mock.reset_mock()
+
+        self.charm.set_secret("app", "password", None)
+        assert self.charm.secrets["app"][SECRET_CACHE_LABEL]["password"] == SECRET_DELETED_LABEL
+        secret_mock.set_content.assert_called_once_with(
+            self.charm.secrets["app"][SECRET_CACHE_LABEL]
+        )
+        secret_mock.reset_mock()
+
+        # Test unit scope.
+        assert "password" not in self.charm.secrets["unit"].get(SECRET_CACHE_LABEL, {})
+        self.charm.set_secret("unit", "password", "test-password")
+        assert self.charm.secrets["unit"][SECRET_CACHE_LABEL]["password"] == "test-password"
+        secret_mock.set_content.assert_called_once_with(
+            self.charm.secrets["unit"][SECRET_CACHE_LABEL]
+        )
+        secret_mock.reset_mock()

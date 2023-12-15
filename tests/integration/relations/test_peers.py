@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_at_scale(ops_test, application_charm, pgb_charm_jammy):
+async def test_deploy_at_scale(ops_test, pgb_charm_jammy):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                application_charm, application_name=CLIENT_APP_NAME, num_units=3
+                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, num_units=3, channel="edge"
             ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
@@ -46,7 +46,9 @@ async def test_scaled_relations(ops_test: OpsTest):
     """Test that the pgbouncer, postgres, and client charms can relate to one another."""
     # Build, deploy, and relate charms.
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(PG, channel="14/edge", trust=True, num_units=3),
+        await ops_test.model.deploy(
+            PG, channel="14/edge", trust=True, num_units=3, config={"profile": "testing"}
+        )
 
         await asyncio.gather(
             ops_test.model.wait_for_idle(

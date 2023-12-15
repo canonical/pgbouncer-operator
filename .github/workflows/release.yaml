@@ -12,6 +12,8 @@ on:
       - renovate.json
       - poetry.lock
       - pyproject.toml
+      - '.github/workflows/ci.yaml'
+      - '.github/workflows/lib-check.yaml'
 
 jobs:
   ci-tests:

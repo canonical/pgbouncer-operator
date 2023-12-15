@@ -17,7 +17,7 @@ from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import AUTH_FILE_NAME, INI_NAME, PGB_CONF_DIR
 
-CLIENT_APP_NAME = "application"
+CLIENT_APP_NAME = "postgresql-test-app"
 FIRST_DATABASE_RELATION_NAME = "first-database"
 SECOND_DATABASE_RELATION_NAME = "second-database"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -59,7 +59,7 @@ async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: 
     return status["applications"][application_name].units[unit_name]["address"]
 
 
-async def get_unit_cores(unit: str) -> int:
+async def get_unit_cores(ops_test: OpsTest, unit: Unit) -> int:
     """Get the number of CPU cores available on the given unit.
 
     Since PgBouncer is single-threaded, the charm automatically creates one instance of pgbouncer
@@ -67,33 +67,30 @@ async def get_unit_cores(unit: str) -> int:
     pgbouncer instances.
 
     Args:
+        ops_test: ops_test plugin
         unit: the juju unit instance
 
     Returns:
         The number of cores on the unit.
     """
-    get_cores_from_unit = await unit.run("nproc --all")
-    cores = get_cores_from_unit.results.get("Stdout")
-    if cores is not None:
-        return int(cores)
-    else:
-        raise Exception(get_cores_from_unit.results)
+    return int(await run_command_on_unit(ops_test, unit.name, "nproc --all"))
 
 
-async def get_running_instances(unit: Unit, service: str) -> int:
+async def get_running_instances(ops_test: OpsTest, unit: Unit, service: str) -> int:
     """Returns the number of running instances of the given service.
 
     Uses `ps` to find the number of instances of a given service.
 
     Args:
+        ops_test: ops_test plugin
         unit: the juju unit running the service
         service: a string that can be used to grep for the intended service.
 
     Returns:
         an integer defining the number of running instances.
     """
-    get_running_instances = await unit.run(f"pgrep -cx {service}")
-    return int(get_running_instances.results.get("Stdout"))
+    get_running_instances = await run_command_on_unit(ops_test, unit.name, f"pgrep -cx {service}")
+    return int(get_running_instances)
 
 
 async def get_unit_info(ops_test: OpsTest, unit_name: str) -> Dict:
@@ -148,7 +145,7 @@ async def get_auth_file(ops_test: OpsTest, unit_name) -> str:
 
 
 async def run_sql(ops_test, unit_name, command, pgpass, user, host, port, dbname):
-    run_cmd = f"run --unit {unit_name} --"
+    run_cmd = f"exec --unit {unit_name} --"
     connstr = f"--username={user} -h {host} -p {port} --dbname={dbname}"
     cmd = f'PGPASSWORD={pgpass} psql {connstr} --command="{command}"'
     return await ops_test.juju(*run_cmd.split(" "), cmd)
@@ -161,9 +158,21 @@ def get_legacy_relation_username(ops_test: OpsTest, relation_id: int):
     return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 
 
+async def get_juju_secret(ops_test: OpsTest, secret_uri: str) -> Dict[str, str]:
+    """Retrieve juju secret."""
+    secret_unique_id = secret_uri.split("/")[-1]
+    complete_command = f"show-secret {secret_uri} --reveal --format=json"
+    _, stdout, _ = await ops_test.juju(*complete_command.split())
+    return json.loads(stdout)[secret_unique_id]["content"]["Data"]
+
+
 async def get_backend_user_pass(ops_test, backend_relation):
     pgb_unit = ops_test.model.applications[PGB].units[0]
     backend_databag = await get_app_relation_databag(ops_test, pgb_unit.name, backend_relation.id)
+    if secret_uri := backend_databag.get("secret-user"):
+        secret_data = await get_juju_secret(ops_test, secret_uri)
+        return (secret_data["username"], secret_data["password"])
+
     pgb_user = backend_databag["username"]
     pgb_password = backend_databag["password"]
     return (pgb_user, pgb_password)
@@ -272,7 +281,7 @@ async def deploy_postgres_bundle(
             PG,
             channel="14/edge",
             num_units=db_units,
-            config=pg_config,
+            config={"profile": "testing", **pg_config},
         ),
     )
     async with ops_test.fast_forward():
@@ -368,3 +377,23 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
         await ops_test.model.wait_for_idle(
             apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
         )
+
+
+async def run_command_on_unit(ops_test: OpsTest, unit_name: str, command: str) -> str:
+    """Run a command on a specific unit.
+
+    Args:
+        ops_test: The ops test framework instance
+        unit_name: The name of the unit to run the command on
+        command: The command to run
+
+    Returns:
+        the command output if it succeeds, otherwise raises an exception.
+    """
+    complete_command = ["exec", "--unit", unit_name, "--", *command.split()]
+    return_code, stdout, _ = await ops_test.juju(*complete_command)
+    if return_code != 0:
+        raise Exception(
+            "Expected command %s to succeed instead it failed: %s", command, return_code
+        )
+    return stdout

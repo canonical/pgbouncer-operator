@@ -11,13 +11,13 @@ and "read-only-endpoints" fields. All values are examples taken from a test depl
 not definite.
 
 Example:
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-----------------------------------------------------------------------------------------------------------------
 ┃ relation (id: 3) ┃ postgresql                               ┃ pgbouncer                                       ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+-----------------------------------------------------------------------------------------------------------------
 │ relation name    │ database                                 │ backend-database                                │
 │ interface        │ postgresql_client                        │ postgresql_client                               │
 │ leader unit      │ 0                                        │ 2                                               │
-├──────────────────┼──────────────────────────────────────────┼─────────────────────────────────────────────────┤
+-----------------------------------------------------------------------------------------------------------------
 │ application data │ ╭──────────────────────────────────────╮ │ ╭─────────────────────────────────────────────╮ │
 │                  │ │                                      │ │ │                                             │ │
 │                  │ │  data       {"database": "pgbouncer",│ │ │  database          pgbouncer                │ │
@@ -42,7 +42,7 @@ Example:
 │                  │                                          │ │        "username": "relation-3",            │ │
 │                  │                                          │ │         "version": "12.12"}                 │ │
 │                  │                                          │ ╰─────────────────────────────────────────────╯ │
-└──────────────────┴──────────────────────────────────────────┴─────────────────────────────────────────────────┘
+-----------------------------------------------------------------------------------------------------------------
 
 """  # noqa: W505
 
@@ -67,6 +67,7 @@ from ops.model import (
 )
 
 from constants import (
+    APP_SCOPE,
     AUTH_FILE_NAME,
     BACKEND_RELATION_NAME,
     MONITORING_PASSWORD_KEY,
@@ -139,11 +140,9 @@ class BackendDatabaseRequires(Object):
         self.initialise_auth_function([self.database.database, PG])
 
         # Add the monitoring user.
-        if not (
-            monitoring_password := self.charm.peers.get_secret("app", MONITORING_PASSWORD_KEY)
-        ):
+        if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
             monitoring_password = pgb.generate_password()
-            self.charm.peers.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
+            self.charm.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
         hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
         self.charm.render_auth_file(
@@ -306,8 +305,8 @@ class BackendDatabaseRequires(Object):
 
         databag = self.postgres_databag
         endpoint = databag.get("endpoints")
-        user = databag.get("username")
-        password = databag.get("password")
+        user = self.database.fetch_relation_field(self.relation.id, "username")
+        password = self.database.fetch_relation_field(self.relation.id, "password")
         database = self.database.database
 
         if None in [endpoint, user, password]:
@@ -324,7 +323,10 @@ class BackendDatabaseRequires(Object):
     @property
     def auth_user(self):
         """Username for auth_user."""
-        username = self.postgres_databag.get("username")
+        if not self.relation:
+            return None
+
+        username = self.database.fetch_relation_field(self.relation.id, "username")
         if username is None:
             return None
         return f"pgbouncer_auth_{username}".replace("-", "_")

@@ -14,13 +14,13 @@ This relation uses the pgsql interface, omitting roles and extensions as they ar
 the new postgres charm.
 
 Some example relation data is below. All values are examples, generated in a running test instance.
-┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+------------------------------------------------------------------------------------------------------------
 ┃ relation (id: 4) ┃ psql                ┃ pgbouncer                                                       ┃
-┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+------------------------------------------------------------------------------------------------------------
 │ relation name    │ db                  │ db-admin                                                        │
 │ interface        │ pgsql               │ pgsql                                                           │
 │ leader unit      │ 0                   │ 0                                                               │
-├──────────────────┼─────────────────────┼─────────────────────────────────────────────────────────────────┤
+------------------------------------------------------------------------------------------------------------
 │ application data │ ╭─────────────────╮ │ ╭─────────────────────────────────────────────────────────────╮ │
 │                  │ │ <empty>         │ │ │                                                             │ │
 │                  │ ╰─────────────────╯ │ │  allowed-subnets  10.180.162.56/32                          │ │
@@ -81,7 +81,7 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ │  user             pgbouncer_user_4_test_db_admin_3una       │ │
 │                  │                     │ │  version          12.12                                     │ │
 │                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
-└──────────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────┘
+------------------------------------------------------------------------------------------------------------
 """  # noqa: W505
 
 import logging
@@ -111,7 +111,7 @@ from ops.model import (
     WaitingStatus,
 )
 
-from constants import EXTENSIONS_BLOCKING_MESSAGE, PG
+from constants import APP_SCOPE, EXTENSIONS_BLOCKING_MESSAGE, PG
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class DbProvides(Object):
         if self.charm.unit.is_leader():
             password = pgb.generate_password()
         else:
-            if not (password := self.charm.peers.app_databag.get(user, None)):
+            if not (password := self.charm.get_secret(APP_SCOPE, user)):
                 join_event.defer()
 
         self.update_databags(
@@ -258,7 +258,6 @@ class DbProvides(Object):
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
             logger.error(err_msg)
-            join_event.fail()
             self.charm.unit.status = BlockedStatus(err_msg)
             return
 

@@ -18,13 +18,12 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_user_pass,
     get_cfg,
+    run_command_on_unit,
     wait_for_relation_removed_between,
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
-    enable_connections_logging,
     get_postgres_primary,
-    run_command_on_unit,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,12 +32,14 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, application_charm, pgb_charm_jammy):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
     relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_series="jammy")
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME)
+        await ops_test.model.deploy(
+            CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+        )
         # Relate the charms and wait for them exchanging some connection data.
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
         # Pgbouncer enters a blocked status without a postgres backend database relation
@@ -99,7 +100,8 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Enable additional logs on the PostgreSQL instance to check TLS
         # being used in a later step.
-        enable_connections_logging(ops_test, f"{PG}/0")
+        await ops_test.model.applications[PG].set_config({"logging_log_connections": "True"})
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", idle_period=30)
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
@@ -110,11 +112,10 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Check the logs to ensure TLS is being used by PgBouncer.
         postgresql_primary_unit = await get_postgres_primary(ops_test)
-        logs = await run_command_on_unit(
+        mailman_ssl_log = f"connection authorized: user={pgb_user} database=mailman3 SSL enabled"
+        postgresql_logs = "/var/snap/charmed-postgresql/common/var/log/postgresql/postgresql-*.log"
+        await run_command_on_unit(
             ops_test,
             postgresql_primary_unit,
-            "journalctl -u snap.charmed-postgresql.patroni.service",
+            f"grep '{mailman_ssl_log}' {postgresql_logs}",
         )
-        assert (
-            f"connection authorized: user={pgb_user} database=mailman3 SSL enabled" in logs
-        ), "TLS is not being used on connections to PostgreSQL"

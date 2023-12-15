@@ -19,6 +19,7 @@ from tests.integration.helpers.helpers import (
     deploy_postgres_bundle,
     get_backend_user_pass,
     get_legacy_relation_username,
+    run_command_on_unit,
 )
 from tests.integration.helpers.postgresql_helpers import (
     check_database_users_existence,
@@ -64,8 +65,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
 
         # Assert Mailman3 Core is configured to use PostgreSQL instead of SQLite.
         mailman_unit = ops_test.model.applications[MAILMAN3].units[0]
-        action = await mailman_unit.run("mailman info")
-        result = action.results.get("Stdout", action.results.get("Stderr", None))
+        result = await run_command_on_unit(ops_test, mailman_unit.name, "mailman info")
         assert "db url: postgres://" in result, f"no postgres db url, Stderr: {result}"
 
         # Do some CRUD operations using Mailman3 Core client.
@@ -103,13 +103,15 @@ async def test_remove_relation(ops_test: OpsTest):
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
 
 
-async def test_extensions(ops_test: OpsTest, pgb_charm_jammy, application_charm):
+async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
     """Test that PGB blocks on disabled extension request and allows enabled ones."""
     async with ops_test.fast_forward():
         logger.info("Deploying test app")
         pgb_jammy = f"{PGB}-jammy"
         await gather(
-            ops_test.model.deploy(application_charm, application_name=CLIENT_APP_NAME),
+            ops_test.model.deploy(
+                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+            ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
                 application_name=pgb_jammy,
@@ -128,7 +130,7 @@ async def test_extensions(ops_test: OpsTest, pgb_charm_jammy, application_charm)
             == EXTENSIONS_BLOCKING_MESSAGE
         )
 
-        logger.info("Rekatung with enabled extensions")
+        logger.info("Relating with enabled extensions")
         await ops_test.model.applications[pgb_jammy].remove_relation(
             f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db"
         )

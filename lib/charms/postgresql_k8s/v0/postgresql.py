@@ -19,7 +19,7 @@ The `postgresql` module provides methods for interacting with the PostgreSQL ins
 Any charm using this library should import the `psycopg2` or `psycopg2-binary` dependency.
 """
 import logging
-from typing import Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import psycopg2
 from psycopg2 import sql
@@ -32,7 +32,9 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 9
+LIBPATCH = 20
+
+INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE = "invalid role(s) for extra user roles"
 
 
 logger = logging.getLogger(__name__)
@@ -44,6 +46,14 @@ class PostgreSQLCreateDatabaseError(Exception):
 
 class PostgreSQLCreateUserError(Exception):
     """Exception raised when creating a user fails."""
+
+    def __init__(self, message: str = None):
+        super().__init__(message)
+        self.message = message
+
+
+class PostgreSQLDatabasesSetupError(Exception):
+    """Exception raised when the databases setup fails."""
 
 
 class PostgreSQLDeleteUserError(Exception):
@@ -76,12 +86,14 @@ class PostgreSQL:
         user: str,
         password: str,
         database: str,
+        system_users: List[str] = [],
     ):
         self.primary_host = primary_host
         self.current_host = current_host
         self.user = user
         self.password = password
         self.database = database
+        self.system_users = system_users
 
     def _connect_to_database(
         self, database: str = None, connect_to_current_host: bool = False
@@ -105,12 +117,13 @@ class PostgreSQL:
         connection.autocommit = True
         return connection
 
-    def create_database(self, database: str, user: str) -> None:
+    def create_database(self, database: str, user: str, plugins: List[str] = []) -> None:
         """Creates a new database and grant privileges to a user on it.
 
         Args:
             database: database to be created.
             user: user that will have access to the database.
+            plugins: extensions to enable in the new database.
         """
         try:
             connection = self._connect_to_database()
@@ -119,10 +132,16 @@ class PostgreSQL:
             if cursor.fetchone() is None:
                 cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(database)))
             cursor.execute(
-                sql.SQL("GRANT ALL PRIVILEGES ON DATABASE {} TO {};").format(
-                    sql.Identifier(database), sql.Identifier(user)
+                sql.SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM PUBLIC;").format(
+                    sql.Identifier(database)
                 )
             )
+            for user_to_grant_access in [user, "admin"] + self.system_users:
+                cursor.execute(
+                    sql.SQL("GRANT ALL PRIVILEGES ON DATABASE {} TO {};").format(
+                        sql.Identifier(database), sql.Identifier(user_to_grant_access)
+                    )
+                )
             with self._connect_to_database(database=database) as conn:
                 with conn.cursor() as curs:
                     statements = []
@@ -152,8 +171,11 @@ class PostgreSQL:
             logger.error(f"Failed to create database: {e}")
             raise PostgreSQLCreateDatabaseError()
 
+        # Enable preset extensions
+        self.enable_disable_extensions({plugin: True for plugin in plugins}, database)
+
     def create_user(
-        self, user: str, password: str, admin: bool = False, extra_user_roles: str = None
+        self, user: str, password: str = None, admin: bool = False, extra_user_roles: str = None
     ) -> None:
         """Creates a database user.
 
@@ -164,30 +186,36 @@ class PostgreSQL:
             extra_user_roles: additional privileges and/or roles to be assigned to the user.
         """
         try:
-            with self._connect_to_database() as connection, connection.cursor() as cursor:
-                # Separate roles and privileges from the provided extra user roles.
-                roles = privileges = None
-                if extra_user_roles:
-                    extra_user_roles = tuple(extra_user_roles.lower().split(","))
-                    cursor.execute(
-                        "SELECT rolname FROM pg_roles WHERE rolname IN %s;", (extra_user_roles,)
-                    )
-                    roles = [role[0] for role in cursor.fetchall()]
-                    privileges = [
-                        extra_user_role
-                        for extra_user_role in extra_user_roles
-                        if extra_user_role not in roles
-                    ]
+            # Separate roles and privileges from the provided extra user roles.
+            admin_role = False
+            roles = privileges = None
+            if extra_user_roles:
+                extra_user_roles = tuple(extra_user_roles.lower().split(","))
+                admin_role = "admin" in extra_user_roles
+                valid_privileges, valid_roles = self.list_valid_privileges_and_roles()
+                roles = [
+                    role for role in extra_user_roles if role in valid_roles and role != "admin"
+                ]
+                privileges = {
+                    extra_user_role
+                    for extra_user_role in extra_user_roles
+                    if extra_user_role not in roles and extra_user_role != "admin"
+                }
+                invalid_privileges = [
+                    privilege for privilege in privileges if privilege not in valid_privileges
+                ]
+                if len(invalid_privileges) > 0:
+                    logger.error(f'Invalid extra user roles: {", ".join(privileges)}')
+                    raise PostgreSQLCreateUserError(INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE)
 
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
                 # Create or update the user.
                 cursor.execute(f"SELECT TRUE FROM pg_roles WHERE rolname='{user}';")
                 if cursor.fetchone() is not None:
                     user_definition = "ALTER ROLE {}"
                 else:
                     user_definition = "CREATE ROLE {}"
-                user_definition += (
-                    f"WITH LOGIN{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}'"
-                )
+                user_definition += f"WITH {'NOLOGIN' if user == 'admin' else 'LOGIN'}{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}'{'IN ROLE admin CREATEDB' if admin_role else ''}"
                 if privileges:
                     user_definition += f' {" ".join(privileges)}'
                 cursor.execute(sql.SQL(f"{user_definition};").format(sql.Identifier(user)))
@@ -241,22 +269,16 @@ class PostgreSQL:
             logger.error(f"Failed to delete user: {e}")
             raise PostgreSQLDeleteUserError()
 
-    def enable_disable_extension(self, extension: str, enable: bool, database: str = None) -> None:
+    def enable_disable_extensions(self, extensions: Dict[str, bool], database: str = None) -> None:
         """Enables or disables a PostgreSQL extension.
 
         Args:
-            extension: the name of the extensions.
-            enable: whether the extension should be enabled or disabled.
+            extensions: the name of the extensions.
             database: optional database where to enable/disable the extension.
 
         Raises:
             PostgreSQLEnableDisableExtensionError if the operation fails.
         """
-        statement = (
-            f"CREATE EXTENSION IF NOT EXISTS {extension};"
-            if enable
-            else f"DROP EXTENSION IF EXISTS {extension};"
-        )
         connection = None
         try:
             if database is not None:
@@ -272,7 +294,12 @@ class PostgreSQL:
                 with self._connect_to_database(
                     database=database
                 ) as connection, connection.cursor() as cursor:
-                    cursor.execute(statement)
+                    for extension, enable in extensions.items():
+                        cursor.execute(
+                            f"CREATE EXTENSION IF NOT EXISTS {extension};"
+                            if enable
+                            else f"DROP EXTENSION IF EXISTS {extension};"
+                        )
         except psycopg2.errors.UniqueViolation:
             pass
         except psycopg2.Error:
@@ -280,6 +307,32 @@ class PostgreSQL:
         finally:
             if connection is not None:
                 connection.close()
+
+    def get_postgresql_text_search_configs(self) -> Set[str]:
+        """Returns the PostgreSQL available text search configs.
+
+        Returns:
+            Set of PostgreSQL text search configs.
+        """
+        with self._connect_to_database(
+            connect_to_current_host=True
+        ) as connection, connection.cursor() as cursor:
+            cursor.execute("SELECT CONCAT('pg_catalog.', cfgname) FROM pg_ts_config;")
+            text_search_configs = cursor.fetchall()
+            return {text_search_config[0] for text_search_config in text_search_configs}
+
+    def get_postgresql_timezones(self) -> Set[str]:
+        """Returns the PostgreSQL available timezones.
+
+        Returns:
+            Set of PostgreSQL timezones.
+        """
+        with self._connect_to_database(
+            connect_to_current_host=True
+        ) as connection, connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM pg_timezone_names;")
+            timezones = cursor.fetchall()
+            return {timezone[0] for timezone in timezones}
 
     def get_postgresql_version(self) -> str:
         """Returns the PostgreSQL version.
@@ -331,6 +384,47 @@ class PostgreSQL:
             logger.error(f"Failed to list PostgreSQL database users: {e}")
             raise PostgreSQLListUsersError()
 
+    def list_valid_privileges_and_roles(self) -> Tuple[Set[str], Set[str]]:
+        """Returns two sets with valid privileges and roles.
+
+        Returns:
+            Tuple containing two sets: the first with valid privileges
+                and the second with valid roles.
+        """
+        with self._connect_to_database() as connection, connection.cursor() as cursor:
+            cursor.execute("SELECT rolname FROM pg_roles;")
+            return {
+                "createdb",
+                "createrole",
+                "superuser",
+            }, {role[0] for role in cursor.fetchall() if role[0]}
+
+    def set_up_database(self) -> None:
+        """Set up postgres database with the right permissions."""
+        connection = None
+        try:
+            self.create_user(
+                "admin",
+                extra_user_roles="pg_read_all_data,pg_write_all_data",
+            )
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                # Allow access to the postgres database only to the system users.
+                cursor.execute("REVOKE ALL PRIVILEGES ON DATABASE postgres FROM PUBLIC;")
+                cursor.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC;")
+                for user in self.system_users:
+                    cursor.execute(
+                        sql.SQL("GRANT ALL PRIVILEGES ON DATABASE postgres TO {};").format(
+                            sql.Identifier(user)
+                        )
+                    )
+                cursor.execute("GRANT CONNECT ON DATABASE postgres TO admin;")
+        except psycopg2.Error as e:
+            logger.error(f"Failed to set up databases: {e}")
+            raise PostgreSQLDatabasesSetupError()
+        finally:
+            if connection is not None:
+                connection.close()
+
     def update_user_password(self, username: str, password: str) -> None:
         """Update a user password.
 
@@ -341,6 +435,7 @@ class PostgreSQL:
         Raises:
             PostgreSQLUpdateUserPasswordError if the password couldn't be changed.
         """
+        connection = None
         try:
             with self._connect_to_database() as connection, connection.cursor() as cursor:
                 cursor.execute(
@@ -354,3 +449,94 @@ class PostgreSQL:
         finally:
             if connection is not None:
                 connection.close()
+
+    def is_restart_pending(self) -> bool:
+        """Query pg_settings for pending restart."""
+        connection = None
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM pg_settings WHERE pending_restart=True;")
+                return cursor.fetchone()[0] > 0
+        except psycopg2.OperationalError:
+            logger.warning("Failed to connect to PostgreSQL.")
+            return False
+        except psycopg2.Error as e:
+            logger.error(f"Failed to check if restart is pending: {e}")
+            return False
+        finally:
+            if connection:
+                connection.close()
+
+    @staticmethod
+    def build_postgresql_parameters(
+        config_options: Dict, available_memory: int, limit_memory: Optional[int] = None
+    ) -> Optional[Dict]:
+        """Builds the PostgreSQL parameters.
+
+        Args:
+            config_options: charm config options containing profile and PostgreSQL parameters.
+            available_memory: available memory to use in calculation in bytes.
+            limit_memory: (optional) limit memory to use in calculation in bytes.
+
+        Returns:
+            Dictionary with the PostgreSQL parameters.
+        """
+        if limit_memory:
+            available_memory = min(available_memory, limit_memory)
+        profile = config_options["profile"]
+        logger.debug(f"Building PostgreSQL parameters for {profile=} and {available_memory=}")
+        parameters = {}
+        for config, value in config_options.items():
+            # Filter config option not related to PostgreSQL parameters.
+            if not config.startswith(
+                (
+                    "durability",
+                    "instance",
+                    "logging",
+                    "memory",
+                    "optimizer",
+                    "request",
+                    "response",
+                    "vacuum",
+                )
+            ):
+                continue
+            parameter = "_".join(config.split("_")[1:])
+            if parameter in ["date_style", "time_zone"]:
+                parameter = "".join(x.capitalize() for x in parameter.split("_"))
+            parameters[parameter] = value
+        shared_buffers_max_value = int(int(available_memory * 0.4) / 10**6)
+        if parameters.get("shared_buffers", 0) > shared_buffers_max_value:
+            raise Exception(
+                f"Shared buffers config option should be at most 40% of the available memory, which is {shared_buffers_max_value}MB"
+            )
+        if profile == "production":
+            # Use 25% of the available memory for shared_buffers.
+            # and the remaining as cache memory.
+            shared_buffers = int(available_memory * 0.25)
+            effective_cache_size = int(available_memory - shared_buffers)
+            parameters.setdefault("shared_buffers", f"{int(shared_buffers/10**6)}MB")
+            parameters.update({"effective_cache_size": f"{int(effective_cache_size/10**6)}MB"})
+        else:
+            # Return default
+            parameters.setdefault("shared_buffers", "128MB")
+        return parameters
+
+    def validate_date_style(self, date_style: str) -> bool:
+        """Validate a date style against PostgreSQL.
+
+        Returns:
+            Whether the date style is valid.
+        """
+        try:
+            with self._connect_to_database(
+                connect_to_current_host=True
+            ) as connection, connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL(
+                        "SET DateStyle to {};",
+                    ).format(sql.Identifier(date_style))
+                )
+            return True
+        except psycopg2.Error:
+            return False

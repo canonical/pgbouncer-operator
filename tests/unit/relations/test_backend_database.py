@@ -32,7 +32,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
         self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
-    @patch("charm.Peers.get_secret", return_value=None)
+    @patch("charm.PgBouncerCharm.get_secret", return_value=None)
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",

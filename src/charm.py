@@ -17,12 +17,20 @@ from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0 import pgb
 from jinja2 import Template
+from ops import JujuVersion
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import (
+    ActiveStatus,
+    BlockedStatus,
+    MaintenanceStatus,
+    SecretNotFoundError,
+    WaitingStatus,
+)
 
 from constants import (
+    APP_SCOPE,
     AUTH_FILE_NAME,
     CLIENT_RELATION_NAME,
     EXTENSIONS_BLOCKING_MESSAGE,
@@ -35,13 +43,20 @@ from constants import (
     PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
     POSTGRESQL_SNAP_NAME,
+    SECRET_CACHE_LABEL,
+    SECRET_DELETED_LABEL,
+    SECRET_INTERNAL_LABEL,
+    SECRET_KEY_OVERRIDES,
+    SECRET_LABEL,
     SNAP_PACKAGES,
     SNAP_TMP_DIR,
+    UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
+from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +70,8 @@ class PgBouncerCharm(CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+        self.secrets = {APP_SCOPE: {}, UNIT_SCOPE: {}}
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.remove, self._on_remove)
@@ -70,7 +87,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
 
         self._cores = os.cpu_count()
-        self.service_ids = [service_id for service_id in range(self._cores)]
+        self.service_ids = list(range(self._cores))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
@@ -84,9 +101,52 @@ class PgBouncerCharm(CharmBase):
             refresh_events=[self.on.config_changed],
         )
 
+        self.upgrade = PgbouncerUpgrade(
+            self,
+            model=get_pgbouncer_dependencies_model(),
+            relation_name="upgrade",
+            substrate="vm",
+        )
+
     # =======================
     #  Charm Lifecycle Hooks
     # =======================
+
+    def render_utility_files(self):
+        """Render charm utility services and configuration."""
+        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
+        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
+        # throw a fit.
+        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
+        cfg["pgbouncer"]["user"] = "snap_daemon"
+        self.render_pgb_config(cfg)
+
+        # Render pgbouncer service file and reload systemd
+        with open("templates/pgbouncer.service.j2", "r") as file:
+            template = Template(file.read())
+        # Render the template file with the correct values.
+        rendered = template.render(
+            app_name=self.app.name, conf_dir=PGB_CONF_DIR, snap_tmp_dir=SNAP_TMP_DIR
+        )
+
+        self.render_file(
+            f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
+        )
+        systemd.daemon_reload()
+        # Render the logrotate config
+        with open("templates/logrotate.j2", "r") as file:
+            template = Template(file.read())
+        # Logrotate expects the file to be owned by root
+        with open(f"/etc/logrotate.d/{PGB}-{self.app.name}", "w+") as file:
+            file.write(
+                template.render(
+                    log_dir=PGB_LOG_DIR,
+                    app_name=self.app.name,
+                    service_ids=self.service_ids,
+                    prefix=PGB,
+                )
+            )
 
     def _on_install(self, _) -> None:
         """On install hook.
@@ -119,26 +179,7 @@ class PgBouncerCharm(CharmBase):
             os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
             os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
-        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
-        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
-        # throw a fit.
-        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
-        cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
-        cfg["pgbouncer"]["user"] = "snap_daemon"
-        self.render_pgb_config(cfg)
-
-        # Render pgbouncer service file and reload systemd
-        with open("templates/pgbouncer.service.j2", "r") as file:
-            template = Template(file.read())
-        # Render the template file with the correct values.
-        rendered = template.render(
-            app_name=self.app.name, conf_dir=PGB_CONF_DIR, snap_tmp_dir=SNAP_TMP_DIR
-        )
-
-        self.render_file(
-            f"/etc/systemd/system/{PGB}-{self.app.name}@.service", rendered, perms=0o644
-        )
-        systemd.daemon_reload()
+        self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
 
@@ -165,6 +206,7 @@ class PgBouncerCharm(CharmBase):
 
         os.remove(f"/etc/systemd/system/{PGB}-{self.app.name}@.service")
         self.remove_exporter_service()
+        os.remove(f"/etc/logrotate.d/{PGB}-{self.app.name}")
 
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
@@ -183,6 +225,176 @@ class PgBouncerCharm(CharmBase):
             logger.exception("Unable to get Pgbouncer version")
             return ""
 
+    def _normalize_secret_key(self, key: str) -> str:
+        new_key = key.replace("_", "-")
+        new_key = new_key.strip("-")
+
+        return new_key
+
+    def _scope_obj(self, scope: str):
+        if scope == APP_SCOPE:
+            return self.framework.model.app
+        if scope == UNIT_SCOPE:
+            return self.framework.model.unit
+
+    def _juju_secrets_get(self, scope: str) -> Optional[bool]:
+        """Helper function to get Juju secret."""
+        if scope == UNIT_SCOPE:
+            peer_data = self.peers.unit_databag
+        else:
+            peer_data = self.peers.app_databag
+
+        if not peer_data.get(SECRET_INTERNAL_LABEL):
+            return
+
+        if SECRET_CACHE_LABEL not in self.secrets[scope]:
+            try:
+                # NOTE: Secret contents are not yet available!
+                secret = self.model.get_secret(id=peer_data[SECRET_INTERNAL_LABEL])
+            except SecretNotFoundError as e:
+                logging.debug(f"No secret found for ID {peer_data[SECRET_INTERNAL_LABEL]}, {e}")
+                return
+
+            logging.debug(f"Secret {peer_data[SECRET_INTERNAL_LABEL]} downloaded")
+
+            # We keep the secret object around -- needed when applying modifications
+            self.secrets[scope][SECRET_LABEL] = secret
+
+            # We retrieve and cache actual secret data for the lifetime of the event scope
+            self.secrets[scope][SECRET_CACHE_LABEL] = secret.get_content()
+
+        return bool(self.secrets[scope].get(SECRET_CACHE_LABEL))
+
+    def _juju_secret_get_key(self, scope: str, key: str) -> Optional[str]:
+        if not key:
+            return
+
+        key = SECRET_KEY_OVERRIDES.get(key, self._normalize_secret_key(key))
+
+        if self._juju_secrets_get(scope):
+            secret_cache = self.secrets[scope].get(SECRET_CACHE_LABEL)
+            if secret_cache:
+                secret_data = secret_cache.get(key)
+                if secret_data and secret_data != SECRET_DELETED_LABEL:
+                    logging.debug(f"Getting secret {scope}:{key}")
+                    return secret_data
+        logging.debug(f"No value found for secret {scope}:{key}")
+
+    def get_secret(self, scope: str, key: str) -> Optional[str]:
+        """Get secret from the secret storage."""
+        if scope not in [APP_SCOPE, UNIT_SCOPE]:
+            raise RuntimeError("Unknown secret scope.")
+
+        if scope == UNIT_SCOPE:
+            result = self.peers.unit_databag.get(key, None)
+        else:
+            result = self.peers.app_databag.get(key, None)
+
+        # TODO change upgrade to switch to secrets once minor version upgrades is done
+        if result:
+            return result
+
+        juju_version = JujuVersion.from_environ()
+        if juju_version.has_secrets:
+            return self._juju_secret_get_key(scope, key)
+
+    def _juju_secret_set(self, scope: str, key: str, value: str) -> Optional[str]:
+        """Helper function setting Juju secret."""
+        if scope == UNIT_SCOPE:
+            peer_data = self.peers.unit_databag
+        else:
+            peer_data = self.peers.app_databag
+        self._juju_secrets_get(scope)
+
+        key = SECRET_KEY_OVERRIDES.get(key, self._normalize_secret_key(key))
+
+        secret = self.secrets[scope].get(SECRET_LABEL)
+
+        # It's not the first secret for the scope, we can reuse the existing one
+        # that was fetched in the previous call
+        if secret:
+            secret_cache = self.secrets[scope][SECRET_CACHE_LABEL]
+
+            if secret_cache.get(key) == value:
+                logging.debug(f"Key {scope}:{key} has this value defined already")
+            else:
+                secret_cache[key] = value
+                try:
+                    secret.set_content(secret_cache)
+                except OSError as error:
+                    logging.error(
+                        f"Error in attempt to set {scope}:{key}. "
+                        f"Existing keys were: {list(secret_cache.keys())}. {error}"
+                    )
+                    return
+                logging.debug(f"Secret {scope}:{key} was {key} set")
+
+        # We need to create a brand-new secret for this scope
+        else:
+            scope_obj = self._scope_obj(scope)
+
+            secret = scope_obj.add_secret({key: value})
+            if not secret:
+                raise RuntimeError(f"Couldn't set secret {scope}:{key}")
+
+            self.secrets[scope][SECRET_LABEL] = secret
+            self.secrets[scope][SECRET_CACHE_LABEL] = {key: value}
+            logging.debug(f"Secret {scope}:{key} published (as first). ID: {secret.id}")
+            peer_data.update({SECRET_INTERNAL_LABEL: secret.id})
+
+        return self.secrets[scope][SECRET_LABEL].id
+
+    def set_secret(self, scope: str, key: str, value: Optional[str]) -> Optional[str]:
+        """Set secret from the secret storage."""
+        if scope not in [APP_SCOPE, UNIT_SCOPE]:
+            raise RuntimeError("Unknown secret scope.")
+
+        if not value:
+            return self.remove_secret(scope, key)
+
+        juju_version = JujuVersion.from_environ()
+
+        if juju_version.has_secrets:
+            self._juju_secret_set(scope, key, value)
+            return
+        if scope == UNIT_SCOPE:
+            self.peers.unit_databag.update({key: value})
+        else:
+            self.peers.app_databag.update({key: value})
+
+    def _juju_secret_remove(self, scope: str, key: str) -> None:
+        """Remove a Juju 3.x secret."""
+        self._juju_secrets_get(scope)
+
+        key = SECRET_KEY_OVERRIDES.get(key, self._normalize_secret_key(key))
+
+        secret = self.secrets[scope].get(SECRET_LABEL)
+        if not secret:
+            logging.error(f"Secret {scope}:{key} wasn't deleted: no secrets are available")
+            return
+
+        secret_cache = self.secrets[scope].get(SECRET_CACHE_LABEL)
+        if not secret_cache or key not in secret_cache:
+            logging.error(f"No secret {scope}:{key}")
+            return
+
+        secret_cache[key] = SECRET_DELETED_LABEL
+        secret.set_content(secret_cache)
+        logging.debug(f"Secret {scope}:{key}")
+
+    def remove_secret(self, scope: str, key: str) -> None:
+        """Removing a secret."""
+        if scope not in [APP_SCOPE, UNIT_SCOPE]:
+            raise RuntimeError("Unknown secret scope.")
+
+        juju_version = JujuVersion.from_environ()
+        if juju_version.has_secrets:
+            return self._juju_secret_remove(scope, key)
+        if scope == UNIT_SCOPE:
+            del self.peers.unit_databag[key]
+        else:
+            del self.peers.app_databag[key]
+
     def _on_start(self, _) -> None:
         """On Start hook.
 
@@ -197,7 +409,7 @@ class PgBouncerCharm(CharmBase):
                 systemd.service_start(service)
 
             if self.backend.postgres:
-                self.unit.status = ActiveStatus("pgbouncer started")
+                self.unit.status = self.check_status()
             else:
                 # Wait for backend relation relation if it doesn't exist
                 self.unit.status = BlockedStatus("waiting for backend database relation")
@@ -386,7 +598,8 @@ class PgBouncerCharm(CharmBase):
         # Render the template file with the correct values.
         rendered = template.render(
             stats_user=self.backend.stats_user,
-            stats_password=self.peers.get_secret("app", MONITORING_PASSWORD_KEY),
+            pgb_service=f"{PGB}-{self.app.name}",
+            stats_password=self.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY),
             listen_port=self.config["listen_port"],
             metrics_port=self.config["metrics_port"],
         )
@@ -431,18 +644,20 @@ class PgBouncerCharm(CharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_snap_packages(self, packages: List[str]) -> None:
+    def _install_snap_packages(self, packages: List[str], refresh: bool = False) -> None:
         """Installs package(s) to container.
 
         Args:
             packages: list of packages to install.
+            refresh: whether to refresh the snap if it's
+                already present.
         """
         for snap_name, snap_version in packages:
             try:
                 snap_cache = snap.SnapCache()
                 snap_package = snap_cache[snap_name]
 
-                if not snap_package.present:
+                if not snap_package.present or refresh:
                     if snap_version.get("revision"):
                         snap_package.ensure(
                             snap.SnapState.Latest, revision=snap_version["revision"]

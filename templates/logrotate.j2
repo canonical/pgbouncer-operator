@@ -1,0 +1,16 @@
+{{ log_dir }}/{{ app_name }}/instance_*/pgbouncer.log {
+    rotate 10
+    missingok
+    sharedscripts
+    notifempty
+    nocompress
+    daily
+    create 0600 snap_daemon snap_daemon
+    dateext
+    dateformat -%Y%m%d_%H:%M.log
+    postrotate
+    {% for id in service_ids %}
+        systemctl reload {{ prefix }}-{{ app_name }}@{{ id }}
+    {% endfor %}
+    endscript
+}
