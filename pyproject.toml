@@ -50,7 +50,7 @@ optional = true
 [tool.poetry.group.integration.dependencies]
 pytest = "7.4.3"
 pytest-operator = "0.31.0"
-juju = "2.9.45.0 || 3.2.0.1"  # renovate libjuju
+juju = "2.9.46.0 || 3.2.0.1"  # renovate libjuju
 tenacity = "8.2.3"
 mailmanclient = "3.3.5"
 psycopg2 = {version = "^2.9.6", extras = ["binary"]}
