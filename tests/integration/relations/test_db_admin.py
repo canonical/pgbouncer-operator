@@ -22,6 +22,7 @@ PSQL = "psql"
 RELATION = "db-admin"
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm_focal) -> None:
     await deploy_postgres_bundle(
@@ -61,6 +62,7 @@ async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm_focal) -> None:
     assert rtn == 0, f"failed to run admin command {db_command}, {err}"
 
 
+@pytest.mark.group(1)
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
     async with ops_test.fast_forward():

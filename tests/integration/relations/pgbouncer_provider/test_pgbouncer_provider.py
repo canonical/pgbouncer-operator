@@ -42,6 +42,7 @@ APP_NAMES = [CLIENT_APP_NAME, PG]
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_charm_jammy):
     """Test basic functionality of database relation interface."""
@@ -98,6 +99,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
         assert password is None
 
 
+@pytest.mark.group(1)
 async def test_database_usage(ops_test: OpsTest):
     """Check we can update and delete things."""
     update_query = (
@@ -117,6 +119,7 @@ async def test_database_usage(ops_test: OpsTest):
     assert "some data" in json.loads(run_update_query["results"])[0]
 
 
+@pytest.mark.group(1)
 async def test_database_version(ops_test: OpsTest):
     """Check version is accurate."""
     version_query = "SELECT version();"
@@ -137,6 +140,7 @@ async def test_database_version(ops_test: OpsTest):
     assert version in json.loads(run_version_query["results"])[0][0]
 
 
+@pytest.mark.group(1)
 async def test_database_admin_permissions(ops_test: OpsTest):
     """Test admin permissions."""
     create_database_query = "CREATE DATABASE another_database;"
@@ -162,6 +166,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
+@pytest.mark.group(1)
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
@@ -180,6 +185,7 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
+@pytest.mark.group(1)
 async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
@@ -198,6 +204,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ), f"read-only-endpoints in pgb databag: {databag}"
 
 
+@pytest.mark.group(1)
 async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
@@ -222,6 +229,7 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
         pass
 
 
+@pytest.mark.group(1)
 async def test_an_application_can_connect_to_multiple_database_clusters(
     ops_test: OpsTest, pgb_charm_jammy
 ):
@@ -281,6 +289,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
 
 
+@pytest.mark.group(1)
 async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     """Test that an application can request additional databases using the same interface.
 
@@ -308,6 +317,7 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     assert first_database_connection_string != second_database_connection_string
 
 
+@pytest.mark.group(1)
 async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
@@ -338,6 +348,7 @@ async def test_scaling(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
 
 
+@pytest.mark.group(1)
 @pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
@@ -371,6 +382,7 @@ async def test_relation_broken(ops_test: OpsTest):
     )
 
 
+@pytest.mark.group(1)
 async def test_relation_with_data_integrator(ops_test: OpsTest):
     """Test that the charm can be related to the data integrator without extra user roles."""
     config = {"database-name": "test-database"}
