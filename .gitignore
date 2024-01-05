@@ -8,3 +8,5 @@ __pycache__/
 *.ini
 *.log
 *.tar.xz
+requirements.txt
+requirements-last-build.txt
