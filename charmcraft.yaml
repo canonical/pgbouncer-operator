@@ -18,6 +18,15 @@ bases:
 
 parts:
   charm:
-    charm-binary-python-packages:
-      - psycopg2-binary==2.9.9  # renovate
-      - psycopg[binary]==3.1.13  # renovate
+    build-packages:
+      - libpq-dev
+  libpq:
+    build-packages:
+      - libpq-dev
+    plugin: dump
+    source: /usr/lib/
+    source-type: local
+    prime:
+      - binlibs/
+    organize:
+      "*-linux-gnu/libpq.so*": binlibs/

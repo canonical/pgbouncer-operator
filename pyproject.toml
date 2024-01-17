@@ -19,7 +19,8 @@ tenacity = "8.2.3"
 cosl = "0.0.7"
 pydantic = "1.10.13"
 poetry-core = "1.8.1"
-# psycopg2 = "2.9.5" # Injected in charmcraft.yaml
+psycopg2 = "2.9.9"
+psycopg = {extras = ["c"], version = "^3.1.17"}
 
 [tool.poetry.group.format]
 optional = true
@@ -41,7 +42,6 @@ optional = true
 coverage = {extras = ["toml"], version = "7.3.2"}
 pytest = "7.4.3"
 pytest-asyncio = "0.21.1"
-psycopg2 = {version = "2.9.9", extras = ["binary"]}
 jinja2 = "3.1.2"
 
 [tool.poetry.group.integration]
@@ -53,7 +53,6 @@ pytest-operator = "0.31.0"
 juju = "2.9.45.0 || 3.2.0.1"  # renovate libjuju
 tenacity = "8.2.3"
 mailmanclient = "3.3.5"
-psycopg2 = {version = "^2.9.6", extras = ["binary"]}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
