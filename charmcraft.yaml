@@ -26,3 +26,6 @@ parts:
           exit 1
       fi
     charm-strict-dependencies: true
+    charm-binary-python-packages:
+      - psycopg2-binary
+      - psycopg-binary
