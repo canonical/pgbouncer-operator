@@ -167,6 +167,7 @@ class PgBouncerCharm(CharmBase):
         try:
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
+            selected_snap.alias("psql")
             selected_snap.stop(services=["pgbackrest-service"], disable=True)
         except snap.SnapError as e:
             error_message = "Failed to stop and disable pgbackrest snap service"
