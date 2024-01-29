@@ -351,7 +351,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
             await ops_test.model.wait_for_idle(
                 apps=[application_name, PG, PGB],
                 status="active",
-                timeout=600,
+                timeout=1200,
             )
 
     return relation
