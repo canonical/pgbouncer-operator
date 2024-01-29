@@ -175,9 +175,9 @@ class Peers(Object):
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
         self.unit_databag.update({ADDRESS_KEY: self.charm.unit_ip})
-        self.charm.update_client_connection_info()
 
         if self.charm.unit.is_leader():
+            self.charm.update_client_connection_info()
             try:
                 cfg = self.charm.read_pgb_config()
             except FileNotFoundError:
@@ -211,8 +211,8 @@ class Peers(Object):
 
     def update_connection(self):
         """Updates available leader in app databag."""
-        self.charm.update_client_connection_info()
         if self.charm.unit.is_leader():
+            self.charm.update_client_connection_info()
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
 
     def update_cfg(self, cfg: PgbConfig) -> None:
