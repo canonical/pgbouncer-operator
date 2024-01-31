@@ -164,11 +164,13 @@ class BackendDatabaseRequires(Object):
 
     def _on_endpoints_changed(self, _):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
-        self.charm.update_client_connection_info()
+        if self.charm.unit.is_leader():
+            self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
-        self.charm.update_client_connection_info()
+        if self.charm.unit.is_leader():
+            self.charm.update_client_connection_info()
 
     def _on_relation_departed(self, event: RelationDepartedEvent):
         """Runs pgbouncer-uninstall.sql and removes auth user.
@@ -177,7 +179,8 @@ class BackendDatabaseRequires(Object):
         the postgres relation-broken hook removes the user needed to remove authentication for the
         users we create.
         """
-        self.charm.update_client_connection_info()
+        if self.charm.unit.is_leader():
+            self.charm.update_client_connection_info()
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
         if event.departing_unit == self.charm.unit:

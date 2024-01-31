@@ -30,6 +30,7 @@ APP_NAMES = [CLIENT_APP_NAME, PG]
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_in_place_upgrade(ops_test: OpsTest, pgb_charm_jammy):
     """Test basic functionality of database relation interface."""

@@ -13,47 +13,63 @@ repository = "https://github.com/canonical/pgbouncer-operator"
 
 [tool.poetry.dependencies]
 python = "^3.8.10"
-ops = "2.8.0"
-pgconnstr = "1.0.1"
-tenacity = "8.2.3"
-cosl = "0.0.7"
-pydantic = "1.10.13"
-poetry-core = "1.8.1"
-# psycopg2 = "2.9.5" # Injected in charmcraft.yaml
+ops = "^2.10.0"
+pgconnstr = "^1.0.1"
+tenacity = "^8.2.3"
+cosl = "^0.0.7"
+pydantic = "^1.10.14"
+poetry-core = "^1.8.1"
+psycopg2-binary = "^2.9.9"
+psycopg = {extras = ["binary"], version = "^3.1.17"}
+
+[tool.poetry.group.charm-libs.dependencies]
+# data_platform_libs/v0/data_interfaces.py
+ops = ">=2.0.0"
+# data_platform_libs/v0/upgrade.py
+poetry-core = "*"
+# data_platform_libs/v0/upgrade.py requires pydantic ^1.10
+# grafana_agent/v0/cos_agent.py requires pydantic <2
+pydantic = "^1.10, <2"
+# grafana_agent/v0/cos_agent.py
+cosl = "*"
+
 
 [tool.poetry.group.format]
 optional = true
 
 [tool.poetry.group.format.dependencies]
-black = "23.11.0"
-ruff = "0.1.6"
+black = "^24.1.1"
+ruff = "^0.1.15"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
-codespell = "2.2.6"
+codespell = "^2.2.6"
 
 [tool.poetry.group.unit]
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = {extras = ["toml"], version = "7.3.2"}
-pytest = "7.4.3"
-pytest-asyncio = "0.21.1"
-psycopg2 = {version = "2.9.9", extras = ["binary"]}
-jinja2 = "3.1.2"
+coverage = {extras = ["toml"], version = "^7.4.1"}
+pytest = "^8.0.0"
+pytest-asyncio = "*"
+psycopg2-binary = "^2.9.9"
+jinja2 = "^3.1.3"
 
 [tool.poetry.group.integration]
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-pytest = "7.4.3"
-pytest-operator = "0.31.0"
-juju = "2.9.45.0 || 3.2.0.1"  # renovate libjuju
-tenacity = "8.2.3"
-mailmanclient = "3.3.5"
-psycopg2 = {version = "^2.9.6", extras = ["binary"]}
+pytest = "^8.0.0"
+pytest-github-secrets = {git = "https://github.com/canonical/data-platform-workflows", tag = "v11.0.1", subdirectory = "python/pytest_plugins/github_secrets"}
+pytest-operator = "^0.32.0"
+pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v11.0.1", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
+pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v11.0.1", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
+juju = "^3.3.0.0"
+tenacity = "*"
+mailmanclient = "^3.3.5"
+psycopg2-binary = "^2.9.9"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -70,7 +86,7 @@ show_missing = true
 minversion = "6.0"
 log_cli_level = "INFO"
 asyncio_mode = "auto"
-markers = ["unstable"]
+markers = ["unstable", "juju2", "juju3", "juju_secrets"]
 
 # Formatting tools configuration
 [tool.black]
@@ -79,6 +95,9 @@ target-version = ["py38"]
 
 # Linting tools configuration
 [tool.ruff]
+# preview and explicit preview are enabled for CPY001
+preview = true
+explicit-preview-rules = true
 target-version = "py38"
 src = ["src", "."]
 line-length = 99

@@ -199,8 +199,7 @@ class DbProvides(Object):
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
-        self.charm.unit.status = self.charm.check_status()
-        if not isinstance(self.charm.unit.status, ActiveStatus):
+        if not self._check_backend():
             join_event.defer()
             return
 
@@ -566,3 +565,17 @@ class DbProvides(Object):
         for entry in relation.data.keys():
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry
+
+    def _check_backend(self) -> bool:
+        """Verifies backend is ready, sets waiting status if not.
+
+        Returns:
+            bool signifying whether backend is ready or not
+        """
+        if not self.charm.backend.ready:
+            # We can't relate an app to the backend database without a backend postgres relation
+            wait_str = "waiting for backend-database relation to connect"
+            logger.warning(wait_str)
+            self.charm.unit.status = WaitingStatus(wait_str)
+            return False
+        return True

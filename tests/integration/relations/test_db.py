@@ -33,6 +33,7 @@ DATABASE_UNITS = 2
 RELATION_NAME = "db"
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
@@ -93,16 +94,18 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         assert domain_name not in [domain.mail_host for domain in client.domains]
 
 
+@pytest.mark.group(1)
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{MAILMAN3}:db")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
-    for attempt in Retrying(stop=stop_after_attempt(60), wait=wait_fixed(5), reraise=True):
+    for attempt in Retrying(stop=stop_after_attempt(60), wait=wait_fixed(10), reraise=True):
         with attempt:
             await ops_test.model.applications[PGB].get_status()
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
 
 
+@pytest.mark.group(1)
 async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
     """Test that PGB blocks on disabled extension request and allows enabled ones."""
     async with ops_test.fast_forward():

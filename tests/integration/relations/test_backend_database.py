@@ -4,6 +4,7 @@
 import asyncio
 import logging
 
+import pytest
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
@@ -32,6 +33,7 @@ TLS = "tls-certificates-operator"
 RELATION = "backend-database"
 
 
+@pytest.mark.group(1)
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
@@ -82,6 +84,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.remove_application(PGB, block_until_done=True)
 
 
+@pytest.mark.group(1)
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
     await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, series="focal")
     async with ops_test.fast_forward():
