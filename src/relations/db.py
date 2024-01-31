@@ -567,7 +567,7 @@ class DbProvides(Object):
                 return entry
 
     def _check_backend(self) -> bool:
-        """Verifies backend is ready, defers event if not.
+        """Verifies backend is ready, sets waiting status if not.
 
         Returns:
             bool signifying whether backend is ready or not
