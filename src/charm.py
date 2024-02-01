@@ -25,6 +25,7 @@ from ops.model import (
     ActiveStatus,
     BlockedStatus,
     MaintenanceStatus,
+    ModelError,
     SecretNotFoundError,
     WaitingStatus,
 )
@@ -166,6 +167,7 @@ class PgBouncerCharm(CharmBase):
         try:
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
+            selected_snap.alias("psql")
             selected_snap.stop(services=["pgbackrest-service"], disable=True)
         except snap.SnapError as e:
             error_message = "Failed to stop and disable pgbackrest snap service"
@@ -261,7 +263,21 @@ class PgBouncerCharm(CharmBase):
             self.secrets[scope][SECRET_LABEL] = secret
 
             # We retrieve and cache actual secret data for the lifetime of the event scope
-            self.secrets[scope][SECRET_CACHE_LABEL] = secret.get_content()
+            try:
+                self.secrets[scope][SECRET_CACHE_LABEL] = secret.get_content(refresh=True)
+            except (ValueError, ModelError) as err:
+                # https://bugs.launchpad.net/juju/+bug/2042596
+                # Only triggered when 'refresh' is set
+                known_model_errors = [
+                    "ERROR either URI or label should be used for getting an owned secret but not both",
+                    "ERROR secret owner cannot use --refresh",
+                ]
+                if isinstance(err, ModelError) and not any(
+                    msg in str(err) for msg in known_model_errors
+                ):
+                    raise
+                # Due to: ValueError: Secret owner cannot use refresh=True
+                self.secrets[scope][SECRET_CACHE_LABEL] = secret.get_content()
 
         return bool(self.secrets[scope].get(SECRET_CACHE_LABEL))
 

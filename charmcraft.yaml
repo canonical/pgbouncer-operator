@@ -18,8 +18,13 @@ bases:
 
 parts:
   charm:
-    build-packages:
-      - libpq-dev
+    override-pull: |
+      craftctl default
+      if [[ ! -f requirements.txt ]]; then
+          echo 'ERROR: Use "tox run -e build" instead of calling "charmcraft pack" directly' >&2
+          exit 1
+      fi
+    charm-strict-dependencies: true
   libpq:
     build-packages:
       - libpq-dev
@@ -27,6 +32,6 @@ parts:
     source: /usr/lib/
     source-type: local
     prime:
-      - binlibs/
+      - lib/
     organize:
-      "*-linux-gnu/libpq.so*": binlibs/
+      "*-linux-gnu/libpq.so*": lib/

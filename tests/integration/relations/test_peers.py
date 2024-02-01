@@ -21,6 +21,7 @@ from tests.integration.helpers.helpers import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_deploy_at_scale(ops_test, pgb_charm_jammy):
     async with ops_test.fast_forward():
@@ -41,6 +42,7 @@ async def test_deploy_at_scale(ops_test, pgb_charm_jammy):
     assert ops_test.model.units[f"{PGB}/0"].workload_status_message == WAIT_MSG
 
 
+@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_scaled_relations(ops_test: OpsTest):
     """Test that the pgbouncer, postgres, and client charms can relate to one another."""
@@ -82,6 +84,7 @@ async def test_scaled_relations(ops_test: OpsTest):
         )
 
 
+@pytest.mark.group(1)
 async def test_scaling(ops_test: OpsTest):
     """Test data is replicated to new units after a scale up."""
     # Ensure the initial number of units in the application.
@@ -111,6 +114,7 @@ async def test_scaling(ops_test: OpsTest):
         )
 
 
+@pytest.mark.group(1)
 async def test_exit_relations(ops_test: OpsTest):
     """Test that we can exit relations with multiple units without breaking anything."""
     async with ops_test.fast_forward():

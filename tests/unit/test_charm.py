@@ -47,6 +47,7 @@ class TestCharm(unittest.TestCase):
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @patch("builtins.open", unittest.mock.mock_open())
+    @patch("charm.snap.SnapCache")
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charms.operator_libs_linux.v1.systemd.service_stop")
     @patch("os.makedirs")
@@ -67,7 +68,9 @@ class TestCharm(unittest.TestCase):
         _makedirs,
         _stop,
         _install,
+        _snap_cache,
     ):
+        pg_snap = _snap_cache.return_value["charmed-postgresql"]
         self.charm.on.install.emit()
 
         _install.assert_called_once_with(packages=SNAP_PACKAGES)
@@ -83,6 +86,7 @@ class TestCharm(unittest.TestCase):
         initial_cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
         initial_cfg["pgbouncer"]["user"] = "snap_daemon"
         _render_configs.assert_called_once_with(initial_cfg)
+        pg_snap.alias.assert_called_once_with("psql")
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
 
