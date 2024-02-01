@@ -16,29 +16,36 @@ from tests.integration.helpers.helpers import (
 
 logger = logging.getLogger(__name__)
 
-DATA_INTEGRATOR_APP_NAME = "data-integrator"
-CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
-TEST_DBNAME = "postgresql_test_app_first_database"
-ANOTHER_APPLICATION_APP_NAME = "another-application"
-PG_2 = "another-postgresql"
-PGB_2 = "another-pgbouncer"
-APP_NAMES = [CLIENT_APP_NAME, PG]
-MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
+# DATA_INTEGRATOR_APP_NAME = "data-integrator"
+# TODO replace with data-integrator once it can handle secrets
+DATA_INTEGRATOR_APP_NAME = CLIENT_APP_NAME
+
+
+# TODO remove when we no longer need to hotpatch
+async def _update_file(ops_test: OpsTest, file_path, dest):
+    unit = ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
+    base_path = f"/var/lib/juju/agents/unit-{unit.name.replace('/', '-').replace('_', '-')}/charm"
+    await unit.scp_to(source=file_path, destination="temp_file")
+    mv_cmd = f"exec --unit {unit.name} sudo mv /home/ubuntu/temp_file {base_path}/{dest}"
+    return_code, _, _ = await ops_test.juju(*mv_cmd.split())
+    assert return_code == 0
+    chown_cmd = f"exec --unit {unit.name} sudo chown root:root {base_path}/{dest}"
+    return_code, _, _ = await ops_test.juju(*chown_cmd.split())
+    assert return_code == 0
+    chmod_cmd = f"exec --unit {unit.name} sudo chmod +x {base_path}/{dest}"
+    return_code, _, _ = await ops_test.juju(*chmod_cmd.split())
+    assert return_code == 0
 
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_charm_jammy):
+async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
+    # config = {"database-name": "test-database"}
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.deploy(
-                CLIENT_APP_NAME,
-                application_name=CLIENT_APP_NAME,
-                channel="edge",
-            ),
             ops_test.model.deploy(
                 pgb_charm_jammy,
                 application_name=PGB,
@@ -51,20 +58,26 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
                 channel="14/edge",
                 config={"profile": "testing"},
             ),
+            ops_test.model.deploy(
+                DATA_INTEGRATOR_APP_NAME,
+                channel="edge",
+                # config=config,
+            ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
-    await ops_test.model.wait_for_idle(status="active", timeout=600)
-
-
-@pytest.mark.group(1)
-async def test_relation_with_data_integrator(ops_test: OpsTest):
-    """Test that the charm can be related to the data integrator without extra user roles."""
-    config = {"database-name": "test-database"}
-    await ops_test.model.deploy(
-        DATA_INTEGRATOR_APP_NAME,
-        channel="edge",
-        config=config,
+    # TODO remove hotpatching when data-integrator implements its side of the replation
+    await ops_test.model.wait_for_idle(apps=[DATA_INTEGRATOR_APP_NAME])
+    await _update_file(
+        ops_test,
+        "./lib/charms/data_platform_libs/v0/data_interfaces.py",
+        "lib/charms/data_platform_libs/v0/data_interfaces.py",
     )
-    await ops_test.model.add_relation(f"{PGB}:database", DATA_INTEGRATOR_APP_NAME)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(status="active")
+    await _update_file(
+        ops_test,
+        "./tests/integration/relations/pgbouncer_provider/data_integrator_charm.py",
+        "src/charm.py",
+    )
+
+    # await ops_test.model.add_relation(PGB, DATA_INTEGRATOR_APP_NAME)
+    await ops_test.model.add_relation(PGB, f"{DATA_INTEGRATOR_APP_NAME}:first-database")
+    await ops_test.model.wait_for_idle(status="active")

@@ -98,6 +98,7 @@ class PgBouncerProvider(Object):
         if not self._check_backend():
             event.defer()
             return
+
         if not self.charm.unit.is_leader():
             return
 
@@ -134,6 +135,8 @@ class PgBouncerProvider(Object):
         # Update pgbouncer config
         cfg = self.charm.read_pgb_config()
         cfg.add_user(user, admin=True if "SUPERUSER" in extra_user_roles else False)
+        if event.expose:
+            cfg["pgbouncer"]["listen_addr"] = "*"
         self.update_postgres_endpoints(event.relation, cfg=cfg)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
 
@@ -183,10 +186,20 @@ class PgBouncerProvider(Object):
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
         # Set the read/write endpoint.
+        relation_data = self.database_provides.fetch_relation_data(
+            relation_ids=[relation.id], fields=["expose"]
+        )
+        exposed = "expose" in relation_data.get(relation.id, {})
+        if exposed:
+            rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
+        else:
+            rw_endpoint = f"localhost:{self.charm.config['listen_port']}"
         self.database_provides.set_endpoints(
             relation.id,
-            f"localhost:{self.charm.config['listen_port']}",
+            rw_endpoint,
         )
+        if exposed:
+            self.update_read_only_endpoints()
 
         # Set the database version.
         if self._check_backend():
@@ -241,6 +254,24 @@ class PgBouncerProvider(Object):
         # Write config data to charm filesystem
         if render_cfg:
             self.charm.render_pgb_config(cfg, reload_pgbouncer=reload_pgbouncer)
+
+    def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
+        """Set the read-only endpoint only if there are replicas."""
+        if not self.charm.unit.is_leader():
+            return
+
+        # Get the current relation or all the relations if this is triggered by another type of
+        # event.
+        relations = [event.relation] if event else self.model.relations[self.relation_name]
+
+        port = self.charm.config["listen_port"]
+        ips = set(self.charm.peers.units_ips)
+        ips.discard(self.charm.peers.leader_ip)
+        for relation in relations:
+            self.database_provides.set_read_only_endpoints(
+                relation.id,
+                ",".join([f"{host}:{port}" for host in ips]),
+            )
 
     def get_database(self, relation):
         """Gets database name from relation."""
