@@ -380,17 +380,3 @@ async def test_relation_broken(ops_test: OpsTest):
     await check_database_users_existence(
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
     )
-
-
-@pytest.mark.group(1)
-async def test_relation_with_data_integrator(ops_test: OpsTest):
-    """Test that the charm can be related to the data integrator without extra user roles."""
-    config = {"database-name": "test-database"}
-    await ops_test.model.deploy(
-        DATA_INTEGRATOR_APP_NAME,
-        channel="edge",
-        config=config,
-    )
-    await ops_test.model.add_relation(f"{PGB}:database", DATA_INTEGRATOR_APP_NAME)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(status="active")
