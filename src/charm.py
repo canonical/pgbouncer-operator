@@ -16,6 +16,7 @@ from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0 import pgb
+from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from jinja2 import Template
 from ops import JujuVersion
 from ops.charm import CharmBase
@@ -51,6 +52,9 @@ from constants import (
     SECRET_LABEL,
     SNAP_PACKAGES,
     SNAP_TMP_DIR,
+    TLS_CA_FILE,
+    TLS_CERT_FILE,
+    TLS_KEY_FILE,
     UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -86,6 +90,7 @@ class PgBouncerCharm(CharmBase):
         self.client_relation = PgBouncerProvider(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
+        self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
 
         self._cores = os.cpu_count()
         self.service_ids = list(range(self._cores))
@@ -410,6 +415,61 @@ class PgBouncerCharm(CharmBase):
             del self.peers.unit_databag[key]
         else:
             del self.peers.app_databag[key]
+
+    def get_hostname_by_unit(self, _) -> str:
+        """Create a DNS name for a Pgbouncer unit.
+
+        Returns:
+            A string representing the hostname of the Pgbouncer unit.
+        """
+        # For now, as there is no DNS hostnames on VMs, and it would also depend on
+        # the underlying provider (LXD, MAAS, etc.), the unit IP is returned.
+        return self.unit_ip
+
+    def push_tls_files_to_workload(self, update_config: bool = True) -> None:
+        """Uploads TLS files to the workload container."""
+        key, ca, cert = self.tls.get_tls_files()
+        if key is not None:
+            self.render_file(
+                f"{PGB_CONF_DIR}/{TLS_KEY_FILE}",
+                key,
+                0o400,
+            )
+        if ca is not None:
+            self.render_file(
+                f"{PGB_CONF_DIR}/{TLS_CA_FILE}",
+                ca,
+                0o400,
+            )
+        if cert is not None:
+            self.render_file(
+                f"{PGB_CONF_DIR}/{TLS_CERT_FILE}",
+                cert,
+                0o400,
+            )
+        if update_config:
+            self.update_config()
+
+    def update_config(self) -> None:
+        """Updates PgBouncer config file based on the existence of the TLS files."""
+        try:
+            config = self.read_pgb_config()
+        except FileNotFoundError as err:
+            logger.warning(f"update_config: Unable to read config, error: {err}")
+            return
+
+        if all(self.tls.get_tls_files()):
+            config["pgbouncer"]["client_tls_key_file"] = f"{PGB_CONF_DIR}/{TLS_KEY_FILE}"
+            config["pgbouncer"]["client_tls_ca_file"] = f"{PGB_CONF_DIR}/{TLS_CA_FILE}"
+            config["pgbouncer"]["client_tls_cert_file"] = f"{PGB_CONF_DIR}/{TLS_CERT_FILE}"
+            config["pgbouncer"]["client_tls_sslmode"] = "prefer"
+        else:
+            # cleanup tls keys if present
+            config["pgbouncer"].pop("client_tls_key_file", None)
+            config["pgbouncer"].pop("client_tls_cert_file", None)
+            config["pgbouncer"].pop("client_tls_ca_file", None)
+            config["pgbouncer"].pop("client_tls_sslmode", None)
+        self.render_pgb_config(config, True)
 
     def _on_start(self, _) -> None:
         """On Start hook.

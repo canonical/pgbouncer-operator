@@ -13,12 +13,21 @@ from tests.integration.helpers.helpers import (
     PG,
     PGB,
 )
+from tests.integration.juju_ import juju_major_version
 
 logger = logging.getLogger(__name__)
 
 # DATA_INTEGRATOR_APP_NAME = "data-integrator"
 # TODO replace with data-integrator once it can handle secrets
 DATA_INTEGRATOR_APP_NAME = CLIENT_APP_NAME
+if juju_major_version < 3:
+    TLS_CERTIFICATES_APP_NAME = "tls-certificates-operator"
+    TLS_CHANNEL = "legacy/stable"
+    TLS_CONFIG = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+else:
+    TLS_CERTIFICATES_APP_NAME = "self-signed-certificates"
+    TLS_CHANNEL = "latest/stable"
+    TLS_CONFIG = {"ca-common-name": "Test CA"}
 
 
 # TODO remove when we no longer need to hotpatch
@@ -63,6 +72,9 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
                 channel="edge",
                 # config=config,
             ),
+            ops_test.model.deploy(
+                TLS_CERTIFICATES_APP_NAME, config=TLS_CONFIG, channel=TLS_CHANNEL
+            ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
     # TODO remove hotpatching when data-integrator implements its side of the replation
@@ -80,4 +92,10 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
 
     # await ops_test.model.add_relation(PGB, DATA_INTEGRATOR_APP_NAME)
     await ops_test.model.add_relation(PGB, f"{DATA_INTEGRATOR_APP_NAME}:first-database")
+    await ops_test.model.wait_for_idle(status="active", timeout=1200)
+
+
+@pytest.mark.group(1)
+async def test_tls(ops_test: OpsTest, pgb_charm_jammy):
+    await ops_test.model.add_relation(PGB, TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.wait_for_idle(status="active")

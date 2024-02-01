@@ -59,6 +59,10 @@ requires:
     interface: postgresql_client
     optional: false
     limit: 1
+  certificates:
+    interface: tls-certificates
+    optional: true
+    limit: 1
   juju-info:
     interface: juju-info
     scope: container

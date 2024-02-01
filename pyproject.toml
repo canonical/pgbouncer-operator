@@ -19,6 +19,8 @@ tenacity = "^8.2.3"
 cosl = "^0.0.7"
 pydantic = "^1.10.14"
 poetry-core = "^1.8.1"
+cryptography = "^42.0.2"
+jsonschema = "^4.21.1"
 psycopg2-binary = "^2.9.9"
 psycopg = {extras = ["binary"], version = "^3.1.17"}
 
@@ -32,6 +34,9 @@ poetry-core = "*"
 pydantic = "^1.10, <2"
 # grafana_agent/v0/cos_agent.py
 cosl = "*"
+# tls_certificates_interface/v2/tls_certificates.py
+cryptography = "*"
+jsonschema = "*"
 
 
 [tool.poetry.group.format]
