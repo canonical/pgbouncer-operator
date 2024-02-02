@@ -137,6 +137,7 @@ class PgBouncerProvider(Object):
         cfg.add_user(user, admin=True if "SUPERUSER" in extra_user_roles else False)
         if event.expose:
             cfg["pgbouncer"]["listen_addr"] = "*"
+            self.charm.update_config()
         self.update_postgres_endpoints(event.relation, cfg=cfg)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
 
