@@ -10,16 +10,23 @@ from pytest_operator.plugin import OpsTest
 from constants import BACKEND_RELATION_NAME
 from tests.integration.helpers.helpers import (
     CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
     PG,
     PGB,
 )
 from tests.integration.juju_ import juju_major_version
+from tests.integration.relations.pgbouncer_provider.helpers import (
+    check_new_relation,
+    check_tls,
+)
 
 logger = logging.getLogger(__name__)
 
 # DATA_INTEGRATOR_APP_NAME = "data-integrator"
 # TODO replace with data-integrator once it can handle secrets
 DATA_INTEGRATOR_APP_NAME = CLIENT_APP_NAME
+TEST_DBNAME = "postgresql_test_app_first_database"
+
 if juju_major_version < 3:
     TLS_CERTIFICATES_APP_NAME = "tls-certificates-operator"
     TLS_CHANNEL = "legacy/stable"
@@ -32,18 +39,20 @@ else:
 
 # TODO remove when we no longer need to hotpatch
 async def _update_file(ops_test: OpsTest, file_path, dest):
-    unit = ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
-    base_path = f"/var/lib/juju/agents/unit-{unit.name.replace('/', '-').replace('_', '-')}/charm"
-    await unit.scp_to(source=file_path, destination="temp_file")
-    mv_cmd = f"exec --unit {unit.name} sudo mv /home/ubuntu/temp_file {base_path}/{dest}"
-    return_code, _, _ = await ops_test.juju(*mv_cmd.split())
-    assert return_code == 0
-    chown_cmd = f"exec --unit {unit.name} sudo chown root:root {base_path}/{dest}"
-    return_code, _, _ = await ops_test.juju(*chown_cmd.split())
-    assert return_code == 0
-    chmod_cmd = f"exec --unit {unit.name} sudo chmod +x {base_path}/{dest}"
-    return_code, _, _ = await ops_test.juju(*chmod_cmd.split())
-    assert return_code == 0
+    for unit in ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units:
+        base_path = (
+            f"/var/lib/juju/agents/unit-{unit.name.replace('/', '-').replace('_', '-')}/charm"
+        )
+        await unit.scp_to(source=file_path, destination="temp_file")
+        mv_cmd = f"exec --unit {unit.name} sudo mv /home/ubuntu/temp_file {base_path}/{dest}"
+        return_code, _, _ = await ops_test.juju(*mv_cmd.split())
+        assert return_code == 0
+        chown_cmd = f"exec --unit {unit.name} sudo chown root:root {base_path}/{dest}"
+        return_code, _, _ = await ops_test.juju(*chown_cmd.split())
+        assert return_code == 0
+        chmod_cmd = f"exec --unit {unit.name} sudo chmod +x {base_path}/{dest}"
+        return_code, _, _ = await ops_test.juju(*chmod_cmd.split())
+        assert return_code == 0
 
 
 @pytest.mark.group(1)
@@ -70,6 +79,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
             ops_test.model.deploy(
                 DATA_INTEGRATOR_APP_NAME,
                 channel="edge",
+                num_units=2,
                 # config=config,
             ),
             ops_test.model.deploy(
@@ -94,8 +104,34 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.add_relation(PGB, f"{DATA_INTEGRATOR_APP_NAME}:first-database")
     await ops_test.model.wait_for_idle(status="active", timeout=1200)
 
+    # TODO rewrite to use data-integrator credentials
+    for relation in ops_test.model.relations:
+        if relation.requires == ops_test.model.applications[CLIENT_APP_NAME]:
+            break
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
+        dbname=TEST_DBNAME,
+    )
+    assert await check_tls(ops_test, relation.id, False)
+
 
 @pytest.mark.group(1)
 async def test_tls(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.add_relation(PGB, TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.wait_for_idle(status="active")
+
+    # TODO rewrite to use data-integrator credentials
+    for relation in ops_test.model.relations:
+        if relation.requires == ops_test.model.applications[CLIENT_APP_NAME]:
+            break
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=relation.id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
+        dbname=TEST_DBNAME,
+    )
+    assert await check_tls(ops_test, relation.id, True)
