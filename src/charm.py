@@ -456,9 +456,9 @@ class PgBouncerCharm(CharmBase):
             config = self.read_pgb_config()
         except FileNotFoundError as err:
             logger.warning(f"update_config: Unable to read config, error: {err}")
-            return
+            return False
 
-        if all(self.tls.get_tls_files()):
+        if all(self.tls.get_tls_files()) and self.config["expose"]:
             config["pgbouncer"]["client_tls_key_file"] = f"{PGB_CONF_DIR}/{TLS_KEY_FILE}"
             config["pgbouncer"]["client_tls_ca_file"] = f"{PGB_CONF_DIR}/{TLS_CA_FILE}"
             config["pgbouncer"]["client_tls_cert_file"] = f"{PGB_CONF_DIR}/{TLS_CERT_FILE}"
@@ -470,6 +470,8 @@ class PgBouncerCharm(CharmBase):
             config["pgbouncer"].pop("client_tls_ca_file", None)
             config["pgbouncer"].pop("client_tls_sslmode", None)
         self.render_pgb_config(config, True)
+
+        return True
 
     def _on_start(self, _) -> None:
         """On Start hook.
