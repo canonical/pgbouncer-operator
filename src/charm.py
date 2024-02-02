@@ -450,15 +450,9 @@ class PgBouncerCharm(CharmBase):
         if update_config:
             self.update_config()
 
-    def update_config(self) -> bool:
-        """Updates PgBouncer config file based on the existence of the TLS files."""
-        try:
-            config = self.read_pgb_config()
-        except FileNotFoundError as err:
-            logger.warning(f"update_config: Unable to read config, error: {err}")
-            return False
-
-        if all(self.tls.get_tls_files()) and config["pgbouncer"]["listen_addr"] == "*":
+    def update_tls_config(self, config, exposed: bool) -> None:
+        """Sets only the TLS section of a provided configuration."""
+        if all(self.tls.get_tls_files()) and exposed:
             config["pgbouncer"]["client_tls_key_file"] = f"{PGB_CONF_DIR}/{TLS_KEY_FILE}"
             config["pgbouncer"]["client_tls_ca_file"] = f"{PGB_CONF_DIR}/{TLS_CA_FILE}"
             config["pgbouncer"]["client_tls_cert_file"] = f"{PGB_CONF_DIR}/{TLS_CERT_FILE}"
@@ -469,6 +463,25 @@ class PgBouncerCharm(CharmBase):
             config["pgbouncer"].pop("client_tls_cert_file", None)
             config["pgbouncer"].pop("client_tls_ca_file", None)
             config["pgbouncer"].pop("client_tls_sslmode", None)
+
+    def update_config(self) -> bool:
+        """Updates PgBouncer config file based on the existence of the TLS files."""
+        try:
+            config = self.read_pgb_config()
+        except FileNotFoundError as err:
+            logger.warning(f"update_config: Unable to read config, error: {err}")
+            return False
+
+        exposed = False
+
+        # There should be only one client relation
+        for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
+            exposed = bool(
+                self.client_relation.database_provides.fetch_relation_field(relation.id, "expose")
+            )
+            break
+
+        self.update_tls_config(config, exposed)
         self.render_pgb_config(config, True)
 
         return True
