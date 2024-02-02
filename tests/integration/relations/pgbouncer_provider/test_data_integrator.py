@@ -108,10 +108,12 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     for relation in ops_test.model.relations:
         if relation.requires == ops_test.model.applications[CLIENT_APP_NAME]:
             break
+    global relation_id
+    relation_id = relation.id
     await check_new_relation(
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=relation.id,
+        relation_id=relation_id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
@@ -119,19 +121,32 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
 
 
 @pytest.mark.group(1)
-async def test_tls(ops_test: OpsTest, pgb_charm_jammy):
+async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.add_relation(PGB, TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.wait_for_idle(status="active")
 
     # TODO rewrite to use data-integrator credentials
-    for relation in ops_test.model.relations:
-        if relation.requires == ops_test.model.applications[CLIENT_APP_NAME]:
-            break
     await check_new_relation(
         ops_test,
         unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=relation.id,
+        relation_id=relation_id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
         dbname=TEST_DBNAME,
     )
-    assert await check_tls(ops_test, relation.id, True)
+    assert await check_tls(ops_test, relation_id, True)
+
+
+@pytest.mark.group(1)
+async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
+    await ops_test.model.remove_relation(PGB, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.wait_for_idle(status="active")
+
+    # TODO rewrite to use data-integrator credentials
+    await check_new_relation(
+        ops_test,
+        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
+        relation_id=relation_id,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
+        dbname=TEST_DBNAME,
+    )
+    assert await check_tls(ops_test, relation_id, False)
