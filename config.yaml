@@ -66,3 +66,9 @@ options:
 
       0 = unlimited.
     type: int
+
+  expose:
+    default: false
+    description: |
+      (Deprecated) Temporary switch to expose pgb to all networks.
+    type: boolean

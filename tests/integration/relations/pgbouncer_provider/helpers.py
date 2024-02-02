@@ -7,11 +7,12 @@ import logging
 from typing import Optional
 from uuid import uuid4
 
+import psycopg2
 import yaml
 from pytest_operator.plugin import OpsTest
-from tenacity import RetryError, Retrying, stop_after_attempt, wait_fixed
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
-from ...helpers.helpers import CLIENT_APP_NAME, get_juju_secret
+from ...helpers.helpers import get_juju_secret
 
 
 async def get_application_relation_data(
@@ -160,34 +161,28 @@ async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, relation
             assert smoke_val in json.loads(run_update_query["results"])[0]
 
 
-# TODO use psycopg to do the check when data-integrator is ready
-async def check_tls(ops_test: OpsTest, relation_id: int, enabled: bool) -> bool:
-    """Returns whether TLS is enabled on a related PgBouncer cluster.
+def check_exposed_connection(credentials, tls):
+    table_name = "expose_test"
+    smoke_val = str(uuid4())
 
-    Args:
-        ops_test: The ops test framework instance.
-        relation_id: The id of the relation.
-        enabled: check if TLS is enabled/disabled.
+    host, port = credentials["postgresql"]["endpoints"].split(":")
+    user = credentials["postgresql"]["username"]
+    password = credentials["postgresql"]["password"]
+    database = credentials["postgresql"]["database"]
+    if tls:
+        sslmode = "require"
+    else:
+        sslmode = "disable"
+    connstr = f"dbname='{database}' user='{user}' host='{host}' port='{port}' password='{password}' connect_timeout=1 sslmode={sslmode}"
+    connection = psycopg2.connect(connstr)
+    connection.autocommit = True
+    smoke_query = (
+        # TODO fix ownership of DB objects on rerelation in PG to be able to drop
+        f"CREATE TABLE IF NOT EXISTS {table_name}(data TEXT);"
+        f"INSERT INTO {table_name}(data) VALUES('{smoke_val}');"
+        f"SELECT data FROM {table_name} WHERE data = '{smoke_val}';"
+    )
+    cursor = connection.cursor()
+    cursor.execute(smoke_query)
 
-    Returns:
-        Whether TLS is enabled/disabled.
-    """
-    unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    params = {
-        "dbname": f"{CLIENT_APP_NAME.replace('-', '_')}_first_database",
-        "relation-id": relation_id,
-        "relation-name": "first-database",
-        "readonly": False,
-    }
-    try:
-        for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(3)):
-            with attempt:
-                action = await unit.run_action("test-tls", **params)
-                result = await action.wait()
-
-                tls_enabled = result.results["results"] == "True"
-                if enabled != tls_enabled:
-                    raise ValueError(f"TLS is{' not' if not tls_enabled else ''} enabled")
-                return True
-    except RetryError:
-        return False
+    assert smoke_val == cursor.fetchone()[0]

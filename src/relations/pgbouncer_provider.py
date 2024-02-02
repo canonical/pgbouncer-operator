@@ -135,7 +135,7 @@ class PgBouncerProvider(Object):
         # Update pgbouncer config
         cfg = self.charm.read_pgb_config()
         cfg.add_user(user, admin=True if "SUPERUSER" in extra_user_roles else False)
-        if event.expose:
+        if self.charm.config["expose"]:
             cfg["pgbouncer"]["listen_addr"] = "*"
         self.update_postgres_endpoints(event.relation, cfg=cfg)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
@@ -186,11 +186,7 @@ class PgBouncerProvider(Object):
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
         # Set the read/write endpoint.
-        relation_data = self.database_provides.fetch_relation_data(
-            relation_ids=[relation.id], fields=["expose"]
-        )
-        exposed = "expose" in relation_data.get(relation.id, {})
-        if exposed:
+        if self.charm.config["expose"]:
             rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
         else:
             rw_endpoint = f"localhost:{self.charm.config['listen_port']}"
@@ -198,7 +194,7 @@ class PgBouncerProvider(Object):
             relation.id,
             rw_endpoint,
         )
-        if exposed:
+        if self.charm.config["expose"]:
             self.update_read_only_endpoints()
 
         # Set the database version.
