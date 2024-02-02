@@ -431,19 +431,19 @@ class PgBouncerCharm(CharmBase):
         key, ca, cert = self.tls.get_tls_files()
         if key is not None:
             self.render_file(
-                f"{PGB_CONF_DIR}/{TLS_KEY_FILE}",
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_KEY_FILE}",
                 key,
                 0o400,
             )
         if ca is not None:
             self.render_file(
-                f"{PGB_CONF_DIR}/{TLS_CA_FILE}",
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CA_FILE}",
                 ca,
                 0o400,
             )
         if cert is not None:
             self.render_file(
-                f"{PGB_CONF_DIR}/{TLS_CERT_FILE}",
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CERT_FILE}",
                 cert,
                 0o400,
             )
@@ -459,9 +459,15 @@ class PgBouncerCharm(CharmBase):
             return False
 
         if all(self.tls.get_tls_files()) and self.config["expose"]:
-            config["pgbouncer"]["client_tls_key_file"] = f"{PGB_CONF_DIR}/{TLS_KEY_FILE}"
-            config["pgbouncer"]["client_tls_ca_file"] = f"{PGB_CONF_DIR}/{TLS_CA_FILE}"
-            config["pgbouncer"]["client_tls_cert_file"] = f"{PGB_CONF_DIR}/{TLS_CERT_FILE}"
+            config["pgbouncer"][
+                "client_tls_key_file"
+            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_KEY_FILE}"
+            config["pgbouncer"][
+                "client_tls_ca_file"
+            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CA_FILE}"
+            config["pgbouncer"][
+                "client_tls_cert_file"
+            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CERT_FILE}"
             config["pgbouncer"]["client_tls_sslmode"] = "prefer"
         else:
             # cleanup tls keys if present
