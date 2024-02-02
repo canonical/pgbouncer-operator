@@ -8,500 +8,395 @@ This charm is meant to be used only for testing
 of the libraries in this repository.
 """
 
-# TODO replace with dataintegrator when it can handle hotpaching
-
-import json
+# TODO remove once data-integrator starts using the expose logic
 import logging
-import os
-import signal
-import subprocess
-from typing import Dict, Optional
+from enum import Enum
+from typing import Dict, MutableMapping, Optional
 
-import ops.lib
-import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseCreatedEvent,
-    DatabaseEndpointsChangedEvent,
     DatabaseRequires,
+    DataRequires,
+    IndexCreatedEvent,
+    KafkaRequires,
+    OpenSearchRequires,
+    TopicCreatedEvent,
 )
-from ops.charm import ActionEvent, CharmBase
+from literals import DATABASES, KAFKA, OPENSEARCH, PEER
+from ops.charm import ActionEvent, CharmBase, RelationBrokenEvent, RelationEvent
+from ops.framework import EventBase
 from ops.main import main
-from ops.model import ActiveStatus, Relation
-from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
+from ops.model import ActiveStatus, BlockedStatus, Relation, StatusBase
 
 logger = logging.getLogger(__name__)
-
-pgsql = ops.lib.use("pgsql", 1, "postgresql-charmers@lists.launchpad.net")
-
-# Extra roles that this application needs when interacting with the database.
-EXTRA_USER_ROLES = "CREATEDB,CREATEROLE"
-
-PEER = "postgresql-test-peers"
-LAST_WRITTEN_FILE = "/tmp/last_written_value"
-CONFIG_FILE = "/tmp/continuous_writes_config"
-PROC_PID_KEY = "proc-pid"
+Statuses = Enum("Statuses", ["ACTIVE", "BROKEN", "REMOVED"])
 
 
-class ApplicationCharm(CharmBase):
-    """Application charm that connects to database charms."""
+class IntegratorCharm(CharmBase):
+    """Integrator charm that connects to database charms."""
 
-    @property
-    def _peers(self) -> Optional[Relation]:
-        """Retrieve the peer relation (`ops.model.Relation`)."""
-        return self.model.get_relation(PEER)
-
-    @property
-    def app_peer_data(self) -> Dict:
-        """Application peer relation data object."""
-        if self._peers is None:
-            return {}
-
-        return self._peers.data[self.app]
+    def _setup_database_requirer(self, relation_name: str) -> DatabaseRequires:
+        """Handle the creation of relations and listeners."""
+        database_requirer = DatabaseRequires(
+            self,
+            relation_name=relation_name,
+            database_name=self.database_name or "",
+            extra_user_roles=self.extra_user_roles or "",
+            expose=True,
+        )
+        self.framework.observe(database_requirer.on.database_created, self._on_database_created)
+        self.framework.observe(self.on[relation_name].relation_broken, self._on_relation_broken)
+        return database_requirer
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        # Default charm events.
-        self.framework.observe(self.on.start, self._on_start)
+        self.framework.observe(self.on.get_credentials_action, self._on_get_credentials_action)
+        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
 
-        # Events related to the first database that is requested
-        # (these events are defined in the database requires charm library).
-        self.first_database_name = f'{self.app.name.replace("-", "_")}_first_database'
-        self.first_database = DatabaseRequires(
-            self, "first-database", self.first_database_name, EXTRA_USER_ROLES, expose=True
-        )
-        self.framework.observe(
-            self.first_database.on.database_created, self._on_first_database_created
-        )
-        self.framework.observe(
-            self.first_database.on.endpoints_changed, self._on_first_database_endpoints_changed
-        )
-        self.framework.observe(
-            self.on.clear_continuous_writes_action, self._on_clear_continuous_writes_action
-        )
-        self.framework.observe(
-            self.on.start_continuous_writes_action, self._on_start_continuous_writes_action
-        )
-        self.framework.observe(
-            self.on.stop_continuous_writes_action, self._on_stop_continuous_writes_action
-        )
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
-        # Events related to the second database that is requested
-        # (these events are defined in the database requires charm library).
-        database_name = f'{self.app.name.replace("-", "_")}_second_database'
-        self.second_database = DatabaseRequires(
-            self, "second-database", database_name, EXTRA_USER_ROLES
-        )
-        self.framework.observe(
-            self.second_database.on.database_created, self._on_second_database_created
-        )
-        self.framework.observe(
-            self.second_database.on.endpoints_changed, self._on_second_database_endpoints_changed
-        )
+        # Databases: MySQL, PostgreSQL and MongoDB
+        self.databases: Dict[str, DatabaseRequires] = {
+            name: self._setup_database_requirer(name) for name in DATABASES
+        }
 
-        # Multiple database clusters charm events (clusters/relations without alias).
-        database_name = f'{self.app.name.replace("-", "_")}_multiple_database_clusters'
-        self.database_clusters = DatabaseRequires(
-            self, "multiple-database-clusters", database_name, EXTRA_USER_ROLES
-        )
-        self.framework.observe(
-            self.database_clusters.on.database_created, self._on_cluster_database_created
-        )
-        self.framework.observe(
-            self.database_clusters.on.endpoints_changed,
-            self._on_cluster_endpoints_changed,
-        )
-
-        # Multiple database clusters charm events (defined dynamically
-        # in the database requires charm library, using the provided cluster/relation aliases).
-        database_name = f'{self.app.name.replace("-", "_")}_aliased_multiple_database_clusters'
-        cluster_aliases = ["cluster1", "cluster2"]  # Aliases for the multiple clusters/relations.
-        self.aliased_database_clusters = DatabaseRequires(
+        # Kafka
+        self.kafka = KafkaRequires(
             self,
-            "aliased-multiple-database-clusters",
-            database_name,
-            EXTRA_USER_ROLES,
-            cluster_aliases,
+            relation_name=KAFKA,
+            topic=self.topic_name or "",
+            extra_user_roles=self.extra_user_roles or "",
+            consumer_group_prefix=self.consumer_group_prefix or "",
         )
-        # Each database cluster will have its own events
-        # with the name having the cluster/relation alias as the prefix.
-        self.framework.observe(
-            self.aliased_database_clusters.on.cluster1_database_created,
-            self._on_cluster1_database_created,
+        self.framework.observe(self.kafka.on.topic_created, self._on_topic_created)
+        self.framework.observe(self.on[KAFKA].relation_broken, self._on_relation_broken)
+
+        # OpenSearch
+        self.opensearch = OpenSearchRequires(
+            self,
+            relation_name=OPENSEARCH,
+            index=self.index_name or "",
+            extra_user_roles=self.extra_user_roles or "",
         )
-        self.framework.observe(
-            self.aliased_database_clusters.on.cluster1_endpoints_changed,
-            self._on_cluster1_endpoints_changed,
-        )
-        self.framework.observe(
-            self.aliased_database_clusters.on.cluster2_database_created,
-            self._on_cluster2_database_created,
-        )
-        self.framework.observe(
-            self.aliased_database_clusters.on.cluster2_endpoints_changed,
-            self._on_cluster2_endpoints_changed,
-        )
+        self.framework.observe(self.opensearch.on.index_created, self._on_index_created)
+        self.framework.observe(self.on[OPENSEARCH].relation_broken, self._on_relation_broken)
 
-        # Relation used to test the situation where no database name is provided.
-        self.no_database = DatabaseRequires(self, "no-database", database_name="")
-
-        # Legacy interface
-        self.db = pgsql.PostgreSQLClient(self, "db")
-        self.framework.observe(
-            self.db.on.database_relation_joined, self._on_database_relation_joined
-        )
-
-        self.framework.observe(self.on.run_sql_action, self._on_run_sql_action)
-        self.framework.observe(self.on.test_tls_action, self._on_test_tls_action)
-
-    def _on_start(self, _) -> None:
-        """Only sets an Active status."""
-        self.unit.status = ActiveStatus()
-
-    # First database events observers.
-    def _on_first_database_created(self, event: DatabaseCreatedEvent) -> None:
-        """Event triggered when a database was created for this application."""
-        # Retrieve the credentials using the charm library.
-        logger.info(f"first database credentials: {event.username} {event.password}")
-        self.unit.status = ActiveStatus("received database credentials of the first database")
-
-    def _on_first_database_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
-        """Event triggered when the read/write endpoints of the database change."""
-        logger.info(f"first database endpoints have been changed to: {event.endpoints}")
-        if self._connection_string is None:
+    def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
+        """Handle relation broken event."""
+        if not self.unit.is_leader():
             return
+        # update peer databag to trigger the charm status update
+        self._update_relation_status(event, Statuses.BROKEN.name)
 
-        if not self.app_peer_data.get(PROC_PID_KEY):
-            return None
+    def get_status(self) -> StatusBase:
+        """Return the current application status."""
+        if not any([self.topic_name, self.database_name, self.index_name]):
+            return BlockedStatus("Please specify either topic, index, or database name")
 
-        with open(CONFIG_FILE, "w") as fd:
-            fd.write(self._connection_string)
-            os.fsync(fd)
+        if not any([self.is_database_related, self.is_kafka_related, self.is_opensearch_related]):
+            return BlockedStatus("Please relate the data-integrator with the desired product")
 
-        try:
-            os.kill(int(self.app_peer_data[PROC_PID_KEY]), signal.SIGKILL)
-        except ProcessLookupError:
-            del self.app_peer_data[PROC_PID_KEY]
-            return
-        count = self._count_writes()
-        self._start_continuous_writes(count + 1)
-
-    # Second database events observers.
-    def _on_second_database_created(self, event: DatabaseCreatedEvent) -> None:
-        """Event triggered when a database was created for this application."""
-        # Retrieve the credentials using the charm library.
-        logger.info(f"second database credentials: {event.username} {event.password}")
-        self.unit.status = ActiveStatus("received database credentials of the second database")
-
-    def _on_second_database_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
-        """Event triggered when the read/write endpoints of the database change."""
-        logger.info(f"second database endpoints have been changed to: {event.endpoints}")
-
-    # Multiple database clusters events observers.
-    def _on_cluster_database_created(self, event: DatabaseCreatedEvent) -> None:
-        """Event triggered when a database was created for this application."""
-        # Retrieve the credentials using the charm library.
-        logger.info(
-            f"cluster {event.relation.app.name} credentials: {event.username} {event.password}"
-        )
-        self.unit.status = ActiveStatus(
-            f"received database credentials for cluster {event.relation.app.name}"
-        )
-
-    def _on_cluster_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
-        """Event triggered when the read/write endpoints of the database change."""
-        logger.info(
-            f"cluster {event.relation.app.name} endpoints have been changed to: {event.endpoints}"
-        )
-
-    # Multiple database clusters events observers (for aliased clusters/relations).
-    def _on_cluster1_database_created(self, event: DatabaseCreatedEvent) -> None:
-        """Event triggered when a database was created for this application."""
-        # Retrieve the credentials using the charm library.
-        logger.info(f"cluster1 credentials: {event.username} {event.password}")
-        self.unit.status = ActiveStatus("received database credentials for cluster1")
-
-    def _on_cluster1_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
-        """Event triggered when the read/write endpoints of the database change."""
-        logger.info(f"cluster1 endpoints have been changed to: {event.endpoints}")
-
-    def _on_cluster2_database_created(self, event: DatabaseCreatedEvent) -> None:
-        """Event triggered when a database was created for this application."""
-        # Retrieve the credentials using the charm library.
-        logger.info(f"cluster2 credentials: {event.username} {event.password}")
-        self.unit.status = ActiveStatus("received database credentials for cluster2")
-
-    def _on_cluster2_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
-        """Event triggered when the read/write endpoints of the database change."""
-        logger.info(f"cluster2 endpoints have been changed to: {event.endpoints}")
-
-    # HA event observers
-    @property
-    def _connection_string(self) -> Optional[str]:
-        """Returns the PostgreSQL connection string."""
-        data = list(self.first_database.fetch_relation_data().values())[0]
-        username = data.get("username")
-        password = data.get("password")
-        endpoints = data.get("endpoints")
-        if None in [username, password, endpoints]:
-            return None
-
-        host, port = endpoints.split(":")
-
-        if not host or host == "None":
-            return None
-
-        return (
-            f"dbname='{self.first_database_name}' user='{username}'"
-            f" host='{host}' password='{password}' port={port} connect_timeout=5"
-        )
-
-    def _count_writes(self) -> int:
-        """Count the number of records in the continuous_writes table."""
-        with psycopg2.connect(
-            self._connection_string
-        ) as connection, connection.cursor() as cursor:
-            cursor.execute("SELECT COUNT(number) FROM continuous_writes;")
-            count = cursor.fetchone()[0]
-        connection.close()
-        return count
-
-    def _on_clear_continuous_writes_action(self, event: ActionEvent) -> None:
-        """Clears database writes."""
-        if self._connection_string is None:
-            event.set_results({"result": "False"})
-            return
-
-        try:
-            self._stop_continuous_writes()
-        except Exception as e:
-            event.set_results({"result": "False"})
-            logger.exception("Unable to stop writes to drop table", exc_info=e)
-            return
-
-        try:
-            with psycopg2.connect(
-                self._connection_string
-            ) as connection, connection.cursor() as cursor:
-                cursor.execute("DROP TABLE IF EXISTS continuous_writes;")
-            event.set_results({"result": "True"})
-        except Exception as e:
-            event.set_results({"result": "False"})
-            logger.exception("Unable to drop table", exc_info=e)
-        finally:
-            connection.close()
-
-    def _on_start_continuous_writes_action(self, event: ActionEvent) -> None:
-        """Start the continuous writes process."""
-        if self._connection_string is None:
-            event.set_results({"result": "False"})
-            return
-
-        try:
-            self._stop_continuous_writes()
-        except Exception as e:
-            event.set_results({"result": "False"})
-            logger.exception("Unable to stop writes to create table", exc_info=e)
-            return
-
-        try:
-            # Create the table to write records on and also a unique index to prevent duplicate
-            # writes.
-            with psycopg2.connect(
-                self._connection_string
-            ) as connection, connection.cursor() as cursor:
-                connection.autocommit = True
-                cursor.execute("CREATE TABLE IF NOT EXISTS continuous_writes(number INTEGER);")
-                cursor.execute(
-                    "CREATE UNIQUE INDEX IF NOT EXISTS number ON continuous_writes(number);"
-                )
-        except Exception as e:
-            event.set_results({"result": "False"})
-            logger.exception("Unable to create table", exc_info=e)
-            return
-        finally:
-            connection.close()
-
-        self._start_continuous_writes(1)
-        event.set_results({"result": "True"})
-
-    def _on_stop_continuous_writes_action(self, event: ActionEvent) -> None:
-        """Stops the continuous writes process."""
-        writes = self._stop_continuous_writes()
-        event.set_results({"writes": writes})
-
-    def _start_continuous_writes(self, starting_number: int) -> None:
-        """Starts continuous writes to PostgreSQL instance."""
-        if self._connection_string is None:
-            return
-
-        # Stop any writes that might be going.
-        self._stop_continuous_writes()
-
-        with open(CONFIG_FILE, "w") as fd:
-            fd.write(self._connection_string)
-            os.fsync(fd)
-
-        # Run continuous writes in the background.
-        popen = subprocess.Popen(
-            [
-                "/usr/bin/python3",
-                "src/continuous_writes.py",
-                str(starting_number),
-            ]
-        )
-
-        # Store the continuous writes process ID to stop the process later.
-        self.app_peer_data[PROC_PID_KEY] = str(popen.pid)
-
-    def _stop_continuous_writes(self) -> Optional[int]:
-        """Stops continuous writes to PostgreSQL and returns the last written value."""
-        if not self.app_peer_data.get(PROC_PID_KEY):
-            return None
-
-        # Stop the process.
-        try:
-            os.kill(int(self.app_peer_data[PROC_PID_KEY]), signal.SIGTERM)
-        except ProcessLookupError:
-            del self.app_peer_data[PROC_PID_KEY]
-            return None
-
-        del self.app_peer_data[PROC_PID_KEY]
-
-        # Return the max written value (or -1 if it was not possible to get that value).
-        try:
-            for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(5)):
-                with attempt:
-                    with open(LAST_WRITTEN_FILE, "r") as fd:
-                        last_written_value = int(fd.read())
-        except RetryError as e:
-            logger.exception("Unable to read result", exc_info=e)
-            return -1
-
-        os.remove(LAST_WRITTEN_FILE)
-        os.remove(CONFIG_FILE)
-        return last_written_value
-
-    # Legacy event handlers
-    def _on_database_relation_joined(
-        self, event: pgsql.DatabaseRelationJoinedEvent  # type: ignore
-    ) -> None:
-        """Handle db-relation-joined.
-
-        Args:
-            event: Event triggering the database relation joined handler.
-        """
-        if self.model.unit.is_leader():
-            event.database = "db_with_extensions"
-            if self.config["legacy_roles"]:
-                event.roles = "admin"
-            else:
-                event.extensions = ["pg_trgm:public", "unaccent:public"]
-
-    # Run_sql action handler
-    def _on_run_sql_action(self, event: ActionEvent):
-        """An action that allows us to run SQL queries from this charm."""
-        logger.info(event.params)
-
-        relation_id = event.params["relation-id"]
-        relation_name = event.params["relation-name"]
-        if relation_name == self.first_database.relation_name:
-            relation = self.first_database
-        elif relation_name == self.second_database.relation_name:
-            relation = self.second_database
-        else:
-            event.fail(message="invalid relation name")
-
-        databag = relation.fetch_relation_data()[relation_id]
-
-        dbname = event.params["dbname"]
-        query = event.params["query"]
-        user = databag.get("username")
-        password = databag.get("password")
-
-        if event.params["readonly"]:
-            host = databag.get("read-only-endpoints").split(",")[0]
-            dbname = f"{dbname}_readonly"
-        else:
-            host = databag.get("endpoints").split(",")[0]
-        endpoint = host.split(":")[0]
-        port = host.split(":")[1]
-
-        logger.info(f"running query: \n{query}")
-        connection = self.connect_to_database(
-            database=dbname, user=user, password=password, host=endpoint, port=port
-        )
-        cursor = connection.cursor()
-        cursor.execute(query)
-
-        try:
-            results = cursor.fetchall()
-        except psycopg2.Error as error:
-            results = [str(error)]
-        logger.info(results)
-
-        event.set_results({"results": json.dumps(results)})
-
-    def _on_test_tls_action(self, event: ActionEvent):
-        """An action that allows us to run SQL queries from this charm."""
-        logger.info(event.params)
-
-        relation_id = event.params["relation-id"]
-        relation_name = event.params["relation-name"]
-        if relation_name == self.first_database.relation_name:
-            relation = self.first_database
-        elif relation_name == self.second_database.relation_name:
-            relation = self.second_database
-        else:
-            event.fail(message="invalid relation name")
-
-        databag = relation.fetch_relation_data()[relation_id]
-
-        dbname = event.params["dbname"]
-        user = databag.get("username")
-        password = databag.get("password")
-
-        if event.params["readonly"]:
-            host = databag.get("read-only-endpoints").split(",")[0]
-            dbname = f"{dbname}_readonly"
-        else:
-            host = databag.get("endpoints").split(",")[0]
-        endpoint = host.split(":")[0]
-        port = host.split(":")[1]
-
-        try:
-            connection = self.connect_to_database(
-                database=dbname, user=user, password=password, host=endpoint, port=port, tls=True
+        if self.is_kafka_related and self.topic_active != self.topic_name:
+            logger.error(
+                f"Trying to change Kafka configuration for existing relation : To change topic: {self.topic_active}, please remove relation and add it again"
             )
-            connection.close()
-            event.set_results({"results": "True"})
-        except psycopg2.OperationalError:
-            event.set_results({"results": "False"})
+            return BlockedStatus(
+                f"To change topic: {self.topic_active}, please remove relation and add it again"
+            )
 
-    def connect_to_database(
-        self, host: str, port: str, database: str, user: str, password: str, tls: bool = False
-    ) -> psycopg2.extensions.connection:
-        """Creates a psycopg2 connection object to the database, with autocommit enabled.
+        if self.is_opensearch_related and self.index_active != self.index_name:
+            logger.error(
+                f"Trying to change OpenSearch configuration for existing relation : To change index name: {self.index_active}, please remove relation and add it again"
+            )
+            return BlockedStatus(
+                f"To change index name: {self.index_active}, please remove relation and add it again"
+            )
 
-        Args:
-            host: network host for the database
-            port: port on which to access the database
-            database: database to connect to
-            user: user to use to connect to the database
-            password: password for the given user
-            tls: whether to require TLS
+        if self.is_database_related and any(
+            database != self.database_name for database in self.databases_active.values()
+        ):
+            current_database = list(self.databases_active.values())[0]
+            logger.error(
+                f"Trying to change database-name configuration for existing relation. To change database name: {current_database}, please remove relation and add it again"
+            )
+            return BlockedStatus(
+                f"To change database name: {current_database}, please remove relation and add it again"
+            )
 
-        Returns:
-            psycopg2 connection object using the provided data
-        """
-        connstr = f"dbname='{database}' user='{user}' host='{host}' port='{port}' password='{password}' connect_timeout=1"
-        if tls:
-            connstr = f"{connstr} sslmode=require"
-        logger.debug(f"connecting to database: \n{connstr}")
-        connection = psycopg2.connect(connstr)
-        connection.autocommit = True
-        return connection
+        return ActiveStatus()
+
+    def _on_update_status(self, _: EventBase) -> None:
+        """Handle the status update."""
+        self.unit.status = self.get_status()
+
+    def _on_config_changed(self, _: EventBase) -> None:
+        """Handle on config changed event."""
+        # Only execute in the unit leader
+        self.unit.status = self.get_status()
+
+        if not self.unit.is_leader():
+            return
+
+        # update relation databag
+        # if a relation has been created before configuring the topic or database name
+        # update the relation databag with the proper value
+        if not self.databases_active and self.database_name:
+            database_relation_data = {
+                "database": self.database_name,
+                "extra-user-roles": self.extra_user_roles or "",
+            }
+            self._update_database_relations(database_relation_data)
+
+        if not self.topic_active and self.topic_name:
+            for rel in self.kafka.relations:
+                self.kafka.update_relation_data(
+                    rel.id,
+                    {
+                        "topic": self.topic_name or "",
+                        "extra-user-roles": self.extra_user_roles or "",
+                        "consumer-group-prefix": self.consumer_group_prefix or "",
+                    },
+                )
+
+        if not self.index_active and self.index_name:
+            for rel in self.opensearch.relations:
+                self.opensearch.update_relation_data(
+                    rel.id,
+                    {
+                        "index": self.index_name or "",
+                        "extra-user-roles": self.extra_user_roles or "",
+                    },
+                )
+
+    def _update_database_relations(self, database_relation_data: Dict[str, str]):
+        """Update the relation data of the related databases."""
+        for db_name, relation in self.database_relations.items():
+            logger.debug(f"Updating databag for database: {db_name}")
+            self.databases[db_name].update_relation_data(relation.id, database_relation_data)
+
+    def _on_get_credentials_action(self, event: ActionEvent) -> None:
+        """Returns the credentials an action response."""
+        if not any([self.database_name, self.topic_name, self.index_name]):
+            event.fail("The database name or topic name is not specified in the config.")
+            event.set_results({"ok": False})
+            return
+
+        if not any([self.is_database_related, self.is_kafka_related, self.is_opensearch_related]):
+            event.fail("The action can be run only after relation is created.")
+            event.set_results({"ok": False})
+            return
+
+        result = {"ok": True}
+
+        for name in self.databases_active.keys():
+            result[name] = list(self.databases[name].fetch_relation_data().values())[0]
+
+        if self.is_kafka_related:
+            result[KAFKA] = list(self.kafka.fetch_relation_data().values())[0]
+
+        if self.is_opensearch_related:
+            result[OPENSEARCH] = list(self.opensearch.fetch_relation_data().values())[0]
+
+        event.set_results(result)
+
+    def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
+        """Event triggered when a database was created for this application."""
+        logger.debug(f"Database credentials are received: {event.username}")
+        self._on_config_changed(event)
+        if not self.unit.is_leader():
+            return
+        # update values in the databag
+        self._update_relation_status(event, Statuses.ACTIVE.name)
+
+    def _on_topic_created(self, event: TopicCreatedEvent) -> None:
+        """Event triggered when a topic was created for this application."""
+        logger.debug(f"Kafka credentials are received: {event.username}")
+        self._on_config_changed(event)
+        if not self.unit.is_leader():
+            return
+        # update status of the relations in the peer-databag
+        self._update_relation_status(event, Statuses.ACTIVE.name)
+
+    def _on_index_created(self, event: IndexCreatedEvent) -> None:
+        """Event triggered when an index is created for this application."""
+        logger.debug(f"OpenSearch credentials are received: {event.username}")
+        self._on_config_changed(event)
+        if not self.unit.is_leader:
+            return
+        # update status of the relations in the peer-databag
+        self._update_relation_status(event, Statuses.ACTIVE.name)
+
+    def _update_relation_status(self, event: RelationEvent, status: str) -> None:
+        """Update the relation status in the peer-relation databag."""
+        self.set_secret("app", event.relation.name, status)
+
+    def _on_peer_relation_changed(self, _: RelationEvent) -> None:
+        """Handle the peer relation changed event."""
+        if not self.unit.is_leader():
+            return
+        removed_relations = []
+        # check for relation that has been removed
+        for relation_data_key, relation_value in self.app_peer_data.items():
+            if relation_value == Statuses.BROKEN.name:
+                removed_relations.append(relation_data_key)
+        if removed_relations:
+            # update the unit status
+            self.unit.status = self.get_status()
+            # update relation status to removed if relation databag is empty
+            for relation_name in removed_relations:
+                # check if relation databag is not empty
+                if self.model.relations[relation_name]:
+                    continue
+                self.set_secret("app", relation_name, Statuses.REMOVED.name)
+
+    @property
+    def database_name(self) -> Optional[str]:
+        """Return the configured database name."""
+        return self.model.config.get("database-name", None)
+
+    @property
+    def topic_name(self) -> Optional[str]:
+        """Return the configured topic name."""
+        return self.model.config.get("topic-name", None)
+
+    @property
+    def index_name(self) -> Optional[str]:
+        """Return the configured database name."""
+        return self.model.config.get("index-name", None)
+
+    @property
+    def extra_user_roles(self) -> Optional[str]:
+        """Return the configured extra user roles."""
+        return self.model.config.get("extra-user-roles", None)
+
+    @property
+    def consumer_group_prefix(self) -> Optional[str]:
+        """Return the configured consumer group prefix."""
+        return self.model.config.get("consumer-group-prefix", None)
+
+    @property
+    def database_relations(self) -> Dict[str, Relation]:
+        """Return the active database relations."""
+        return {
+            name: requirer.relations[0]
+            for name, requirer in self.databases.items()
+            if len(requirer.relations)
+        }
+
+    @property
+    def opensearch_relation(self) -> Optional[Relation]:
+        """Return the opensearch relation if present."""
+        return self.opensearch.relations[0] if len(self.opensearch.relations) else None
+
+    @property
+    def kafka_relation(self) -> Optional[Relation]:
+        """Return the kafka relation if present."""
+        return self.kafka.relations[0] if len(self.kafka.relations) else None
+
+    @property
+    def databases_active(self) -> Dict[str, str]:
+        """Return the configured database name."""
+        return {
+            name: requirer.fetch_relation_field(requirer.relations[0].id, "database")
+            for name, requirer in self.databases.items()
+            if requirer.relations
+            and requirer.fetch_relation_field(requirer.relations[0].id, "database")
+        }
+
+    @property
+    def topic_active(self) -> Optional[str]:
+        """Return the configured topic name."""
+        if relation := self.kafka_relation:
+            return self.kafka.fetch_relation_field(relation.id, "topic")
+
+    @property
+    def index_active(self) -> Optional[str]:
+        """Return the configured index name."""
+        if relation := self.opensearch_relation:
+            return self.opensearch.fetch_relation_field(relation.id, "index")
+
+    @property
+    def extra_user_roles_active(self) -> Optional[str]:
+        """Return the configured user-extra-roles parameter."""
+        return (
+            self.kafka.fetch_relation_field(relation.id, "extra-user-roles")
+            if (relation := self.kafka_relation)
+            else None
+        )
+
+    @property
+    def is_database_related(self) -> bool:
+        """Return if a relation with database is present."""
+        possible_relations = [
+            self._check_for_credentials(database_requirer)
+            for _, database_requirer in self.databases.items()
+        ]
+        return any(possible_relations)
+
+    @staticmethod
+    def _check_for_credentials(requirer: DataRequires) -> bool:
+        """Check if credentials are present in the relation databag."""
+        for relation in requirer.relations:
+            if requirer.fetch_relation_field(
+                relation.id, "username"
+            ) and requirer.fetch_relation_field(relation.id, "password"):
+                return True
+        return False
+
+    @property
+    def is_kafka_related(self) -> bool:
+        """Return if a relation with kafka is present."""
+        return self._check_for_credentials(self.kafka)
+
+    @property
+    def is_opensearch_related(self) -> bool:
+        """Return if a relation with opensearch is present."""
+        return self._check_for_credentials(self.opensearch)
+
+    @property
+    def app_peer_data(self) -> MutableMapping[str, str]:
+        """Application peer relation data object."""
+        relation = self.model.get_relation(PEER)
+        if not relation:
+            return {}
+
+        return relation.data[relation.app]
+
+    @property
+    def unit_peer_data(self) -> MutableMapping[str, str]:
+        """Peer relation data object."""
+        relation = self.model.get_relation(PEER)
+        if relation is None:
+            return {}
+
+        return relation.data[self.unit]
+
+    def get_secret(self, scope: str, key: str) -> Optional[str]:
+        """Get secret from the secret storage."""
+        if scope == "unit":
+            return self.unit_peer_data.get(key, None)
+        elif scope == "app":
+            return self.app_peer_data.get(key, None)
+        else:
+            raise RuntimeError("Unknown secret scope.")
+
+    def set_secret(self, scope: str, key: str, value: Optional[str]) -> None:
+        """Set secret in the secret storage."""
+        if scope == "unit":
+            if not value:
+                del self.unit_peer_data[key]
+                return
+            self.unit_peer_data.update({key: value})
+        elif scope == "app":
+            if not value:
+                del self.app_peer_data[key]
+                return
+            self.app_peer_data.update({key: value})
+        else:
+            raise RuntimeError("Unknown secret scope.")
 
 
 if __name__ == "__main__":
-    main(ApplicationCharm)
+    main(IntegratorCharm)
