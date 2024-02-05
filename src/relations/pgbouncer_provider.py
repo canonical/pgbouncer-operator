@@ -52,7 +52,7 @@ from charms.postgresql_k8s.v0.postgresql import (
 )
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
-from ops.model import Application, BlockedStatus, Relation, WaitingStatus
+from ops.model import Application, BlockedStatus, ModelError, Relation, WaitingStatus
 
 from constants import CLIENT_RELATION_NAME
 
@@ -98,6 +98,14 @@ class PgBouncerProvider(Object):
         if not self._check_backend():
             event.defer()
             return
+
+        # If exposed relation, open the listen port for all units
+        if event.expose:
+            # Open port
+            try:
+                self.charm.unit.open_port("tcp", self.charm.config["listen_port"])
+            except ModelError:
+                logger.exception("failed to open port")
 
         if not self.charm.unit.is_leader():
             return
