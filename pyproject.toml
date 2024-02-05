@@ -19,8 +19,8 @@ tenacity = "^8.2.3"
 cosl = "^0.0.7"
 pydantic = "^1.10.14"
 poetry-core = "^1.8.1"
-psycopg2-binary = "^2.9.9"
-psycopg = {extras = ["binary"], version = "^3.1.17"}
+psycopg2 = "^2.9.9"
+psycopg = {extras = ["c"], version = "^3.1.17"}
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
@@ -54,7 +54,6 @@ optional = true
 coverage = {extras = ["toml"], version = "^7.4.1"}
 pytest = "^8.0.0"
 pytest-asyncio = "*"
-psycopg2-binary = "^2.9.9"
 jinja2 = "^3.1.3"
 
 [tool.poetry.group.integration]
