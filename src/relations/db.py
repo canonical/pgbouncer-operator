@@ -111,7 +111,7 @@ from ops.model import (
     WaitingStatus,
 )
 
-from constants import APP_SCOPE, EXTENSIONS_BLOCKING_MESSAGE, PG
+from constants import EXTENSIONS_BLOCKING_MESSAGE, PG
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +199,9 @@ class DbProvides(Object):
         If the backend relation is fully initialised and available, we generate the proposed
         database and create a user on the postgres charm, and add preliminary data to the databag.
         """
+        if not self.charm.unit.is_leader():
+            return
+
         if not self._check_backend():
             join_event.defer()
             return
@@ -224,11 +227,7 @@ class DbProvides(Object):
             return
 
         user = self._generate_username(join_event)
-        if self.charm.unit.is_leader():
-            password = pgb.generate_password()
-        else:
-            if not (password := self.charm.get_secret(APP_SCOPE, user)):
-                join_event.defer()
+        password = pgb.generate_password()
 
         self.update_databags(
             join_event.relation,
@@ -262,7 +261,6 @@ class DbProvides(Object):
 
         # set up auth function
         self.charm.backend.initialise_auth_function([database])
-        self.charm.peers.add_user(user, password)
 
         # Create user in pgbouncer config
         cfg = self.charm.read_pgb_config()
@@ -481,7 +479,6 @@ class DbProvides(Object):
 
         cfg.remove_user(user)
         self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
-        self.charm.peers.remove_user(user)
 
         try:
             self.charm.backend.postgres.delete_user(user)
