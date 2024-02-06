@@ -113,7 +113,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("relations.peers.Peers.remove_user")
     @patch("charm.PgBouncerCharm.update_postgres_endpoints")
     @patch("charm.PgBouncerCharm.update_client_connection_info")
     @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
@@ -122,7 +121,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _remove_auth,
         _update_conn_info,
         _update_endpoints,
-        _remove_user,
         _postgres,
         _auth_user,
     ):
@@ -138,7 +136,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _remove_auth.assert_called()
         _remove_auth.reset_mock()
         _postgres().delete_user.assert_called()
-        _remove_user.assert_called()
 
         # Check departing when we're just scaling down this
         depart_event.departing_unit = self.charm.unit
