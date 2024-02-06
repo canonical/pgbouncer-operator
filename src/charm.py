@@ -261,6 +261,13 @@ class PgBouncerCharm(CharmBase):
         if scope == UNIT_SCOPE:
             return self.unit
 
+    def peer_relation_data(self, scope: Scopes) -> DataPeer:
+        """Returns the peer relation data per scope."""
+        if scope == APP_SCOPE:
+            return self.peer_relation_app
+        elif scope == UNIT_SCOPE:
+            return self.peer_relation_unit
+
     def _translate_field_to_secret_key(self, key: str) -> str:
         """Change 'key' to secrets-compatible key field."""
         if not JujuVersion.from_environ().has_secrets:
@@ -276,11 +283,7 @@ class PgBouncerCharm(CharmBase):
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
         secret_key = self._translate_field_to_secret_key(key)
-        if scope == APP_SCOPE:
-            value = self.peer_relation_app.fetch_my_relation_field(peers.id, secret_key)
-        else:
-            value = self.peer_relation_unit.fetch_my_relation_field(peers.id, secret_key)
-        return value
+        return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, secret_key)
 
     def set_secret(self, scope: Scopes, key: str, value: Optional[str]) -> Optional[str]:
         """Set secret from the secret storage."""
@@ -292,10 +295,7 @@ class PgBouncerCharm(CharmBase):
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
         secret_key = self._translate_field_to_secret_key(key)
-        if scope == APP_SCOPE:
-            self.peer_relation_app.update_relation_data(peers.id, {secret_key: value})
-        else:
-            self.peer_relation_unit.update_relation_data(peers.id, {secret_key: value})
+        self.peer_relation_data(scope).update_relation_data(peers.id, {secret_key: value})
 
     def remove_secret(self, scope: Scopes, key: str) -> None:
         """Removing a secret."""
@@ -304,10 +304,7 @@ class PgBouncerCharm(CharmBase):
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
         secret_key = self._translate_field_to_secret_key(key)
-        if scope == APP_SCOPE:
-            self.peer_relation_app.delete_relation_data(peers.id, [secret_key])
-        else:
-            self.peer_relation_unit.delete_relation_data(peers.id, [secret_key])
+        self.peer_relation_data(scope).delete_relation_data(peers.id, [secret_key])
 
     def _on_start(self, _) -> None:
         """On Start hook.
