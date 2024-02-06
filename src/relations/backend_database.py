@@ -213,7 +213,6 @@ class BackendDatabaseRequires(Object):
             return
 
         self.postgres.delete_user(self.auth_user)
-        self.charm.peers.remove_user(self.auth_user)
         logger.info("pgbouncer auth user removed")
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
