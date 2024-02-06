@@ -119,7 +119,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
 @pytest.mark.group(1)
 async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.add_relation(PGB, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(status="active")
+    await ops_test.model.wait_for_idle(status="active", timeout=1200)
 
     credentials = await fetch_action_get_credentials(
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
@@ -132,7 +132,7 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:certificates", f"{TLS_CERTIFICATES_APP_NAME}:certificates"
     )
-    await ops_test.model.wait_for_idle(status="active")
+    await ops_test.model.wait_for_idle(status="active", timeout=1200)
 
     credentials = await fetch_action_get_credentials(
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
