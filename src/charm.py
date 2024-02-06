@@ -322,7 +322,7 @@ class PgBouncerCharm(CharmBase):
         # the underlying provider (LXD, MAAS, etc.), the unit IP is returned.
         return self.unit_ip
 
-    def push_tls_files_to_workload(self, update_config: bool = True) -> None:
+    def push_tls_files_to_workload(self, update_config: bool = True) -> bool:
         """Uploads TLS files to the workload container."""
         key, ca, cert = self.tls.get_tls_files()
         if key is not None:
@@ -344,7 +344,8 @@ class PgBouncerCharm(CharmBase):
                 0o400,
             )
         if update_config:
-            self.update_config()
+            return self.update_config()
+        return True
 
     def update_tls_config(self, config, exposed: bool) -> None:
         """Sets only the TLS section of a provided configuration."""
