@@ -80,9 +80,9 @@ class PgBouncerCharm(CharmBase):
             self,
             relation_name=PEER_RELATION_NAME,
             additional_secret_fields=[
-                AUTH_FILE_DATABAG_KEY,
-                CFG_FILE_DATABAG_KEY,
-                MONITORING_PASSWORD_KEY,
+                self._translate_field_to_secret_key(AUTH_FILE_DATABAG_KEY),
+                self._translate_field_to_secret_key(CFG_FILE_DATABAG_KEY),
+                self._translate_field_to_secret_key(MONITORING_PASSWORD_KEY),
             ],
             secret_field_name=SECRET_INTERNAL_LABEL,
             deleted_label=SECRET_DELETED_LABEL,

@@ -186,7 +186,6 @@ class Peers(Object):
                 event.defer()
                 return
 
-            self.update_cfg(cfg)
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
             return
 
