@@ -539,6 +539,51 @@ class TestCharm(unittest.TestCase):
             self.rel_id, getattr(self.charm, scope).name
         )
 
+    # @parameterized.expand([("unit", True), ("unit", False)])
+    @parameterized.expand([("app", True)])
+    @patch_network_get(private_address="1.1.1.1")
+    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    def test_migration_from_databag_translated_field(self, scope, is_leader, _):
+        """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
+        # App has to be leader, unit can be either
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(is_leader)
+
+        oldname = "cfg_file"
+        newname = "cfg-file"
+
+        # Getting current password
+        entity = getattr(self.charm, scope)
+        self.harness.update_relation_data(self.rel_id, entity.name, {oldname: "bla"})
+        assert self.harness.charm.get_secret(scope, oldname) == "bla"
+
+        # Set secret via old name resulting in having it moved from databag to Juju Secret
+        self.harness.charm.set_secret(scope, oldname, "blablabla")
+        assert self.harness.charm.get_secret(scope, oldname) == "blablabla"
+        assert self.harness.charm.get_secret(scope, newname) == "blablabla"
+        # A secret was created, while the databag field disappeared
+        assert self.harness.charm.model.get_secret(label=f"pgbouncer.{scope}")
+        assert oldname not in self.harness.get_relation_data(
+            self.rel_id, getattr(self.charm, scope).name
+        )
+
+        # Set secret via new name
+        self.harness.charm.set_secret(scope, newname, "blablabla-new")
+        assert self.harness.charm.get_secret(scope, oldname) == "blablabla-new"
+        assert self.harness.charm.get_secret(scope, newname) == "blablabla-new"
+
+        # Delete secret via old name
+        self.harness.charm.set_secret(scope, oldname, "")
+        assert self.harness.charm.get_secret(scope, oldname) is None
+        assert self.harness.charm.get_secret(scope, newname) is None
+
+        # Delete secret via new name
+        self.harness.charm.set_secret(scope, newname, "blablabla-new2")
+        assert self.harness.charm.get_secret(scope, oldname) == "blablabla-new2"
+        self.harness.charm.set_secret(scope, newname, "")
+        assert self.harness.charm.get_secret(scope, oldname) is None
+        assert self.harness.charm.get_secret(scope, newname) is None
+
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
     @patch_network_get(private_address="1.1.1.1")
     @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)

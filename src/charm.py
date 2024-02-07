@@ -75,12 +75,13 @@ class PgBouncerCharm(CharmBase):
             self,
             relation_name=PEER_RELATION_NAME,
             additional_secret_fields=[
-                self._translate_field_to_secret_key(AUTH_FILE_DATABAG_KEY),
-                self._translate_field_to_secret_key(CFG_FILE_DATABAG_KEY),
-                self._translate_field_to_secret_key(MONITORING_PASSWORD_KEY),
+                AUTH_FILE_DATABAG_KEY,
+                CFG_FILE_DATABAG_KEY,
+                MONITORING_PASSWORD_KEY,
             ],
             secret_field_name=SECRET_INTERNAL_LABEL,
             deleted_label=SECRET_DELETED_LABEL,
+            field_translations=SECRET_KEY_OVERRIDES,
         )
         self.peer_relation_unit = DataPeerUnit(
             self,
@@ -284,8 +285,9 @@ class PgBouncerCharm(CharmBase):
             raise RuntimeError("Unknown secret scope.")
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
-        secret_key = self._translate_field_to_secret_key(key)
-        return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, secret_key)
+        # secret_key = self._translate_field_to_secret_key(key)
+        # return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, secret_key)
+        return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, key)
 
     def set_secret(self, scope: Scopes, key: str, value: Optional[str]) -> Optional[str]:
         """Set secret from the secret storage."""
@@ -296,8 +298,9 @@ class PgBouncerCharm(CharmBase):
             return self.remove_secret(scope, key)
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
-        secret_key = self._translate_field_to_secret_key(key)
-        self.peer_relation_data(scope).update_relation_data(peers.id, {secret_key: value})
+        # secret_key = self._translate_field_to_secret_key(key)
+        # self.peer_relation_data(scope).update_relation_data(peers.id, {secret_key: value})
+        self.peer_relation_data(scope).update_relation_data(peers.id, {key: value})
 
     def remove_secret(self, scope: Scopes, key: str) -> None:
         """Removing a secret."""
@@ -305,8 +308,9 @@ class PgBouncerCharm(CharmBase):
             raise RuntimeError("Unknown secret scope.")
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
-        secret_key = self._translate_field_to_secret_key(key)
-        self.peer_relation_data(scope).delete_relation_data(peers.id, [secret_key])
+        # secret_key = self._translate_field_to_secret_key(key)
+        # self.peer_relation_data(scope).delete_relation_data(peers.id, [secret_key])
+        self.peer_relation_data(scope).delete_relation_data(peers.id, [key])
 
     def _on_start(self, _) -> None:
         """On Start hook.
