@@ -100,7 +100,7 @@ class PgBouncerProvider(Object):
             return
 
         # If exposed relation, open the listen port for all units
-        if event.expose:
+        if event.external_node_connectivity:
             # Open port
             try:
                 self.charm.unit.open_port("tcp", self.charm.config["listen_port"])
@@ -141,7 +141,7 @@ class PgBouncerProvider(Object):
         # Update pgbouncer config
         cfg = self.charm.read_pgb_config()
         cfg.add_user(user, admin=True if "SUPERUSER" in extra_user_roles else False)
-        if event.expose:
+        if event.external_node_connectivity:
             cfg["pgbouncer"]["listen_addr"] = "*"
             self.charm.update_tls_config(cfg, True)
         self.update_postgres_endpoints(event.relation, cfg=cfg)
@@ -193,7 +193,9 @@ class PgBouncerProvider(Object):
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
         # Set the read/write endpoint.
-        exposed = bool(self.database_provides.fetch_relation_field(relation.id, "expose"))
+        exposed = bool(
+            self.database_provides.fetch_relation_field(relation.id, "external-node-connectivity")
+        )
         if exposed:
             rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
         else:

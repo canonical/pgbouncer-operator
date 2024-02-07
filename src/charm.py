@@ -371,7 +371,9 @@ class PgBouncerCharm(CharmBase):
         # There should be only one client relation
         for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
             return bool(
-                self.client_relation.database_provides.fetch_relation_field(relation.id, "expose")
+                self.client_relation.database_provides.fetch_relation_field(
+                    relation.id, "external-node-connectivity"
+                )
             )
 
     def update_config(self) -> bool:

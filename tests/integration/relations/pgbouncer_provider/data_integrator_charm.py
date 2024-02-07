@@ -42,7 +42,7 @@ class IntegratorCharm(CharmBase):
             relation_name=relation_name,
             database_name=self.database_name or "",
             extra_user_roles=self.extra_user_roles or "",
-            expose=True,
+            external_node_connectivity=True,
         )
         self.framework.observe(database_requirer.on.database_created, self._on_database_created)
         self.framework.observe(self.on[relation_name].relation_broken, self._on_relation_broken)
