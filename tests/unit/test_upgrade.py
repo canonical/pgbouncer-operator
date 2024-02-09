@@ -40,6 +40,7 @@ class TestUpgrade(unittest.TestCase):
             "Run `juju refresh --revision <previous-revision> pgbouncer` to initiate the rollback"
         )
 
+    @patch("charm.PgBouncerCharm.get_secret")
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
@@ -62,6 +63,7 @@ class TestUpgrade(unittest.TestCase):
         _set_unit_completed: Mock,
         _on_upgrade_changed: Mock,
         _,
+        __,
     ):
         event = Mock()
 
@@ -84,6 +86,7 @@ class TestUpgrade(unittest.TestCase):
 
         _on_upgrade_changed.assert_called_once_with(event)
 
+    @patch("charm.PgBouncerCharm.get_secret")
     @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
@@ -108,6 +111,7 @@ class TestUpgrade(unittest.TestCase):
         _on_upgrade_changed: Mock,
         _,
         __,
+        ___,
     ):
         _cluster_checks.side_effect = ClusterNotReadyError("test", "test")
 

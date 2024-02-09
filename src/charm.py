@@ -135,12 +135,12 @@ class PgBouncerCharm(CharmBase):
     #  Charm Lifecycle Hooks
     # =======================
 
-    def render_utility_files(self):
+    def render_utility_files(self, cfg_file=None):
         """Render charm utility services and configuration."""
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
-        if not (cfg_file := self.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)):
+        if not cfg_file:
             cfg_file = pgb.DEFAULT_CONFIG
         cfg = pgb.PgbConfig(cfg_file)
         cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
