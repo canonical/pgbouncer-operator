@@ -140,7 +140,9 @@ class PgBouncerCharm(CharmBase):
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
         # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
         # throw a fit.
-        cfg = pgb.PgbConfig(pgb.DEFAULT_CONFIG)
+        if not (cfg_file := self.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)):
+            cfg_file = pgb.DEFAULT_CONFIG
+        cfg = pgb.PgbConfig(cfg_file)
         cfg["pgbouncer"]["listen_addr"] = "127.0.0.1"
         cfg["pgbouncer"]["user"] = "snap_daemon"
         self.render_pgb_config(cfg)
