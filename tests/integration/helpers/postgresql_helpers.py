@@ -2,10 +2,11 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import itertools
-from typing import List
+from typing import List, Optional
 
 import psycopg2
 import yaml
+from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import PG
@@ -179,3 +180,13 @@ def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
         IP address of the unit
     """
     return ops_test.model.units.get(unit_name).public_address
+
+
+async def get_leader_unit(ops_test: OpsTest, app: str) -> Optional[Unit]:
+    leader_unit = None
+    for unit in ops_test.model.applications[app].units:
+        if await unit.is_leader_from_status():
+            leader_unit = unit
+            break
+
+    return leader_unit
