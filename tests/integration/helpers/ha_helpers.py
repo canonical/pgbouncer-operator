@@ -12,10 +12,8 @@ from tenacity import (
     wait_fixed,
 )
 
-from .postgresql_helpers import (
-    APPLICATION_NAME,
-    get_leader_unit,
-)
+from .helpers import CLIENT_APP_NAME
+from .postgresql_helpers import get_leader_unit
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,7 @@ async def count_writes(
             host = member["host"]
 
             connection_string = (
-                f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator'"
+                f"dbname='{CLIENT_APP_NAME.replace('-', '_')}_first_database' user='operator'"
                 f" host='{host}' password='{password}' connect_timeout=10"
             )
 
@@ -169,14 +167,14 @@ async def start_continuous_writes(ops_test: OpsTest, app: str) -> None:
         for relation in ops_test.model.applications[app].relations
         if not relation.is_peer
         and f"{relation.requires.application_name}:{relation.requires.name}"
-        == f"{APPLICATION_NAME}:first-database"
+        == f"{CLIENT_APP_NAME}:first-database"
     ]
     if not relations:
-        await ops_test.model.relate(app, f"{APPLICATION_NAME}:first-database")
+        await ops_test.model.relate(app, f"{CLIENT_APP_NAME}:first-database")
         await ops_test.model.wait_for_idle(status="active", timeout=1000)
     for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(3), reraise=True):
         with attempt:
-            leader = await get_leader_unit(ops_test, APPLICATION_NAME)
+            leader = await get_leader_unit(ops_test, CLIENT_APP_NAME)
             action = await leader.run_action("start-continuous-writes")
             await action.wait()
             assert action.results["result"] == "True", "Unable to create continuous_writes table"
@@ -184,7 +182,7 @@ async def start_continuous_writes(ops_test: OpsTest, app: str) -> None:
 
 async def stop_continuous_writes(ops_test: OpsTest) -> int:
     """Stops continuous writes to PostgreSQL and returns the last written value."""
-    leader = await get_leader_unit(ops_test, APPLICATION_NAME)
+    leader = await get_leader_unit(ops_test, CLIENT_APP_NAME)
     action = await leader.run_action("stop-continuous-writes")
     action = await action.wait()
     return int(action.results["writes"])
