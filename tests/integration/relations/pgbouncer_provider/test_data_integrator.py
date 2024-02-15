@@ -44,24 +44,6 @@ async def fetch_action_get_credentials(unit: Unit) -> Dict:
     return result.results
 
 
-# TODO remove when we no longer need to hotpatch
-async def _update_file(ops_test: OpsTest, file_path, dest):
-    for unit in ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units:
-        base_path = (
-            f"/var/lib/juju/agents/unit-{unit.name.replace('/', '-').replace('_', '-')}/charm"
-        )
-        await unit.scp_to(source=file_path, destination="temp_file")
-        mv_cmd = f"exec --unit {unit.name} sudo mv /home/ubuntu/temp_file {base_path}/{dest}"
-        return_code, _, _ = await ops_test.juju(*mv_cmd.split())
-        assert return_code == 0
-        chown_cmd = f"exec --unit {unit.name} sudo chown root:root {base_path}/{dest}"
-        return_code, _, _ = await ops_test.juju(*chown_cmd.split())
-        assert return_code == 0
-        chmod_cmd = f"exec --unit {unit.name} sudo chmod +x {base_path}/{dest}"
-        return_code, _, _ = await ops_test.juju(*chmod_cmd.split())
-        assert return_code == 0
-
-
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
@@ -94,18 +76,6 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
-    # TODO remove hotpatching when data-integrator implements its side of the replation
-    await ops_test.model.wait_for_idle(apps=[DATA_INTEGRATOR_APP_NAME])
-    await _update_file(
-        ops_test,
-        "./lib/charms/data_platform_libs/v0/data_interfaces.py",
-        "lib/charms/data_platform_libs/v0/data_interfaces.py",
-    )
-    await _update_file(
-        ops_test,
-        "./tests/integration/relations/pgbouncer_provider/data_integrator_charm.py",
-        "src/charm.py",
-    )
 
     await ops_test.model.add_relation(PGB, DATA_INTEGRATOR_APP_NAME)
     await ops_test.model.wait_for_idle(status="active", timeout=1200)
