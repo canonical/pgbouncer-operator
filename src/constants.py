@@ -32,6 +32,10 @@ BACKEND_RELATION_NAME = "backend-database"
 PEER_RELATION_NAME = "pgb-peers"
 CLIENT_RELATION_NAME = "database"
 
+TLS_KEY_FILE = "key.pem"
+TLS_CA_FILE = "ca.pem"
+TLS_CERT_FILE = "cert.pem"
+
 MONITORING_PASSWORD_KEY = "monitoring_password"
 
 EXTENSIONS_BLOCKING_MESSAGE = "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
@@ -47,4 +51,5 @@ SECRET_KEY_OVERRIDES = {
     "cfg_file": "cfg-file",
     "monitoring_password": "monitoring-password",
     "auth_file": "auth-file",
+    "ca": "cauth",
 }

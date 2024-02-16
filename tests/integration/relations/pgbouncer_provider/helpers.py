@@ -7,6 +7,7 @@ import logging
 from typing import Optional
 from uuid import uuid4
 
+import psycopg2
 import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
@@ -158,3 +159,30 @@ async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, relation
                 relation_name=relation_name,
             )
             assert smoke_val in json.loads(run_update_query["results"])[0]
+
+
+def check_exposed_connection(credentials, tls):
+    table_name = "expose_test"
+    smoke_val = str(uuid4())
+
+    host, port = credentials["postgresql"]["endpoints"].split(":")
+    user = credentials["postgresql"]["username"]
+    password = credentials["postgresql"]["password"]
+    database = credentials["postgresql"]["database"]
+    if tls:
+        sslmode = "require"
+    else:
+        sslmode = "disable"
+    connstr = f"dbname='{database}' user='{user}' host='{host}' port='{port}' password='{password}' connect_timeout=1 sslmode={sslmode}"
+    connection = psycopg2.connect(connstr)
+    connection.autocommit = True
+    smoke_query = (
+        # TODO fix ownership of DB objects on rerelation in PG to be able to drop
+        f"CREATE TABLE IF NOT EXISTS {table_name}(data TEXT);"
+        f"INSERT INTO {table_name}(data) VALUES('{smoke_val}');"
+        f"SELECT data FROM {table_name} WHERE data = '{smoke_val}';"
+    )
+    cursor = connection.cursor()
+    cursor.execute(smoke_query)
+
+    assert smoke_val == cursor.fetchone()[0]
