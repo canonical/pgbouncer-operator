@@ -3,10 +3,11 @@
 # See LICENSE file for licensing details.
 import itertools
 import subprocess
-from typing import List
+from typing import List, Optional
 
 import psycopg2
 import yaml
+from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from tests.integration.helpers.helpers import PG
@@ -226,3 +227,13 @@ async def restart_machine(ops_test: OpsTest, unit_name: str) -> None:
     raw_hostname = await get_machine_from_unit(ops_test, unit_name)
     restart_machine_command = f"lxc restart {raw_hostname}"
     subprocess.check_call(restart_machine_command.split())
+
+
+async def get_leader_unit(ops_test: OpsTest, app: str) -> Optional[Unit]:
+    leader_unit = None
+    for unit in ops_test.model.applications[app].units:
+        if await unit.is_leader_from_status():
+            leader_unit = unit
+            break
+
+    return leader_unit
