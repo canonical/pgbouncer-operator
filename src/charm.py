@@ -6,6 +6,7 @@
 
 import logging
 import os
+import platform
 import pwd
 import shutil
 import subprocess
@@ -664,9 +665,15 @@ class PgBouncerCharm(CharmBase):
                 snap_package = snap_cache[snap_name]
 
                 if not snap_package.present or refresh:
-                    if snap_version.get("revision"):
+                    if revision := snap_version.get("revision"):
+                        try:
+                            revision = revision[platform.machine()]
+                        except Exception:
+                            logger.error("Unavailable snap architecture %s", platform.machine())
+                            raise
+                        channel = snap_version.get("channel", "")
                         snap_package.ensure(
-                            snap.SnapState.Latest, revision=snap_version["revision"]
+                            snap.SnapState.Latest, revision=revision, channel=channel
                         )
                         snap_package.hold()
                     else:
