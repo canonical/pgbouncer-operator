@@ -26,7 +26,7 @@ async def pgb_charm_jammy(ops_test: OpsTest):
 
 @pytest.fixture()
 async def continuous_writes(ops_test: OpsTest) -> None:
-    """Deploy the charm that makes continuous writes to PostgreSQL."""
+    """Cleans up continuous writes after a test run."""
     yield
     # Clear the written data at the end.
     for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(3), reraise=True):
