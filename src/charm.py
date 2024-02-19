@@ -416,7 +416,7 @@ class PgBouncerCharm(CharmBase):
         prom_service = f"{PGB}-{self.app.name}-prometheus"
         if os.path.exists(f"/etc/systemd/system/{prom_service}.service"):
             try:
-                systemd.service_start(service)
+                systemd.service_start(prom_service)
             except systemd.SystemdError as e:
                 logger.error(e)
                 self.unit.status = BlockedStatus("failed to start pgbouncer exporter")

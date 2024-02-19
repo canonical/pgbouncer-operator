@@ -10,7 +10,8 @@ from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR, PGB_LOG_DIR
-from tests.integration.helpers.helpers import (
+
+from .helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
     PG,
@@ -20,6 +21,7 @@ from tests.integration.helpers.helpers import (
     get_running_instances,
     get_unit_cores,
 )
+from .helpers.postgresql_helpers import restart_machine
 
 logger = logging.getLogger(__name__)
 
@@ -137,3 +139,10 @@ async def test_logrotate(ops_test: OpsTest):
     logs = output.strip().split()
     logs.remove("pgbouncer.log")
     assert len(logs), "Log not rotated"
+
+
+@pytest.mark.group(1)
+async def test_restart_unit(ops_test: OpsTest):
+    await restart_machine(ops_test, f"{CLIENT_APP_NAME}/0")
+
+    await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
