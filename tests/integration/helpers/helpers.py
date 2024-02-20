@@ -5,12 +5,12 @@
 import asyncio
 import json
 import logging
+from configparser import ConfigParser
 from multiprocessing import ProcessError
 from pathlib import Path
 from typing import Dict
 
 import yaml
-from charms.pgbouncer_k8s.v0 import pgb
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
@@ -127,13 +127,24 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
     return output
 
 
-async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> pgb.PgbConfig:
+async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> dict:
     """Gets pgbouncer config from unit filesystem."""
     if path is None:
         app_name = unit_name.split("/")[0]
-        path = f"{PGB_CONF_DIR}/{app_name}/{INI_NAME}"
-    cat = await cat_file_from_unit(ops_test, path, unit_name)
-    return pgb.PgbConfig(cat)
+        path = f"{PGB_CONF_DIR}/{app_name}/instance_0/{INI_NAME}"
+    parser = ConfigParser()
+    parser.optionxform = str
+    parser.read_string(await cat_file_from_unit(ops_test, path, unit_name))
+
+    cfg = dict(parser)
+    # Convert Section objects to dictionaries, so they can hold dictionaries themselves.
+    for section, data in cfg.items():
+        cfg[section] = dict(data)
+
+    # ConfigParser object creates a DEFAULT section of an .ini file, which we don't need.
+    del cfg["DEFAULT"]
+
+    return cfg
 
 
 async def get_auth_file(ops_test: OpsTest, unit_name) -> str:

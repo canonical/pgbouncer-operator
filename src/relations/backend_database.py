@@ -64,11 +64,12 @@ from ops.model import (
     BlockedStatus,
     MaintenanceStatus,
     Relation,
+    WaitingStatus,
 )
 
 from constants import (
     APP_SCOPE,
-    AUTH_FILE_NAME,
+    AUTH_FILE_DATABAG_KEY,
     BACKEND_RELATION_NAME,
     MONITORING_PASSWORD_KEY,
     PG,
@@ -126,7 +127,16 @@ class BackendDatabaseRequires(Object):
         logger.info("initialising postgres and pgbouncer relations")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
         if not self.charm.unit.is_leader():
+            if not (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)):
+                logger.debug("_on_database_created deferred: waiting for leader to initialise")
+                event.defer()
+                return
+            self.charm.render_auth_file(auth_file)
+            self.charm.render_pgb_config(reload_pgbouncer=True)
+            self.charm.render_prometheus_service()
+            self.charm.unit.status = ActiveStatus()
             return
+
         if self.postgres is None:
             event.defer()
             logger.error("deferring database-created hook - postgres database not ready")
@@ -149,26 +159,18 @@ class BackendDatabaseRequires(Object):
             f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
         )
 
-        cfg = self.charm.read_pgb_config()
-        cfg.add_user(user=self.stats_user, stats=True)
-        cfg["pgbouncer"][
-            "auth_query"
-        ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
-        cfg["pgbouncer"]["auth_file"] = f"{PGB_CONF_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
-        self.charm.render_pgb_config(cfg)
+        self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.render_prometheus_service()
-
-        self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
         self.charm.unit.status = ActiveStatus("backend-database relation initialised.")
 
     def _on_endpoints_changed(self, _):
-        self.charm.update_postgres_endpoints(reload_pgbouncer=True)
+        self.charm.render_pgb_config(reload_pgbouncer=True)
         if self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
-        self.charm.update_postgres_endpoints(reload_pgbouncer=True)
+        self.charm.render_pgb_config(reload_pgbouncer=True)
         if self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
 
@@ -179,9 +181,9 @@ class BackendDatabaseRequires(Object):
         the postgres relation-broken hook removes the user needed to remove authentication for the
         users we create.
         """
+        self.charm.render_pgb_config(reload_pgbouncer=True)
         if self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
-        self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
         if event.departing_unit == self.charm.unit:
             self.charm.peers.unit_databag.update(
@@ -228,18 +230,7 @@ class BackendDatabaseRequires(Object):
             logging.info("exiting relation-broken hook - nothing to do")
             return
 
-        try:
-            cfg = self.charm.read_pgb_config()
-        except FileNotFoundError:
-            event.defer()
-            return
-
-        if self.postgres:
-            cfg.remove_user(self.postgres.user)
-        cfg["pgbouncer"].pop("stats_users", None)
-        cfg["pgbouncer"].pop("auth_query", None)
-        cfg["pgbouncer"].pop("auth_file", None)
-        self.charm.render_pgb_config(cfg)
+        self.charm.render_pgb_config()
 
         self.charm.delete_file(f"{PGB_CONF_DIR}/userlist.txt")
         self.charm.peers.update_auth_file(auth_file=None)
@@ -334,6 +325,13 @@ class BackendDatabaseRequires(Object):
         return f"pgbouncer_auth_{username}".replace("-", "_")
 
     @property
+    def auth_query(self) -> str:
+        """Generate auth query."""
+        if not self.relation:
+            return ""
+        return f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
+
+    @property
     def stats_user(self):
         """Username for stats."""
         return f"pgbouncer_stats_{self.charm.app.name}".replace("-", "_")
@@ -360,9 +358,8 @@ class BackendDatabaseRequires(Object):
         if not self.postgres:
             return False
 
-        # Check we can authenticate
-        cfg = self.charm.read_pgb_config()
-        if "auth_query" not in cfg["pgbouncer"].keys():
+        if not self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+            logger.debug("Backend not ready: no auth file secret set")
             return False
 
         # Check we can actually connect to backend database by running a command.
@@ -383,3 +380,17 @@ class BackendDatabaseRequires(Object):
         if not read_only_endpoints:
             return set()
         return set(read_only_endpoints.split(","))
+
+    def check_backend(self) -> bool:
+        """Verifies backend is ready, defers event if not.
+
+        Returns:
+            bool signifying whether backend is ready or not
+        """
+        if not self.charm.backend.ready:
+            # We can't relate an app to the backend database without a backend postgres relation
+            wait_str = "waiting for backend-database relation to connect"
+            logger.warning(wait_str)
+            self.charm.unit.status = WaitingStatus(wait_str)
+            return False
+        return True

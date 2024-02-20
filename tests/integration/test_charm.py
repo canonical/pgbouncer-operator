@@ -6,7 +6,6 @@ import asyncio
 import logging
 
 import pytest
-from charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR, PGB_LOG_DIR
@@ -77,14 +76,10 @@ async def test_change_config(ops_test: OpsTest):
     # The config changes depending on the amount of cores on the unit, so get that info.
     cores = await get_unit_cores(ops_test, unit)
 
-    expected_cfg = PgbConfig(DEFAULT_CONFIG)
-    expected_cfg["pgbouncer"]["pool_mode"] = "transaction"
-    expected_cfg.set_max_db_connection_derivatives(44, cores)
-
     primary_cfg = await get_cfg(ops_test, unit.name)
-    existing_cfg = PgbConfig(primary_cfg)
 
-    assert existing_cfg.render() == primary_cfg.render()
+    assert primary_cfg["pgbouncer"]["pool_mode"] == "transaction"
+    assert primary_cfg["pgbouncer"]["max_db_connections"] == "44"
 
     # Validating service config files are correctly written is handled by render_pgb_config and its
     # tests, but we need to make sure they at least exist in the right places.

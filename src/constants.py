@@ -39,6 +39,8 @@ TLS_CA_FILE = "ca.pem"
 TLS_CERT_FILE = "cert.pem"
 
 MONITORING_PASSWORD_KEY = "monitoring_password"
+CFG_FILE_DATABAG_KEY = "cfg_file"
+AUTH_FILE_DATABAG_KEY = "auth_file"
 
 EXTENSIONS_BLOCKING_MESSAGE = "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
 

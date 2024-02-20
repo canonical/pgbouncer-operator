@@ -18,8 +18,7 @@ from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import APP_SCOPE, SNAP_PACKAGES
-from relations.peers import CFG_FILE_DATABAG_KEY
+from constants import SNAP_PACKAGES
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -84,8 +83,7 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm._install_snap_packages(packages=SNAP_PACKAGES, refresh=True)
 
         self.charm.unit.status = MaintenanceStatus("restarting services")
-        cfg = self.charm.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)
-        self.charm.render_utility_files(cfg)
+        self.charm.render_utility_files()
         self.charm.reload_pgbouncer()
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()

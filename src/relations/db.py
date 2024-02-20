@@ -111,7 +111,7 @@ from ops.model import (
     WaitingStatus,
 )
 
-from constants import EXTENSIONS_BLOCKING_MESSAGE, PG
+from constants import EXTENSIONS_BLOCKING_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +202,7 @@ class DbProvides(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if not self._check_backend():
+        if not self.charm.backend.check_backend():
             join_event.defer()
             return
 
@@ -228,6 +228,10 @@ class DbProvides(Object):
 
         user = self._generate_username(join_event)
         password = pgb.generate_password()
+
+        dbs = self.charm.generate_relation_databases()
+        dbs[join_event.relation.id] = {"name": database, "legacy": True}
+        self.charm.set_relation_databases(dbs)
 
         self.update_databags(
             join_event.relation,
@@ -263,9 +267,7 @@ class DbProvides(Object):
         self.charm.backend.initialise_auth_function([database])
 
         # Create user in pgbouncer config
-        cfg = self.charm.read_pgb_config()
-        cfg.add_user(user, admin=self.admin)
-        self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.charm.render_pgb_config(reload_pgbouncer=True)
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
@@ -303,7 +305,6 @@ class DbProvides(Object):
             return
 
         self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
-        self.update_postgres_endpoints(change_event.relation, reload_pgbouncer=True)
         self.update_databags(
             change_event.relation,
             {
@@ -349,54 +350,6 @@ class DbProvides(Object):
 
         self.update_databags(relation, connection_updates)
 
-    def update_postgres_endpoints(self, relation: Relation, reload_pgbouncer: bool = False):
-        """Updates postgres replicas.
-
-        Requires the backend relation to be running.
-        """
-        database = self.get_databags(relation)[0].get("database")
-        if database is None:
-            logger.warning(
-                f"{self.relation_name} relation not fully initialised - skipping postgres endpoint update"
-            )
-            # TODO return false
-            return
-
-        # In postgres, "endpoints" will only ever have one value. Other databases using the library
-        # can have more, but that's not planned for the postgres charm.
-        postgres_endpoint = self.charm.backend.postgres_databag.get("endpoints")
-
-        cfg = self.charm.read_pgb_config()
-        cfg["databases"][database] = {
-            "host": postgres_endpoint.split(":")[0],
-            "dbname": database,
-            "port": postgres_endpoint.split(":")[1],
-            "auth_user": self.charm.backend.auth_user,
-        }
-
-        read_only_endpoints = self.charm.backend.get_read_only_endpoints()
-        if len(read_only_endpoints) > 0:
-            cfg["databases"][f"{database}_standby"] = {
-                "host": ",".join([ep.split(":")[0] for ep in read_only_endpoints]),
-                "dbname": database,
-                "port": next(iter(read_only_endpoints)).split(":")[1],
-                "auth_user": self.charm.backend.auth_user,
-            }
-        else:
-            cfg["databases"].pop(f"{database}_standby", None)
-
-        if self.admin:
-            # Admin relations get access to postgres root db
-            cfg["databases"][PG] = {
-                "host": postgres_endpoint.split(":")[0],
-                "dbname": PG,
-                "port": postgres_endpoint.split(":")[1],
-                "auth_user": self.charm.backend.auth_user,
-            }
-
-        # Write config data to charm filesystem
-        self.charm.render_pgb_config(cfg, reload_pgbouncer=reload_pgbouncer)
-
     def _on_relation_departed(self, departed_event: RelationDepartedEvent):
         """Handle db-relation-departed event.
 
@@ -433,6 +386,11 @@ class DbProvides(Object):
         if not self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             return
+
+        dbs = self.charm.generate_relation_databases()
+        dbs.pop(str(broken_event.relation.id), None)
+        self.charm.set_relation_databases(dbs)
+
         break_flag = f"{self.relation_name}-{broken_event.relation.id}-relation-breaking"
         if not self.charm.peers.app_databag.get(break_flag, None):
             # This relation isn't being removed, so we don't need to do the relation teardown
@@ -455,8 +413,6 @@ class DbProvides(Object):
             broken_event.defer()
             return
 
-        cfg = self.charm.read_pgb_config()
-
         # check database can be deleted from pgb config, and if so, delete it. Database is kept on
         # postgres application because we don't want to delete all user data with one command.
         delete_db = True
@@ -471,14 +427,11 @@ class DbProvides(Object):
                 break
 
         if delete_db:
-            cfg["databases"].pop(database, None)
-            cfg["databases"].pop(f"{database}_standby", None)
             self.charm.backend.remove_auth_function([database])
 
         # TODO delete postgres database from config if there's no admin relations left
 
-        cfg.remove_user(user)
-        self.charm.render_pgb_config(cfg, reload_pgbouncer=True)
+        self.charm.render_pgb_config(reload_pgbouncer=True)
 
         try:
             self.charm.backend.postgres.delete_user(user)
@@ -562,17 +515,3 @@ class DbProvides(Object):
         for entry in relation.data.keys():
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry
-
-    def _check_backend(self) -> bool:
-        """Verifies backend is ready, sets waiting status if not.
-
-        Returns:
-            bool signifying whether backend is ready or not
-        """
-        if not self.charm.backend.ready:
-            # We can't relate an app to the backend database without a backend postgres relation
-            wait_str = "waiting for backend-database relation to connect"
-            logger.warning(wait_str)
-            self.charm.unit.status = WaitingStatus(wait_str)
-            return False
-        return True
