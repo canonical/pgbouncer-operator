@@ -1,4 +1,7 @@
-# PgBouncer Operator
+# Charmed PgBouncer Operator
+[![Charmhub](https://charmhub.io/pgbouncer/badge.svg)](https://charmhub.io/pgbouncer)
+[![Release](https://github.com/canonical/pgbouncer-operator/actions/workflows/release.yaml/badge.svg)](https://github.com/canonical/pgbouncer-operator/actions/workflows/release.yaml)
+[![Tests](https://github.com/canonical/pgbouncer-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/pgbouncer-operator/actions/workflows/ci.yaml)
 
 ## Description
 
