@@ -38,10 +38,9 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
             channel="14/edge",
             config={"profile": "testing"},
         ),
-        # TODO use stable when it works with 3.1.7
         ops_test.model.deploy(
             PGB,
-            channel="1/candidate",
+            channel="1/stable",
             num_units=None,
         ),
         ops_test.model.deploy(
