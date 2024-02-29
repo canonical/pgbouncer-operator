@@ -13,7 +13,10 @@ AUTH_FILE_NAME = "userlist.txt"
 PGBOUNCER_EXECUTABLE = "charmed-postgresql.pgbouncer"
 POSTGRESQL_SNAP_NAME = "charmed-postgresql"
 SNAP_PACKAGES = [
-    (POSTGRESQL_SNAP_NAME, {"revision": {"aarch64": "97", "x86_64": "98"}, "channel": "14/stable"})
+    (
+        POSTGRESQL_SNAP_NAME,
+        {"revision": {"aarch64": "97", "x86_64": "102"}, "channel": "14/stable"},
+    )
 ]
 
 SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
