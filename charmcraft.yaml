@@ -30,6 +30,7 @@ parts:
       - rustc
       - cargo
       - pkg-config
+      - libpq-dev
     charm-strict-dependencies: true
   libpq:
     build-packages:
