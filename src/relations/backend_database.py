@@ -151,9 +151,9 @@ class BackendDatabaseRequires(Object):
 
         cfg = self.charm.read_pgb_config()
         cfg.add_user(user=self.stats_user, stats=True)
-        cfg["pgbouncer"][
-            "auth_query"
-        ] = f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
+        cfg["pgbouncer"]["auth_query"] = (
+            f"SELECT username, password FROM {self.auth_user}.get_auth($1)"
+        )
         cfg["pgbouncer"]["auth_file"] = f"{PGB_CONF_DIR}/{self.charm.app.name}/{AUTH_FILE_NAME}"
         self.charm.render_pgb_config(cfg)
         self.charm.render_prometheus_service()
@@ -184,9 +184,9 @@ class BackendDatabaseRequires(Object):
         self.charm.update_postgres_endpoints(reload_pgbouncer=True)
 
         if event.departing_unit == self.charm.unit:
-            self.charm.peers.unit_databag.update(
-                {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
-            )
+            self.charm.peers.unit_databag.update({
+                f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"
+            })
             logger.error("added relation-departing flag to peer databag")
             return
 

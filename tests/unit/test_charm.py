@@ -212,13 +212,11 @@ class TestCharm(unittest.TestCase):
         test_config["pgbouncer"]["listen_port"] = 6464
 
         # set config to include pool_mode and max_db_connections
-        self.harness.update_config(
-            {
-                "pool_mode": "transaction",
-                "max_db_connections": max_db_connections,
-                "listen_port": 6464,
-            }
-        )
+        self.harness.update_config({
+            "pool_mode": "transaction",
+            "max_db_connections": max_db_connections,
+            "listen_port": 6464,
+        })
 
         _read.assert_called_once()
         # _read.return_value is modified on config update, but the object reference is the same.
@@ -262,9 +260,9 @@ class TestCharm(unittest.TestCase):
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
         _snap_package.ensure.side_effect = None
-        self.charm._install_snap_packages(
-            [("postgresql", {"revision": {platform.machine(): "42"}})]
-        )
+        self.charm._install_snap_packages([
+            ("postgresql", {"revision": {platform.machine(): "42"}})
+        ])
         _snap_cache.assert_called_once_with()
         _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
         _snap_package.ensure.assert_called_once_with(
@@ -290,9 +288,9 @@ class TestCharm(unittest.TestCase):
         # Test without refresh
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
-        self.charm._install_snap_packages(
-            [("postgresql", {"revision": {platform.machine(): "42"}})]
-        )
+        self.charm._install_snap_packages([
+            ("postgresql", {"revision": {platform.machine(): "42"}})
+        ])
         _snap_cache.assert_called_once_with()
         _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
         _snap_package.ensure.assert_not_called()
@@ -347,9 +345,9 @@ class TestCharm(unittest.TestCase):
         for service_id in self.charm.service_ids:
             cfg = pgb.PgbConfig(DEFAULT_CFG)
             cfg["pgbouncer"]["unix_socket_dir"] = f"/tmp/pgbouncer/instance_{service_id}"
-            cfg["pgbouncer"][
-                "logfile"
-            ] = f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}/pgbouncer.log"
+            cfg["pgbouncer"]["logfile"] = (
+                f"{PGB_LOG_DIR}/pgbouncer/instance_{service_id}/pgbouncer.log"
+            )
             cfg["pgbouncer"]["pidfile"] = f"/tmp/pgbouncer/instance_{service_id}/pgbouncer.pid"
 
             cfg_list.append(cfg.render())
