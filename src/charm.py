@@ -353,15 +353,15 @@ class PgBouncerCharm(CharmBase):
     def update_tls_config(self, config, exposed: bool) -> None:
         """Sets only the TLS section of a provided configuration."""
         if all(self.tls.get_tls_files()) and exposed:
-            config["pgbouncer"][
-                "client_tls_key_file"
-            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_KEY_FILE}"
-            config["pgbouncer"][
-                "client_tls_ca_file"
-            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CA_FILE}"
-            config["pgbouncer"][
-                "client_tls_cert_file"
-            ] = f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CERT_FILE}"
+            config["pgbouncer"]["client_tls_key_file"] = (
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_KEY_FILE}"
+            )
+            config["pgbouncer"]["client_tls_ca_file"] = (
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CA_FILE}"
+            )
+            config["pgbouncer"]["client_tls_cert_file"] = (
+                f"{PGB_CONF_DIR}/{self.app.name}/{TLS_CERT_FILE}"
+            )
             config["pgbouncer"]["client_tls_sslmode"] = "prefer"
         else:
             # cleanup tls keys if present
@@ -558,12 +558,12 @@ class PgBouncerCharm(CharmBase):
         # Modify & render config files for each service instance
         for service_id in self.service_ids:
             primary_config[PGB]["unix_socket_dir"] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}"
-            primary_config[PGB][
-                "logfile"
-            ] = f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log"
-            primary_config[PGB][
-                "pidfile"
-            ] = f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid"
+            primary_config[PGB]["logfile"] = (
+                f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log"
+            )
+            primary_config[PGB]["pidfile"] = (
+                f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid"
+            )
 
             self._render_pgb_config(
                 primary_config,

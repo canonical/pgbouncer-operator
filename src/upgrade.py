@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Upgrades implementation."""
+
 import json
 import logging
 from typing import List
