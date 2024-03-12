@@ -186,9 +186,9 @@ class BackendDatabaseRequires(Object):
             self.charm.update_client_connection_info()
 
         if event.departing_unit == self.charm.unit:
-            self.charm.peers.unit_databag.update(
-                {f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"}
-            )
+            self.charm.peers.unit_databag.update({
+                f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"
+            })
             logger.error("added relation-departing flag to peer databag")
             return
 

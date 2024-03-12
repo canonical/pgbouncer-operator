@@ -35,7 +35,6 @@ f"{dbname}_readonly".
 
 """  # noqa: W505
 
-
 import logging
 
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -151,9 +150,9 @@ class PgBouncerProvider(Object):
         """Check if this relation is being removed, and update the peer databag accordingly."""
         self.update_connection_info(event.relation)
         if event.departing_unit == self.charm.unit:
-            self.charm.peers.unit_databag.update(
-                {f"{self.relation_name}_{event.relation.id}_departing": "true"}
-            )
+            self.charm.peers.unit_databag.update({
+                f"{self.relation_name}_{event.relation.id}_departing": "true"
+            })
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""

@@ -65,12 +65,10 @@ async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     async with ops_test.fast_forward():
         unit = ops_test.model.units[f"{PGB}/0"]
-        await ops_test.model.applications[PGB].set_config(
-            {
-                "pool_mode": "transaction",
-                "max_db_connections": "44",
-            }
-        )
+        await ops_test.model.applications[PGB].set_config({
+            "pool_mode": "transaction",
+            "max_db_connections": "44",
+        })
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
