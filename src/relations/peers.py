@@ -32,7 +32,7 @@ from ops.charm import CharmBase, RelationChangedEvent, RelationCreatedEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
-from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PEER_RELATION_NAME
+from constants import PEER_RELATION_NAME
 
 ADDRESS_KEY = "private-address"
 LEADER_ADDRESS_KEY = "leader_ip"
@@ -145,11 +145,3 @@ class Peers(Object):
         if self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
-
-    def update_auth_file(self, auth_file: str) -> None:
-        """Writes auth_file to app databag if leader."""
-        if not self.charm.unit.is_leader() or not self.relation:
-            return
-
-        self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
-        logger.debug("updated auth file in peer databag")

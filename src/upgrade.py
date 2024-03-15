@@ -85,6 +85,7 @@ class PgbouncerUpgrade(DataUpgrade):
 
         self.charm.unit.status = MaintenanceStatus("restarting services")
         self.charm.render_utility_files()
+        self.charm.render_pgb_config()
         self.charm.reload_pgbouncer()
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()

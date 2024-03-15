@@ -155,9 +155,8 @@ class BackendDatabaseRequires(Object):
             self.charm.set_secret("app", MONITORING_PASSWORD_KEY, monitoring_password)
         hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
-        self.charm.render_auth_file(
-            f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
-        )
+        auth_file = f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
+        self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.render_prometheus_service()
@@ -233,7 +232,8 @@ class BackendDatabaseRequires(Object):
         self.charm.render_pgb_config()
 
         self.charm.delete_file(f"{PGB_CONF_DIR}/userlist.txt")
-        self.charm.peers.update_auth_file(auth_file=None)
+        if self.charm.unit.is_leader():
+            self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, None)
 
         self.charm.remove_exporter_service()
 

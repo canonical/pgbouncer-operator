@@ -681,7 +681,6 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
 
-        self.peers.update_auth_file(auth_file)
         self.render_file(
             f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
         )
