@@ -266,9 +266,6 @@ class DbProvides(Object):
         # set up auth function
         self.charm.backend.initialise_auth_function([database])
 
-        # Create user in pgbouncer config
-        self.charm.render_pgb_config(reload_pgbouncer=True)
-
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.
 
@@ -304,20 +301,22 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
-        self.update_databags(
-            change_event.relation,
-            {
-                "allowed-subnets": self.get_allowed_subnets(change_event.relation),
-                "allowed-units": self.get_allowed_units(change_event.relation),
-                "version": self.charm.backend.postgres.get_postgresql_version(),
-                "host": self.charm.unit_ip,
-                "user": user,
-                "password": password,
-                "database": database,
-                "state": self._get_state(),
-            },
-        )
+        self.charm.render_pgb_config(reload_pgbouncer=True)
+        if self.charm.unit.is_leader():
+            self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
+            self.update_databags(
+                change_event.relation,
+                {
+                    "allowed-subnets": self.get_allowed_subnets(change_event.relation),
+                    "allowed-units": self.get_allowed_units(change_event.relation),
+                    "version": self.charm.backend.postgres.get_postgresql_version(),
+                    "host": self.charm.unit_ip,
+                    "user": user,
+                    "password": password,
+                    "database": database,
+                    "state": self._get_state(),
+                },
+            )
 
     def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection info."""
@@ -361,10 +360,11 @@ class DbProvides(Object):
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
         )
 
-        self.update_databags(
-            departed_event.relation,
-            {"allowed-units": self.get_allowed_units(departed_event.relation)},
-        )
+        if self.charm.unit.is_leader():
+            self.update_databags(
+                departed_event.relation,
+                {"allowed-units": self.get_allowed_units(departed_event.relation)},
+            )
 
         # If a departed event is dispatched to itself, this relation isn't being scaled down -
         # it's being removed
@@ -430,9 +430,6 @@ class DbProvides(Object):
             self.charm.backend.remove_auth_function([database])
 
         # TODO delete postgres database from config if there's no admin relations left
-
-        self.charm.render_pgb_config(reload_pgbouncer=True)
-
         try:
             self.charm.backend.postgres.delete_user(user)
         except PostgreSQLDeleteUserError as err:

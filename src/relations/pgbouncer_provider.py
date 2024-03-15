@@ -140,11 +140,12 @@ class PgBouncerProvider(Object):
         dbs[event.relation.id] = {"name": database, "legacy": False}
         self.charm.set_relation_databases(dbs)
 
-        # Share the credentials and updated connection info with the client application.
-        self.database_provides.set_credentials(rel_id, user, password)
-        # Set the database name
-        self.database_provides.set_database(rel_id, databases)
-        self.update_connection_info(event.relation)
+        if self.charm.unit.is_leader():
+            # Share the credentials and updated connection info with the client application.
+            self.database_provides.set_credentials(rel_id, user, password)
+            # Set the database name
+            self.database_provides.set_database(rel_id, databases)
+            self.update_connection_info(event.relation)
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Check if this relation is being removed, and update the peer databag accordingly."""
