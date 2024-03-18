@@ -214,8 +214,11 @@ class PgBouncerProvider(Object):
         relations = [event.relation] if event else self.model.relations[self.relation_name]
 
         port = self.charm.config["listen_port"]
-        ips = set(self.charm.peers.units_ips)
+        ips = self.charm.peers.units_ips
         ips.discard(self.charm.peers.leader_ip)
+        ips = list(ips)
+        ips.sort()
+
         for relation in relations:
             self.database_provides.set_read_only_endpoints(
                 relation.id,
