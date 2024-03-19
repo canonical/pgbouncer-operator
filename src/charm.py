@@ -23,7 +23,6 @@ from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from jinja2 import Template
 from ops import JujuVersion
 from ops.charm import CharmBase
-from ops.framework import StoredState
 from ops.main import main
 from ops.model import (
     ActiveStatus,
@@ -73,8 +72,6 @@ INSTANCE_DIR = "instance_"
 
 class PgBouncerCharm(CharmBase):
     """A class implementing charmed PgBouncer."""
-
-    _stored = StoredState()
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -760,7 +757,7 @@ class PgBouncerCharm(CharmBase):
     def update_client_connection_info(self, port: Optional[str] = None):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
-        if not self.backend.postgres:
+        if not self.backend.postgres or not self.unit.is_leader():
             return
 
         if port is None:

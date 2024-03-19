@@ -165,6 +165,9 @@ class DbProvides(Object):
         self.charm = charm
         self.admin = admin
 
+    def _depart_flag(self, relation):
+        return f"{self.relation_name}_{relation.id}_departing"
+
     def _check_extensions(self, extensions: List) -> bool:
         """Checks if requested extensions are enabled."""
         for extension in extensions:
@@ -203,6 +206,7 @@ class DbProvides(Object):
             return
 
         if not self.charm.backend.check_backend():
+            # We can't relate an app to the backend database without a backend postgres relation
             join_event.defer()
             return
 
@@ -226,8 +230,13 @@ class DbProvides(Object):
         if self._block_on_extensions(join_event.relation, remote_app_databag):
             return
 
-        user = self._generate_username(join_event)
+        user = self._generate_username(join_event.relation)
         password = pgb.generate_password()
+
+        if None in [database, password]:
+            # If database isn't available, defer
+            join_event.defer()
+            return
 
         dbs = self.charm.generate_relation_databases()
         dbs[join_event.relation.id] = {"name": database, "legacy": True}
@@ -242,9 +251,6 @@ class DbProvides(Object):
             },
         )
 
-        if not self.charm.unit.is_leader():
-            return
-
         # Create user and database in backend postgresql database
         try:
             init_msg = f"initialising database and user for {self.relation_name} relation"
@@ -255,7 +261,7 @@ class DbProvides(Object):
             self.charm.backend.postgres.create_database(database, user)
 
             created_msg = f"database and user for {self.relation_name} relation created"
-            self.charm.unit.status = ActiveStatus(created_msg)
+            self.charm.unit.status = ActiveStatus()
             logger.info(created_msg)
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"
@@ -272,11 +278,12 @@ class DbProvides(Object):
         Takes information from the pgbouncer db app relation databag and copies it into the
         pgbouncer.ini config.
 
-        This relation will defer if the backend relation isn't fully available, and if the
-        relation_joined hook isn't completed.
+        Deferrals:
+            - If backend relation isn't available
+            - If relation_joined hook hasn't completed
         """
-        self.charm.unit.status = self.charm.check_status()
-        if not isinstance(self.charm.unit.status, ActiveStatus):
+        if not self.charm.backend.check_backend():
+            # We can't relate an app to the backend database without a backend postgres relation
             change_event.defer()
             return
 
@@ -285,19 +292,17 @@ class DbProvides(Object):
         )
 
         # No backup values because if databag isn't populated, this relation isn't initialised.
-        # This means that the database and user requested in this relation haven't been created, so
-        # we defer this event until the databag is populated.
+        # This means that the database and user requested in this relation haven't been created,
+        # so we defer this event until the databag is populated.
         databag = self.get_databags(change_event.relation)[0]
         database = databag.get("database")
         user = databag.get("user")
         password = databag.get("password")
 
         if None in [database, user, password]:
-            not_initialised = (
+            logger.warning(
                 "relation not fully initialised - deferring until join_event is complete"
             )
-            logger.warning(not_initialised)
-            self.charm.unit.status = WaitingStatus(not_initialised)
             change_event.defer()
             return
 
@@ -310,7 +315,7 @@ class DbProvides(Object):
                     "allowed-subnets": self.get_allowed_subnets(change_event.relation),
                     "allowed-units": self.get_allowed_units(change_event.relation),
                     "version": self.charm.backend.postgres.get_postgresql_version(),
-                    "host": self.charm.unit_ip,
+                    "host": "localhost",
                     "user": user,
                     "password": password,
                     "database": database,
@@ -319,7 +324,7 @@ class DbProvides(Object):
             )
 
     def update_connection_info(self, relation: Relation, port: str = None):
-        """Updates databag connection info."""
+        """Updates databag connection information."""
         if not port:
             port = self.charm.config["listen_port"]
 
@@ -355,6 +360,18 @@ class DbProvides(Object):
         Removes relevant information from pgbouncer config when db relation is removed. This
         function assumes that relation databags are destroyed when the relation itself is removed.
         """
+        # Set a flag to avoid deleting database users when this unit
+        # is removed and receives relation broken events from related applications.
+        # This is needed because of https://bugs.launchpad.net/juju/+bug/1979811.
+        # Neither peer relation data nor stored state are good solutions,
+        # just a temporary solution.
+        if departed_event.departing_unit == self.charm.unit:
+            self.charm.peers.unit_databag.update({
+                self._depart_flag(departed_event.relation): "True"
+            })
+            # Just run the rest of the logic for departing of remote units.
+            return
+
         logger.info("db relation removed - updating config")
         logger.warning(
             f"DEPRECATION WARNING - {self.relation_name} is a legacy relation, and will be deprecated in a future release. "
@@ -366,13 +383,6 @@ class DbProvides(Object):
                 {"allowed-units": self.get_allowed_units(departed_event.relation)},
             )
 
-        # If a departed event is dispatched to itself, this relation isn't being scaled down -
-        # it's being removed
-        if departed_event.app == self.charm.app and self.charm.unit.is_leader():
-            self.charm.peers.app_databag[
-                f"{self.relation_name}-{self.relation.id}-relation-breaking"
-            ] = "true"
-
     def _on_relation_broken(self, broken_event: RelationBrokenEvent):
         """Handle db-relation-broken event.
 
@@ -381,30 +391,23 @@ class DbProvides(Object):
 
         This doesn't delete any tables so we aren't deleting a user's entire database with one
         command.
+
+        Deferrals:
+            - If backend relation doesn't exist
+            - If relation data has not been fully initialised
         """
-        # Only delete relation data if we're the leader, and we're the last unit to leave.
-        if not self.charm.unit.is_leader():
-            self.charm.update_client_connection_info()
+        # Run this event only if this unit isn't being removed while the others from this
+        # application are still alive. This check is needed because of
+        # https://bugs.launchpad.net/juju/+bug/1979811. Neither peer relation data nor stored state
+        # are good solutions, just a temporary solution.
+        if self._depart_flag(broken_event.relation) in self.charm.peers.unit_databag:
             return
-
-        dbs = self.charm.generate_relation_databases()
-        dbs.pop(str(broken_event.relation.id), None)
-        self.charm.set_relation_databases(dbs)
-
-        break_flag = f"{self.relation_name}-{broken_event.relation.id}-relation-breaking"
-        if not self.charm.peers.app_databag.get(break_flag, None):
-            # This relation isn't being removed, so we don't need to do the relation teardown
-            # steps.
-            self.update_connection_info(broken_event.relation)
-            return
-
-        del self.charm.peers.app_databag[break_flag]
 
         databag = self.get_databags(broken_event.relation)[0]
         user = databag.get("user")
         database = databag.get("database")
 
-        if not self.charm.backend.postgres or None in [user, database]:
+        if not self.charm.backend.check_backend() or None in [user, database]:
             # this relation was never created, so wait for it to be initialised before removing
             # everything.
             logger.warning(
@@ -413,30 +416,34 @@ class DbProvides(Object):
             broken_event.defer()
             return
 
-        # check database can be deleted from pgb config, and if so, delete it. Database is kept on
-        # postgres application because we don't want to delete all user data with one command.
-        delete_db = True
-        relations = self.model.relations.get("db", []) + self.model.relations.get("db-admin", [])
-        for relation in relations:
-            if relation.id == broken_event.relation.id:
-                continue
-            if relation.data[self.charm.unit].get("database") == database:
-                # There's multiple applications using this database, so don't remove it until
-                # we can guarantee this is the last one.
-                delete_db = False
-                break
+        dbs = self.charm.generate_relation_databases()
+        dbs.pop(str(broken_event.relation.id), None)
+        self.charm.set_relation_databases(dbs)
+        if self.charm.unit.is_leader():
+            # check database can be deleted from pgb config, and if so, delete it. Database is kept on
+            # postgres application because we don't want to delete all user data with one command.
+            delete_db = True
+            relations = self.model.relations.get("db", []) + self.model.relations.get(
+                "db-admin", []
+            )
+            for relation in relations:
+                if relation.id == broken_event.relation.id:
+                    continue
+                if relation.data[self.charm.unit].get("database") == database:
+                    # There's multiple applications using this database, so don't remove it until
+                    # we can guarantee this is the last one.
+                    delete_db = False
+                    break
 
-        if delete_db:
-            self.charm.backend.remove_auth_function([database])
+            if delete_db:
+                self.charm.backend.remove_auth_function([database])
 
-        # TODO delete postgres database from config if there's no admin relations left
-        try:
-            self.charm.backend.postgres.delete_user(user)
-        except PostgreSQLDeleteUserError as err:
-            # We've likely lost connection at this point, and can't do anything about a
-            # trailing user.
-            logger.error(f"connection lost to PostgreSQL - unable to delete user {user}.")
-            logger.error(err)
+            try:
+                self.charm.backend.postgres.delete_user(user)
+            except PostgreSQLDeleteUserError:
+                # We've likely lost connection at this point, and can't do anything about a
+                # trailing user.
+                logger.exception(f"connection lost to PostgreSQL - unable to delete user {user}.")
 
     def get_databags(self, relation):
         """Returns a list of writable databags for this unit."""
@@ -447,19 +454,17 @@ class DbProvides(Object):
 
     def update_databags(self, relation, updates: Dict[str, str]):
         """Updates databag with the given dict."""
-        databags = self.get_databags(relation)
-
         # Databag entries can only be strings
         for key, item in updates.items():
             updates[key] = str(item)
 
-        for databag in databags:
+        for databag in self.get_databags(relation):
             databag.update(updates)
 
-    def _generate_username(self, event):
+    def _generate_username(self, relation):
         """Generates a unique username for this relation."""
         app_name = self.charm.app.name
-        relation_id = event.relation.id
+        relation_id = relation.id
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
 

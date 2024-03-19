@@ -169,7 +169,7 @@ class TestDb(unittest.TestCase):
                 "allowed-subnets": _allowed_subnets.return_value,
                 "allowed-units": _allowed_units.return_value,
                 "version": self.charm.backend.postgres.get_postgresql_version(),
-                "host": self.charm.unit_ip,
+                "host": "localhost",
                 "user": user,
                 "password": password,
                 "database": database,

@@ -424,6 +424,47 @@ class TestCharm(unittest.TestCase):
                 f"{PGB_CONF_DIR}/pgbouncer/instance_{i}/pgbouncer.ini", expected_content, 0o700
             )
 
+    @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})
+    @patch("charm.PgBouncerCharm.get_secret")
+    def test_get_relation_databases_legacy_data(self, _get_secret, _):
+        """Test that legacy data will be parsed if new one is not set."""
+        self.harness.set_leader(False)
+        _get_secret.return_value = """
+        [databases]
+        test_db = host_cfg
+        test_db_standby = host_cfg
+        other_db = other_cfg
+        """
+        result = self.charm.get_relation_databases()
+        assert result == {
+            "1": {"legacy": False, "name": "test_db"},
+            "2": {"legacy": False, "name": "other_db"},
+        }
+        _get_secret.assert_called_once_with("app", "cfg_file")
+
+        # Get empty dict if no config is set
+        _get_secret.return_value = None
+        assert self.charm.get_relation_databases() == {}
+
+        # Get empty dict if exception
+        _get_secret.return_value = 1
+        assert self.charm.get_relation_databases() == {}
+
+        # Get empty dict if no databases
+        _get_secret.return_value = """
+        [other]
+        test_db = host_cfg
+        test_db_standby = host_cfg
+        other_db = other_cfg
+        """
+        assert self.charm.get_relation_databases() == {}
+
+    @patch("charm.PgBouncerCharm.get_relation_databases", return_value={"some": "values"})
+    def test_generate_relation_databases_not_leader(self, _):
+        self.harness.set_leader(False)
+
+        assert self.charm.generate_relation_databases() == {}
+
     #
     # Secrets
     #

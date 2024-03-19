@@ -50,7 +50,13 @@ from charms.postgresql_k8s.v0.postgresql import (
 )
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
-from ops.model import Application, BlockedStatus, ModelError
+from ops.model import (
+    ActiveStatus,
+    Application,
+    BlockedStatus,
+    MaintenanceStatus,
+    ModelError,
+)
 
 from constants import CLIENT_RELATION_NAME
 
@@ -88,10 +94,19 @@ class PgBouncerProvider(Object):
             charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
 
+    def _depart_flag(self, relation):
+        return f"{self.relation_name}_{relation.id}_departing"
+
+    def _unit_departing(self, relation):
+        return self.charm.peers.unit_databag.get(self._depart_flag(relation), None) == "true"
+
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Handle the client relation-requested event.
 
         Generate password and handle user and database creation for the related application.
+
+        Deferrals:
+            - If backend relation is not fully initialised
         """
         if not self.charm.backend.check_backend():
             event.defer()
@@ -109,22 +124,22 @@ class PgBouncerProvider(Object):
             return
 
         # Retrieve the database name and extra user roles using the charm library.
-        databases = event.database
+        database = event.database
         extra_user_roles = event.extra_user_roles or ""
         rel_id = event.relation.id
 
         # Creates the user and the database for this specific relation.
         user = f"relation_id_{rel_id}"
+        logger.debug("generating relation user")
         password = pgb.generate_password()
         try:
             self.charm.backend.postgres.create_user(
                 user, password, extra_user_roles=extra_user_roles
             )
-            dblist = databases.split(",")
-            for database in dblist:
-                self.charm.backend.postgres.create_database(database, user)
+            logger.debug("creating database")
+            self.charm.backend.postgres.create_database(database, user)
             # set up auth function
-            self.charm.backend.initialise_auth_function(dbs=dblist)
+            self.charm.backend.initialise_auth_function(dbs=[database])
         except (
             PostgreSQLCreateDatabaseError,
             PostgreSQLCreateUserError,
@@ -140,30 +155,36 @@ class PgBouncerProvider(Object):
         dbs[event.relation.id] = {"name": database, "legacy": False}
         self.charm.set_relation_databases(dbs)
 
-        if self.charm.unit.is_leader():
-            # Share the credentials and updated connection info with the client application.
-            self.database_provides.set_credentials(rel_id, user, password)
-            # Set the database name
-            self.database_provides.set_database(rel_id, databases)
-            self.update_connection_info(event.relation)
+        # Share the credentials and updated connection info with the client application.
+        self.database_provides.set_credentials(rel_id, user, password)
+        # Set the database name
+        self.database_provides.set_database(rel_id, database)
+        self.update_connection_info(event.relation)
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
-        """Check if this relation is being removed, and update the peer databag accordingly."""
+        """Check if this relation is being removed, and update databags accordingly.
+
+        If the leader is being removed, we check if this unit is departing. This occurs only on
+        relation deletion, so we set a flag for the relation-broken hook to remove the relation.
+        When scaling down, we don't set this flag and we just let the newly elected leader take
+        control of the pgbouncer config.
+        """
         self.update_connection_info(event.relation)
+
+        # This only ever evaluates to true when the relation is being removed - on app scale-down,
+        # depart events are only sent to the other application in the relation.
         if event.departing_unit == self.charm.unit:
-            self.charm.peers.unit_databag.update({
-                f"{self.relation_name}_{event.relation.id}_departing": "true"
-            })
+            self.charm.peers.unit_databag.update({self._depart_flag(event.relation): "true"})
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation, and revoke connection permissions."""
+        self.update_connection_info(event.relation)
         if not self.charm.backend.check_backend() or not self.charm.unit.is_leader():
             return
 
-        depart_flag = f"{self.relation_name}_{event.relation.id}_departing"
-        if self.charm.peers.unit_databag.get(depart_flag, None) == "true":
+        if self._unit_departing(event.relation):
             # This unit is being removed, so don't update the relation.
-            self.charm.peers.unit_databag.pop(depart_flag, None)
+            self.charm.peers.unit_databag.pop(self._depart_flag(event.relation), None)
             return
 
         dbs = self.charm.generate_relation_databases()
@@ -187,6 +208,11 @@ class PgBouncerProvider(Object):
         exposed = bool(
             self.database_provides.fetch_relation_field(relation.id, "external-node-connectivity")
         )
+        if not self.charm.unit.is_leader():
+            return
+        self.charm.unit.status = MaintenanceStatus(
+            f"Updating {self.relation_name} relation connection information"
+        )
         if exposed:
             rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
         else:
@@ -204,6 +230,8 @@ class PgBouncerProvider(Object):
                 relation.id, self.charm.backend.postgres.get_postgresql_version()
             )
 
+        self.charm.unit.status = ActiveStatus()
+
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
         if not self.charm.unit.is_leader():
@@ -218,7 +246,6 @@ class PgBouncerProvider(Object):
         ips.discard(self.charm.peers.leader_ip)
         ips = list(ips)
         ips.sort()
-
         for relation in relations:
             self.database_provides.set_read_only_endpoints(
                 relation.id,

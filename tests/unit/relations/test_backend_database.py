@@ -179,8 +179,8 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.backend._on_relation_broken(event)
 
-        _render.assert_called_once_with()
-        _delete_file.assert_called_with(f"{PGB_CONF_DIR}/userlist.txt")
+        _render.assert_called_once_with(reload_pgbouncer=True)
+        _delete_file.assert_called_with(f"{PGB_CONF_DIR}/pgbouncer/userlist.txt")
         _remove_exporter.assert_called_once_with()
 
     @patch(
