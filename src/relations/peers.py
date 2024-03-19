@@ -131,7 +131,6 @@ class Peers(Object):
 
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
             self.charm.generate_relation_databases()
-            return
 
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()

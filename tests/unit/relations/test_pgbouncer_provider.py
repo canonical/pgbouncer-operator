@@ -8,7 +8,6 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from constants import BACKEND_RELATION_NAME, CLIENT_RELATION_NAME, PEER_RELATION_NAME
-from lib.charms.pgbouncer_k8s.v0.pgb import DEFAULT_CONFIG, PgbConfig
 from tests.helpers import patch_network_get
 
 
@@ -26,8 +25,9 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_relation = self.charm.client_relation
 
         # Define a peer relation
-        self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer")
-        self.harness.add_relation_unit(self.peers_rel_id, self.unit)
+        with patch("charm.PgBouncerCharm.render_pgb_config"):
+            self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer")
+            self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
         # Define a backend relation
         self.backend_rel_id = self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
@@ -37,7 +37,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_rel_id = self.harness.add_relation(CLIENT_RELATION_NAME, "application")
         self.harness.add_relation_unit(self.client_rel_id, "application/0")
 
-    @patch("relations.pgbouncer_provider.PgBouncerProvider._check_backend")
+    @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
@@ -52,20 +52,22 @@ class TestPgbouncerProvider(unittest.TestCase):
         return_value="test_auth_user",
     )
     @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test_pass")
+    @patch("relations.pgbouncer_provider.PgBouncerProvider.update_read_only_endpoints")
     @patch("relations.pgbouncer_provider.PgBouncerProvider.get_database", return_value="test-db")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_credentials")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_version")
-    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("charm.PgBouncerCharm.set_relation_databases")
+    @patch("charm.PgBouncerCharm.generate_relation_databases")
     def test_on_database_requested(
         self,
-        _render_cfg,
-        _cfg,
+        _gen_rel_dbs,
+        _set_rel_dbs,
         _dbp_set_version,
         _dbp_set_endpoints,
         _dbp_set_credentials,
         _get_database,
+        _update_read_only_endpoints,
         _password,
         _auth_user,
         _pg_databag,
@@ -73,6 +75,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         _check_backend,
     ):
         self.harness.set_leader()
+        _gen_rel_dbs.return_value = {}
 
         event = MagicMock()
         rel_id = event.relation.id = 1
@@ -98,89 +101,33 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_endpoints.assert_called_with(
             rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
-        _render_cfg.assert_called_with(_cfg(), reload_pgbouncer=True)
+        _set_rel_dbs.assert_called_once_with({1: {"name": "test-db", "legacy": False}})
 
-        # Verify config contains what we want
-        postgres_endpoint = self.charm.backend.postgres_databag.get("endpoints")
-        assert _cfg()["databases"][database] == {
-            "host": postgres_endpoint.split(":")[0],
-            "dbname": database,
-            "port": postgres_endpoint.split(":")[1],
-            "auth_user": self.charm.backend.auth_user,
-        }
-        assert not _cfg()["databases"].get(f"{database}_readonly")
-
-        # test cfg with scaled pg
-        _pg_databag.return_value["read-only-endpoints"] = "r_test:endpoint"
-        self.client_relation._on_database_requested(event)
-        postgres_endpoint = self.charm.backend.postgres_databag.get("endpoints")
-        assert _cfg()["databases"][database] == {
-            "host": postgres_endpoint.split(":")[0],
-            "dbname": database,
-            "port": postgres_endpoint.split(":")[1],
-            "auth_user": self.charm.backend.auth_user,
-        }
-        read_only_endpoints = self.charm.backend.get_read_only_endpoints()
-        r_hosts = ",".join([host.split(":")[0] for host in read_only_endpoints])
-        assert _cfg()["databases"][f"{database}_readonly"] == {
-            "host": r_hosts,
-            "dbname": database,
-            "port": next(iter(read_only_endpoints)).split(":")[1],
-            "auth_user": self.charm.backend.auth_user,
-        }
-
-    @patch("relations.pgbouncer_provider.PgBouncerProvider._check_backend")
+    @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("charm.PgBouncerCharm.read_pgb_config", return_value=PgbConfig(DEFAULT_CONFIG))
-    @patch("charm.PgBouncerCharm.render_pgb_config")
-    def test_on_relation_broken(self, _render_cfg, _cfg, _pg, _check_backend):
+    @patch("charm.PgBouncerCharm.set_relation_databases")
+    @patch("charm.PgBouncerCharm.generate_relation_databases")
+    def test_on_relation_broken(self, _gen_rel_dbs, _set_rel_dbs, _pg, _check_backend):
         _pg.return_value.get_postgresql_version.return_value = "10"
+        _gen_rel_dbs.return_value = {"1": {"name": "test_db", "legacy": False}}
         self.harness.set_leader()
 
         event = MagicMock()
         rel_id = event.relation.id = 1
-        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         external_app = self.charm.client_relation.get_external_app(event.relation)
         event.relation.data = {external_app: {"database": "test_db"}}
-        database = event.relation.data[external_app]["database"]
         user = f"relation_id_{rel_id}"
 
-        _cfg.return_value["databases"][database] = {
-            "host": "host",
-            "dbname": database,
-            "port": "1111",
-            "auth_user": self.charm.backend.auth_user,
-        }
-        _cfg.return_value["databases"][f"{database}_readonly"] = {
-            "host": "host2",
-            "dbname": database,
-            "port": "1111",
-            "auth_user": self.charm.backend.auth_user,
-        }
-        _cfg.return_value["pgbouncer"]["admin_users"].add(user)
-        _cfg.return_value["pgbouncer"]["stats_users"].add(user)
-
-        _check_backend.return_value = True
-        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
         self.client_relation._on_relation_broken(event)
-        _cfg.assert_called()
-        assert user not in _cfg()["pgbouncer"]["admin_users"]
-        assert user not in _cfg()["pgbouncer"]["stats_users"]
-        assert not _cfg()["databases"].get(database)
-        assert not _cfg()["databases"].get(f"{database}_readonly")
-        _render_cfg.assert_called_with(_cfg(), reload_pgbouncer=True)
         _pg().delete_user.assert_called_with(user)
 
-        # Test again without readonly node
-        _cfg.return_value["databases"][database] = {
-            "host": "host",
-            "dbname": database,
-            "port": "1111",
-            "auth_user": self.charm.backend.auth_user,
-        }
-        self.charm.peers.app_databag[f"database-{event.relation.id}-relation-breaking"] = "true"
-        self.client_relation._on_relation_broken(event)
-        assert not _cfg()["databases"].get(database)
-        assert not _cfg()["databases"].get(f"{database}_readonly")
+        _set_rel_dbs.assert_called_once_with({})
+
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
+    def test_update_read_only_endpoints(self, _set_read_only_endpoints):
+        self.harness.set_leader()
+        event = MagicMock()
+        self.client_relation.update_read_only_endpoints(event)
+        _set_read_only_endpoints.assert_called()

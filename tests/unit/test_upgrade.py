@@ -45,6 +45,7 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
     @patch("charm.PgbouncerUpgrade._cluster_checks")
+    @patch("charm.PgBouncerCharm.generate_relation_databases")
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_utility_files")
@@ -59,6 +60,7 @@ class TestUpgrade(unittest.TestCase):
         _render_utility_files: Mock,
         _reload_pgbouncer: Mock,
         _render_prometheus_service: Mock,
+        _generate_relation_databases: Mock,
         _cluster_checks: Mock,
         _set_unit_completed: Mock,
         _on_upgrade_changed: Mock,
@@ -75,8 +77,10 @@ class TestUpgrade(unittest.TestCase):
         _remove_exporter_service.assert_called_once_with()
         _install_snap_packages.assert_called_once_with(packages=SNAP_PACKAGES, refresh=True)
         _render_prometheus_service.assert_called_once_with()
+        _render_utility_files.assert_called_once_with()
         _cluster_checks.assert_called_once_with()
         _set_unit_completed.assert_called_once_with()
+        assert not _generate_relation_databases.called
 
         # Test extra call as leader
         with self.harness.hooks_disabled():
@@ -85,6 +89,7 @@ class TestUpgrade(unittest.TestCase):
         self.charm.upgrade._on_upgrade_granted(event)
 
         _on_upgrade_changed.assert_called_once_with(event)
+        _generate_relation_databases.assert_called_once_with()
 
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))

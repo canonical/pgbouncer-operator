@@ -572,7 +572,7 @@ class PgBouncerCharm(CharmBase):
                 "port": port,
                 "auth_user": self.backend.auth_user,
             }
-            if r_hosts and self._is_exposed:
+            if r_hosts:
                 pgb_dbs[f"{name}_readonly"] = {
                     "host": r_hosts,
                     "dbname": name,
