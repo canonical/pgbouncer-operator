@@ -28,7 +28,7 @@ Example:
 import logging
 from typing import List, Optional, Set
 
-from ops.charm import CharmBase, RelationChangedEvent, RelationCreatedEvent
+from ops.charm import CharmBase, RelationChangedEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
@@ -57,7 +57,6 @@ class Peers(Object):
 
         self.charm = charm
 
-        self.framework.observe(charm.on[PEER_RELATION_NAME].relation_created, self._on_created)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_joined, self._on_changed)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
         self.framework.observe(charm.on.secret_changed, self._on_changed)
@@ -118,19 +117,11 @@ class Peers(Object):
         else:
             return None
 
-    def _on_created(self, event: RelationCreatedEvent):
-        if not self.charm.unit.is_leader():
-            return
-
     def _on_changed(self, event: RelationChangedEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
         self.unit_databag.update({ADDRESS_KEY: self.charm.unit_ip})
 
-        if self.charm.unit.is_leader():
-            self.charm.update_client_connection_info()
-
-            self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
-            self.charm.generate_relation_databases()
+        self.update_leader()
 
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
@@ -138,10 +129,11 @@ class Peers(Object):
         self.charm.render_pgb_config(reload_pgbouncer=True)
 
     def _on_departed(self, _):
-        self.update_connection()
+        self.update_leader()
 
-    def update_connection(self):
-        """Updates available leader in app databag."""
+    def update_leader(self):
+        """Updates leader hostname in peer databag to match this unit if it's the leader."""
         if self.charm.unit.is_leader():
             self.charm.update_client_connection_info()
             self.app_databag[LEADER_ADDRESS_KEY] = self.charm.unit_ip
+            self.charm.generate_relation_databases()

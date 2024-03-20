@@ -34,6 +34,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
             self.peers_rel_id = self.harness.add_relation(PEER_RELATION_NAME, "pgbouncer/0")
             self.harness.add_relation_unit(self.peers_rel_id, self.unit)
 
+    @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
     @patch("charm.PgBouncerCharm.get_secret", return_value=None)
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
@@ -70,6 +71,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _app_databag,
         _render_prometheus_service,
         _,
+        __,
     ):
         self.harness.set_leader(True)
         pw = _gen_pw.return_value
@@ -131,9 +133,10 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _render_pgb.assert_called_once_with(reload_pgbouncer=True)
         _update_client_conn.assert_called_once_with()
 
+    @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
     @patch("charm.PgBouncerCharm.update_client_connection_info")
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    def test_on_relation_changed(self, _render_pgb, _update_client_conn):
+    def test_on_relation_changed(self, _render_pgb, _update_client_conn, _):
         self.harness.set_leader()
         _update_client_conn.reset_mock()
 

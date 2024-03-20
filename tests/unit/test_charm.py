@@ -135,13 +135,13 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
-    @patch("charm.PgBouncerCharm.check_status", return_value=BlockedStatus())
-    def test_reload_pgbouncer(self, _running, _restart):
+    @patch("charm.PgBouncerCharm.check_pgb_running")
+    def test_reload_pgbouncer(self, _check_pgb_running, _restart):
         intended_instances = self._cores = os.cpu_count()
         self.charm.reload_pgbouncer()
         calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
-        _running.assert_called_once()
+        _check_pgb_running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _restart.side_effect = systemd.SystemdError()
@@ -154,26 +154,29 @@ class TestCharm(unittest.TestCase):
         new_callable=PropertyMock,
         return_value=False,
     )
-    def test_check_status(self, _postgres_ready, _running):
+    def test_check_pgb_running(self, _postgres_ready, _running):
         # check fail on postgres not available
         # Testing charm blocks when the pgbouncer services aren't running
-        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
+        assert not self.charm.check_pgb_running()
+        self.assertIsInstance(self.charm.unit.status, BlockedStatus)
         _postgres_ready.return_value = True
 
         # check fail when services aren't all running
-        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
+        assert not self.charm.check_pgb_running()
+        self.assertIsInstance(self.charm.unit.status, BlockedStatus)
         calls = [call("pgbouncer-pgbouncer@0")]
         _running.assert_has_calls(calls)
         _running.return_value = True
 
         # check fail when we can't get service status
         _running.side_effect = systemd.SystemdError
-        self.assertIsInstance(self.charm.check_status(), BlockedStatus)
+        assert not self.charm.check_pgb_running()
+        self.assertIsInstance(self.charm.unit.status, BlockedStatus)
         _running.side_effect = None
 
         # otherwise check all services and return activestatus
         intended_instances = self._cores = os.cpu_count()
-        self.assertIsInstance(self.charm.check_status(), ActiveStatus)
+        assert self.charm.check_pgb_running()
         calls = [
             call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)
         ]

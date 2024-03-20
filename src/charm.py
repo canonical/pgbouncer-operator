@@ -374,11 +374,7 @@ class PgBouncerCharm(CharmBase):
                 logger.info(f"starting {service}")
                 systemd.service_start(service)
 
-            if self.backend.postgres:
-                self.unit.status = self.check_status()
-            else:
-                # Wait for backend relation relation if it doesn't exist
-                self.unit.status = BlockedStatus("waiting for backend database relation")
+            self.update_status()
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("failed to start pgbouncer")
@@ -391,11 +387,38 @@ class PgBouncerCharm(CharmBase):
                 self.unit.status = BlockedStatus("failed to start pgbouncer exporter")
 
     def _on_leader_elected(self, _):
-        self.peers.update_connection()
+        self.peers.update_leader()
 
     def _on_update_status(self, _) -> None:
-        """Update Status hook."""
-        self.unit.status = self.check_status()
+        """Update Status hook.
+
+        Sets BlockedStatus if we have no backend database; if we can't connect to a backend, this
+        charm serves no purpose.
+        """
+        self.update_status()
+
+        self.peers.update_leader()
+
+        # Update relation connection information. This is necessary because we don't receive any
+        # information when the leader is removed, but we still need to have up-to-date connection
+        # information in all the relation databags.
+        self.update_client_connection_info()
+
+    def update_status(self):
+        """Health check to update pgbouncer status based on charm state."""
+        if self.backend.postgres is None:
+            self.unit.status = BlockedStatus("waiting for backend database relation to initialise")
+            return
+
+        if not self.backend.ready:
+            self.unit.status = BlockedStatus("backend database relation not ready")
+            return
+
+        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
+            return
+
+        if self.check_pgb_running():
+            self.unit.status = ActiveStatus()
 
     def _on_config_changed(self, _) -> None:
         """Config changed handler.
@@ -424,40 +447,28 @@ class PgBouncerCharm(CharmBase):
         if self.backend.postgres:
             self.render_prometheus_service()
 
-    def check_status(self) -> Union[ActiveStatus, BlockedStatus, WaitingStatus]:
-        """Checks status of PgBouncer application.
-
-        Checks whether pgb config is available, backend is ready, and pgbouncer systemd service is
-        running.
-
-        Returns:
-            Recommended unit status. Can be active, blocked, or waiting.
-        """
-        if not self.backend.ready:
-            # We can't relate an app to the backend database without a backend postgres relation
-            backend_wait_msg = "waiting for backend database relation to connect"
-            logger.warning(backend_wait_msg)
-            return BlockedStatus(backend_wait_msg)
-
-        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
-            return BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
-
+    def check_pgb_running(self):
+        """Checks that pgbouncer service is running, and updates status accordingly."""
         prom_service = f"{PGB}-{self.app.name}-prometheus"
         services = [*self.pgb_services]
 
-        if self.backend.postgres:
+        if self.backend.ready:
             services.append(prom_service)
 
         try:
             for service in services:
                 if not systemd.service_running(service):
-                    return BlockedStatus(f"{service} is not running")
+                    pgb_not_running = f"PgBouncer service {service} not running"
+                    self.unit.status = BlockedStatus(pgb_not_running)
+                    logger.warning(pgb_not_running)
+                    return False
 
         except systemd.SystemdError as e:
             logger.error(e)
-            return BlockedStatus("failed to get pgbouncer status")
+            self.unit.status = BlockedStatus("failed to get pgbouncer status")
+            return False
 
-        return ActiveStatus()
+        return True
 
     def reload_pgbouncer(self):
         """Restarts systemd pgbouncer service."""
@@ -469,7 +480,7 @@ class PgBouncerCharm(CharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
 
-        self.unit.status = self.check_status()
+        self.check_pgb_running()
 
     # ==============================
     #  PgBouncer-Specific Utilities

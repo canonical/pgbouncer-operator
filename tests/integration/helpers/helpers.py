@@ -26,7 +26,7 @@ PG = "postgresql"
 WEEBL = "weebl"
 MAILMAN3 = "mailman3-core"
 
-WAIT_MSG = "waiting for backend database relation to connect"
+WAIT_MSG = "waiting for backend database relation to initialise"
 
 
 def get_backend_relation(ops_test: OpsTest):

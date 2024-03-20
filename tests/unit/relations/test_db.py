@@ -4,7 +4,6 @@
 import unittest
 from unittest.mock import Mock, PropertyMock, patch
 
-from ops.model import ActiveStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
@@ -124,7 +123,6 @@ class TestDb(unittest.TestCase):
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("charm.PgBouncerCharm.check_status", return_value=ActiveStatus())
     @patch("relations.db.DbProvides.get_databags", return_value=[{}])
     @patch("relations.db.DbProvides.update_connection_info")
     @patch("relations.db.DbProvides.update_databags")
@@ -141,7 +139,6 @@ class TestDb(unittest.TestCase):
         _update_databags,
         _update_connection_info,
         _get_databags,
-        _check_status,
         _backend_postgres,
         _check_backend,
     ):

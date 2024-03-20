@@ -138,6 +138,11 @@ class BackendDatabaseRequires(Object):
         logger.info("initialising pgbouncer backend relation")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
 
+        if not self.charm.check_pgb_running():
+            logger.debug("_on_database_created deferred: PGB not running")
+            event.defer()
+            return
+
         if self.postgres is None or self.relation.data[self.charm.app].get("database") is None:
             event.defer()
             logger.error("deferring database-created hook - postgres database not ready")
@@ -170,6 +175,10 @@ class BackendDatabaseRequires(Object):
         self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
+        if not self.charm.check_pgb_running():
+            logger.debug("_on_relation_changed early exit: PGB not running")
+            return
+
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.update_client_connection_info()
 
