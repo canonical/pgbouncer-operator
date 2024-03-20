@@ -369,6 +369,9 @@ class PgBouncerCharm(CharmBase):
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
 
+        if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+            self.render_auth_file(auth_file)
+
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")
@@ -406,15 +409,15 @@ class PgBouncerCharm(CharmBase):
 
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
+        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
+            return
+
         if self.backend.postgres is None:
             self.unit.status = BlockedStatus("waiting for backend database relation to initialise")
             return
 
         if not self.backend.ready:
             self.unit.status = BlockedStatus("backend database relation not ready")
-            return
-
-        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
             return
 
         if self.check_pgb_running():

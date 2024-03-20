@@ -59,7 +59,6 @@ from charms.postgresql_k8s.v0.postgresql import PostgreSQL
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
-    ActiveStatus,
     Application,
     BlockedStatus,
     MaintenanceStatus,
@@ -132,7 +131,7 @@ class BackendDatabaseRequires(Object):
             self.charm.render_auth_file(auth_file)
             self.charm.render_pgb_config(reload_pgbouncer=True)
             self.charm.render_prometheus_service()
-            self.charm.unit.status = ActiveStatus()
+            self.charm.update_status()
             return
 
         logger.info("initialising pgbouncer backend relation")
@@ -168,7 +167,7 @@ class BackendDatabaseRequires(Object):
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.render_prometheus_service()
 
-        self.charm.unit.status = ActiveStatus("backend-database relation initialised.")
+        self.charm.update_status()
 
     def _on_endpoints_changed(self, _):
         self.charm.render_pgb_config(reload_pgbouncer=True)

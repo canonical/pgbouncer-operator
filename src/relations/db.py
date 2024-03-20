@@ -102,7 +102,6 @@ from ops.charm import (
 )
 from ops.framework import Object
 from ops.model import (
-    ActiveStatus,
     Application,
     BlockedStatus,
     MaintenanceStatus,
@@ -261,7 +260,7 @@ class DbProvides(Object):
             self.charm.backend.postgres.create_database(database, user)
 
             created_msg = f"database and user for {self.relation_name} relation created"
-            self.charm.unit.status = ActiveStatus()
+            self.charm.update_status()
             logger.info(created_msg)
         except (PostgreSQLCreateDatabaseError, PostgreSQLCreateUserError):
             err_msg = f"failed to create database or user for {self.relation_name}"

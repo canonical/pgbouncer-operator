@@ -28,7 +28,7 @@ Example:
 import logging
 from typing import List, Optional, Set
 
-from ops.charm import CharmBase, RelationChangedEvent
+from ops.charm import CharmBase, HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
@@ -57,7 +57,7 @@ class Peers(Object):
 
         self.charm = charm
 
-        self.framework.observe(charm.on[PEER_RELATION_NAME].relation_joined, self._on_changed)
+        self.framework.observe(charm.on[PEER_RELATION_NAME].relation_joined, self._on_joined)
         self.framework.observe(charm.on[PEER_RELATION_NAME].relation_changed, self._on_changed)
         self.framework.observe(charm.on.secret_changed, self._on_changed)
         self.framework.observe(charm.on.secret_remove, self._on_changed)
@@ -117,7 +117,12 @@ class Peers(Object):
         else:
             return None
 
-    def _on_changed(self, event: RelationChangedEvent):
+    def _on_joined(self, event: HookEvent):
+        self._on_changed(event)
+        if self.charm.unit.is_leader():
+            self.charm.client_relation.update_read_only_endpoints()
+
+    def _on_changed(self, event: HookEvent):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
         self.unit_databag.update({ADDRESS_KEY: self.charm.unit_ip})
 
