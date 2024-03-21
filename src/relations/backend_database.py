@@ -193,11 +193,14 @@ class BackendDatabaseRequires(Object):
         self.charm.update_client_connection_info()
 
         if event.departing_unit == self.charm.unit:
-            # This should only occur when the relation is being removed, not on scale-down
-            self.charm.peers.unit_databag.update({
-                f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"
-            })
-            logger.warning("added relation-departing flag to peer databag")
+            if self.charm.peers.relation:
+                # This should only occur when the relation is being removed, not on scale-down
+                self.charm.peers.unit_databag.update({
+                    f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing": "true"
+                })
+                logger.warning("added relation-departing flag to peer databag")
+            else:
+                logger.warning("peer databag has departed")
             return
 
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
@@ -233,7 +236,7 @@ class BackendDatabaseRequires(Object):
         """
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         self.charm.remove_exporter_service()
-        if self.charm.peers.unit_databag.get(depart_flag, False):
+        if not self.charm.peers.relation or self.charm.peers.unit_databag.get(depart_flag, False):
             logging.info("exiting relation-broken hook - nothing to do")
             return
 
