@@ -462,23 +462,27 @@ class PgBouncerCharm(CharmBase):
             for service in services:
                 if not systemd.service_running(service):
                     pgb_not_running = f"PgBouncer service {service} not running"
-                    self.unit.status = BlockedStatus(pgb_not_running)
                     logger.warning(pgb_not_running)
+                    if self.unit.status.message != EXTENSIONS_BLOCKING_MESSAGE:
+                        self.unit.status = BlockedStatus(pgb_not_running)
                     return False
 
         except systemd.SystemdError as e:
             logger.error(e)
-            self.unit.status = BlockedStatus("failed to get pgbouncer status")
+            if self.unit.status.message != EXTENSIONS_BLOCKING_MESSAGE:
+                self.unit.status = BlockedStatus("failed to get pgbouncer status")
             return False
 
         return True
 
     def reload_pgbouncer(self):
         """Restarts systemd pgbouncer service."""
+        initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             for service in self.pgb_services:
                 systemd.service_restart(service)
+            self.unit.status = initial_status
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart pgbouncer")
@@ -598,6 +602,7 @@ class PgBouncerCharm(CharmBase):
         This method takes a primary config and generates one unique config for each intended
         instance of pgbouncer, implemented as a templated systemd service.
         """
+        initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
 
         # Render primary config. This config is the only copy that the charm reads from to create
@@ -651,6 +656,7 @@ class PgBouncerCharm(CharmBase):
                     ),
                     0o700,
                 )
+        self.unit.status = initial_status
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
@@ -690,11 +696,13 @@ class PgBouncerCharm(CharmBase):
                 changes to take effect. However, these config updates can be done in batches,
                 minimising the amount of necessary restarts.
         """
+        initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("updating PgBouncer users")
 
         self.render_file(
             f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
         )
+        self.unit.status = initial_status
 
         if reload_pgbouncer:
             self.reload_pgbouncer()

@@ -209,6 +209,7 @@ class PgBouncerProvider(Object):
         )
         if not self.charm.unit.is_leader():
             return
+        initial_status = self.charm.unit.status
         self.charm.unit.status = MaintenanceStatus(
             f"Updating {self.relation_name} relation connection information"
         )
@@ -229,6 +230,7 @@ class PgBouncerProvider(Object):
                 relation.id, self.charm.backend.postgres.get_postgresql_version()
             )
 
+        self.charm.unit.status = initial_status
         self.charm.update_status()
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
