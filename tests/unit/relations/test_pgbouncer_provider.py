@@ -125,9 +125,9 @@ class TestPgbouncerProvider(unittest.TestCase):
 
         _set_rel_dbs.assert_called_once_with({})
 
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_field")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
-    def test_update_read_only_endpoints(self, _set_read_only_endpoints):
+    def test_update_read_only_endpoints(self, _set_read_only_endpoints, _fetch_relation_field):
         self.harness.set_leader()
-        event = MagicMock()
-        self.client_relation.update_read_only_endpoints(event)
+        self.client_relation.update_read_only_endpoints()
         _set_read_only_endpoints.assert_called()

@@ -246,10 +246,15 @@ class PgBouncerProvider(Object):
         ips = list(ips)
         ips.sort()
         for relation in relations:
-            self.database_provides.set_read_only_endpoints(
-                relation.id,
-                ",".join([f"{host}:{port}" for host in ips]),
-            )
+            if bool(
+                self.database_provides.fetch_relation_field(
+                    relation.id, "external-node-connectivity"
+                )
+            ):
+                self.database_provides.set_read_only_endpoints(
+                    relation.id,
+                    ",".join([f"{host}:{port}" for host in ips]),
+                )
 
     def get_database(self, relation):
         """Gets database name from relation."""
