@@ -372,6 +372,9 @@ class PgBouncerCharm(CharmBase):
         if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
             self.render_auth_file(auth_file)
 
+        if self.backend.postgres:
+            self.render_prometheus_service()
+
         try:
             for service in self.pgb_services:
                 logger.info(f"starting {service}")

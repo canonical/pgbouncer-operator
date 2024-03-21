@@ -102,13 +102,14 @@ class TestCharm(unittest.TestCase):
         return_value=True,
     )
     @patch("charm.systemd.service_running")
+    @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("charms.operator_libs_linux.v1.systemd.service_start", side_effect=systemd.SystemdError)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres",
         new_callable=PropertyMock,
         return_value=None,
     )
-    def test_on_start(self, _has_relation, _start, _, __):
+    def test_on_start(self, _has_relation, _start, _render_prom_service, _, __):
         intended_instances = self._cores = os.cpu_count()
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
@@ -132,6 +133,7 @@ class TestCharm(unittest.TestCase):
         self.charm.on.start.emit()
         calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _start.assert_has_calls(calls)
+        _render_prom_service.assert_called_once_with()
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
