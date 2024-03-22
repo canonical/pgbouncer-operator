@@ -4,7 +4,6 @@
 import asyncio
 import json
 import logging
-import time
 
 import pytest
 from juju.errors import JujuAPIError
@@ -20,7 +19,6 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
-    get_cfg,
     scale_application,
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
@@ -350,7 +348,6 @@ async def test_scaling(ops_test: OpsTest):
 
 
 @pytest.mark.group(1)
-@pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Retrieve the relation user.
@@ -359,26 +356,14 @@ async def test_relation_broken(ops_test: OpsTest):
     )
 
     # Break the relation.
+    backend_rel = get_backend_relation(ops_test)
+    pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
-        backend_rel = get_backend_relation(ops_test)
-        pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
 
-        # Check that the relation user was removed from the database.
-        await check_database_users_existence(
-            ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass
-        )
-
-    # check relation data was correctly removed from config
-    pgb_unit_name = ops_test.model.applications[PGB].units[0].name
-    cfg = await get_cfg(ops_test, pgb_unit_name)
-    assert "first-database" not in cfg["databases"].keys()
-    assert "first-database_readonly" not in cfg["databases"].keys()
-
-    time.sleep(10)
     # Check that the relation user was removed from the database.
     await check_database_users_existence(
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass

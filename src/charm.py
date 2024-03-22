@@ -405,11 +405,6 @@ class PgBouncerCharm(CharmBase):
 
         self.peers.update_leader()
 
-        # Update relation connection information. This is necessary because we don't receive any
-        # information when the leader is removed, but we still need to have up-to-date connection
-        # information in all the relation databags.
-        self.update_client_connection_info()
-
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
         if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
