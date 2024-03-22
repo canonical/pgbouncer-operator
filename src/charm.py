@@ -421,7 +421,7 @@ class PgBouncerCharm(CharmBase):
         if self.check_pgb_running():
             self.unit.status = ActiveStatus()
 
-    def _on_config_changed(self, _) -> None:
+    def _on_config_changed(self, event) -> None:
         """Config changed handler.
 
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
@@ -439,7 +439,14 @@ class PgBouncerCharm(CharmBase):
             except ModelError:
                 logger.exception("failed to open port")
 
-        self.render_pgb_config(reload_pgbouncer=True)
+        # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
+        # deferring until the leader manages to set the label
+        try:
+            self.render_pgb_config(reload_pgbouncer=True)
+        except ModelError:
+            logger.warning("Deferring on_config_changed: cannot set secret label")
+            event.defer()
+            return
         if self.backend.postgres:
             self.render_prometheus_service()
 

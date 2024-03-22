@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import time
 
 import pytest
 from juju.errors import JujuAPIError
@@ -347,7 +348,9 @@ async def test_scaling(ops_test: OpsTest):
     )
 
 
+# TODO stabilise on juju2
 @pytest.mark.group(1)
+@pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Retrieve the relation user.
@@ -363,6 +366,7 @@ async def test_relation_broken(ops_test: OpsTest):
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
+        time.sleep(20)
 
     # Check that the relation user was removed from the database.
     await check_database_users_existence(

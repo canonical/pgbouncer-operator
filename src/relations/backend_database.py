@@ -235,7 +235,6 @@ class BackendDatabaseRequires(Object):
         Removes all traces of this relation from pgbouncer config.
         """
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
-        self.charm.remove_exporter_service()
         if self.charm.peers.relation and self.charm.peers.unit_databag.get(depart_flag, False):
             logging.info("exiting relation-broken hook - nothing to do")
             return
@@ -244,6 +243,7 @@ class BackendDatabaseRequires(Object):
         if self.charm.unit.is_leader():
             self.charm.remove_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
 
+        self.charm.remove_exporter_service()
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.unit.status = BlockedStatus(
             "waiting for backend database relation to initialise"
