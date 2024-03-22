@@ -433,11 +433,9 @@ class PgBouncerCharm(CharmBase):
         restarts pgbouncer to apply changes.
         """
         old_port = self.peers.app_databag.get("current_port")
-        if (
-            self.unit.is_leader()
-            and old_port != str(self.config["listen_port"])
-            and self._is_exposed()
-        ):
+        if old_port != str(self.config["listen_port"]) and self._is_exposed():
+            if self.unit.is_leader():
+                self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
             try:
                 if old_port:
@@ -445,9 +443,6 @@ class PgBouncerCharm(CharmBase):
                 self.unit.open_port("tcp", self.config["listen_port"])
             except ModelError:
                 logger.exception("failed to open port")
-
-        if not self.unit.is_leader():
-            return
 
         self.render_pgb_config(reload_pgbouncer=True)
         if self.backend.postgres:

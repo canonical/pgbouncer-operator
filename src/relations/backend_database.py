@@ -200,7 +200,7 @@ class BackendDatabaseRequires(Object):
                 })
                 logger.warning("added relation-departing flag to peer databag")
             else:
-                logger.warning("peer databag has departed")
+                logger.warning("peer databag has already departed")
             return
 
         if not self.charm.unit.is_leader() or event.departing_unit.app != self.charm.app:
@@ -236,7 +236,7 @@ class BackendDatabaseRequires(Object):
         """
         depart_flag = f"{BACKEND_RELATION_NAME}_{event.relation.id}_departing"
         self.charm.remove_exporter_service()
-        if not self.charm.peers.relation or self.charm.peers.unit_databag.get(depart_flag, False):
+        if self.charm.peers.relation and self.charm.peers.unit_databag.get(depart_flag, False):
             logging.info("exiting relation-broken hook - nothing to do")
             return
 
