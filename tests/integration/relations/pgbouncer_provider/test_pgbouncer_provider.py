@@ -348,9 +348,7 @@ async def test_scaling(ops_test: OpsTest):
     )
 
 
-# TODO stabilise on juju2
 @pytest.mark.group(1)
-@pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Retrieve the relation user.
