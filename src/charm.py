@@ -369,7 +369,11 @@ class PgBouncerCharm(CharmBase):
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
 
-        if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+        if (
+            (auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
+            and self.backend.auth_user
+            and self.backend.auth_user in auth_file
+        ):
             self.render_auth_file(auth_file)
 
         if self.backend.postgres:
