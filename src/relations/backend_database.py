@@ -382,7 +382,11 @@ class BackendDatabaseRequires(Object):
             logger.debug("Backend not ready: no connection info")
             return False
 
-        if not self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+        if (
+            not (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
+            or not self.auth_user
+            or self.auth_user not in auth_file
+        ):
             logger.debug("Backend not ready: no auth file secret set")
             return False
 
