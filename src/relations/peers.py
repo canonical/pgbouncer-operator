@@ -32,7 +32,7 @@ from ops.charm import CharmBase, HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
-from constants import PEER_RELATION_NAME
+from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PEER_RELATION_NAME
 
 ADDRESS_KEY = "private-address"
 LEADER_ADDRESS_KEY = "leader_ip"
@@ -127,6 +127,8 @@ class Peers(Object):
         self.unit_databag.update({ADDRESS_KEY: self.charm.unit_ip})
 
         self.update_leader()
+        if auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+            self.charm.render_auth_file(auth_file)
 
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
