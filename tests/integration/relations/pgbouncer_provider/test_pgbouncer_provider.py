@@ -20,6 +20,7 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
+    get_cfg,
     scale_application,
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
@@ -177,13 +178,17 @@ async def test_database_admin_permissions(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
@@ -196,14 +201,17 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
-
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     assert not databag.get(
@@ -329,60 +337,52 @@ async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
-
-    # Break the relation so that test_relation_broken can be conditionally skipped
-    await ops_test.model.applications[PGB].remove_relation(
-        f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
-    )
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
 
 @pytest.mark.group(1)
 @pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
-    client_relation = await ops_test.model.add_relation(
-        f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
+    # Retrieve the relation user.
+    relation_user = await get_application_relation_data(
+        ops_test, CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, "username"
     )
 
-    await ops_test.model.wait_for_idle(status="active", timeout=600)
-
-    client_unit_name = ops_test.model.applications[CLIENT_APP_NAME].units[0].name
-    # Retrieve the relation user.
-    databag = await get_app_relation_databag(ops_test, client_unit_name, client_relation.id)
-    relation_user = databag.get("username", None)
-    logging.info(f"relation user: {relation_user}")
-    assert relation_user, f"no relation user in client databag: {databag}"
-
+    # Break the relation.
     backend_rel = get_backend_relation(ops_test)
     pg_user, pg_pass = await get_backend_user_pass(ops_test, backend_rel)
-
-    # Break the relation.
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:database", f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}"
     )
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", raise_on_blocked=True)
+        time.sleep(20)
 
-    time.sleep(10)
     # Check that the relation user was removed from the database.
     await check_database_users_existence(
         ops_test, [], [relation_user], pg_user=pg_user, pg_user_password=pg_pass

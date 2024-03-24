@@ -14,13 +14,12 @@ from charms.data_platform_libs.v0.upgrade import (
     UpgradeGrantedEvent,
 )
 from charms.operator_libs_linux.v1 import systemd
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import MaintenanceStatus
 from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import APP_SCOPE, SNAP_PACKAGES
-from relations.peers import CFG_FILE_DATABAG_KEY
+from constants import SNAP_PACKAGES
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -66,7 +65,7 @@ class PgbouncerUpgrade(DataUpgrade):
 
     def _cluster_checks(self) -> None:
         """Check that the cluster is in healthy state."""
-        if not isinstance(self.charm.check_status(), ActiveStatus):
+        if not self.charm.check_pgb_running():
             raise ClusterNotReadyError(DEFAULT_MESSAGE, "Not all pgbouncer services are up yet.")
 
         if self.charm.backend.postgres and not self.charm.backend.ready:
@@ -85,8 +84,10 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm._install_snap_packages(packages=SNAP_PACKAGES, refresh=True)
 
         self.charm.unit.status = MaintenanceStatus("restarting services")
-        cfg = self.charm.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)
-        self.charm.render_utility_files(cfg)
+        if self.charm.unit.is_leader():
+            self.charm.generate_relation_databases()
+
+        self.charm.render_utility_files()
         self.charm.reload_pgbouncer()
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
@@ -96,7 +97,7 @@ class PgbouncerUpgrade(DataUpgrade):
                 self._cluster_checks()
 
         self.set_unit_completed()
-        self.charm.unit.status = ActiveStatus()
+        self.charm.update_status()
 
         # Ensures leader gets its own relation-changed when it upgrades
         if self.charm.unit.is_leader():
