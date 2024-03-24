@@ -539,7 +539,7 @@ class PgBouncerCharm(CharmBase):
         for relation in self.model.relations.get("db", []):
             database = self.legacy_db_relation.get_databags(relation)[0].get("database")
             if database:
-                databases[relation.id] = {
+                databases[str(relation.id)] = {
                     "name": database,
                     "legacy": True,
                 }
@@ -547,7 +547,7 @@ class PgBouncerCharm(CharmBase):
         for relation in self.model.relations.get("db-admin", []):
             database = self.legacy_db_admin_relation.get_databags(relation)[0].get("database")
             if database:
-                databases[relation.id] = {
+                databases[str(relation.id)] = {
                     "name": database,
                     "legacy": True,
                 }
@@ -557,7 +557,7 @@ class PgBouncerCharm(CharmBase):
         ).items():
             database = data.get("database")
             if database:
-                databases[rel_id] = {
+                databases[str(rel_id)] = {
                     "name": database,
                     "legacy": False,
                 }
