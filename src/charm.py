@@ -346,6 +346,7 @@ class PgBouncerCharm(CharmBase):
             return self.update_config()
         return True
 
+    @property
     def _is_exposed(self) -> bool:
         # There should be only one client relation
         for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
@@ -354,6 +355,7 @@ class PgBouncerCharm(CharmBase):
                     relation.id, "external-node-connectivity"
                 )
             )
+        return False
 
     def update_config(self) -> bool:
         """Updates PgBouncer config file based on the existence of the TLS files."""
@@ -432,7 +434,7 @@ class PgBouncerCharm(CharmBase):
         restarts pgbouncer to apply changes.
         """
         old_port = self.peers.app_databag.get("current_port")
-        if old_port != str(self.config["listen_port"]) and self._is_exposed():
+        if old_port != str(self.config["listen_port"]) and self._is_exposed:
             if self.unit.is_leader():
                 self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port

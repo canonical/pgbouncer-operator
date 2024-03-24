@@ -181,7 +181,7 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
-        logger.info(f"Checking connection for {unit}")
+        logger.info(f"Checking connection for {unit.name}")
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
@@ -204,7 +204,7 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
-        logger.info(f"Checking connection for {unit}")
+        logger.info(f"Checking connection for {unit.name}")
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
@@ -340,7 +340,7 @@ async def test_scaling(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
-        logger.info(f"Checking connection for {unit}")
+        logger.info(f"Checking connection for {unit.name}")
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
@@ -354,7 +354,7 @@ async def test_scaling(ops_test: OpsTest):
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
-        logger.info(f"Checking connection for {unit}")
+        logger.info(f"Checking connection for {unit.name}")
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
