@@ -532,9 +532,6 @@ class PgBouncerCharm(CharmBase):
         if not self.unit.is_leader():
             return {}
 
-        # The k8s charm gets a peer data cache here, but we can't rely on it in a subordinate
-        # since we can't reliably clean it
-
         databases = {}
         for relation in self.model.relations.get("db", []):
             database = self.legacy_db_relation.get_databags(relation)[0].get("database")
