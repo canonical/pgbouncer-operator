@@ -346,6 +346,7 @@ class PgBouncerCharm(CharmBase):
             return self.update_config()
         return True
 
+    @property
     def _is_exposed(self) -> bool:
         # There should be only one client relation
         for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
@@ -354,6 +355,7 @@ class PgBouncerCharm(CharmBase):
                     relation.id, "external-node-connectivity"
                 )
             )
+        return False
 
     def update_config(self) -> bool:
         """Updates PgBouncer config file based on the existence of the TLS files."""
@@ -369,7 +371,11 @@ class PgBouncerCharm(CharmBase):
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
 
-        if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+        if (
+            (auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
+            and self.backend.auth_user
+            and self.backend.auth_user in auth_file
+        ):
             self.render_auth_file(auth_file)
 
         if self.backend.postgres:
@@ -428,7 +434,7 @@ class PgBouncerCharm(CharmBase):
         restarts pgbouncer to apply changes.
         """
         old_port = self.peers.app_databag.get("current_port")
-        if old_port != str(self.config["listen_port"]) and self._is_exposed():
+        if old_port != str(self.config["listen_port"]) and self._is_exposed:
             if self.unit.is_leader():
                 self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
@@ -527,14 +533,12 @@ class PgBouncerCharm(CharmBase):
         """Generates a mapping between relation and database and sets it in the app databag."""
         if not self.unit.is_leader():
             return {}
-        if dbs := self.get_relation_databases():
-            return dbs
 
         databases = {}
         for relation in self.model.relations.get("db", []):
             database = self.legacy_db_relation.get_databags(relation)[0].get("database")
             if database:
-                databases[relation.id] = {
+                databases[str(relation.id)] = {
                     "name": database,
                     "legacy": True,
                 }
@@ -542,7 +546,7 @@ class PgBouncerCharm(CharmBase):
         for relation in self.model.relations.get("db-admin", []):
             database = self.legacy_db_admin_relation.get_databags(relation)[0].get("database")
             if database:
-                databases[relation.id] = {
+                databases[str(relation.id)] = {
                     "name": database,
                     "legacy": True,
                 }
@@ -552,7 +556,7 @@ class PgBouncerCharm(CharmBase):
         ).items():
             database = data.get("database")
             if database:
-                databases[rel_id] = {
+                databases[str(rel_id)] = {
                     "name": database,
                     "legacy": False,
                 }

@@ -95,12 +95,17 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _render_prometheus_service.assert_called_with()
         _render_cfg_file.assert_called_once_with(reload_pgbouncer=True)
 
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.auth_user",
+        new_callable=PropertyMock,
+        return_value=None,
+    )
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     def test_on_database_created_not_leader(
-        self, _get_secret, _render_pgb, _render_auth, _render_prometheus_service
+        self, _get_secret, _render_pgb, _render_auth, _render_prometheus_service, _auth_user
     ):
         self.harness.set_leader(False)
 
@@ -109,6 +114,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         mock_event = MagicMock()
         mock_event.username = "mock_user"
+
         self.backend._on_database_created(mock_event)
 
         assert not _render_auth.called
@@ -116,9 +122,20 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _get_secret.assert_called_once_with("app", "auth_file")
         mock_event.defer.assert_called_once_with()
 
-        _get_secret.return_value = "AUTH"
+        # Stale secret
+        _get_secret.return_value = '"AUTH_USER"'
+
         self.backend._on_database_created(mock_event)
-        _render_auth.assert_called_once_with("AUTH")
+
+        assert not _render_auth.called
+        assert not _render_pgb.called
+
+        # initialised leader
+        _auth_user.return_value = "AUTH_USER"
+
+        self.backend._on_database_created(mock_event)
+
+        _render_auth.assert_called_once_with('"AUTH_USER"')
         _render_prometheus_service.assert_called_with()
         _render_pgb.assert_called_once_with(reload_pgbouncer=True)
 

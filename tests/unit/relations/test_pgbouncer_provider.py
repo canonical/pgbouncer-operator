@@ -101,7 +101,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_endpoints.assert_called_with(
             rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
-        _set_rel_dbs.assert_called_once_with({1: {"name": "test-db", "legacy": False}})
+        _set_rel_dbs.assert_called_once_with({"1": {"name": "test-db", "legacy": False}})
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(

@@ -20,6 +20,7 @@ from tests.integration.helpers.helpers import (
     get_app_relation_databag,
     get_backend_relation,
     get_backend_user_pass,
+    get_cfg,
     scale_application,
 )
 from tests.integration.helpers.postgresql_helpers import check_database_users_existence
@@ -177,13 +178,17 @@ async def test_database_admin_permissions(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
@@ -196,14 +201,17 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
-
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
     assert not databag.get(
@@ -329,26 +337,33 @@ async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await ops_test.model.wait_for_idle()
-    await check_new_relation(
-        ops_test,
-        unit_name=ops_test.model.applications[CLIENT_APP_NAME].units[0].name,
-        relation_id=client_relation.id,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        dbname=TEST_DBNAME,
-    )
+    cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
+    logger.info(cfg)
+    for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
+        logger.info(f"Checking connection for {unit.name}")
+        await check_new_relation(
+            ops_test,
+            unit_name=unit.name,
+            relation_id=client_relation.id,
+            relation_name=FIRST_DATABASE_RELATION_NAME,
+            dbname=TEST_DBNAME,
+        )
 
 
-# TODO stabilise on juju2
 @pytest.mark.group(1)
 @pytest.mark.unstable
 async def test_relation_broken(ops_test: OpsTest):
