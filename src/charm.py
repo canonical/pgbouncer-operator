@@ -531,8 +531,9 @@ class PgBouncerCharm(CharmBase):
         """Generates a mapping between relation and database and sets it in the app databag."""
         if not self.unit.is_leader():
             return {}
-        if dbs := self.get_relation_databases():
-            return dbs
+
+        # The k8s charm gets a peer data cache here, but we can't rely on it in a subordinate
+        # since we can't reliably clean it
 
         databases = {}
         for relation in self.model.relations.get("db", []):
