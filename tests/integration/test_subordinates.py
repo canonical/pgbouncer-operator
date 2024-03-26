@@ -15,12 +15,12 @@ from constants import BACKEND_RELATION_NAME
 from .helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
-    PG,
     PGB,
     get_unit_address,
     scale_application,
 )
 
+PG = "pg"
 LS_CLIENT = "landscape-client"
 UBUNTU_PRO_APP_NAME = "ubuntu-advantage"
 
@@ -42,7 +42,8 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
             num_units=None,
         ),
         ops_test.model.deploy(
-            PG,
+            "postgresql",
+            application_name=PG,
             num_units=3,
             channel="14/edge",
             config={"profile": "testing"},
