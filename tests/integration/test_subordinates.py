@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy(ops_test: OpsTest, charm: str, pgb_charm_jammy, github_secrets):
+async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
     landscape_config = {
         "admin_email": "admin@example.com",
         "admin_name": "Admin",
@@ -42,8 +42,7 @@ async def test_deploy(ops_test: OpsTest, charm: str, pgb_charm_jammy, github_sec
             num_units=None,
         ),
         ops_test.model.deploy(
-            charm,
-            application_name=PG,
+            PG,
             num_units=3,
             channel="14/edge",
             config={"profile": "testing"},
@@ -90,6 +89,8 @@ async def test_deploy(ops_test: OpsTest, charm: str, pgb_charm_jammy, github_sec
     })
     await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{LS_CLIENT}:container")
     await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
+    await ops_test.model.relate(f"{PG}:juju-info", f"{LS_CLIENT}:container")
+    await ops_test.model.relate(f"{PG}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.wait_for_idle(
         apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB], status="active"
     )
