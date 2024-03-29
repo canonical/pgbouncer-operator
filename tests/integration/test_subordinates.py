@@ -16,9 +16,9 @@ from .helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
     PGB,
-    get_unit_address,
     scale_application,
 )
+from .helpers.postgresql_helpers import get_unit_address
 
 PG = "pg"
 LS_CLIENT = "landscape-client"
@@ -71,7 +71,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
         timeout=3000,
     )
     haproxy_unit = ops_test.model.applications["haproxy"].units[0]
-    haproxy_addr = await get_unit_address(ops_test, "haproxy", haproxy_unit.name)
+    haproxy_addr = get_unit_address(ops_test, haproxy_unit.name)
     haproxy_host = haproxy_unit.machine.hostname
     cert = subprocess.check_output([
         "lxc",
