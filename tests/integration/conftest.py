@@ -10,14 +10,12 @@ from .helpers.helpers import CLIENT_APP_NAME
 from .helpers.postgresql_helpers import get_leader_unit
 
 
-@pytest.mark.abort_on_fail
 @pytest.fixture(scope="module")
 async def pgb_charm_focal(ops_test: OpsTest):
     """Build the pgbouncer charm."""
     return await ops_test.build_charm(".", bases_index=0)
 
 
-@pytest.mark.abort_on_fail
 @pytest.fixture(scope="module")
 async def pgb_charm_jammy(ops_test: OpsTest):
     """Build the pgbouncer charm."""
