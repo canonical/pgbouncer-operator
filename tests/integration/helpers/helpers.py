@@ -44,21 +44,6 @@ def get_joining_relations(ops_test: OpsTest, app_1: str, app_2: str):
     return relations
 
 
-async def get_unit_address(ops_test: OpsTest, application_name: str, unit_name: str) -> str:
-    """Get unit IP address.
-
-    Args:
-        ops_test: The ops test framework instance
-        application_name: The name of the application
-        unit_name: The name of the unit
-
-    Returns:
-        IP address of the unit
-    """
-    status = await ops_test.model.get_status()
-    return status["applications"][application_name].units[unit_name]["address"]
-
-
 async def get_unit_cores(ops_test: OpsTest, unit: Unit) -> int:
     """Get the number of CPU cores available on the given unit.
 
