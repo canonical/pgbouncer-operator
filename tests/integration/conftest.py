@@ -21,7 +21,7 @@ async def pgb_charm_focal(ops_test: OpsTest):
 @pytest.fixture(scope="module")
 async def pgb_charm_jammy(ops_test: OpsTest):
     """Build the pgbouncer charm."""
-    return await ops_test.build_charm(".", bases_index=1)
+    return await ops_test.build_charm(".", bases_index=2)
 
 
 @pytest.fixture()
