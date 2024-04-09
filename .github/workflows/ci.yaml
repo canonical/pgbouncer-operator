@@ -75,4 +75,6 @@ jobs:
       integration-test: |
         {
           "UBUNTU_PRO_TOKEN" : "${{ secrets.UBUNTU_PRO_TOKEN }}",
+          "LANDSCAPE_ACCOUNT_NAME": "${{ secrets.LANDSCAPE_ACCOUNT_NAME }}",
+          "LANDSCAPE_REGISTRATION_KEY": "${{ secrets.LANDSCAPE_REGISTRATION_KEY }}",
         }
