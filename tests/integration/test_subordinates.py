@@ -46,6 +46,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
         ops_test.model.deploy(
             UBUNTU_PRO_APP_NAME,
             config={"token": github_secrets["UBUNTU_PRO_TOKEN"]},
+            channel="latest/edge",
             num_units=0,
         ),
         ops_test.model.deploy(
@@ -55,6 +56,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
                 "registration-key": github_secrets["LANDSCAPE_REGISTRATION_KEY"],
                 "ppa": "ppa:landscape/self-hosted-beta",
             },
+            channel="latest/edge",
             num_units=0,
         ),
     )
