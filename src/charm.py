@@ -598,6 +598,11 @@ class PgBouncerCharm(CharmBase):
                     "port": r_port,
                     "auth_user": self.backend.auth_user,
                 }
+        pgb_dbs["*"] = {
+            "host": host,
+            "port": port,
+            "auth_user": self.backend.auth_user,
+        }
         return pgb_dbs
 
     def render_pgb_config(self, reload_pgbouncer=False):

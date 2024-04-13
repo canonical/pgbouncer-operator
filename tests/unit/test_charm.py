@@ -369,6 +369,12 @@ class TestCharm(unittest.TestCase):
                 "port": "PORT",
                 "auth_user": "pgbouncer_auth_BACKNEND_USER",
             },
+            "*": {
+                "host": "HOST",
+                "port": "PORT",
+                "auth_db": "postgres",
+                "auth_user": "pgbouncer_auth_BACKNEND_USER",
+            },
         }
         for i in range(self.charm._cores):
             expected_content = template.render(
