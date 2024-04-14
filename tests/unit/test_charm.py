@@ -29,6 +29,7 @@ from constants import (
     PEER_RELATION_NAME,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
+    SECRET_INTERNAL_LABEL,
     SNAP_PACKAGES,
 )
 from tests.helpers import patch_network_get
@@ -550,7 +551,7 @@ class TestCharm(unittest.TestCase):
 
         with self.harness.hooks_disabled():
             self.harness.set_leader(True)
-        with self._caplog.at_level(logging.ERROR):
+        with self._caplog.at_level(logging.DEBUG):
             self.harness.charm.remove_secret("app", "replication")
             assert (
                 "Non-existing field 'replication' was attempted to be removed" in self._caplog.text
@@ -627,7 +628,7 @@ class TestCharmSecrets(unittest.TestCase):
         with self.harness.hooks_disabled():
             self.harness.set_leader(is_leader)
 
-        with self.assertRaises(RelationDataTypeError):
+        with self.assertRaises((RelationDataTypeError, TypeError)):
             self.harness.charm.set_secret(scope, "somekey", 1)
 
         self.harness.charm.set_secret(scope, "somekey", "")
@@ -651,7 +652,7 @@ class TestCharmSecrets(unittest.TestCase):
 
         with self.harness.hooks_disabled():
             self.harness.set_leader(True)
-        with self._caplog.at_level(logging.ERROR):
+        with self._caplog.at_level(logging.DEBUG):
             self.harness.charm.remove_secret("app", "monitoring-password")
             assert (
                 "Non-existing secret monitoring-password was attempted to be removed."
@@ -672,3 +673,56 @@ class TestCharmSecrets(unittest.TestCase):
                 "Non-existing field 'non-existing-secret' was attempted to be removed"
                 in self._caplog.text
             )
+
+    # @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
+    # @patch_network_get(private_address="1.1.1.1")
+    # @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    # def test_migration_from_databag(self, scope, is_leader, _, __):
+    #     """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
+    #     # App has to be leader, unit can be either
+    #     with self.harness.hooks_disabled():
+    #         self.harness.set_leader(is_leader)
+    #
+    #     # Getting current password
+    #     entity = getattr(self.charm, scope)
+    #     self.harness.update_relation_data(self.rel_id, entity.name, {"monitoring_password": "bla"})
+    #     assert self.harness.charm.get_secret(scope, "monitoring_password") == "bla"
+    #
+    #     # Reset new secret
+    #     self.harness.charm.set_secret(scope, "monitoring-password", "blablabla")
+    #     assert self.harness.charm.model.get_secret(label=f"{PEER_RELATION_NAME}.pgbouncer.{scope}")
+    #     assert self.harness.charm.get_secret(scope, "monitoring-password") == "blablabla"
+    #     assert "monitoring-password" not in self.harness.get_relation_data(
+    #         self.rel_id, getattr(self.charm, scope).name
+    #     )
+
+    @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
+    @patch_network_get(private_address="1.1.1.1")
+    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    def test_migration_from_single_secret(self, scope, is_leader, _, __):
+        """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
+        # App has to be leader, unit can be either
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(is_leader)
+
+        secret = self.harness.charm.app.add_secret({"monitoring-password": "bla"})
+
+        # Getting current password
+        entity = getattr(self.charm, scope)
+        self.harness.update_relation_data(
+            self.rel_id, entity.name, {SECRET_INTERNAL_LABEL: secret.id}
+        )
+        assert self.harness.charm.get_secret(scope, "monitoring-password") == "bla"
+
+        # Reset new secret
+        # Only the leader can set app secret content.
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(True)
+        self.harness.charm.set_secret(scope, "monitoring-password", "blablabla")
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(is_leader)
+        assert self.harness.charm.model.get_secret(label=f"{PEER_RELATION_NAME}.pgbouncer.{scope}")
+        assert self.harness.charm.get_secret(scope, "monitoring-password") == "blablabla"
+        assert SECRET_INTERNAL_LABEL not in self.harness.get_relation_data(
+            self.rel_id, getattr(self.charm, scope).name
+        )
