@@ -15,7 +15,7 @@ import subprocess
 from configparser import ConfigParser
 from typing import Dict, List, Literal, Optional, Union, get_args
 
-from charms.data_platform_libs.v0.data_interfaces import DataPeer, DataPeerUnit
+from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
@@ -76,27 +76,15 @@ class PgBouncerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.peer_relation_app = DataPeer(
-            self,
+        self.peer_relation_app = DataPeerData(
+            self.model,
             relation_name=PEER_RELATION_NAME,
-            additional_secret_fields=[
-                self._translate_field_to_secret_key(AUTH_FILE_DATABAG_KEY),
-                self._translate_field_to_secret_key(CFG_FILE_DATABAG_KEY),
-                self._translate_field_to_secret_key(MONITORING_PASSWORD_KEY),
-            ],
             secret_field_name=SECRET_INTERNAL_LABEL,
             deleted_label=SECRET_DELETED_LABEL,
         )
-        self.peer_relation_unit = DataPeerUnit(
-            self,
+        self.peer_relation_unit = DataPeerUnitData(
+            self.model,
             relation_name=PEER_RELATION_NAME,
-            additional_secret_fields=[
-                "key",
-                "csr",
-                "cauth",
-                "cert",
-                "chain",
-            ],
             secret_field_name=SECRET_INTERNAL_LABEL,
             deleted_label=SECRET_DELETED_LABEL,
         )
@@ -264,7 +252,7 @@ class PgBouncerCharm(CharmBase):
         if scope == UNIT_SCOPE:
             return self.unit
 
-    def peer_relation_data(self, scope: Scopes) -> DataPeer:
+    def peer_relation_data(self, scope: Scopes) -> DataPeerData:
         """Returns the peer relation data per scope."""
         if scope == APP_SCOPE:
             return self.peer_relation_app
@@ -287,8 +275,9 @@ class PgBouncerCharm(CharmBase):
         peers = self.model.get_relation(PEER_RELATION_NAME)
         if not peers:
             return None
+
         secret_key = self._translate_field_to_secret_key(key)
-        return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, secret_key)
+        return self.peer_relation_data(scope).get_secret(peers.id, secret_key)
 
     def set_secret(self, scope: Scopes, key: str, value: Optional[str]) -> Optional[str]:
         """Set secret from the secret storage."""
@@ -300,7 +289,7 @@ class PgBouncerCharm(CharmBase):
 
         peers = self.model.get_relation(PEER_RELATION_NAME)
         secret_key = self._translate_field_to_secret_key(key)
-        self.peer_relation_data(scope).update_relation_data(peers.id, {secret_key: value})
+        self.peer_relation_data(scope).set_secret(peers.id, secret_key, value)
 
     def remove_secret(self, scope: Scopes, key: str) -> None:
         """Removing a secret."""
