@@ -107,7 +107,6 @@ from ops.model import (
     MaintenanceStatus,
     Relation,
     Unit,
-    WaitingStatus,
 )
 
 from constants import EXTENSIONS_BLOCKING_MESSAGE
@@ -219,12 +218,10 @@ class DbProvides(Object):
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
-            # If there's nothing in either databag, return early.
-            no_db = "No database name provided in app or unit databag"
-            logger.warning(no_db)
-            self.charm.unit.status = WaitingStatus(no_db)
-            join_event.defer()
-            return
+            # Sometimes a relation changed event is triggered, and it doesn't have
+            # a database name in it (like the relation with Landscape server charm),
+            # so create a database with the other application name.
+            database = join_event.relation.app.name
 
         if self._block_on_extensions(join_event.relation, remote_app_databag):
             return
@@ -459,8 +456,8 @@ class DbProvides(Object):
         for key, item in updates.items():
             updates[key] = str(item)
 
-        for databag in self.get_databags(relation):
-            databag.update(updates)
+        databag = relation.data[self.charm.unit]
+        databag.update(updates)
 
     def _generate_username(self, relation):
         """Generates a unique username for this relation."""

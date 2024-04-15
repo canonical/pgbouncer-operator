@@ -109,10 +109,10 @@ class TestDb(unittest.TestCase):
         _create_database.assert_called_with(database, user)
         _init_auth.assert_called_with([database])
 
-        for dbag in [relation_data[self.charm.unit], relation_data[self.charm.app]]:
-            assert dbag["database"] == database
-            assert dbag["user"] == user
-            assert dbag["password"] == password
+        dbag = relation_data[self.charm.unit]
+        assert dbag["database"] == database
+        assert dbag["user"] == user
+        assert dbag["password"] == password
 
         # Check admin permissions aren't present when we use db_relation
         _set_rel_dbs.reset_mock()
@@ -227,13 +227,10 @@ class TestDb(unittest.TestCase):
         }
         self.db_relation._on_relation_departed(mock_event)
 
-        app_databag = mock_event.relation.data[self.charm.app]
         unit_databag = mock_event.relation.data[self.charm.unit]
 
-        expected_app_databag = {"allowed-units": "test_string"}
         expected_unit_databag = {"allowed-units": "test_string"}
 
-        self.assertDictEqual(app_databag, expected_app_databag)
         self.assertDictEqual(unit_databag, expected_unit_databag)
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
