@@ -11,12 +11,12 @@ from pytest_operator.plugin import OpsTest
 from ..helpers.helpers import (
     PG,
     PGB,
-    deploy_and_relate_bundle_with_pgbouncer,
     deploy_postgres_bundle,
 )
 from ..helpers.postgresql_helpers import (
     check_database_users_existence,
     check_databases_creation,
+    deploy_and_relate_bundle_with_pgbouncer,
     get_landscape_api_credentials,
 )
 
