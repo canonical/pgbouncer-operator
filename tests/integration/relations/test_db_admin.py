@@ -1,72 +1,94 @@
 #!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
+import json
 import logging
 
 import pytest
+from landscape_api.base import run_query
 from pytest_operator.plugin import OpsTest
-from tenacity import Retrying, stop_after_attempt, wait_fixed
 
-from tests.integration.helpers.helpers import (
+from ..helpers.helpers import (
     PG,
     PGB,
-    deploy_and_relate_application_with_pgbouncer_bundle,
+    deploy_and_relate_bundle_with_pgbouncer,
     deploy_postgres_bundle,
-    get_app_relation_databag,
-    run_sql,
+)
+from ..helpers.postgresql_helpers import (
+    check_database_users_existence,
+    check_databases_creation,
+    get_landscape_api_credentials,
 )
 
 logger = logging.getLogger(__name__)
 
-PSQL = "psql"
-RELATION = "db-admin"
+HAPROXY_APP_NAME = "haproxy"
+LANDSCAPE_APP_NAME = "landscape-server"
+RABBITMQ_APP_NAME = "rabbitmq-server"
+DATABASE_UNITS = 2
+RELATION_NAME = "db-admin"
 
 
 @pytest.mark.group(1)
-@pytest.mark.abort_on_fail
-async def test_db_admin_with_psql(ops_test: OpsTest, pgb_charm_focal) -> None:
+async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: str) -> None:
+    """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
     await deploy_postgres_bundle(
         ops_test,
-        pgb_charm_focal,
-        db_units=2,
-        pgb_series="focal",
+        pgb_charm_jammy,
+        db_units=DATABASE_UNITS,
+        pgb_series="jammy",
+        pg_config={"profile": "testing", "plugin_plpython3u_enable": "True"},
     )
 
-    psql_relation = await deploy_and_relate_application_with_pgbouncer_bundle(
+    # Deploy and test the Landscape Scalable bundle (using this PostgreSQL charm).
+    relation_id = await deploy_and_relate_bundle_with_pgbouncer(
         ops_test,
-        "postgresql-charmers-postgresql-client",
-        PSQL,
-        relation=RELATION,
-        series="focal",
+        "ch:landscape-scalable",
+        LANDSCAPE_APP_NAME,
+        main_application_num_units=2,
+        relation_name=RELATION_NAME,
+        timeout=3000,
+    )
+    await check_databases_creation(
+        ops_test,
+        [
+            "landscape-standalone-account-1",
+            "landscape-standalone-knowledge",
+            "landscape-standalone-main",
+            "landscape-standalone-package",
+            "landscape-standalone-resource-1",
+            "landscape-standalone-session",
+        ],
     )
 
-    unit_name = f"{PSQL}/0"
-    psql_databag = await get_app_relation_databag(ops_test, unit_name, psql_relation.id)
+    landscape_users = [f"relation-{relation_id}"]
 
-    pgpass = psql_databag.get("password")
-    user = psql_databag.get("user")
-    host = psql_databag.get("host")
-    port = psql_databag.get("port")
-    dbname = psql_databag.get("database")
+    await check_database_users_existence(ops_test, landscape_users, [])
 
-    assert None not in [pgpass, user, host, port, dbname], "databag incorrectly populated"
-
-    user_command = "CREATE ROLE myuser3 LOGIN PASSWORD 'mypass';"
-    rtn, _, err = await run_sql(
-        ops_test, unit_name, user_command, pgpass, user, host, port, dbname
+    # Create the admin user on Landscape through configs.
+    await ops_test.model.applications["landscape-server"].set_config({
+        "admin_email": "admin@canonical.com",
+        "admin_name": "Admin",
+        "admin_password": "test1234",
+    })
+    await ops_test.model.wait_for_idle(
+        apps=["landscape-server", PG, PGB],
+        status="active",
+        timeout=1200,
     )
-    assert rtn == 0, f"failed to run admin command {user_command}, {err}"
 
-    db_command = "CREATE DATABASE test_db;"
-    rtn, _, err = await run_sql(ops_test, unit_name, db_command, pgpass, user, host, port, dbname)
-    assert rtn == 0, f"failed to run admin command {db_command}, {err}"
+    # Connect to the Landscape API through HAProxy and do some CRUD calls (without the update).
+    key, secret = await get_landscape_api_credentials(ops_test)
+    haproxy_unit = ops_test.model.applications[HAPROXY_APP_NAME].units[0]
+    api_uri = f"https://{haproxy_unit.public_address}/api/"
 
+    # Create a role and list the available roles later to check that the new one is there.
+    role_name = "User1"
+    run_query(key, secret, "CreateRole", {"name": role_name}, api_uri, False)
+    api_response = run_query(key, secret, "GetRoles", {}, api_uri, False)
+    assert role_name in [user["name"] for user in json.loads(api_response)]
 
-@pytest.mark.group(1)
-async def test_remove_relation(ops_test: OpsTest):
-    await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db-admin", f"{PSQL}:db")
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle([PG], status="active", timeout=300)
-    for attempt in Retrying(stop=stop_after_attempt(60), wait=wait_fixed(1), reraise=True):
-        with attempt:
-            assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
+    # Remove the role and assert it isn't part of the roles list anymore.
+    run_query(key, secret, "RemoveRole", {"name": role_name}, api_uri, False)
+    api_response = run_query(key, secret, "GetRoles", {}, api_uri, False)
+    assert role_name not in [user["name"] for user in json.loads(api_response)]
