@@ -674,27 +674,27 @@ class TestCharmSecrets(unittest.TestCase):
                 in self._caplog.text
             )
 
-    # @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    # @patch_network_get(private_address="1.1.1.1")
-    # @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
-    # def test_migration_from_databag(self, scope, is_leader, _, __):
-    #     """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
-    #     # App has to be leader, unit can be either
-    #     with self.harness.hooks_disabled():
-    #         self.harness.set_leader(is_leader)
-    #
-    #     # Getting current password
-    #     entity = getattr(self.charm, scope)
-    #     self.harness.update_relation_data(self.rel_id, entity.name, {"monitoring_password": "bla"})
-    #     assert self.harness.charm.get_secret(scope, "monitoring_password") == "bla"
-    #
-    #     # Reset new secret
-    #     self.harness.charm.set_secret(scope, "monitoring-password", "blablabla")
-    #     assert self.harness.charm.model.get_secret(label=f"{PEER_RELATION_NAME}.pgbouncer.{scope}")
-    #     assert self.harness.charm.get_secret(scope, "monitoring-password") == "blablabla"
-    #     assert "monitoring-password" not in self.harness.get_relation_data(
-    #         self.rel_id, getattr(self.charm, scope).name
-    #     )
+    @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
+    @patch_network_get(private_address="1.1.1.1")
+    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    def test_migration_from_databag(self, scope, is_leader, _, __):
+        """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
+        # App has to be leader, unit can be either
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(is_leader)
+
+        # Getting current password
+        entity = getattr(self.charm, scope)
+        self.harness.update_relation_data(self.rel_id, entity.name, {"monitoring_password": "bla"})
+        assert self.harness.charm.get_secret(scope, "monitoring_password") == "bla"
+
+        # Reset new secret
+        self.harness.charm.set_secret(scope, "monitoring-password", "blablabla")
+        assert self.harness.charm.model.get_secret(label=f"{PEER_RELATION_NAME}.pgbouncer.{scope}")
+        assert self.harness.charm.get_secret(scope, "monitoring-password") == "blablabla"
+        assert "monitoring-password" not in self.harness.get_relation_data(
+            self.rel_id, getattr(self.charm, scope).name
+        )
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
     @patch_network_get(private_address="1.1.1.1")
