@@ -305,13 +305,6 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        dbs = self.charm.get_relation_databases()
-        if str(change_event.relation.id) not in dbs:
-            pass
-            logger.debug("relation not fully initialised - database mapping not yet set")
-            change_event.defer()
-            return
-
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.update_databags(
             change_event.relation,

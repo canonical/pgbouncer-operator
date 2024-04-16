@@ -12,9 +12,9 @@ from ..helpers.helpers import (
     PG,
     PGB,
     deploy_postgres_bundle,
+    get_backend_user_pass,
 )
 from ..helpers.postgresql_helpers import (
-    check_database_users_existence,
     check_databases_creation,
     deploy_and_relate_bundle_with_pgbouncer,
     get_landscape_api_credentials,
@@ -32,16 +32,17 @@ RELATION_NAME = "db-admin"
 @pytest.mark.group(1)
 async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: str) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
-    await deploy_postgres_bundle(
+    backend_relation = await deploy_postgres_bundle(
         ops_test,
         pgb_charm_jammy,
         db_units=DATABASE_UNITS,
         pgb_series="jammy",
         pg_config={"profile": "testing", "plugin_plpython3u_enable": "True"},
+        pgb_config={"max_db_connections": "500"},
     )
 
     # Deploy and test the Landscape Scalable bundle (using this PostgreSQL charm).
-    relation_id = await deploy_and_relate_bundle_with_pgbouncer(
+    await deploy_and_relate_bundle_with_pgbouncer(
         ops_test,
         "ch:landscape-scalable",
         LANDSCAPE_APP_NAME,
@@ -49,6 +50,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: 
         relation_name=RELATION_NAME,
         timeout=3000,
     )
+    pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
     await check_databases_creation(
         ops_test,
         [
@@ -59,11 +61,9 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: 
             "landscape-standalone-resource-1",
             "landscape-standalone-session",
         ],
+        pgb_user,
+        pgb_pass,
     )
-
-    landscape_users = [f"relation-{relation_id}"]
-
-    await check_database_users_existence(ops_test, landscape_users, [])
 
     # Create the admin user on Landscape through configs.
     await ops_test.model.applications["landscape-server"].set_config({
