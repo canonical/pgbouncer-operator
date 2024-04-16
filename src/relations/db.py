@@ -84,6 +84,7 @@ Some example relation data is below. All values are examples, generated in a run
 ------------------------------------------------------------------------------------------------------------
 """  # noqa: W505
 
+import json
 import logging
 from typing import Dict, Iterable, List
 
@@ -238,14 +239,13 @@ class DbProvides(Object):
         dbs[str(join_event.relation.id)] = {"name": database, "legacy": True}
         self.charm.set_relation_databases(dbs)
 
-        self.update_databags(
-            join_event.relation,
-            {
-                "user": user,
-                "password": password,
-                "database": database,
-            },
-        )
+        creds = {
+            "user": user,
+            "password": password,
+            "database": database,
+        }
+        self.charm.peers.app_databag[user] = json.dumps(creds)
+        self.update_databags(join_event.relation, creds)
 
         # Create user and database in backend postgresql database
         try:
@@ -292,7 +292,8 @@ class DbProvides(Object):
         # No backup values because if databag isn't populated, this relation isn't initialised.
         # This means that the database and user requested in this relation haven't been created,
         # so we defer this event until the databag is populated.
-        databag = self.get_databags(change_event.relation)[0]
+        user = self._generate_username(change_event.relation)
+        databag = json.loads(self.charm.peers.app_databag.get(user, "{}"))
         database = databag.get("database")
         user = databag.get("user")
         password = databag.get("password")
@@ -304,22 +305,28 @@ class DbProvides(Object):
             change_event.defer()
             return
 
+        dbs = self.charm.get_relation_databases()
+        if str(change_event.relation.id) not in dbs:
+            pass
+            logger.debug("relation not fully initialised - database mapping not yet set")
+            change_event.defer()
+            return
+
         self.charm.render_pgb_config(reload_pgbouncer=True)
-        if self.charm.unit.is_leader():
-            self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
-            self.update_databags(
-                change_event.relation,
-                {
-                    "allowed-subnets": self.get_allowed_subnets(change_event.relation),
-                    "allowed-units": self.get_allowed_units(change_event.relation),
-                    "version": self.charm.backend.postgres.get_postgresql_version(),
-                    "host": "localhost",
-                    "user": user,
-                    "password": password,
-                    "database": database,
-                    "state": self._get_state(),
-                },
-            )
+        self.update_databags(
+            change_event.relation,
+            {
+                "allowed-subnets": self.get_allowed_subnets(change_event.relation),
+                "allowed-units": self.get_allowed_units(change_event.relation),
+                "version": self.charm.backend.postgres.get_postgresql_version(),
+                "host": "localhost",
+                "user": user,
+                "password": password,
+                "database": database,
+                "state": "master",
+            },
+        )
+        self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
 
     def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection information."""
@@ -456,8 +463,7 @@ class DbProvides(Object):
         for key, item in updates.items():
             updates[key] = str(item)
 
-        databag = relation.data[self.charm.unit]
-        databag.update(updates)
+        relation.data[self.charm.unit].update(updates)
 
     def _generate_username(self, relation):
         """Generates a unique username for this relation."""
@@ -465,20 +471,6 @@ class DbProvides(Object):
         relation_id = relation.id
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
-
-    def _get_state(self) -> str:
-        """Gets the given state for this unit.
-
-        Args:
-            standbys: the comma-separated list of postgres standbys
-
-        Returns:
-            The described state of this unit. Can be 'master' or 'standby'.
-        """
-        if self.charm.unit.is_leader():
-            return "master"
-        else:
-            return "standby"
 
     def get_allowed_subnets(self, relation: Relation) -> str:
         """Gets the allowed subnets from this relation."""
