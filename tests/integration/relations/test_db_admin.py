@@ -3,6 +3,8 @@
 # See LICENSE file for licensing details.
 import json
 import logging
+import math
+import os
 
 import pytest
 from landscape_api.base import run_query
@@ -32,13 +34,14 @@ RELATION_NAME = "db-admin"
 @pytest.mark.group(1)
 async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: str) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
+    max_db_conns = math.ceil(80 / os.cpu_count()) * 2 * os.cpu_count()
     backend_relation = await deploy_postgres_bundle(
         ops_test,
         pgb_charm_jammy,
         db_units=DATABASE_UNITS,
         pgb_series="jammy",
         pg_config={"profile": "testing", "plugin_plpython3u_enable": "True"},
-        pgb_config={"max_db_connections": "500", "pool_mode": "transaction"},
+        pgb_config={"max_db_connections": str(max_db_conns), "pool_mode": "transaction"},
     )
 
     # Deploy and test the Landscape Scalable bundle (using this PostgreSQL charm).
