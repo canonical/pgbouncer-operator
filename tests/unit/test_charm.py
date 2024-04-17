@@ -379,7 +379,9 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
-                socket_dir=f"/tmp/pgbouncer/instance_{i}",
+                peer_id=i,
+                peers=range(self.charm._cores),
+                base_socket_dir="/tmp/pgbouncer/instance_",
                 log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
                 pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
                 listen_addr="127.0.0.1",
@@ -416,7 +418,9 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
-                socket_dir=f"/tmp/pgbouncer/instance_{i}",
+                peer_id=i,
+                peers=range(self.charm._cores),
+                base_socket_dir="/tmp/pgbouncer/instance_",
                 log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
                 pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
                 listen_addr="127.0.0.1",

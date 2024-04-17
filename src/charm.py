@@ -645,7 +645,9 @@ class PgBouncerCharm(CharmBase):
                     f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
                     template.render(
                         databases=databases,
-                        socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}",
+                        peer_id=service_id,
+                        base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
+                        peers=self.service_ids,
                         log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
                         pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
                         listen_addr=addr,
