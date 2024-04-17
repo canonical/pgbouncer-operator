@@ -487,7 +487,7 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             for service in self.pgb_services:
-                systemd.service_reload(service, restart_on_failure=True)
+                systemd.service_restart(service)
             self.unit.status = initial_status
         except systemd.SystemdError as e:
             logger.error(e)
