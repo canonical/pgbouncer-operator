@@ -379,6 +379,7 @@ async def get_landscape_api_credentials(ops_test: OpsTest) -> List[str]:
 
     output = await execute_query_on_unit(
         unit_address,
+        "operator",
         password,
         "SELECT encode(access_key_id,'escape'), encode(access_secret_key,'escape') FROM api_credentials;",
         database="landscape-standalone-main",
