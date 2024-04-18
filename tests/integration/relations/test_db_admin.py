@@ -38,7 +38,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: 
         db_units=DATABASE_UNITS,
         pgb_series="jammy",
         pg_config={"profile": "testing"},
-        pgb_config={"max_db_connections": "40", "pool_mode": "transaction"},
+        pgb_config={"max_db_connections": "20", "pool_mode": "transaction"},
     )
 
     # Deploy and test the Landscape Scalable bundle (using this PostgreSQL charm).
@@ -46,7 +46,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: 
         ops_test,
         "ch:landscape-scalable",
         LANDSCAPE_APP_NAME,
-        main_application_num_units=1,
+        main_application_num_units=2,
         relation_name=RELATION_NAME,
         timeout=3000,
     )

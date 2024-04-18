@@ -110,7 +110,7 @@ class TestCharm(unittest.TestCase):
         return_value=None,
     )
     def test_on_start(self, _has_relation, _start, _render_prom_service, _, __):
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
         # Charm should fail out after calling _start once
@@ -139,7 +139,7 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
     @patch("charm.PgBouncerCharm.check_pgb_running")
     def test_reload_pgbouncer(self, _check_pgb_running, _restart):
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         self.charm.reload_pgbouncer()
         calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
@@ -177,7 +177,7 @@ class TestCharm(unittest.TestCase):
         _running.side_effect = None
 
         # otherwise check all services and return activestatus
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         assert self.charm.check_pgb_running()
         calls = [
             call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)

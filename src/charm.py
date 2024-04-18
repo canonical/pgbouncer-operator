@@ -115,7 +115,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
 
-        self._cores = os.cpu_count()
+        self._cores = max(min(os.cpu_count(), 4), 2)
         self.service_ids = list(range(self._cores))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
