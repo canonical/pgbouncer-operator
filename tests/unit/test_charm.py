@@ -50,10 +50,6 @@ class TestCharm(unittest.TestCase):
 
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
-    @pytest.fixture
-    def use_caplog(self, caplog):
-        self._caplog = caplog
-
     @pytest.fixture()
     def with_juju_secrets(self, monkeypatch):
         monkeypatch.setattr("ops.JujuVersion.has_secrets", True)
@@ -577,7 +573,6 @@ class TestCharm(unittest.TestCase):
         self.harness.charm.set_secret(scope, "somekey", "")
         assert self.harness.charm.get_secret(scope, "somekey") is None
 
-    @pytest.mark.usefixtures("use_caplog")
     @patch_network_get(private_address="1.1.1.1")
     def test_delete_password(self):
         """NOTE: currently ops.testing seems to allow for non-leader to remove secrets too!"""
