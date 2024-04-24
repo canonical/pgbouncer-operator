@@ -369,12 +369,6 @@ class TestCharm(unittest.TestCase):
                 "port": "PORT",
                 "auth_user": "pgbouncer_auth_BACKNEND_USER",
             },
-            "*": {
-                "host": "HOST",
-                "port": "PORT",
-                "auth_db": "postgres",
-                "auth_user": "pgbouncer_auth_BACKNEND_USER",
-            },
         }
         for i in range(self.charm._cores):
             expected_content = template.render(
@@ -409,6 +403,13 @@ class TestCharm(unittest.TestCase):
             })
         del expected_databases["first_test_readonly"]
         del expected_databases["second_test_readonly"]
+        expected_databases["*"] = {
+            "host": "HOST",
+            "port": "PORT",
+            "auth_dbname": "first_test",
+            "auth_user": "pgbouncer_auth_BACKNEND_USER",
+        }
+        _get_dbs.return_value["*"] = {"name": "*", "auth_dbname": "first_test"}
 
         del _postgres_databag.return_value["read-only-endpoints"]
 

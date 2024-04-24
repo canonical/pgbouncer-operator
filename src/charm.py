@@ -535,6 +535,7 @@ class PgBouncerCharm(CharmBase):
             return {}
 
         databases = {}
+        add_wildcard = False
         for relation in self.model.relations.get("db", []):
             database = self.legacy_db_relation.get_databags(relation)[0].get("database")
             if database:
@@ -550,16 +551,22 @@ class PgBouncerCharm(CharmBase):
                     "name": database,
                     "legacy": True,
                 }
+                add_wildcard = True
 
         for rel_id, data in self.client_relation.database_provides.fetch_relation_data(
-            fields=["database"]
+            fields=["database", "extra-user-roles"]
         ).items():
             database = data.get("database")
+            roles = data.get("extra-user-roles", "").lower().split(",")
             if database:
                 databases[str(rel_id)] = {
                     "name": database,
                     "legacy": False,
                 }
+            if "admin" in roles or "superuser" in roles:
+                add_wildcard = True
+        if add_wildcard:
+            databases["*"] = {"name": "*", "auth_dbname": database}
         self.set_relation_databases(databases)
         return databases
 
@@ -585,6 +592,8 @@ class PgBouncerCharm(CharmBase):
 
         for database in databases.values():
             name = database["name"]
+            if name == "*":
+                continue
             pgb_dbs[name] = {
                 "host": host,
                 "dbname": name,
@@ -598,11 +607,13 @@ class PgBouncerCharm(CharmBase):
                     "port": r_port,
                     "auth_user": self.backend.auth_user,
                 }
-        pgb_dbs["*"] = {
-            "host": host,
-            "port": port,
-            "auth_user": self.backend.auth_user,
-        }
+        if "*" in databases:
+            pgb_dbs["*"] = {
+                "host": host,
+                "port": port,
+                "auth_user": self.backend.auth_user,
+                "auth_dbname": databases["*"]["auth_dbname"],
+            }
         return pgb_dbs
 
     def render_pgb_config(self, reload_pgbouncer=False):

@@ -1,6 +1,6 @@
 [databases]
 {% for name, database in databases.items() -%}
-{{ name }} = host={{ database.host }} {% if database.dbname %}dbname={{ database.dbname }}{% else %}auth_dbname=postgres{% endif %} port={{ database.port }} auth_user={{ database.auth_user }}
+{{ name }} = host={{ database.host }} {% if database.dbname %}dbname={{ database.dbname }}{% else %}auth_dbname={{ database.auth_dbname }}{% endif %} port={{ database.port }} auth_user={{ database.auth_user }}
 {% endfor %}
 
 [peers]
