@@ -104,7 +104,10 @@ class TestDb(unittest.TestCase):
 
         _set_rel_dbs.reset_mock()
         self.db_admin_relation._on_relation_joined(mock_event)
-        _set_rel_dbs.assert_called_once_with({"1": {"name": "test_db", "legacy": True}})
+        _set_rel_dbs.assert_called_once_with({
+            "1": {"name": "test_db", "legacy": True},
+            "*": {"name": "*", "auth_dbname": "test_db"},
+        })
 
         _create_user.assert_called_with(user, password, admin=True)
         _create_database.assert_called_with(database, user)
@@ -119,7 +122,10 @@ class TestDb(unittest.TestCase):
         _set_rel_dbs.reset_mock()
         self.db_relation._on_relation_joined(mock_event)
         _create_user.assert_called_with(user, password, admin=False)
-        _set_rel_dbs.assert_called_once_with({"1": {"name": "test_db", "legacy": True}})
+        _set_rel_dbs.assert_called_once_with({
+            "1": {"name": "test_db", "legacy": True},
+            "*": {"name": "*", "auth_dbname": "test_db"},
+        })
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(

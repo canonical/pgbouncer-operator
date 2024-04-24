@@ -237,6 +237,8 @@ class DbProvides(Object):
 
         dbs = self.charm.generate_relation_databases()
         dbs[str(join_event.relation.id)] = {"name": database, "legacy": True}
+        if self.admin:
+            dbs["*"] = {"name": "*", "auth_dbname": database}
         self.charm.set_relation_databases(dbs)
 
         creds = {
