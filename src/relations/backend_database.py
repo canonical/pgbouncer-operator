@@ -132,7 +132,9 @@ class BackendDatabaseRequires(Object):
                     logger.debug("database %s not yet created", database)
 
         for relation in self.charm.model.relations.get("db-admin", []):
-            database = self.legacy_db_admin_relation.get_databags(relation)[0].get("database")
+            database = self.charm.legacy_db_admin_relation.get_databags(relation)[0].get(
+                "database"
+            )
             if database and relation.units:
                 try:
                     con = self.postgres._connect_to_database(database)
