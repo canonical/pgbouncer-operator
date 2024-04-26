@@ -123,20 +123,35 @@ class BackendDatabaseRequires(Object):
         databases = [self.database.database, PG]
         for relation in self.charm.model.relations.get("db", []):
             database = self.charm.legacy_db_relation.get_databags(relation)[0].get("database")
-            if database:
-                databases.append(database)
+            if database and relation.units:
+                try:
+                    con = self.postgres._connect_to_database(database)
+                    con.close()
+                    databases.append(database)
+                except psycopg2.OperationalError:
+                    logger.debug("database %s not yet created", database)
 
         for relation in self.charm.model.relations.get("db-admin", []):
             database = self.legacy_db_admin_relation.get_databags(relation)[0].get("database")
-            if database:
-                databases.append(database)
+            if database and relation.units:
+                try:
+                    con = self.postgres._connect_to_database(database)
+                    con.close()
+                    databases.append(database)
+                except psycopg2.OperationalError:
+                    logger.debug("database %s not yet created", database)
 
         for _, data in self.charm.client_relation.database_provides.fetch_relation_data(
             fields=["database"]
         ).items():
             database = data.get("database")
             if database:
-                databases.append(database)
+                try:
+                    con = self.postgres._connect_to_database(database)
+                    con.close()
+                    databases.append(database)
+                except psycopg2.OperationalError:
+                    logger.debug("database %s not yet created", database)
 
         return databases
 
