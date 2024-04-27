@@ -1,0 +1,70 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:focal/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/tls-certificates-operator-22
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  tls-certificates-operator/0 [idle] active: 
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+  tls-certificates-operator/0 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:834 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.1.8    unsupported  01:52:40Z
+
+App                        Version  Status   Scale  Charm                      Channel        Rev  Exposed  Message
+pgbouncer                           unknown      0  pgbouncer                                   0  no       
+postgresql                 14.11    active       3  postgresql                 14/edge        401  no       
+tls-certificates-operator           active       1  tls-certificates-operator  latest/stable   22  no       
+
+Unit                          Workload  Agent      Machine  Public address  Ports     Message
+postgresql/0                  waiting   executing  0        10.135.93.89    5432/tcp  Awaiting restart operation
+postgresql/1                  active    executing  1        10.135.93.42    5432/tcp  
+postgresql/2*                 error     idle       2        10.135.93.60    5432/tcp  hook failed: "certificates-relation-changed"
+tls-certificates-operator/0*  active    idle       4        10.135.93.107             
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.135.93.89   juju-945c67-0  ubuntu@22.04      Running
+1        started  10.135.93.42   juju-945c67-1  ubuntu@22.04      Running
+2        started  10.135.93.60   juju-945c67-2  ubuntu@22.04      Running
+4        started  10.135.93.107  juju-945c67-4  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:840 Juju error logs:
+
+machine-2: 01:38:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:38:02 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-2: 01:38:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:38:02 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:38:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:38:09 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-1: 01:38:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:38:09 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 01:38:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:38:10 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-0: 01:38:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:38:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 01:48:48 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:48:48 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-3: 01:48:48 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:48:48 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:48:52 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-pgbouncer-0: 01:50:25 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "fec203b2-c9eb-473f-8588-40f7c7945c67:r#5#postgresql": settings fec203b2-c9eb-473f-8588-40f7c7945c67:r#5#postgresql not found (not found)
+unit-postgresql-2: 01:50:26 ERROR unit.postgresql/2.juju-log Non-existing field 'relation-5' was attempted to be removed from the databag (relation ID: 0)
+unit-postgresql-2: 01:50:26 ERROR unit.postgresql/2.juju-log Non-existing field 'relation-5-database' was attempted to be removed from the databag (relation ID: 0)
+machine-3: 01:50:49 ERROR juju.api.watcher error trying to stop watcher: websocket: close sent
+machine-4: 01:51:55 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:51:55 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-4: 01:51:55 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-tls-certificates-operator-0: 01:51:55 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:904 Forgetting main...
