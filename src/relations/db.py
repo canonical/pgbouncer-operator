@@ -258,7 +258,9 @@ class DbProvides(Object):
             logger.info(init_msg)
 
             self.charm.backend.postgres.create_user(user, password, admin=self.admin)
-            self.charm.backend.postgres.create_database(database, user)
+            self.charm.backend.postgres.create_database(
+                database, user, client_relations=self.charm.client_relations
+            )
 
             created_msg = f"database and user for {self.relation_name} relation created"
             self.charm.unit.status = initial_status
@@ -271,6 +273,7 @@ class DbProvides(Object):
             return
 
         # set up auth function
+        self.charm.backend.remove_auth_function(dbs=[database])
         self.charm.backend.initialise_auth_function([database])
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
@@ -417,24 +420,13 @@ class DbProvides(Object):
             broken_event.defer()
             return
 
-        dbs = self.charm.generate_relation_databases()
-        dbs.pop(str(broken_event.relation.id), None)
+        dbs = self.charm.get_relation_databases()
+        database = dbs.pop(str(broken_event.relation.id), {}).get("name")
         self.charm.set_relation_databases(dbs)
         if self.charm.unit.is_leader():
             # check database can be deleted from pgb config, and if so, delete it. Database is kept on
             # postgres application because we don't want to delete all user data with one command.
-            delete_db = True
-            relations = self.model.relations.get("db", []) + self.model.relations.get(
-                "db-admin", []
-            )
-            for relation in relations:
-                if relation.id == broken_event.relation.id:
-                    continue
-                if relation.data[self.charm.unit].get("database") == database:
-                    # There's multiple applications using this database, so don't remove it until
-                    # we can guarantee this is the last one.
-                    delete_db = False
-                    break
+            delete_db = database not in dbs.values()
 
             if delete_db:
                 self.charm.backend.remove_auth_function([database])
