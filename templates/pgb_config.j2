@@ -2,6 +2,9 @@
 {% for name, database in databases.items() -%}
 {{ name }} = host={{ database.host }} {% if database.dbname %}dbname={{ database.dbname }}{% else %}auth_dbname={{ database.auth_dbname }}{% endif %} port={{ database.port }} auth_user={{ database.auth_user }}
 {% endfor %}
+{% for name, database in readonly_databases.items() -%}
+{{ name }} = host={{ database.host }} {% if database.dbname %}dbname={{ database.dbname }}{% else %}auth_dbname={{ database.auth_dbname }}{% endif %} port={{ database.port }} auth_user={{ database.auth_user }}
+{% endfor %}
 
 [peers]
 {% for peer in peers -%}

@@ -374,6 +374,7 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
+                readonly_databases={},
                 peer_id=i,
                 peers=range(self.charm._cores),
                 base_socket_dir="/tmp/pgbouncer/instance_",
@@ -420,6 +421,7 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
+                readonly_databases={},
                 peer_id=i,
                 peers=range(self.charm._cores),
                 base_socket_dir="/tmp/pgbouncer/instance_",
