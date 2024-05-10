@@ -98,7 +98,7 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
         self.framework.observe(
-            self.charm.on.update_readonly_dbs_action, self._on_update_readonly_dbs_action
+            self.on.update_readonly_dbs_action, self._on_update_readonly_dbs_action
         )
 
         self.peers = Peers(self)
@@ -406,42 +406,47 @@ class PgBouncerCharm(CharmBase):
     def _on_leader_elected(self, _):
         self.peers.update_leader()
 
-    def _get_readonly_dbs(self) -> Dict[str, str]:
+    def _get_readonly_dbs(self, databases: Dict) -> Dict[str, str]:
         readonly_dbs = {}
-        read_only_endpoints = self.backend.get_read_only_endpoints()
-        r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
-        if r_hosts:
-            for r_host in read_only_endpoints:
-                r_port = r_host.split(":")[1]
-                break
+        if self.backend.relation and "*" in databases:
+            read_only_endpoints = self.backend.get_read_only_endpoints()
+            r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
+            if r_hosts:
+                for r_host in read_only_endpoints:
+                    r_port = r_host.split(":")[1]
+                    break
 
-            databases = json.loads(self.peers.app_databag.get("readonly_dbs", "[]"))
-            for name in databases:
-                readonly_dbs[f"{name}_readonly"] = {
-                    "host": r_hosts,
-                    "dbname": name,
-                    "port": r_port,
-                    "auth_user": self.backend.auth_user,
-                }
+                backend_databases = json.loads(self.peers.app_databag.get("readonly_dbs", "[]"))
+                for name in backend_databases:
+                    readonly_dbs[f"{name}_readonly"] = {
+                        "host": r_hosts,
+                        "dbname": name,
+                        "port": r_port,
+                        "auth_dbname": databases["*"]["auth_dbname"],
+                        "auth_user": self.backend.auth_user,
+                    }
         return readonly_dbs
 
     def _collect_readonly_dbs(self) -> None:
-        if self.charm.unit.is_leader() and self.backend.relation:
+        if self.unit.is_leader() and self.backend.relation:
             existing_dbs = [db["name"] for db in self.get_relation_databases().values()]
+            existing_dbs += ["postgres", "pgbouncer"]
             try:
-                with self.postgres._connect_to_database(PGB) as conn, conn.cursor() as cursor:
+                with self.backend.postgres._connect_to_database(
+                    PGB
+                ) as conn, conn.cursor() as cursor:
                     cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false;")
                     results = cursor.fetchall()
                 conn.close()
             except psycopg2.Error:
                 logger.warning("PostgreSQL connection failed")
-            readonly_dbs = [db for db in results if db not in existing_dbs]
+            readonly_dbs = [db[0] for db in results if db and db[0] not in existing_dbs]
             readonly_dbs.sort()
             self.peers.app_databag["readonly_dbs"] = json.dumps(readonly_dbs)
 
     def _on_update_readonly_dbs_action(self, _) -> None:
         """Action hook to collect the readonly dbs from the backend."""
-        self.peers._collect_readonly_dbs()
+        self._collect_readonly_dbs()
 
     def _on_update_status(self, _) -> None:
         """Update Status hook.
@@ -452,7 +457,7 @@ class PgBouncerCharm(CharmBase):
         self.update_status()
 
         self.peers.update_leader()
-        self.peers._collect_readonly_dbs()
+        self._collect_readonly_dbs()
 
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
@@ -687,7 +692,7 @@ class PgBouncerCharm(CharmBase):
         with open("templates/pgb_config.j2", "r") as file:
             template = Template(file.read())
             databases = self._get_relation_config()
-            readonly_dbs = self._get_readonly_dbs()
+            readonly_dbs = self._get_readonly_dbs(databases)
             enable_tls = all(self.tls.get_tls_files()) and self._is_exposed
             if self._is_exposed:
                 addr = "*"
