@@ -426,7 +426,7 @@ class DbProvides(Object):
         if self.charm.unit.is_leader():
             # check database can be deleted from pgb config, and if so, delete it. Database is kept on
             # postgres application because we don't want to delete all user data with one command.
-            delete_db = database not in dbs.values()
+            delete_db = database not in [db.get("name") for db in dbs.values()]
 
             if delete_db:
                 self.charm.backend.remove_auth_function([database])
