@@ -428,7 +428,7 @@ class PgBouncerCharm(CharmBase):
         return readonly_dbs
 
     def _collect_readonly_dbs(self) -> None:
-        if self.unit.is_leader() and self.backend.relation:
+        if self.unit.is_leader() and self.backend.postgres:
             existing_dbs = [db["name"] for db in self.get_relation_databases().values()]
             existing_dbs += ["postgres", "pgbouncer"]
             try:
