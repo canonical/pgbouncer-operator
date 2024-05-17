@@ -29,6 +29,7 @@ from ops.model import (
     BlockedStatus,
     MaintenanceStatus,
     ModelError,
+    Relation,
     WaitingStatus,
 )
 
@@ -820,6 +821,15 @@ class PgBouncerCharm(CharmBase):
     def leader_ip(self) -> str:
         """Gets leader ip."""
         return self.peers.leader_ip
+
+    @property
+    def client_relations(self) -> List[Relation]:
+        """Return the list of established client relations."""
+        relations = []
+        for relation_name in ["database", "db", "db-admin"]:
+            for relation in self.model.relations.get(relation_name, []):
+                relations.append(relation)
+        return relations
 
 
 if __name__ == "__main__":

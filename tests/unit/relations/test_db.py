@@ -3,7 +3,7 @@
 
 import json
 import unittest
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch, sentinel
 
 from ops.model import Unit
 from ops.testing import Harness
@@ -57,6 +57,11 @@ class TestDb(unittest.TestCase):
         assert self.charm.legacy_db_admin_relation.relation_name == "db-admin"
         assert self.charm.legacy_db_admin_relation.admin is True
 
+    @patch(
+        "charm.PgBouncerCharm.client_relations",
+        new_callable=PropertyMock,
+        return_value=sentinel.client_rels,
+    )
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -65,6 +70,7 @@ class TestDb(unittest.TestCase):
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL")
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL.create_user")
     @patch("charms.postgresql_k8s.v0.postgresql.PostgreSQL.create_database")
+    @patch("relations.backend_database.BackendDatabaseRequires.remove_auth_function")
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.set_relation_databases")
     @patch("charm.PgBouncerCharm.generate_relation_databases")
@@ -73,12 +79,14 @@ class TestDb(unittest.TestCase):
         _gen_rel_dbs,
         _set_rel_dbs,
         _init_auth,
+        _remove_auth,
         _create_database,
         _create_user,
         _postgres,
         _gen_pw,
         _backend_pg,
         _check_backend,
+        _,
     ):
         self.harness.set_leader(True)
 
@@ -110,7 +118,7 @@ class TestDb(unittest.TestCase):
         })
 
         _create_user.assert_called_with(user, password, admin=True)
-        _create_database.assert_called_with(database, user)
+        _create_database.assert_called_with(database, user, client_relations=sentinel.client_rels)
         _init_auth.assert_called_with([database])
 
         dbag = relation_data[self.charm.unit]
