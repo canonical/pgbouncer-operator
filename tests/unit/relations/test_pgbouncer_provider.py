@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch, sentinel
 
 from ops.testing import Harness
 
@@ -37,6 +37,11 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_rel_id = self.harness.add_relation(CLIENT_RELATION_NAME, "application")
         self.harness.add_relation_unit(self.client_rel_id, "application/0")
 
+    @patch(
+        "charm.PgBouncerCharm.client_relations",
+        new_callable=PropertyMock,
+        return_value=sentinel.client_rels,
+    )
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -73,6 +78,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         _pg_databag,
         _pg,
         _check_backend,
+        _,
     ):
         self.harness.set_leader()
         _gen_rel_dbs.return_value = {}
@@ -95,7 +101,9 @@ class TestPgbouncerProvider(unittest.TestCase):
         _pg().create_user.assert_called_with(
             user, _password(), extra_user_roles=event.extra_user_roles
         )
-        _pg().create_database.assert_called_with(database, user)
+        _pg().create_database.assert_called_with(
+            database, user, client_relations=sentinel.client_rels
+        )
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
         _dbp_set_version.assert_called_with(rel_id, _pg().get_postgresql_version())
         _dbp_set_endpoints.assert_called_with(

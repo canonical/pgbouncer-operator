@@ -177,8 +177,8 @@ def check_exposed_connection(credentials, tls):
     connection = psycopg2.connect(connstr)
     connection.autocommit = True
     smoke_query = (
-        # TODO fix ownership of DB objects on rerelation in PG to be able to drop
-        f"CREATE TABLE IF NOT EXISTS {table_name}(data TEXT);"
+        f"DROP TABLE IF EXISTS {table_name};"
+        f"CREATE TABLE {table_name}(data TEXT);"
         f"INSERT INTO {table_name}(data) VALUES('{smoke_val}');"
         f"SELECT data FROM {table_name} WHERE data = '{smoke_val}';"
     )
