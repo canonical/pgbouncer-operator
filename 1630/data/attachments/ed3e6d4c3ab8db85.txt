@@ -1,0 +1,82 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:127 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:131 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:134 Get leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:138 Run pre-upgrade-check action
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:149 Inject dependency fault
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:154 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:157 Wait for upgrade to fail
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:164 Ensure continuous_writes while in failure state on remaining units
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:167 Re-run pre-upgrade-check action
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:171 Re-refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:174 Wait for application to recover
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  pgbouncer/0 [executing] maintenance: restarting services
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  pgbouncer/0 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:178 Ensure continuous_writes after rollback procedure
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:183 Checking whether no writes were lost
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.1.8    unsupported  02:02:53Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   active      3  pgbouncer                           2  no       
+postgresql           14.11    active      3  postgresql           14/edge      407  no       
+postgresql-test-app           active      3  postgresql-test-app  latest/edge  127  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.5.114.241              received database credentials of the first database
+  pgbouncer/0*          active    idle            10.5.114.241              
+postgresql-test-app/1   active    idle   1        10.5.114.74               received database credentials of the first database
+  pgbouncer/2           active    idle            10.5.114.74               
+postgresql-test-app/2   active    idle   2        10.5.114.201              received database credentials of the first database
+  pgbouncer/1           active    idle            10.5.114.201              
+postgresql/0            active    idle   3        10.5.114.125    5432/tcp  
+postgresql/1            active    idle   4        10.5.114.109    5432/tcp  
+postgresql/2*           active    idle   5        10.5.114.124    5432/tcp  Primary
+
+Machine  State    Address       Inst id        Base          AZ  Message
+0        started  10.5.114.241  juju-b6f5f6-0  ubuntu@22.04      Running
+1        started  10.5.114.74   juju-b6f5f6-1  ubuntu@22.04      Running
+2        started  10.5.114.201  juju-b6f5f6-2  ubuntu@22.04      Running
+3        started  10.5.114.125  juju-b6f5f6-3  ubuntu@22.04      Running
+4        started  10.5.114.109  juju-b6f5f6-4  ubuntu@22.04      Running
+5        started  10.5.114.124  juju-b6f5f6-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+machine-0: 01:45:58 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:45:58 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:45:58 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-test-app-0: 01:46:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 01:46:01 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-5: 01:46:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:46:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:46:01 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 01:46:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:46:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:46:01 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-0: 01:46:03 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:46:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:46:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:46:04 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-test-app-2: 01:46:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 01:46:08 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-4: 01:46:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:46:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:46:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:46:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:46:09 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-1: 01:46:09 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-1: 01:46:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:46:13 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:46:16 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:46:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:02:13 ERROR unit.pgbouncer/1.juju-log Cluster upgrade failed, ensure pre-upgrade checks are ran first.
+unit-pgbouncer-2: 02:02:13 ERROR unit.pgbouncer/2.juju-log Cluster upgrade failed, ensure pre-upgrade checks are ran first.
+unit-pgbouncer-0: 02:02:18 ERROR unit.pgbouncer/0.juju-log Cluster upgrade failed, ensure pre-upgrade checks are ran first.
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
