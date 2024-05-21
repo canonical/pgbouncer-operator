@@ -564,7 +564,7 @@ class PgBouncerCharm(CharmBase):
                     "name": database,
                     "legacy": False,
                 }
-            if "admin" in roles or "superuser" in roles:
+            if "admin" in roles or "superuser" in roles or "createdb" in roles:
                 add_wildcard = True
         if add_wildcard:
             databases["*"] = {"name": "*", "auth_dbname": database}
