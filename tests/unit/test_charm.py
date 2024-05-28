@@ -32,7 +32,8 @@ from constants import (
     SECRET_INTERNAL_LABEL,
     SNAP_PACKAGES,
 )
-from tests.helpers import patch_network_get
+
+from .helpers import patch_network_get
 
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"

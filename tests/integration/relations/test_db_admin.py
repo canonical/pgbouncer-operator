@@ -7,7 +7,7 @@ import pytest
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
-from tests.integration.helpers.helpers import (
+from ..helpers.helpers import (
     PG,
     PGB,
     deploy_and_relate_application_with_pgbouncer_bundle,

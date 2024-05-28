@@ -10,7 +10,8 @@ from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from constants import EXTENSIONS_BLOCKING_MESSAGE
-from tests.integration.helpers.helpers import (
+
+from ..helpers.helpers import (
     CLIENT_APP_NAME,
     MAILMAN3,
     PG,
@@ -21,7 +22,7 @@ from tests.integration.helpers.helpers import (
     get_legacy_relation_username,
     run_command_on_unit,
 )
-from tests.integration.helpers.postgresql_helpers import (
+from ..helpers.postgresql_helpers import (
     check_database_users_existence,
     check_databases_creation,
 )

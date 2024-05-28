@@ -4,6 +4,7 @@
 import unittest
 from unittest.mock import Mock, PropertyMock, patch, sentinel
 
+from charms.pgbouncer_k8s.v0.pgb import parse_dict_to_kv_string
 from ops.model import Unit
 from ops.testing import Harness
 
@@ -14,8 +15,8 @@ from constants import (
     DB_RELATION_NAME,
     PEER_RELATION_NAME,
 )
-from lib.charms.pgbouncer_k8s.v0.pgb import parse_dict_to_kv_string
-from tests.helpers import patch_network_get
+
+from ..helpers import patch_network_get
 
 
 class TestDb(unittest.TestCase):
