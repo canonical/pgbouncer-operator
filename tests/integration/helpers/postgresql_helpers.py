@@ -10,7 +10,7 @@ import yaml
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
-from tests.integration.helpers.helpers import PG
+from .helpers import PG
 
 
 async def build_connection_string(

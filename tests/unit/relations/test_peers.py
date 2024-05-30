@@ -11,7 +11,8 @@ from constants import (
     BACKEND_RELATION_NAME,
     PEER_RELATION_NAME,
 )
-from tests.helpers import patch_network_get
+
+from ..helpers import patch_network_get
 
 
 @patch_network_get(private_address="1.1.1.1")

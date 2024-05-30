@@ -11,7 +11,8 @@ from juju.errors import JujuAPIError
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME
-from tests.integration.helpers.helpers import (
+
+from ...helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
     PG,
@@ -23,8 +24,8 @@ from tests.integration.helpers.helpers import (
     get_cfg,
     scale_application,
 )
-from tests.integration.helpers.postgresql_helpers import check_database_users_existence
-from tests.integration.relations.pgbouncer_provider.helpers import (
+from ...helpers.postgresql_helpers import check_database_users_existence
+from .helpers import (
     build_connection_string,
     check_new_relation,
     get_application_relation_data,

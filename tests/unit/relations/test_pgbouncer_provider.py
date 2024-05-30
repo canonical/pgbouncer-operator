@@ -8,7 +8,8 @@ from ops.testing import Harness
 
 from charm import PgBouncerCharm
 from constants import BACKEND_RELATION_NAME, CLIENT_RELATION_NAME, PEER_RELATION_NAME
-from tests.helpers import patch_network_get
+
+from ..helpers import patch_network_get
 
 
 class TestPgbouncerProvider(unittest.TestCase):

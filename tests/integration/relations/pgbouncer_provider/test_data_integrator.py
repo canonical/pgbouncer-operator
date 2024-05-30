@@ -10,25 +10,33 @@ from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
-from tests.integration.helpers.helpers import (
+
+from ... import architecture
+from ...helpers.helpers import (
     PG,
     PGB,
 )
-from tests.integration.juju_ import juju_major_version
-from tests.integration.relations.pgbouncer_provider.helpers import check_exposed_connection
+from ...juju_ import juju_major_version
+from .helpers import check_exposed_connection
 
 logger = logging.getLogger(__name__)
 
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 
 if juju_major_version < 3:
-    TLS_CERTIFICATES_APP_NAME = "tls-certificates-operator"
-    TLS_CHANNEL = "legacy/stable"
-    TLS_CONFIG = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+    tls_certificates_app_name = "tls-certificates-operator"
+    if architecture.architecture == "arm64":
+        tls_channel = "legacy/edge"
+    else:
+        tls_channel = "legacy/stable"
+    tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
 else:
-    TLS_CERTIFICATES_APP_NAME = "self-signed-certificates"
-    TLS_CHANNEL = "latest/stable"
-    TLS_CONFIG = {"ca-common-name": "Test CA"}
+    tls_certificates_app_name = "self-signed-certificates"
+    if architecture.architecture == "arm64":
+        tls_channel = "latest/edge"
+    else:
+        tls_channel = "latest/stable"
+    tls_config = {"ca-common-name": "Test CA"}
 
 
 async def fetch_action_get_credentials(unit: Unit) -> Dict:
@@ -72,7 +80,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
                 config=config,
             ),
             ops_test.model.deploy(
-                TLS_CERTIFICATES_APP_NAME, config=TLS_CONFIG, channel=TLS_CHANNEL
+                tls_certificates_app_name, config=tls_config, channel=tls_channel
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -88,7 +96,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
 
 @pytest.mark.group(1)
 async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
-    await ops_test.model.add_relation(PGB, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.add_relation(PGB, tls_certificates_app_name)
     await ops_test.model.wait_for_idle(status="active")
 
     credentials = await fetch_action_get_credentials(
@@ -100,7 +108,7 @@ async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
 @pytest.mark.group(1)
 async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.applications[PGB].remove_relation(
-        f"{PGB}:certificates", f"{TLS_CERTIFICATES_APP_NAME}:certificates"
+        f"{PGB}:certificates", f"{tls_certificates_app_name}:certificates"
     )
     await ops_test.model.wait_for_idle(status="active")
 
