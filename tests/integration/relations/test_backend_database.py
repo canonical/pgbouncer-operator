@@ -8,7 +8,8 @@ import pytest
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
-from tests.integration.helpers.helpers import (
+from .. import architecture
+from ..helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
     MAILMAN3,
@@ -22,7 +23,7 @@ from tests.integration.helpers.helpers import (
     run_command_on_unit,
     wait_for_relation_removed_between,
 )
-from tests.integration.helpers.postgresql_helpers import (
+from ..helpers.postgresql_helpers import (
     check_database_users_existence,
     get_postgres_primary,
 )
@@ -31,6 +32,10 @@ logger = logging.getLogger(__name__)
 
 TLS = "tls-certificates-operator"
 RELATION = "backend-database"
+if architecture.architecture == "arm64":
+    tls_channel = "legacy/edge"
+else:
+    tls_channel = "latest/stable"
 
 
 @pytest.mark.group(1)
@@ -94,7 +99,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Deploy TLS Certificates operator.
         config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-        await ops_test.model.deploy(TLS, config=config)
+        await ops_test.model.deploy(TLS, config=config, channel=tls_channel)
         await ops_test.model.wait_for_idle(apps=[TLS], status="active", timeout=1000)
 
         # Relate it to the PostgreSQL to enable TLS.
