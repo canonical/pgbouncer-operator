@@ -1,0 +1,29 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.1.8    unsupported  02:01:05Z
+
+App         Version  Status   Scale  Charm       Channel  Rev  Exposed  Message
+pgbouncer            unknown      0  pgbouncer              0  no       
+postgresql           error        2  postgresql  14/edge  413  no       hook failed: "update-status"
+
+Unit           Workload  Agent      Machine  Public address  Ports  Message
+postgresql/0   error     idle       0        10.85.54.184           hook failed: "update-status"
+postgresql/1*  waiting   executing  1        10.85.54.122           (start) waiting to start PostgreSQL
+
+Machine  State    Address       Inst id        Base          AZ  Message
+0        started  10.85.54.184  juju-ddc791-0  ubuntu@22.04      Running
+1        started  10.85.54.122  juju-ddc791-1  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+machine-1: 01:55:01 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-1: 01:55:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:55:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:55:01 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 01:55:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:55:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:55:01 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-0: 01:55:02 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
