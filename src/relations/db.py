@@ -84,6 +84,7 @@ Some example relation data is below. All values are examples, generated in a run
 ------------------------------------------------------------------------------------------------------------
 """  # noqa: W505
 
+import json
 import logging
 from typing import Dict, Iterable, List
 
@@ -107,7 +108,6 @@ from ops.model import (
     MaintenanceStatus,
     Relation,
     Unit,
-    WaitingStatus,
 )
 
 from constants import EXTENSIONS_BLOCKING_MESSAGE
@@ -219,12 +219,10 @@ class DbProvides(Object):
         if not (database := remote_app_databag.get("database")) and not (
             database := remote_unit_databag.get("database")
         ):
-            # If there's nothing in either databag, return early.
-            no_db = "No database name provided in app or unit databag"
-            logger.warning(no_db)
-            self.charm.unit.status = WaitingStatus(no_db)
-            join_event.defer()
-            return
+            # Sometimes a relation changed event is triggered, and it doesn't have
+            # a database name in it (like the relation with Landscape server charm),
+            # so create a database with the other application name.
+            database = join_event.relation.app.name
 
         if self._block_on_extensions(join_event.relation, remote_app_databag):
             return
@@ -239,16 +237,17 @@ class DbProvides(Object):
 
         dbs = self.charm.generate_relation_databases()
         dbs[str(join_event.relation.id)] = {"name": database, "legacy": True}
+        if self.admin:
+            dbs["*"] = {"name": "*", "auth_dbname": database}
         self.charm.set_relation_databases(dbs)
 
-        self.update_databags(
-            join_event.relation,
-            {
-                "user": user,
-                "password": password,
-                "database": database,
-            },
-        )
+        creds = {
+            "user": user,
+            "password": password,
+            "database": database,
+        }
+        self.charm.peers.app_databag[user] = json.dumps(creds)
+        self.update_databags(join_event.relation, creds)
 
         # Create user and database in backend postgresql database
         try:
@@ -298,7 +297,8 @@ class DbProvides(Object):
         # No backup values because if databag isn't populated, this relation isn't initialised.
         # This means that the database and user requested in this relation haven't been created,
         # so we defer this event until the databag is populated.
-        databag = self.get_databags(change_event.relation)[0]
+        user = self._generate_username(change_event.relation)
+        databag = json.loads(self.charm.peers.app_databag.get(user, "{}"))
         database = databag.get("database")
         user = databag.get("user")
         password = databag.get("password")
@@ -311,21 +311,20 @@ class DbProvides(Object):
             return
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
-        if self.charm.unit.is_leader():
-            self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
-            self.update_databags(
-                change_event.relation,
-                {
-                    "allowed-subnets": self.get_allowed_subnets(change_event.relation),
-                    "allowed-units": self.get_allowed_units(change_event.relation),
-                    "version": self.charm.backend.postgres.get_postgresql_version(),
-                    "host": "localhost",
-                    "user": user,
-                    "password": password,
-                    "database": database,
-                    "state": self._get_state(),
-                },
-            )
+        self.update_databags(
+            change_event.relation,
+            {
+                "allowed-subnets": self.get_allowed_subnets(change_event.relation),
+                "allowed-units": self.get_allowed_units(change_event.relation),
+                "version": self.charm.backend.postgres.get_postgresql_version(),
+                "host": "localhost",
+                "user": user,
+                "password": password,
+                "database": database,
+                "state": "master",
+            },
+        )
+        self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
 
     def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection information."""
@@ -451,8 +450,7 @@ class DbProvides(Object):
         for key, item in updates.items():
             updates[key] = str(item)
 
-        for databag in self.get_databags(relation):
-            databag.update(updates)
+        relation.data[self.charm.unit].update(updates)
 
     def _generate_username(self, relation):
         """Generates a unique username for this relation."""
@@ -460,20 +458,6 @@ class DbProvides(Object):
         relation_id = relation.id
         model_name = self.model.name
         return f"{app_name}_user_{relation_id}_{model_name}".replace("-", "_")
-
-    def _get_state(self) -> str:
-        """Gets the given state for this unit.
-
-        Args:
-            standbys: the comma-separated list of postgres standbys
-
-        Returns:
-            The described state of this unit. Can be 'master' or 'standby'.
-        """
-        if self.charm.unit.is_leader():
-            return "master"
-        else:
-            return "standby"
 
     def get_allowed_subnets(self, relation: Relation) -> str:
         """Gets the allowed subnets from this relation."""

@@ -111,7 +111,7 @@ class TestCharm(unittest.TestCase):
         return_value=None,
     )
     def test_on_start(self, _has_relation, _start, _render_prom_service, _, __):
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
         # Charm should fail out after calling _start once
@@ -140,7 +140,7 @@ class TestCharm(unittest.TestCase):
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
     @patch("charm.PgBouncerCharm.check_pgb_running")
     def test_reload_pgbouncer(self, _check_pgb_running, _restart):
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         self.charm.reload_pgbouncer()
         calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
         _restart.assert_has_calls(calls)
@@ -178,7 +178,7 @@ class TestCharm(unittest.TestCase):
         _running.side_effect = None
 
         # otherwise check all services and return activestatus
-        intended_instances = self._cores = os.cpu_count()
+        intended_instances = max(min(os.cpu_count(), 4), 2)
         assert self.charm.check_pgb_running()
         calls = [
             call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)
@@ -374,7 +374,9 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
-                socket_dir=f"/tmp/pgbouncer/instance_{i}",
+                peer_id=i,
+                peers=range(self.charm._cores),
+                base_socket_dir="/tmp/pgbouncer/instance_",
                 log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
                 pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
                 listen_addr="127.0.0.1",
@@ -402,6 +404,13 @@ class TestCharm(unittest.TestCase):
             })
         del expected_databases["first_test_readonly"]
         del expected_databases["second_test_readonly"]
+        expected_databases["*"] = {
+            "host": "HOST",
+            "port": "PORT",
+            "auth_dbname": "first_test",
+            "auth_user": "pgbouncer_auth_BACKNEND_USER",
+        }
+        _get_dbs.return_value["*"] = {"name": "*", "auth_dbname": "first_test"}
 
         del _postgres_databag.return_value["read-only-endpoints"]
 
@@ -411,7 +420,9 @@ class TestCharm(unittest.TestCase):
         for i in range(self.charm._cores):
             expected_content = template.render(
                 databases=expected_databases,
-                socket_dir=f"/tmp/pgbouncer/instance_{i}",
+                peer_id=i,
+                peers=range(self.charm._cores),
+                base_socket_dir="/tmp/pgbouncer/instance_",
                 log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
                 pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
                 listen_addr="127.0.0.1",

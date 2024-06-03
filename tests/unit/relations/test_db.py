@@ -1,6 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import json
 import unittest
 from unittest.mock import Mock, PropertyMock, patch, sentinel
 
@@ -112,38 +113,44 @@ class TestDb(unittest.TestCase):
 
         _set_rel_dbs.reset_mock()
         self.db_admin_relation._on_relation_joined(mock_event)
-        _set_rel_dbs.assert_called_once_with({"1": {"name": "test_db", "legacy": True}})
+        _set_rel_dbs.assert_called_once_with({
+            "1": {"name": "test_db", "legacy": True},
+            "*": {"name": "*", "auth_dbname": "test_db"},
+        })
 
         _create_user.assert_called_with(user, password, admin=True)
         _create_database.assert_called_with(database, user, client_relations=sentinel.client_rels)
         _init_auth.assert_called_with([database])
 
-        for dbag in [relation_data[self.charm.unit], relation_data[self.charm.app]]:
-            assert dbag["database"] == database
-            assert dbag["user"] == user
-            assert dbag["password"] == password
+        dbag = relation_data[self.charm.unit]
+        assert dbag["database"] == database
+        assert dbag["user"] == user
+        assert dbag["password"] == password
 
         # Check admin permissions aren't present when we use db_relation
         _set_rel_dbs.reset_mock()
         self.db_relation._on_relation_joined(mock_event)
         _create_user.assert_called_with(user, password, admin=False)
-        _set_rel_dbs.assert_called_once_with({"1": {"name": "test_db", "legacy": True}})
+        _set_rel_dbs.assert_called_once_with({
+            "1": {"name": "test_db", "legacy": True},
+            "*": {"name": "*", "auth_dbname": "test_db"},
+        })
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
-    @patch("relations.db.DbProvides.get_databags", return_value=[{}])
+    @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock, return_value={})
     @patch("relations.db.DbProvides.update_connection_info")
     @patch("relations.db.DbProvides.update_databags")
     @patch("relations.db.DbProvides.get_allowed_units")
     @patch("relations.db.DbProvides.get_allowed_subnets")
-    @patch("relations.db.DbProvides._get_state")
+    @patch("charm.PgBouncerCharm.get_relation_databases", return_value={"1": {"some": "data"}})
     @patch("charm.PgBouncerCharm.render_pgb_config")
     def test_on_relation_changed(
         self,
         _render_pgb_config,
-        _get_state,
+        _,
         _allowed_subnets,
         _allowed_units,
         _update_databags,
@@ -152,19 +159,24 @@ class TestDb(unittest.TestCase):
         _backend_postgres,
         _check_backend,
     ):
-        self.harness.set_leader(True)
+        with self.harness.hooks_disabled():
+            self.harness.set_leader(True)
+
+        event = Mock()
+        event.relation.id = 1
 
         database = "test_db"
-        user = "test_user"
+        user = "pgbouncer_user_1_None"
         password = "test_pw"
-        _get_databags.return_value[0] = {
-            "database": database,
-            "user": user,
-            "password": password,
+        _get_databags.return_value = {
+            user: json.dumps({
+                "database": database,
+                "user": user,
+                "password": password,
+            })
         }
 
         # Call the function
-        event = Mock()
         self.db_relation._on_relation_changed(event)
 
         _update_connection_info.assert_called_with(
@@ -180,7 +192,7 @@ class TestDb(unittest.TestCase):
                 "user": user,
                 "password": password,
                 "database": database,
-                "state": _get_state.return_value,
+                "state": "master",
             },
         )
         _render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
@@ -236,13 +248,10 @@ class TestDb(unittest.TestCase):
         }
         self.db_relation._on_relation_departed(mock_event)
 
-        app_databag = mock_event.relation.data[self.charm.app]
         unit_databag = mock_event.relation.data[self.charm.unit]
 
-        expected_app_databag = {"allowed-units": "test_string"}
         expected_unit_databag = {"allowed-units": "test_string"}
 
-        self.assertDictEqual(app_databag, expected_app_databag)
         self.assertDictEqual(unit_databag, expected_unit_databag)
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)

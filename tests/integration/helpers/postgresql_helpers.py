@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
+import asyncio
 import itertools
+import os
 import subprocess
-from typing import List, Optional
+import tempfile
+import zipfile
+from typing import Dict, List, Optional
 
 import psycopg2
 import yaml
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
-from .helpers import PG
+from .helpers import PG, PGB
 
 
 async def build_connection_string(
@@ -237,3 +241,148 @@ async def get_leader_unit(ops_test: OpsTest, app: str) -> Optional[Unit]:
             break
 
     return leader_unit
+
+
+async def deploy_and_relate_bundle_with_pgbouncer(
+    ops_test: OpsTest,
+    bundle_name: str,
+    main_application_name: str,
+    main_application_num_units: int = None,
+    relation_name: str = "db",
+    status: str = "active",
+    status_message: str = None,
+    overlay: Dict = None,
+    timeout: int = 2000,
+) -> str:
+    """Helper function to deploy and relate a bundle with PostgreSQL.
+
+    Args:
+        ops_test: The ops test framework.
+        bundle_name: The name of the bundle to deploy.
+        main_application_name: The name of the application that should be
+            related to PostgreSQL.
+        main_application_num_units: Optional number of units for the main
+            application.
+        relation_name: The name of the relation to use in PostgreSQL
+            (db or db-admin).
+        status: Status to wait for in the application after relating
+            it to PostgreSQL.
+        status_message: Status message to wait for in the application after
+            relating it to PostgreSQL.
+        overlay: Optional overlay to be used when deploying the bundle.
+        timeout: Timeout to wait for the deployment to idle.
+    """
+    # Deploy the bundle.
+    with tempfile.NamedTemporaryFile(dir=os.getcwd()) as original:
+        # Download the original bundle.
+        await ops_test.juju("download", bundle_name, "--filepath", original.name)
+
+        # Open the bundle compressed file and update the contents
+        # of the bundle.yaml file to deploy it.
+        with zipfile.ZipFile(original.name, "r") as archive:
+            bundle_yaml = archive.read("bundle.yaml")
+            data = yaml.load(bundle_yaml, Loader=yaml.FullLoader)
+
+            if main_application_num_units is not None:
+                data["applications"][main_application_name]["num_units"] = (
+                    main_application_num_units
+                )
+
+            # Save the list of relations other than `db` and `db-admin`,
+            # so we can add them back later.
+            other_relations = [
+                relation for relation in data["relations"] if "postgresql" in relation
+            ]
+
+            # Remove PostgreSQL and relations with it from the bundle.yaml file.
+            del data["applications"]["postgresql"]
+            data["relations"] = [
+                relation
+                for relation in data["relations"]
+                if "postgresql" not in relation
+                and "postgresql:db" not in relation
+                and "postgresql:db-admin" not in relation
+            ]
+
+            # Write the new bundle content to a temporary file and deploy it.
+            with tempfile.NamedTemporaryFile(dir=os.getcwd()) as patched:
+                patched.write(yaml.dump(data).encode("utf_8"))
+                patched.seek(0)
+                if overlay is not None:
+                    with tempfile.NamedTemporaryFile() as overlay_file:
+                        overlay_file.write(yaml.dump(overlay).encode("utf_8"))
+                        overlay_file.seek(0)
+                        await ops_test.juju("deploy", patched.name, "--overlay", overlay_file.name)
+                else:
+                    await ops_test.juju("deploy", patched.name)
+
+    async with ops_test.fast_forward(fast_interval="30s"):
+        # Relate application to PostgreSQL.
+        relation = await ops_test.model.relate(main_application_name, f"{PGB}:{relation_name}")
+
+        # Restore previous existing relations.
+        for other_relation in other_relations:
+            await ops_test.model.relate(other_relation[0], other_relation[1])
+
+        # Wait for the deployment to complete.
+        unit = ops_test.model.units.get(f"{main_application_name}/0")
+        awaits = [
+            ops_test.model.wait_for_idle(
+                apps=[PG, PGB],
+                status="active",
+                timeout=timeout,
+            ),
+            ops_test.model.wait_for_idle(
+                apps=[main_application_name],
+                raise_on_blocked=False,
+                status=status,
+                timeout=timeout,
+            ),
+        ]
+        if status_message:
+            awaits.append(
+                ops_test.model.block_until(
+                    lambda: unit.workload_status_message == status_message, timeout=timeout
+                )
+            )
+        await asyncio.gather(*awaits)
+
+    return relation.id
+
+
+async def get_password(ops_test: OpsTest, unit_name: str, username: str = "operator") -> str:
+    """Retrieve a user password using the action.
+
+    Args:
+        ops_test: ops_test instance.
+        unit_name: the name of the unit.
+        username: the user to get the password.
+
+    Returns:
+        the user password.
+    """
+    unit = ops_test.model.units.get(unit_name)
+    action = await unit.run_action("get-password", **{"username": username})
+    result = await action.wait()
+    return result.results["password"]
+
+
+async def get_landscape_api_credentials(ops_test: OpsTest) -> List[str]:
+    """Returns the key and secret to be used in the Landscape API.
+
+    Args:
+        ops_test: The ops test framework
+    """
+    unit = ops_test.model.applications[PG].units[0]
+    password = await get_password(ops_test, unit.name)
+    unit_address = await unit.get_public_address()
+
+    output = await execute_query_on_unit(
+        unit_address,
+        "operator",
+        password,
+        "SELECT encode(access_key_id,'escape'), encode(access_secret_key,'escape') FROM api_credentials;",
+        database="landscape-standalone-main",
+    )
+
+    return output
