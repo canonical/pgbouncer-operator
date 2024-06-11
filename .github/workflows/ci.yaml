@@ -42,7 +42,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v13.3.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@no-install-recommends
     with:
       cache: true
 
