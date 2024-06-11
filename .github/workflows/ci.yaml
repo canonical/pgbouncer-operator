@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-1
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -20,6 +20,33 @@ on:
   workflow_call:
 
 jobs:
+  lint:
+    name: Lint
+    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v13.3.0
+
+  unit-test:
+    name: Unit test charm
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install tox & poetry
+        run: |
+          pipx install tox
+          pipx install poetry
+      - name: Run tests
+        run: tox run -e unit
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v13.3.0
+    with:
+      cache: true
+
+
   integration-test:
     strategy:
       fail-fast: false
@@ -38,9 +65,13 @@ jobs:
               allure_on_amd64: true
             architecture: arm64
     name: Integration test charm | ${{ matrix.juju.agent }} | ${{ matrix.architecture }}
+    needs:
+      - lint
+      - unit-test
+      - build
     uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@arm64-nightly-only
     with:
-      artifact-prefix: foo
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       architecture: ${{ matrix.architecture }}
       cloud: lxd
       juju-agent-version: ${{ matrix.juju.agent }}
