@@ -38,6 +38,7 @@ jobs:
               allure_on_amd64: true
             architecture: arm64
     name: Integration test charm | ${{ matrix.juju.agent }} | ${{ matrix.architecture }}
+    if: ${{ inputs.architecture == 'amd64' || (inputs.architecture == 'arm64' && github.event_name == 'schedule' }}
     uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.0
     with:
       artifact-prefix: foo
