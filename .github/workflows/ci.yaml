@@ -35,6 +35,7 @@ jobs:
         include:
           - juju:
               agent: 3.1.8  # renovate: latest juju 3
+              allure_on_amd64: true
             architecture: arm64
     name: Integration test charm | ${{ matrix.juju.agent }} | ${{ matrix.architecture }}
     uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@arm64-nightly-only
