@@ -59,12 +59,13 @@ jobs:
             allure_on_amd64: true
         architecture:
           - amd64
+          - arm64
     name: Integration test charm | ${{ matrix.juju.agent }} | ${{ matrix.architecture }}
     needs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.0
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@arm64-nightly-only
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       architecture: ${{ matrix.architecture }}
