@@ -57,7 +57,7 @@ from ops.model import (
     ModelError,
 )
 
-from constants import CLIENT_RELATION_NAME
+from constants import CLIENT_RELATION_NAME, SOCKET_LOCATION
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class PgBouncerProvider(Object):
         if exposed:
             rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
         else:
-            rw_endpoint = f"localhost:{self.charm.config['listen_port']}"
+            rw_endpoint = f"{SOCKET_LOCATION}:{self.charm.config['listen_port']}"
         self.database_provides.set_endpoints(
             relation.id,
             rw_endpoint,
