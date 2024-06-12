@@ -105,7 +105,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
 
-        self.service_ids = list(range(self._instances_count))
+        self.service_ids = list(range(self.instances_count))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
@@ -127,7 +127,8 @@ class PgBouncerCharm(CharmBase):
         )
 
     @property
-    def _instances_count(self):
+    def instances_count(self):
+        """Returns the amount of instances to spin based on expose."""
         if self._is_exposed:
             return max(min(os.cpu_count(), 4), 2)
         else:
@@ -684,12 +685,6 @@ class PgBouncerCharm(CharmBase):
             except ModelError:
                 logger.exception("failed to open port")
 
-            # Pgbouncer should spin up multiple instances
-            # self.service_ids = list(range(max(min(os.cpu_count(), 4), 2)))
-            # self.pgb_services = [
-            #    f"{PGB}-{self.charm.app.name}@{service_id}"
-            #    for service_id in self.charm.service_ids
-            # ]
             self.create_instance_directories()
             self.render_utility_files()
 
@@ -705,7 +700,7 @@ class PgBouncerCharm(CharmBase):
             min_pool_size = 10
             reserve_pool_size = 10
         else:
-            effective_db_connections = max_db_connections / self._instances_count
+            effective_db_connections = max_db_connections / self.instances_count
             default_pool_size = math.ceil(effective_db_connections / 2)
             min_pool_size = math.ceil(effective_db_connections / 4)
             reserve_pool_size = math.ceil(effective_db_connections / 4)

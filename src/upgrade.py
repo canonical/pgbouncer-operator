@@ -5,6 +5,7 @@
 
 import json
 import logging
+import os
 from typing import List
 
 from charms.data_platform_libs.v0.upgrade import (
@@ -19,7 +20,7 @@ from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import SNAP_PACKAGES
+from constants import PGB, SNAP_PACKAGES
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -75,8 +76,10 @@ class PgbouncerUpgrade(DataUpgrade):
     def _on_upgrade_granted(self, event: UpgradeGrantedEvent) -> None:
         # Refresh the charmed PostgreSQL snap and restart the database.
         self.charm.unit.status = MaintenanceStatus("stopping services")
-        for service in self.charm.pgb_services:
-            systemd.service_stop(service)
+        # If pgb is upgraded from a version that only uses cpu count excess services should be stopped
+        for service in [f"{PGB}-{self.charm.app.name}@{i}" for i in range(os.cpu_count())]:
+            if systemd.service_running(service):
+                systemd.service_stop(service)
         if self.charm.backend.postgres:
             self.charm.remove_exporter_service()
 
