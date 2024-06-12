@@ -3,7 +3,6 @@
 
 import logging
 import math
-import os
 import platform
 import unittest
 from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
@@ -111,20 +110,20 @@ class TestCharm(unittest.TestCase):
         return_value=None,
     )
     def test_on_start(self, _has_relation, _start, _render_prom_service, _, __):
-        intended_instances = max(min(os.cpu_count(), 4), 2)
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
         # Charm should fail out after calling _start once
         _start.assert_called_once()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        _start.reset_mock()
 
         # Testing charm starts the correct amount of pgbouncer instances but enters BlockedStatus
         # because the backend relation doesn't exist yet.
         _start.side_effect = None
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
-        _start.assert_has_calls(calls)
+        _start.assert_called_once_with("pgbouncer-pgbouncer@0")
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
+        _start.reset_mock()
 
         # Testing charm starts the correct amount of pgbouncer instances and enters activestatus if
         # everything's working fine.
@@ -132,18 +131,16 @@ class TestCharm(unittest.TestCase):
         _start.side_effect = None
         _has_relation.return_value = True
         self.charm.on.start.emit()
-        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
-        _start.assert_has_calls(calls)
+        _start.assert_called_once_with("pgbouncer-pgbouncer@0")
         _render_prom_service.assert_called_once_with()
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
+        _start.reset_mock()
 
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
     @patch("charm.PgBouncerCharm.check_pgb_running")
     def test_reload_pgbouncer(self, _check_pgb_running, _restart):
-        intended_instances = max(min(os.cpu_count(), 4), 2)
         self.charm.reload_pgbouncer()
-        calls = [call(f"pgbouncer-pgbouncer@{instance}") for instance in range(intended_instances)]
-        _restart.assert_has_calls(calls)
+        _restart.assert_called_once_with("pgbouncer-pgbouncer@0")
         _check_pgb_running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
@@ -176,14 +173,11 @@ class TestCharm(unittest.TestCase):
         assert not self.charm.check_pgb_running()
         self.assertIsInstance(self.charm.unit.status, BlockedStatus)
         _running.side_effect = None
+        _running.reset_mock()
 
         # otherwise check all services and return activestatus
-        intended_instances = max(min(os.cpu_count(), 4), 2)
         assert self.charm.check_pgb_running()
-        calls = [
-            call(f"pgbouncer-pgbouncer@{instance}") for instance in range(0, intended_instances)
-        ]
-        _running.assert_has_calls(calls)
+        _running.assert_any_call("pgbouncer-pgbouncer@0")
 
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
@@ -339,7 +333,7 @@ class TestCharm(unittest.TestCase):
             template = Template(file.read())
         self.charm.render_pgb_config(reload_pgbouncer=True)
         _reload.assert_called()
-        effective_db_connections = 100 / self.charm._cores
+        effective_db_connections = 100
         default_pool_size = math.ceil(effective_db_connections / 2)
         min_pool_size = math.ceil(effective_db_connections / 4)
         reserve_pool_size = math.ceil(effective_db_connections / 4)
@@ -371,30 +365,29 @@ class TestCharm(unittest.TestCase):
                 "auth_user": "pgbouncer_auth_BACKNEND_USER",
             },
         }
-        for i in range(self.charm._cores):
-            expected_content = template.render(
-                databases=expected_databases,
-                readonly_databases={},
-                peer_id=i,
-                peers=range(self.charm._cores),
-                base_socket_dir="/tmp/pgbouncer/instance_",
-                log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
-                pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
-                listen_addr="127.0.0.1",
-                listen_port=6432,
-                pool_mode="session",
-                max_db_connections=100,
-                default_pool_size=default_pool_size,
-                min_pool_size=min_pool_size,
-                reserve_pool_size=reserve_pool_size,
-                stats_user="pgbouncer_stats_pgbouncer",
-                auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
-                auth_file=auth_file,
-                enable_tls=False,
-            )
-            _render.assert_any_call(
-                f"{PGB_CONF_DIR}/pgbouncer/instance_{i}/pgbouncer.ini", expected_content, 0o700
-            )
+        expected_content = template.render(
+            databases=expected_databases,
+            readonly_databases={},
+            peer_id=0,
+            peers=range(1),
+            base_socket_dir="/tmp/pgbouncer/instance_",
+            log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_0/pgbouncer.log",
+            pid_file="/tmp/pgbouncer/instance_0/pgbouncer.pid",
+            listen_addr="127.0.0.1",
+            listen_port=6432,
+            pool_mode="session",
+            max_db_connections=100,
+            default_pool_size=default_pool_size,
+            min_pool_size=min_pool_size,
+            reserve_pool_size=reserve_pool_size,
+            stats_user="pgbouncer_stats_pgbouncer",
+            auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
+            auth_file=auth_file,
+            enable_tls=False,
+        )
+        _render.assert_called_once_with(
+            f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
+        )
         _render.reset_mock()
         _reload.reset_mock()
 
@@ -418,30 +411,29 @@ class TestCharm(unittest.TestCase):
         self.charm.render_pgb_config()
 
         assert not _reload.called
-        for i in range(self.charm._cores):
-            expected_content = template.render(
-                databases=expected_databases,
-                readonly_databases={},
-                peer_id=i,
-                peers=range(self.charm._cores),
-                base_socket_dir="/tmp/pgbouncer/instance_",
-                log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_{i}/pgbouncer.log",
-                pid_file=f"/tmp/pgbouncer/instance_{i}/pgbouncer.pid",
-                listen_addr="127.0.0.1",
-                listen_port=6432,
-                pool_mode="session",
-                max_db_connections=0,
-                default_pool_size=20,
-                min_pool_size=10,
-                reserve_pool_size=10,
-                stats_user="pgbouncer_stats_pgbouncer",
-                auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
-                auth_file=auth_file,
-                enable_tls=False,
-            )
-            _render.assert_any_call(
-                f"{PGB_CONF_DIR}/pgbouncer/instance_{i}/pgbouncer.ini", expected_content, 0o700
-            )
+        expected_content = template.render(
+            databases=expected_databases,
+            readonly_databases={},
+            peer_id=0,
+            peers=range(1),
+            base_socket_dir="/tmp/pgbouncer/instance_",
+            log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_0/pgbouncer.log",
+            pid_file="/tmp/pgbouncer/instance_0/pgbouncer.pid",
+            listen_addr="127.0.0.1",
+            listen_port=6432,
+            pool_mode="session",
+            max_db_connections=0,
+            default_pool_size=20,
+            min_pool_size=10,
+            reserve_pool_size=10,
+            stats_user="pgbouncer_stats_pgbouncer",
+            auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
+            auth_file=auth_file,
+            enable_tls=False,
+        )
+        _render.assert_called_once_with(
+            f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
+        )
 
     @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})
     @patch("charm.PgBouncerCharm.get_secret")

@@ -105,8 +105,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
 
-        self._cores = max(min(os.cpu_count(), 4), 2)
-        self.service_ids = list(range(self._cores))
+        self.service_ids = list(range(self._instances_count))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
@@ -126,6 +125,13 @@ class PgBouncerCharm(CharmBase):
             relation_name="upgrade",
             substrate="vm",
         )
+
+    @property
+    def _instances_count(self):
+        if self._is_exposed:
+            return max(min(os.cpu_count(), 4), 2)
+        else:
+            return 1
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -678,7 +684,7 @@ class PgBouncerCharm(CharmBase):
             min_pool_size = 10
             reserve_pool_size = 10
         else:
-            effective_db_connections = max_db_connections / self._cores
+            effective_db_connections = max_db_connections / self._instances_count
             default_pool_size = math.ceil(effective_db_connections / 2)
             min_pool_size = math.ceil(effective_db_connections / 4)
             reserve_pool_size = math.ceil(effective_db_connections / 4)
