@@ -18,7 +18,6 @@ from .helpers.helpers import (
     WAIT_MSG,
     get_cfg,
     get_running_instances,
-    get_unit_cores,
 )
 from .helpers.postgresql_helpers import restart_machine
 
@@ -72,7 +71,7 @@ async def test_change_config(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     # The config changes depending on the amount of cores on the unit, so get that info.
-    cores = max(min(await get_unit_cores(ops_test, unit), 4), 2)
+    cores = 1
 
     primary_cfg = await get_cfg(ops_test, unit.name)
 
@@ -90,10 +89,9 @@ async def test_change_config(ops_test: OpsTest):
 @pytest.mark.group(1)
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
-    expected_processes = max(min(await get_unit_cores(ops_test, unit), 4), 2)
 
     # verify the correct amount of pgbouncer processes are running
-    assert await get_running_instances(ops_test, unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(ops_test, unit, "pgbouncer") == 1
 
     # Kill pgbouncer process and wait for it to restart
     await unit.run("pkill -SIGINT -x pgbouncer")
@@ -101,7 +99,7 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=(3 * 60))
 
     # verify all processes start again
-    assert await get_running_instances(ops_test, unit, "pgbouncer") == expected_processes
+    assert await get_running_instances(ops_test, unit, "pgbouncer") == 1
 
 
 @pytest.mark.group(1)

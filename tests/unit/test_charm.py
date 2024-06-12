@@ -136,11 +136,25 @@ class TestCharm(unittest.TestCase):
         self.assertIsInstance(self.harness.model.unit.status, ActiveStatus)
         _start.reset_mock()
 
+    @patch("charms.operator_libs_linux.v1.systemd.service_running")
+    @patch("charms.operator_libs_linux.v1.systemd.service_reload")
     @patch("charms.operator_libs_linux.v1.systemd.service_restart")
     @patch("charm.PgBouncerCharm.check_pgb_running")
-    def test_reload_pgbouncer(self, _check_pgb_running, _restart):
+    def test_reload_pgbouncer(self, _check_pgb_running, _restart, _reload, _running):
+        # Reloads if the service is running
+        self.charm.reload_pgbouncer()
+        _reload.assert_called_once_with("pgbouncer-pgbouncer@0")
+        assert not _restart.called
+        _check_pgb_running.assert_called_once()
+        _restart.reset_mock()
+        _reload.reset_mock()
+        _check_pgb_running.reset_mock()
+
+        # Restarts if service is not running
+        _running.return_value = False
         self.charm.reload_pgbouncer()
         _restart.assert_called_once_with("pgbouncer-pgbouncer@0")
+        assert not _reload.called
         _check_pgb_running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
