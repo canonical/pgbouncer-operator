@@ -93,6 +93,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         rel_id = event.relation.id = 1
         database = event.database = "test-db"
         event.extra_user_roles = "SUPERUSER"
+        event.external_node_connectivity = False
         user = f"relation_id_{rel_id}"
 
         # check we exit immediately if backend doesn't exist.

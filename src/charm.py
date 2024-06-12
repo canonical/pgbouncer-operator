@@ -137,6 +137,17 @@ class PgBouncerCharm(CharmBase):
     #  Charm Lifecycle Hooks
     # =======================
 
+    def create_instance_directories(self):
+        """Create configuration directories for pgbouncer instances."""
+        pg_user = pwd.getpwnam(PG_USER)
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+
+        # Make a directory for each service to store configs.
+        for service_id in self.service_ids:
+            logger.error(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}")
+            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
+            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+
     def render_utility_files(self):
         """Render charm utility services and configuration."""
         # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
@@ -194,14 +205,7 @@ class PgBouncerCharm(CharmBase):
             error_message = "Failed to stop and disable pgbackrest snap service"
             logger.exception(error_message, exc_info=e)
 
-        pg_user = pwd.getpwnam(PG_USER)
-        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
-
-        # Make a directory for each service to store configs.
-        for service_id in self.service_ids:
-            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
-            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-
+        self.create_instance_directories()
         self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -700,33 +704,36 @@ class PgBouncerCharm(CharmBase):
             # Modify & render config files for each service instance
             for service_id in self.service_ids:
                 self.unit.status = MaintenanceStatus("updating PgBouncer config")
-                self.render_file(
-                    f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
-                    template.render(
-                        databases=databases,
-                        readonly_databases=readonly_dbs,
-                        peer_id=service_id,
-                        base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
-                        peers=self.service_ids,
-                        log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
-                        pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
-                        listen_addr=addr,
-                        listen_port=self.config["listen_port"],
-                        pool_mode=self.config["pool_mode"],
-                        max_db_connections=max_db_connections,
-                        default_pool_size=default_pool_size,
-                        min_pool_size=min_pool_size,
-                        reserve_pool_size=reserve_pool_size,
-                        stats_user=self.backend.stats_user,
-                        auth_query=self.backend.auth_query,
-                        auth_file=f"{app_conf_dir}/{AUTH_FILE_NAME}",
-                        enable_tls=enable_tls,
-                        key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
-                        ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
-                        cert_file=f"{app_conf_dir}/{TLS_CERT_FILE}",
-                    ),
-                    0o700,
-                )
+                try:
+                    self.render_file(
+                        f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
+                        template.render(
+                            databases=databases,
+                            readonly_databases=readonly_dbs,
+                            peer_id=service_id,
+                            base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
+                            peers=self.service_ids,
+                            log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
+                            pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
+                            listen_addr=addr,
+                            listen_port=self.config["listen_port"],
+                            pool_mode=self.config["pool_mode"],
+                            max_db_connections=max_db_connections,
+                            default_pool_size=default_pool_size,
+                            min_pool_size=min_pool_size,
+                            reserve_pool_size=reserve_pool_size,
+                            stats_user=self.backend.stats_user,
+                            auth_query=self.backend.auth_query,
+                            auth_file=f"{app_conf_dir}/{AUTH_FILE_NAME}",
+                            enable_tls=enable_tls,
+                            key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
+                            ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
+                            cert_file=f"{app_conf_dir}/{TLS_CERT_FILE}",
+                        ),
+                        0o700,
+                    )
+                except FileNotFoundError:
+                    logger.warning("Service %s not yet rendered" % service_id)
         self.unit.status = initial_status
 
         if reload_pgbouncer:
