@@ -36,7 +36,6 @@ f"{dbname}_readonly".
 """  # noqa: W505
 
 import logging
-import os
 
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseProvides,
@@ -55,10 +54,9 @@ from ops.model import (
     Application,
     BlockedStatus,
     MaintenanceStatus,
-    ModelError,
 )
 
-from constants import CLIENT_RELATION_NAME, PGB, SOCKET_LOCATION
+from constants import CLIENT_RELATION_NAME, SOCKET_LOCATION
 
 logger = logging.getLogger(__name__)
 
@@ -108,23 +106,6 @@ class PgBouncerProvider(Object):
         Deferrals:
             - If backend relation is not fully initialised
         """
-        # If exposed relation, open the listen port for all units
-        if event.external_node_connectivity:
-            # Open port
-            try:
-                self.charm.unit.open_port("tcp", self.charm.config["listen_port"])
-            except ModelError:
-                logger.exception("failed to open port")
-
-            # Pgbouncer should spin up multiple instances
-            self.charm.service_ids = list(range(max(min(os.cpu_count(), 4), 2)))
-            self.charm.pgb_services = [
-                f"{PGB}-{self.charm.app.name}@{service_id}"
-                for service_id in self.charm.service_ids
-            ]
-            self.charm.create_instance_directories()
-            self.charm.render_utility_files()
-
         if not self.charm.backend.check_backend():
             event.defer()
             return

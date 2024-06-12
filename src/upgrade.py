@@ -87,6 +87,7 @@ class PgbouncerUpgrade(DataUpgrade):
         if self.charm.unit.is_leader():
             self.charm.generate_relation_databases()
 
+        self.charm.render_pgb_config()
         self.charm.render_utility_files()
         self.charm.reload_pgbouncer()
         if self.charm.backend.postgres:

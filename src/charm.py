@@ -150,11 +150,6 @@ class PgBouncerCharm(CharmBase):
 
     def render_utility_files(self):
         """Render charm utility services and configuration."""
-        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
-        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
-        # throw a fit.
-        self.render_pgb_config()
-
         # Render pgbouncer service file and reload systemd
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
@@ -206,6 +201,7 @@ class PgBouncerCharm(CharmBase):
             logger.exception(error_message, exc_info=e)
 
         self.create_instance_directories()
+        self.render_pgb_config()
         self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -485,7 +481,8 @@ class PgBouncerCharm(CharmBase):
         restarts pgbouncer to apply changes.
         """
         old_port = self.peers.app_databag.get("current_port")
-        if old_port != str(self.config["listen_port"]) and self._is_exposed:
+        port_changed = old_port != str(self.config["listen_port"])
+        if port_changed and self._is_exposed:
             if self.unit.is_leader():
                 self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
@@ -499,7 +496,7 @@ class PgBouncerCharm(CharmBase):
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
         try:
-            self.render_pgb_config(reload_pgbouncer=True)
+            self.render_pgb_config(reload_pgbouncer=True, restart=port_changed)
         except ModelError:
             logger.warning("Deferring on_config_changed: cannot set secret label")
             event.defer()
@@ -532,13 +529,16 @@ class PgBouncerCharm(CharmBase):
 
         return True
 
-    def reload_pgbouncer(self):
+    def reload_pgbouncer(self, restart=False):
         """Restarts systemd pgbouncer service."""
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             for service in self.pgb_services:
-                systemd.service_restart(service)
+                if restart or not systemd.service_running(service):
+                    systemd.service_restart(service)
+                else:
+                    systemd.service_reload(service)
             self.unit.status = initial_status
         except systemd.SystemdError as e:
             logger.error(e)
@@ -667,7 +667,7 @@ class PgBouncerCharm(CharmBase):
             }
         return pgb_dbs
 
-    def render_pgb_config(self, reload_pgbouncer=False):
+    def render_pgb_config(self, reload_pgbouncer=False, restart=False):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -675,6 +675,23 @@ class PgBouncerCharm(CharmBase):
         """
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        # If exposed relation, open the listen port for all units
+        if self._is_exposed:
+            # Open port
+            try:
+                self.unit.open_port("tcp", self.config["listen_port"])
+            except ModelError:
+                logger.exception("failed to open port")
+
+            # Pgbouncer should spin up multiple instances
+            # self.service_ids = list(range(max(min(os.cpu_count(), 4), 2)))
+            # self.pgb_services = [
+            #    f"{PGB}-{self.charm.app.name}@{service_id}"
+            #    for service_id in self.charm.service_ids
+            # ]
+            self.create_instance_directories()
+            self.render_utility_files()
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
@@ -737,7 +754,7 @@ class PgBouncerCharm(CharmBase):
         self.unit.status = initial_status
 
         if reload_pgbouncer:
-            self.reload_pgbouncer()
+            self.reload_pgbouncer(restart)
 
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""

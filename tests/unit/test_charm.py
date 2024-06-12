@@ -197,7 +197,7 @@ class TestCharm(unittest.TestCase):
         })
 
         # _read.return_value is modified on config update, but the object reference is the same.
-        _render.assert_called_with(reload_pgbouncer=True)
+        _render.assert_called_with(reload_pgbouncer=True, restart=True)
 
     @patch("charm.snap.SnapCache")
     def test_install_snap_packages(self, _snap_cache):
