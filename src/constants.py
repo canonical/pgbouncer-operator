@@ -62,3 +62,6 @@ SECRET_KEY_OVERRIDES = {
 }
 
 SOCKET_LOCATION = "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_0"
+
+TRACING_RELATION_NAME = "tracing"
+TRACING_PROTOCOL = "otlp_http"
