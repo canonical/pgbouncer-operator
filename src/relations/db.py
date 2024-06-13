@@ -110,7 +110,7 @@ from ops.model import (
     Unit,
 )
 
-from constants import EXTENSIONS_BLOCKING_MESSAGE, SOCKET_LOCATION
+from constants import EXTENSIONS_BLOCKING_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -317,7 +317,7 @@ class DbProvides(Object):
                 "allowed-subnets": self.get_allowed_subnets(change_event.relation),
                 "allowed-units": self.get_allowed_units(change_event.relation),
                 "version": self.charm.backend.postgres.get_postgresql_version(),
-                "host": SOCKET_LOCATION,
+                "host": "localhost",
                 "user": user,
                 "password": password,
                 "database": database,
@@ -341,7 +341,7 @@ class DbProvides(Object):
             return
 
         master_dbconnstr = {
-            "host": SOCKET_LOCATION,
+            "host": "localhost",
             "dbname": database,
             "port": port,
             "user": user,
@@ -352,7 +352,7 @@ class DbProvides(Object):
         connection_updates = {
             "master": pgb.parse_dict_to_kv_string(master_dbconnstr),
             "port": str(port),
-            "host": SOCKET_LOCATION,
+            "host": "localhost",
         }
 
         self.update_databags(relation, connection_updates)

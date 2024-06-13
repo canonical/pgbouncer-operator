@@ -15,7 +15,6 @@ from constants import (
     DB_ADMIN_RELATION_NAME,
     DB_RELATION_NAME,
     PEER_RELATION_NAME,
-    SOCKET_LOCATION,
 )
 
 from ..helpers import patch_network_get
@@ -189,7 +188,7 @@ class TestDb(unittest.TestCase):
                 "allowed-subnets": _allowed_subnets.return_value,
                 "allowed-units": _allowed_units.return_value,
                 "version": self.charm.backend.postgres.get_postgresql_version(),
-                "host": SOCKET_LOCATION,
+                "host": "localhost",
                 "user": user,
                 "password": password,
                 "database": database,
@@ -215,7 +214,7 @@ class TestDb(unittest.TestCase):
         }
 
         master_dbconnstr = {
-            "host": SOCKET_LOCATION,
+            "host": "localhost",
             "dbname": database,
             "port": port,
             "user": user,
@@ -235,7 +234,7 @@ class TestDb(unittest.TestCase):
             {
                 "master": parse_dict_to_kv_string(master_dbconnstr),
                 "port": port,
-                "host": SOCKET_LOCATION,
+                "host": "localhost",
             },
         )
 
