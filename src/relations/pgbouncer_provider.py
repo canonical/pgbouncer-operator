@@ -110,9 +110,6 @@ class PgBouncerProvider(Object):
             event.defer()
             return
 
-        if not self.charm.unit.is_leader():
-            return
-
         # Retrieve the database name and extra user roles using the charm library.
         database = event.database
         extra_user_roles = event.extra_user_roles or ""
