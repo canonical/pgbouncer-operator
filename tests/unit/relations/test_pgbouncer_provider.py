@@ -11,7 +11,6 @@ from constants import (
     BACKEND_RELATION_NAME,
     CLIENT_RELATION_NAME,
     PEER_RELATION_NAME,
-    SOCKET_LOCATION,
 )
 
 from ..helpers import patch_network_get
@@ -114,7 +113,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
         _dbp_set_version.assert_called_with(rel_id, _pg().get_postgresql_version())
         _dbp_set_endpoints.assert_called_with(
-            rel_id, f"{SOCKET_LOCATION}:{self.charm.config['listen_port']}"
+            rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
         _set_rel_dbs.assert_called_once_with({
             "1": {"name": "test-db", "legacy": False},
