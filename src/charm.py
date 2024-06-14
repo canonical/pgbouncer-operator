@@ -21,6 +21,8 @@ from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
+from charms.tempo_k8s.v1.charm_tracing import trace_charm
+from charms.tempo_k8s.v2.tracing import TracingEndpointRequirer
 from jinja2 import Template
 from ops import ActionEvent, JujuVersion
 from ops.charm import CharmBase
@@ -57,6 +59,8 @@ from constants import (
     TLS_CA_FILE,
     TLS_CERT_FILE,
     TLS_KEY_FILE,
+    TRACING_PROTOCOL,
+    TRACING_RELATION_NAME,
     UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -72,6 +76,18 @@ Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
 INSTANCE_DIR = "instance_"
 
 
+@trace_charm(
+    tracing_endpoint="tracing_endpoint",
+    extra_types=(
+        BackendDatabaseRequires,
+        COSAgentProvider,
+        DbProvides,
+        Peers,
+        PgBouncerProvider,
+        PgbouncerUpgrade,
+        PostgreSQLTLS,
+    ),
+)
 class PgBouncerCharm(CharmBase):
     """A class implementing charmed PgBouncer."""
 
@@ -108,8 +124,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
 
-        self._cores = max(min(os.cpu_count(), 4), 2)
-        self.service_ids = list(range(self._cores))
+        self.service_ids = list(range(self.instances_count))
         self.pgb_services = [
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
@@ -130,17 +145,40 @@ class PgBouncerCharm(CharmBase):
             substrate="vm",
         )
 
+        self._tracing = TracingEndpointRequirer(
+            self, relation_name=TRACING_RELATION_NAME, protocols=[TRACING_PROTOCOL]
+        )
+
+    @property
+    def instances_count(self):
+        """Returns the amount of instances to spin based on expose."""
+        if self._is_exposed:
+            return max(min(os.cpu_count(), 4), 2)
+        else:
+            return 1
+
     # =======================
     #  Charm Lifecycle Hooks
     # =======================
 
+    def create_instance_directories(self):
+        """Create configuration directories for pgbouncer instances."""
+        pg_user = pwd.getpwnam(PG_USER)
+        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+
+        # Make a directory for each service to store configs.
+        for service_id in self.service_ids:
+            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
+            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+
+    @property
+    def tracing_endpoint(self) -> Optional[str]:
+        """Otlp http endpoint for charm instrumentation."""
+        if self._tracing.is_ready():
+            return self._tracing.get_endpoint(TRACING_PROTOCOL)
+
     def render_utility_files(self):
         """Render charm utility services and configuration."""
-        # Initialise pgbouncer.ini config files from defaults set in charm lib and current config.
-        # We'll add basic configs for now even if this unit isn't a leader, so systemd doesn't
-        # throw a fit.
-        self.render_pgb_config()
-
         # Render pgbouncer service file and reload systemd
         with open("templates/pgbouncer.service.j2", "r") as file:
             template = Template(file.read())
@@ -191,14 +229,8 @@ class PgBouncerCharm(CharmBase):
             error_message = "Failed to stop and disable pgbackrest snap service"
             logger.exception(error_message, exc_info=e)
 
-        pg_user = pwd.getpwnam(PG_USER)
-        app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
-
-        # Make a directory for each service to store configs.
-        for service_id in self.service_ids:
-            os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
-            os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-
+        self.create_instance_directories()
+        self.render_pgb_config()
         self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -485,7 +517,8 @@ class PgBouncerCharm(CharmBase):
         restarts pgbouncer to apply changes.
         """
         old_port = self.peers.app_databag.get("current_port")
-        if old_port != str(self.config["listen_port"]) and self._is_exposed:
+        port_changed = old_port != str(self.config["listen_port"])
+        if port_changed and self._is_exposed:
             if self.unit.is_leader():
                 self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
@@ -499,7 +532,7 @@ class PgBouncerCharm(CharmBase):
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
         try:
-            self.render_pgb_config(reload_pgbouncer=True)
+            self.render_pgb_config(reload_pgbouncer=True, restart=port_changed)
         except ModelError:
             logger.warning("Deferring on_config_changed: cannot set secret label")
             event.defer()
@@ -532,13 +565,16 @@ class PgBouncerCharm(CharmBase):
 
         return True
 
-    def reload_pgbouncer(self):
+    def reload_pgbouncer(self, restart=False):
         """Restarts systemd pgbouncer service."""
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
         try:
             for service in self.pgb_services:
-                systemd.service_restart(service)
+                if restart or not systemd.service_running(service):
+                    systemd.service_restart(service)
+                else:
+                    systemd.service_reload(service)
             self.unit.status = initial_status
         except systemd.SystemdError as e:
             logger.error(e)
@@ -667,7 +703,7 @@ class PgBouncerCharm(CharmBase):
             }
         return pgb_dbs
 
-    def render_pgb_config(self, reload_pgbouncer=False):
+    def render_pgb_config(self, reload_pgbouncer=False, restart=False):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -675,6 +711,17 @@ class PgBouncerCharm(CharmBase):
         """
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        # If exposed relation, open the listen port for all units
+        if self._is_exposed:
+            # Open port
+            try:
+                self.unit.open_port("tcp", self.config["listen_port"])
+            except ModelError:
+                logger.exception("failed to open port")
+
+            self.create_instance_directories()
+            self.render_utility_files()
 
         # Render primary config. This config is the only copy that the charm reads from to create
         # PgbConfig objects, and is modified below to implement individual services.
@@ -688,7 +735,7 @@ class PgBouncerCharm(CharmBase):
             min_pool_size = 10
             reserve_pool_size = 10
         else:
-            effective_db_connections = max_db_connections / self._cores
+            effective_db_connections = max_db_connections / self.instances_count
             default_pool_size = math.ceil(effective_db_connections / 2)
             min_pool_size = math.ceil(effective_db_connections / 4)
             reserve_pool_size = math.ceil(effective_db_connections / 4)
@@ -704,37 +751,40 @@ class PgBouncerCharm(CharmBase):
             # Modify & render config files for each service instance
             for service_id in self.service_ids:
                 self.unit.status = MaintenanceStatus("updating PgBouncer config")
-                self.render_file(
-                    f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
-                    template.render(
-                        databases=databases,
-                        readonly_databases=readonly_dbs,
-                        peer_id=service_id,
-                        base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
-                        peers=self.service_ids,
-                        log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
-                        pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
-                        listen_addr=addr,
-                        listen_port=self.config["listen_port"],
-                        pool_mode=self.config["pool_mode"],
-                        max_db_connections=max_db_connections,
-                        default_pool_size=default_pool_size,
-                        min_pool_size=min_pool_size,
-                        reserve_pool_size=reserve_pool_size,
-                        stats_user=self.backend.stats_user,
-                        auth_query=self.backend.auth_query,
-                        auth_file=f"{app_conf_dir}/{AUTH_FILE_NAME}",
-                        enable_tls=enable_tls,
-                        key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
-                        ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
-                        cert_file=f"{app_conf_dir}/{TLS_CERT_FILE}",
-                    ),
-                    0o700,
-                )
+                try:
+                    self.render_file(
+                        f"{app_conf_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.ini",
+                        template.render(
+                            databases=databases,
+                            readonly_databases=readonly_dbs,
+                            peer_id=service_id,
+                            base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
+                            peers=self.service_ids,
+                            log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
+                            pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
+                            listen_addr=addr,
+                            listen_port=self.config["listen_port"],
+                            pool_mode=self.config["pool_mode"],
+                            max_db_connections=max_db_connections,
+                            default_pool_size=default_pool_size,
+                            min_pool_size=min_pool_size,
+                            reserve_pool_size=reserve_pool_size,
+                            stats_user=self.backend.stats_user,
+                            auth_query=self.backend.auth_query,
+                            auth_file=f"{app_conf_dir}/{AUTH_FILE_NAME}",
+                            enable_tls=enable_tls,
+                            key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
+                            ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
+                            cert_file=f"{app_conf_dir}/{TLS_CERT_FILE}",
+                        ),
+                        0o700,
+                    )
+                except FileNotFoundError:
+                    logger.warning("Service %s not yet rendered" % service_id)
         self.unit.status = initial_status
 
         if reload_pgbouncer:
-            self.reload_pgbouncer()
+            self.reload_pgbouncer(restart)
 
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""

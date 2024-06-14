@@ -54,7 +54,6 @@ from ops.model import (
     Application,
     BlockedStatus,
     MaintenanceStatus,
-    ModelError,
 )
 
 from constants import CLIENT_RELATION_NAME
@@ -109,17 +108,6 @@ class PgBouncerProvider(Object):
         """
         if not self.charm.backend.check_backend():
             event.defer()
-            return
-
-        # If exposed relation, open the listen port for all units
-        if event.external_node_connectivity:
-            # Open port
-            try:
-                self.charm.unit.open_port("tcp", self.charm.config["listen_port"])
-            except ModelError:
-                logger.exception("failed to open port")
-
-        if not self.charm.unit.is_leader():
             return
 
         # Retrieve the database name and extra user roles using the charm library.

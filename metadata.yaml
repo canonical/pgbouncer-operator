@@ -67,3 +67,7 @@ requires:
     interface: juju-info
     scope: container
     limit: 1
+  tracing:
+    interface: tracing
+    limit: 1
+    optional: true

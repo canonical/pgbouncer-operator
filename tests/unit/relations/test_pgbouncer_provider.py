@@ -7,7 +7,11 @@ from unittest.mock import MagicMock, PropertyMock, patch, sentinel
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, CLIENT_RELATION_NAME, PEER_RELATION_NAME
+from constants import (
+    BACKEND_RELATION_NAME,
+    CLIENT_RELATION_NAME,
+    PEER_RELATION_NAME,
+)
 
 from ..helpers import patch_network_get
 
@@ -88,6 +92,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         rel_id = event.relation.id = 1
         database = event.database = "test-db"
         event.extra_user_roles = "SUPERUSER"
+        event.external_node_connectivity = False
         user = f"relation_id_{rel_id}"
 
         # check we exit immediately if backend doesn't exist.
