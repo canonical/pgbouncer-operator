@@ -490,6 +490,41 @@ class TestCharm(unittest.TestCase):
 
         assert self.charm.generate_relation_databases() == {}
 
+    @patch("charm.PgBouncerCharm._collect_readonly_dbs")
+    @patch("charm.PgBouncerCharm.update_status")
+    @patch("charm.Peers.update_leader")
+    @patch_network_get(private_address="1.1.1.1")
+    def test_on_update_status(self, _update_leader, _update_status, _collect_readonly_dbs):
+        event = Mock()
+
+        self.charm._on_update_status(event)
+
+        _update_leader.assert_called_once_with()
+        _update_status.assert_called_once_with()
+        _collect_readonly_dbs.assert_called_once_with()
+
+    @patch("charm.BackendDatabaseRequires.postgres")
+    @patch(
+        "charm.PgBouncerCharm.get_relation_databases", return_value={"1": {"name": "excludeddb"}}
+    )
+    @patch_network_get(private_address="1.1.1.1")
+    def test_collect_readonly_dbs(self, _get_relation_databases, _postgres):
+        _postgres._connect_to_database().__enter__().cursor().__enter__().fetchall.return_value = (
+            ("includeddb",),
+            ("excludeddb",),
+        )
+
+        # don't collect if not leader
+        self.charm._collect_readonly_dbs()
+        assert "readonly_dbs" not in self.charm.peers.app_databag
+
+        with self.harness.hooks_disabled():
+            self.harness.set_leader()
+
+        self.charm._collect_readonly_dbs()
+
+        assert self.charm.peers.app_databag["readonly_dbs"] == '["includeddb"]'
+
     #
     # Secrets
     #
