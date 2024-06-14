@@ -9,12 +9,14 @@ import pytest
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
-from constants import BACKEND_RELATION_NAME
+from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR
 
 from ... import architecture
 from ...helpers.helpers import (
     PG,
     PGB,
+    get_cfg,
+    get_unit_cores,
 )
 from ...juju_ import juju_major_version
 from .helpers import check_exposed_connection
@@ -116,3 +118,30 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
     )
     check_exposed_connection(credentials, False)
+
+
+@pytest.mark.group(1)
+async def test_change_config(ops_test: OpsTest):
+    """Change config and assert that the pgbouncer config file looks how we expect."""
+    async with ops_test.fast_forward():
+        unit = ops_test.model.units[f"{PGB}/0"]
+        await ops_test.model.applications[PGB].set_config({
+            "pool_mode": "transaction",
+            "max_db_connections": "44",
+        })
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
+
+    # The config changes depending on the amount of cores on the unit, so get that info.
+    cores = max(min(await get_unit_cores(ops_test, unit), 4), 2)
+
+    primary_cfg = await get_cfg(ops_test, unit.name)
+
+    assert primary_cfg["pgbouncer"]["pool_mode"] == "transaction"
+    assert primary_cfg["pgbouncer"]["max_db_connections"] == "44"
+
+    # Validating service config files are correctly written is handled by render_pgb_config and its
+    # tests, but we need to make sure they at least exist in the right places.
+    for service_id in range(cores):
+        path = f"{PGB_CONF_DIR}/{PGB}/instance_{service_id}/pgbouncer.ini"
+        service_cfg = await get_cfg(ops_test, unit.name, path=path)
+        assert service_cfg is not f"cat: {path}: No such file or directory"
