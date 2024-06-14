@@ -165,7 +165,6 @@ class PgBouncerCharm(CharmBase):
 
         # Make a directory for each service to store configs.
         for service_id in self.service_ids:
-            logger.error(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}")
             os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
             os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
