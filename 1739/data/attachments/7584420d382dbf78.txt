@@ -1,0 +1,15 @@
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/postgresql-test-app-150
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [executing] active: 
+  another-application/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  pgbouncer/1 [idle] active: 
+  another-application/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  another-application/0 [idle] active: 
+[33mWARNING [0m juju.model:model.py:1563 relate is deprecated and will be removed. Use integrate instead.
