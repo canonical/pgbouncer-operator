@@ -469,6 +469,7 @@ class PgBouncerCharm(CharmBase):
                 conn.close()
             except psycopg2.Error:
                 logger.warning("PostgreSQL connection failed")
+                return
             readonly_dbs = [db[0] for db in results if db and db[0] not in existing_dbs]
             readonly_dbs.sort()
             self.peers.app_databag["readonly_dbs"] = json.dumps(readonly_dbs)
