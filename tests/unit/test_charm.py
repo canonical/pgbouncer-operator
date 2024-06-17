@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 
 import ops.testing
+import psycopg2
 import pytest
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
@@ -520,6 +521,14 @@ class TestCharm(unittest.TestCase):
 
         with self.harness.hooks_disabled():
             self.harness.set_leader()
+
+        self.charm._collect_readonly_dbs()
+
+        assert self.charm.peers.app_databag["readonly_dbs"] == '["includeddb"]'
+
+        # don't fail if no connection
+        _postgres._connect_to_database().__enter__().cursor().__enter__().fetchall.return_value = ()
+        _postgres._connect_to_database().__enter__.side_effect = psycopg2.Error
 
         self.charm._collect_readonly_dbs()
 
