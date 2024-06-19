@@ -36,6 +36,7 @@ f"{dbname}_readonly".
 """  # noqa: W505
 
 import logging
+from hashlib import shake_128
 
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseProvides,
@@ -48,7 +49,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
     Application,
@@ -91,24 +92,12 @@ class PgBouncerProvider(Object):
         self.framework.observe(
             charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
-        self.framework.observe(
-            charm.on[self.relation_name].relation_changed, self._on_relation_changed
-        )
 
     def _depart_flag(self, relation):
         return f"{self.relation_name}_{relation.id}_departing"
 
     def _unit_departing(self, relation):
         return self.charm.peers.unit_databag.get(self._depart_flag(relation), None) == "true"
-
-    def _on_relation_changed(self, event: RelationChangedEvent) -> None:
-        """Injects the database name for follower units."""
-        if not self.charm.unit.is_leader():
-            if "database" in event.relation.data[event.app]:
-                database = event.relation.data[event.app]["database"]
-                dbs = self.charm.generate_relation_databases()
-                if database not in [db["name"] for db in dbs]:
-                    self.charm.render_pgb_config(reload_pgbouncer=True, inject_db=database)
 
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Handle the client relation-requested event.
@@ -125,7 +114,7 @@ class PgBouncerProvider(Object):
         for key in self.charm.peers.relation.data.keys():
             if key != self.charm.app:
                 if self.charm.peers.relation.data[key].get("auth_file_set", "false") != "true":
-                    logger.info("Backend credentials not yet set on all units")
+                    logger.debug("Backend credentials not yet set on all units")
                     event.defer()
                     return
 
@@ -133,6 +122,24 @@ class PgBouncerProvider(Object):
         database = event.database
         extra_user_roles = event.extra_user_roles or ""
         rel_id = event.relation.id
+
+        dbs = self.charm.generate_relation_databases()
+        dbs[str(event.relation.id)] = {"name": database, "legacy": False}
+        roles = extra_user_roles.lower().split(",")
+        if "admin" in roles or "superuser" in roles:
+            dbs["*"] = {"name": "*", "auth_dbname": database}
+        self.charm.set_relation_databases(dbs)
+
+        pgb_dbs_hash = shake_128(
+            self.charm.peers.app_databag["pgb_dbs_config"].encode()
+        ).hexdigest(16)
+        for key in self.charm.peers.relation.data.keys():
+            # We skip the leader so we don't have to wait on the defer
+            if key != self.charm.app and key != self.charm.unit:
+                if self.charm.peers.relation.data[key].get("pgb_dbs", "") != pgb_dbs_hash:
+                    logger.debug("Not all units have synced configuration")
+                    event.defer()
+                    return
 
         # Creates the user and the database for this specific relation.
         user = f"relation_id_{rel_id}"
@@ -159,13 +166,6 @@ class PgBouncerProvider(Object):
                 f"Failed to initialize {self.relation_name} relation"
             )
             return
-
-        dbs = self.charm.generate_relation_databases()
-        dbs[str(event.relation.id)] = {"name": database, "legacy": False}
-        roles = extra_user_roles.lower().split(",")
-        if "admin" in roles or "superuser" in roles:
-            dbs["*"] = {"name": "*", "auth_dbname": database}
-        self.charm.set_relation_databases(dbs)
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
 

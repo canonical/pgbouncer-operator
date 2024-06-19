@@ -109,6 +109,9 @@ class TestPgbouncerProvider(unittest.TestCase):
             self.harness.update_relation_data(
                 self.peers_rel_id, self.unit, {"auth_file_set": "true"}
             )
+            self.harness.update_relation_data(
+                self.peers_rel_id, self.app, {"pgb_dbs_config": "{}"}
+            )
         self.client_relation._on_database_requested(event)
 
         # Verify we've called everything we should

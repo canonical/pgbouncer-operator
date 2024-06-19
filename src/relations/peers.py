@@ -26,6 +26,7 @@ Example:
 """  # noqa: W505
 
 import logging
+from hashlib import shake_128
 from typing import List, Optional, Set
 
 from ops.charm import CharmBase, HookEvent
@@ -132,7 +133,16 @@ class Peers(Object):
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
 
+        # TODO if we track the secret id as well we can reload only when things change
+        readonly_dbs_hash = shake_128(
+            self.app_databag.get("readonly_dbs", "[]").encode()
+        ).hexdigest(16)
+        pgb_dbs_hash = shake_128(self.app_databag.get("pgb_dbs_config", "{}").encode()).hexdigest(
+            16
+        )
         self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.unit_databag["readonly_dbs"] = readonly_dbs_hash
+        self.unit_databag["pgb_dbs"] = pgb_dbs_hash
 
     def _on_departed(self, _):
         self.update_leader()
