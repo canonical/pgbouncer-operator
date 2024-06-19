@@ -48,7 +48,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
     Application,
@@ -91,12 +91,24 @@ class PgBouncerProvider(Object):
         self.framework.observe(
             charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
+        self.framework.observe(
+            charm.on[self.relation_name].relation_changed, self._on_relation_changed
+        )
 
     def _depart_flag(self, relation):
         return f"{self.relation_name}_{relation.id}_departing"
 
     def _unit_departing(self, relation):
         return self.charm.peers.unit_databag.get(self._depart_flag(relation), None) == "true"
+
+    def _on_relation_changed(self, event: RelationChangedEvent) -> None:
+        """Injects the database name for follower units."""
+        if not self.charm.unit.is_leader():
+            if "database" in event.relation.data[event.app]:
+                database = event.relation.data[event.app]["database"]
+                dbs = self.charm.generate_relation_databases()
+                if database not in [db["name"] for db in dbs]:
+                    self.charm.render_pgb_config(reload_pgbouncer=True, inject_db=database)
 
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Handle the client relation-requested event.
@@ -109,6 +121,13 @@ class PgBouncerProvider(Object):
         if not self.charm.backend.check_backend():
             event.defer()
             return
+
+        for key in self.charm.peers.relation.data.keys():
+            if key != self.charm.app:
+                if self.charm.peers.relation.data[key].get("auth_file_set", "false") != "true":
+                    logger.info("Backend credentials not yet set on all units")
+                    event.defer()
+                    return
 
         # Retrieve the database name and extra user roles using the charm library.
         database = event.database
@@ -147,6 +166,8 @@ class PgBouncerProvider(Object):
         if "admin" in roles or "superuser" in roles:
             dbs["*"] = {"name": "*", "auth_dbname": database}
         self.charm.set_relation_databases(dbs)
+
+        self.charm.render_pgb_config(reload_pgbouncer=True)
 
         # Share the credentials and updated connection info with the client application.
         self.database_provides.set_credentials(rel_id, user, password)

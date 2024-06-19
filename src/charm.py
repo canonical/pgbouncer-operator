@@ -648,7 +648,7 @@ class PgBouncerCharm(CharmBase):
         self.set_relation_databases(databases)
         return databases
 
-    def _get_relation_config(self) -> [Dict[str, Dict[str, Union[str, bool]]]]:
+    def _get_relation_config(self, inject_db=None) -> [Dict[str, Dict[str, Union[str, bool]]]]:
         """Generate pgb config for databases and admin users."""
         if not self.backend.relation or not (databases := self.get_relation_databases()):
             return {}
@@ -685,6 +685,13 @@ class PgBouncerCharm(CharmBase):
                     "port": r_port,
                     "auth_user": self.backend.auth_user,
                 }
+        if inject_db:
+            pgb_dbs[inject_db] = {
+                "host": host,
+                "dbname": inject_db,
+                "port": port,
+                "auth_user": self.backend.auth_user,
+            }
         if "*" in databases:
             pgb_dbs["*"] = {
                 "host": host,
@@ -694,7 +701,7 @@ class PgBouncerCharm(CharmBase):
             }
         return pgb_dbs
 
-    def render_pgb_config(self, reload_pgbouncer=False, restart=False):
+    def render_pgb_config(self, reload_pgbouncer=False, restart=False, inject_db=None):
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -732,7 +739,7 @@ class PgBouncerCharm(CharmBase):
             reserve_pool_size = math.ceil(effective_db_connections / 4)
         with open("templates/pgb_config.j2", "r") as file:
             template = Template(file.read())
-            databases = self._get_relation_config()
+            databases = self._get_relation_config(inject_db=inject_db)
             readonly_dbs = self._get_readonly_dbs(databases)
             enable_tls = all(self.tls.get_tls_files()) and self._is_exposed
             if self._is_exposed:
@@ -819,6 +826,7 @@ class PgBouncerCharm(CharmBase):
             f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
         )
         self.unit.status = initial_status
+        self.peers.unit_databag["auth_file_set"] = "true"
 
         if reload_pgbouncer:
             self.reload_pgbouncer()

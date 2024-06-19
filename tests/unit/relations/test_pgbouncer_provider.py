@@ -100,7 +100,15 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_relation._on_database_requested(event)
         _pg.create_user.assert_not_called()
 
+        # check we exit immediately if not all units are set.
         _check_backend.return_value = True
+        self.client_relation._on_database_requested(event)
+        _pg.create_user.assert_not_called()
+
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.peers_rel_id, self.unit, {"auth_file_set": "true"}
+            )
         self.client_relation._on_database_requested(event)
 
         # Verify we've called everything we should
