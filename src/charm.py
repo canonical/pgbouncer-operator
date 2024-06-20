@@ -819,6 +819,7 @@ class PgBouncerCharm(CharmBase):
             f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
         )
         self.unit.status = initial_status
+        self.peers.unit_databag["auth_file_set"] = "true"
 
         if reload_pgbouncer:
             self.reload_pgbouncer()
