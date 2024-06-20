@@ -2,6 +2,7 @@
 [![Charmhub](https://charmhub.io/pgbouncer/badge.svg)](https://charmhub.io/pgbouncer)
 [![Release](https://github.com/canonical/pgbouncer-operator/actions/workflows/release.yaml/badge.svg)](https://github.com/canonical/pgbouncer-operator/actions/workflows/release.yaml)
 [![Tests](https://github.com/canonical/pgbouncer-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/pgbouncer-operator/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/canonical/pgbouncer-operator/graph/badge.svg?token=YY51XZDOO7)](https://codecov.io/gh/canonical/pgbouncer-operator)
 
 ## Description
 
