@@ -202,6 +202,7 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
 async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
+    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME, PGB], status="active")
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
@@ -351,6 +352,7 @@ async def test_scaling(ops_test: OpsTest):
         )
 
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
+    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME, PGB], status="active")
     await ops_test.model.wait_for_idle()
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
