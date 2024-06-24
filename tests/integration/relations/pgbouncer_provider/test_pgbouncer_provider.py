@@ -353,7 +353,6 @@ async def test_scaling(ops_test: OpsTest):
 
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME, PGB], status="active")
-    await ops_test.model.wait_for_idle()
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
     logger.info(cfg)
     for unit in ops_test.model.applications[CLIENT_APP_NAME].units:
