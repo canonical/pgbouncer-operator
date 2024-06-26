@@ -80,7 +80,7 @@ class TestCharm(unittest.TestCase):
         _install,
         _snap_cache,
     ):
-        pg_snap = _snap_cache.return_value["charmed-postgresql"]
+        pg_snap = _snap_cache.return_value["charmed-pgbouncer"]
         self.charm.on.install.emit()
 
         _install.assert_called_once_with(packages=SNAP_PACKAGES)
@@ -222,29 +222,29 @@ class TestCharm(unittest.TestCase):
 
         # Test for problem with snap update.
         with self.assertRaises(snap.SnapError):
-            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+            self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
         _snap_cache.assert_called_once_with()
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
 
         # Test with a not found package.
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
         _snap_package.ensure.side_effect = snap.SnapNotFoundError
         with self.assertRaises(snap.SnapNotFoundError):
-            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+            self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
         _snap_cache.assert_called_once_with()
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
 
         # Then test a valid one.
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
         _snap_package.ensure.side_effect = None
-        self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
+        self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
         _snap_cache.assert_called_once_with()
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
         _snap_package.hold.assert_not_called()
 
         # Test revision

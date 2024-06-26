@@ -10,8 +10,8 @@ INI_NAME = "pgbouncer.ini"
 AUTH_FILE_NAME = "userlist.txt"
 
 # Snap constants.
-PGBOUNCER_EXECUTABLE = "charmed-postgresql.pgbouncer"
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
+PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
 SNAP_PACKAGES = [
     (
         PGBOUNCER_SNAP_NAME,
@@ -19,13 +19,13 @@ SNAP_PACKAGES = [
     )
 ]
 
-SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
-SNAP_CURRENT_PATH = "/var/snap/charmed-postgresql/current"
+SNAP_COMMON_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/common"
+SNAP_CURRENT_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/current"
 
 PGB_CONF_DIR = f"{SNAP_CURRENT_PATH}/etc/pgbouncer"
 PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
-SNAP_TMP_DIR = "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp"
+SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"
 
 # PGB config
 DATABASES = "databases"
@@ -61,7 +61,7 @@ SECRET_KEY_OVERRIDES = {
     "ca": "cauth",
 }
 
-SOCKET_LOCATION = "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp/pgbouncer/instance_0"
+SOCKET_LOCATION = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp/pgbouncer/instance_0"
 
 TRACING_RELATION_NAME = "tracing"
 TRACING_PROTOCOL = "otlp_http"

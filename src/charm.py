@@ -209,7 +209,7 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
-        # Install the charmed PostgreSQL snap.
+        # Install the charmed PgBouncer snap.
         try:
             self._install_snap_packages(packages=SNAP_PACKAGES)
         except snap.SnapError:
@@ -219,9 +219,8 @@ class PgBouncerCharm(CharmBase):
         # Try to disable pgbackrest service
         try:
             cache = snap.SnapCache()
-            selected_snap = cache["charmed-postgresql"]
+            selected_snap = cache[PGBOUNCER_SNAP_NAME]
             selected_snap.alias("psql")
-            selected_snap.stop(services=["pgbackrest-service"], disable=True)
         except snap.SnapError as e:
             error_message = "Failed to stop and disable pgbackrest snap service"
             logger.exception(error_message, exc_info=e)
