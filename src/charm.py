@@ -439,7 +439,9 @@ class PgBouncerCharm(CharmBase):
         readonly_dbs = {}
         if self.backend.relation and "*" in databases:
             read_only_endpoints = self.backend.get_read_only_endpoints()
-            r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
+            sorted_rhosts = [r_host.split(":")[0] for r_host in read_only_endpoints]
+            sorted_rhosts.sort()
+            r_hosts = ",".join(sorted_rhosts)
             if r_hosts:
                 for r_host in read_only_endpoints:
                     r_port = r_host.split(":")[1]
@@ -644,7 +646,7 @@ class PgBouncerCharm(CharmBase):
             if "admin" in roles or "superuser" in roles or "createdb" in roles:
                 add_wildcard = True
         if add_wildcard:
-            databases["*"] = {"name": "*", "auth_dbname": database}
+            databases["*"] = {"name": "*", "auth_dbname": database, "legacy": False}
         self.set_relation_databases(databases)
         return databases
 
@@ -660,7 +662,9 @@ class PgBouncerCharm(CharmBase):
         host, port = postgres_endpoint.split(":")
 
         read_only_endpoints = self.backend.get_read_only_endpoints()
-        r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
+        sorted_rhosts = [r_host.split(":")[0] for r_host in read_only_endpoints]
+        sorted_rhosts.sort()
+        r_hosts = ",".join(sorted_rhosts)
         if r_hosts:
             for r_host in read_only_endpoints:
                 r_port = r_host.split(":")[1]

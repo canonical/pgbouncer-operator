@@ -504,6 +504,46 @@ class TestCharm(unittest.TestCase):
         _update_status.assert_called_once_with()
         _collect_readonly_dbs.assert_called_once_with()
 
+    @patch(
+        "charm.BackendDatabaseRequires.auth_user",
+        new_callable=PropertyMock,
+        return_value="auth_user",
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.postgres_databag",
+        new_callable=PropertyMock,
+        return_value={},
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.relation", new_callable=PropertyMock, return_value=Mock()
+    )
+    @patch_network_get(private_address="1.1.1.1")
+    def test_get_readonly_dbs(self, _backend_rel, _postgres_databag, _):
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.rel_id, self.charm.app.name, {"readonly_dbs": '["includedb"]'}
+            )
+
+        # Returns empty if no wildcard
+        assert self.charm._get_readonly_dbs({}) == {}
+
+        # Returns empty if no readonly backends
+        assert self.charm._get_readonly_dbs({"*": {"name": "*", "auth_dbname": "authdb"}}) == {}
+
+        _postgres_databag.return_value = {
+            "endpoints": "HOST:PORT",
+            "read-only-endpoints": "HOST2:PORT,HOST3:PORT",
+        }
+        assert self.charm._get_readonly_dbs({"*": {"name": "*", "auth_dbname": "authdb"}}) == {
+            "includedb_readonly": {
+                "auth_dbname": "authdb",
+                "auth_user": "auth_user",
+                "dbname": "includedb",
+                "host": "HOST2,HOST3",
+                "port": "PORT",
+            }
+        }
+
     @patch("charm.BackendDatabaseRequires.postgres")
     @patch(
         "charm.PgBouncerCharm.get_relation_databases", return_value={"1": {"name": "excludeddb"}}
