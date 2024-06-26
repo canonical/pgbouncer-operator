@@ -11,11 +11,11 @@ AUTH_FILE_NAME = "userlist.txt"
 
 # Snap constants.
 PGBOUNCER_EXECUTABLE = "charmed-postgresql.pgbouncer"
-POSTGRESQL_SNAP_NAME = "charmed-postgresql"
+PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
 SNAP_PACKAGES = [
     (
-        POSTGRESQL_SNAP_NAME,
-        {"revision": {"aarch64": "112", "x86_64": "113"}, "channel": "14/stable"},
+        PGBOUNCER_SNAP_NAME,
+        {"revision": {"aarch64": "2", "x86_64": "1"}, "channel": "1/stable"},
     )
 ]
 

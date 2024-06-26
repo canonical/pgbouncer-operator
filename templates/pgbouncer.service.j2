@@ -7,7 +7,7 @@ Type=simple
 ExecStartPre=-/usr/bin/install -o snap_daemon -g snap_daemon -m 700 -d \
         /var/snap/charmed-postgresql/common/var/log/pgbouncer/{{ app_name }}/instance_%i/ \
         {{ snap_tmp_dir }}/{{ app_name }}/instance_%i/
-ExecStart=/snap/bin/charmed-postgresql.pgbouncer-server {{ conf_dir }}/{{ app_name }}/instance_%i/pgbouncer.ini
+ExecStart=/snap/bin/charmed-pgbouncer.pgbouncer-server {{ conf_dir }}/{{ app_name }}/instance_%i/pgbouncer.ini
 KillSignal=SIGINT
 ExecReload=kill -HUP $MAINPID
 Restart=always

@@ -50,7 +50,7 @@ from constants import (
     PGB_CONF_DIR,
     PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
-    POSTGRESQL_SNAP_NAME,
+    PGBOUNCER_SNAP_NAME,
     SECRET_DELETED_LABEL,
     SECRET_INTERNAL_LABEL,
     SECRET_KEY_OVERRIDES,
@@ -131,7 +131,7 @@ class PgBouncerCharm(CharmBase):
             metrics_endpoints=[
                 {"path": "/metrics", "port": self.config["metrics_port"]},
             ],
-            log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
+            log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
             refresh_events=[self.on.config_changed],
         )
 
