@@ -50,7 +50,7 @@ from constants import (
     PGB_CONF_DIR,
     PGB_LOG_DIR,
     PGBOUNCER_EXECUTABLE,
-    POSTGRESQL_SNAP_NAME,
+    PGBOUNCER_SNAP_NAME,
     SECRET_DELETED_LABEL,
     SECRET_INTERNAL_LABEL,
     SECRET_KEY_OVERRIDES,
@@ -131,7 +131,7 @@ class PgBouncerCharm(CharmBase):
             metrics_endpoints=[
                 {"path": "/metrics", "port": self.config["metrics_port"]},
             ],
-            log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
+            log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
             refresh_events=[self.on.config_changed],
         )
 
@@ -209,7 +209,7 @@ class PgBouncerCharm(CharmBase):
         """
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
-        # Install the charmed PostgreSQL snap.
+        # Install the charmed PgBouncer snap.
         try:
             self._install_snap_packages(packages=SNAP_PACKAGES)
         except snap.SnapError:
@@ -219,9 +219,8 @@ class PgBouncerCharm(CharmBase):
         # Try to disable pgbackrest service
         try:
             cache = snap.SnapCache()
-            selected_snap = cache["charmed-postgresql"]
+            selected_snap = cache[PGBOUNCER_SNAP_NAME]
             selected_snap.alias("psql")
-            selected_snap.stop(services=["pgbackrest-service"], disable=True)
         except snap.SnapError as e:
             error_message = "Failed to stop and disable pgbackrest snap service"
             logger.exception(error_message, exc_info=e)
@@ -439,7 +438,9 @@ class PgBouncerCharm(CharmBase):
         readonly_dbs = {}
         if self.backend.relation and "*" in databases:
             read_only_endpoints = self.backend.get_read_only_endpoints()
-            r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
+            sorted_rhosts = [r_host.split(":")[0] for r_host in read_only_endpoints]
+            sorted_rhosts.sort()
+            r_hosts = ",".join(sorted_rhosts)
             if r_hosts:
                 for r_host in read_only_endpoints:
                     r_port = r_host.split(":")[1]
@@ -644,7 +645,7 @@ class PgBouncerCharm(CharmBase):
             if "admin" in roles or "superuser" in roles or "createdb" in roles:
                 add_wildcard = True
         if add_wildcard:
-            databases["*"] = {"name": "*", "auth_dbname": database}
+            databases["*"] = {"name": "*", "auth_dbname": database, "legacy": False}
         self.set_relation_databases(databases)
         return databases
 
@@ -660,7 +661,9 @@ class PgBouncerCharm(CharmBase):
         host, port = postgres_endpoint.split(":")
 
         read_only_endpoints = self.backend.get_read_only_endpoints()
-        r_hosts = ",".join([r_host.split(":")[0] for r_host in read_only_endpoints])
+        sorted_rhosts = [r_host.split(":")[0] for r_host in read_only_endpoints]
+        sorted_rhosts.sort()
+        r_hosts = ",".join(sorted_rhosts)
         if r_hosts:
             for r_host in read_only_endpoints:
                 r_port = r_host.split(":")[1]
