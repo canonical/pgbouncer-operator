@@ -50,6 +50,7 @@ class TestCharm(unittest.TestCase):
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
+        self.harness.add_relation("upgrade", self.charm.app.name)
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @pytest.fixture

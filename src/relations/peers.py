@@ -126,6 +126,12 @@ class Peers(Object):
         """If the current unit is a follower, write updated config and auth files to filesystem."""
         self.unit_databag.update({ADDRESS_KEY: self.charm.unit_ip})
 
+        if not self.charm.upgrade.idle:
+            logger.debug("Defer on_start: Cluster is upgrading")
+            event.defer()
+            return
+
+
         self.update_leader()
         if auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
             self.charm.render_auth_file(auth_file)
