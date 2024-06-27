@@ -10,7 +10,6 @@ from pytest_operator.plugin import OpsTest
 from constants import BACKEND_RELATION_NAME
 
 from .helpers.helpers import (
-    CLIENT_APP_NAME,
     PG,
     PGB,
 )
@@ -55,7 +54,7 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
     await ops_test.model.add_relation(DATA_INTEGRATOR_APP_NAME, PGB)
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
-            apps=[PG, PGB, CLIENT_APP_NAME], status="active", timeout=1500
+            apps=[PG, PGB, DATA_INTEGRATOR_APP_NAME], status="active", timeout=1500
         )
     assert len(ops_test.model.applications[PG].units) == 3
     assert len(ops_test.model.applications[PGB].units) == 1
