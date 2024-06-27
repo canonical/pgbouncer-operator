@@ -131,7 +131,6 @@ class Peers(Object):
             event.defer()
             return
 
-
         self.update_leader()
         if auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
             self.charm.render_auth_file(auth_file)
