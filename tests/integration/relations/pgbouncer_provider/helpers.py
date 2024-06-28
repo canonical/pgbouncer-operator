@@ -4,11 +4,12 @@
 import asyncio
 import json
 import logging
-from typing import Optional
+from typing import Dict, Optional
 from uuid import uuid4
 
 import psycopg2
 import yaml
+from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
@@ -159,6 +160,19 @@ async def check_new_relation(ops_test: OpsTest, unit_name, relation_id, relation
                 relation_name=relation_name,
             )
             assert smoke_val in json.loads(run_update_query["results"])[0]
+
+
+async def fetch_action_get_credentials(unit: Unit) -> Dict:
+    """Helper to run an action to fetch connection info.
+
+    Args:
+        unit: The juju unit on which to run the get_credentials action for credentials
+    Returns:
+        A dictionary with the username, password and access info for the service
+    """
+    action = await unit.run_action(action_name="get-credentials")
+    result = await action.wait()
+    return result.results
 
 
 def check_exposed_connection(credentials, tls):

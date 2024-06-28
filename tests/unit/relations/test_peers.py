@@ -25,6 +25,7 @@ class TestPeers(unittest.TestCase):
         self.charm = self.harness.charm
         self.app = self.charm.app.name
         self.unit = self.charm.unit.name
+        self.harness.add_relation("upgrade", self.charm.app.name)
 
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 

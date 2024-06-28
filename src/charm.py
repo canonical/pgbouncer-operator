@@ -25,7 +25,7 @@ from charms.tempo_k8s.v1.charm_tracing import trace_charm
 from charms.tempo_k8s.v2.tracing import TracingEndpointRequirer
 from jinja2 import Template
 from ops import JujuVersion
-from ops.charm import CharmBase
+from ops.charm import CharmBase, StartEvent
 from ops.main import main
 from ops.model import (
     ActiveStatus,
@@ -396,11 +396,17 @@ class PgBouncerCharm(CharmBase):
 
         return True
 
-    def _on_start(self, _) -> None:
+    def _on_start(self, event: StartEvent) -> None:
         """On Start hook.
 
         Runs pgbouncer through systemd (configured in src/pgbouncer.service)
         """
+        # Safeguard against starting while upgrading.
+        if not self.upgrade.idle:
+            logger.debug("Defer on_start: Cluster is upgrading")
+            event.defer()
+            return
+
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
 
@@ -481,6 +487,10 @@ class PgBouncerCharm(CharmBase):
         Sets BlockedStatus if we have no backend database; if we can't connect to a backend, this
         charm serves no purpose.
         """
+        if not self.upgrade.idle:
+            logger.debug("Early exit on_update_status: Cluster is upgrading")
+            return
+
         self.update_status()
 
         self.peers.update_leader()
@@ -508,6 +518,11 @@ class PgBouncerCharm(CharmBase):
         Reads charm config values, generates derivative values, writes new pgbouncer config, and
         restarts pgbouncer to apply changes.
         """
+        if not self.upgrade.idle:
+            logger.debug("Defer on_config_changed: Cluster is upgrading")
+            event.defer()
+            return
+
         old_port = self.peers.app_databag.get("current_port")
         port_changed = old_port != str(self.config["listen_port"])
         if port_changed and self._is_exposed:
@@ -529,6 +544,7 @@ class PgBouncerCharm(CharmBase):
             logger.warning("Deferring on_config_changed: cannot set secret label")
             event.defer()
             return
+
         if self.backend.postgres:
             self.render_prometheus_service()
 
