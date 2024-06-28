@@ -171,6 +171,12 @@ async def test_fail_and_rollback(ops_test, continuous_writes, pgb_charm_jammy) -
     logger.info("Re-refresh the charm")
     await application.refresh(path=pgb_charm_jammy)
 
+    logger.info("Wait for upgrade to start")
+    await ops_test.model.block_until(
+        lambda: "waiting" in {unit.workload_status for unit in application.units},
+        timeout=TIMEOUT,
+    )
+
     logger.info("Wait for application to recover")
     async with ops_test.fast_forward("60s"):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=TIMEOUT)
