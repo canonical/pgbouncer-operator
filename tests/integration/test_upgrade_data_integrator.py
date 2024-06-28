@@ -43,7 +43,7 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
         ),
         ops_test.model.deploy(
             DATA_INTEGRATOR_APP_NAME,
-            num_units=1,
+            num_units=2,
             channel="latest/edge",
             config={"database-name": "test-database"},
         ),
@@ -57,7 +57,7 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
             apps=[PG, PGB, DATA_INTEGRATOR_APP_NAME], status="active", timeout=1500
         )
     assert len(ops_test.model.applications[PG].units) == 3
-    assert len(ops_test.model.applications[PGB].units) == 1
+    assert len(ops_test.model.applications[PGB].units) == 2
 
 
 @pytest.mark.group(1)
