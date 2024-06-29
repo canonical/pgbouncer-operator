@@ -50,6 +50,7 @@ class TestCharm(unittest.TestCase):
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
 
+        self.harness.add_relation("upgrade", self.charm.app.name)
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @pytest.fixture
@@ -80,7 +81,7 @@ class TestCharm(unittest.TestCase):
         _install,
         _snap_cache,
     ):
-        pg_snap = _snap_cache.return_value["charmed-postgresql"]
+        pg_snap = _snap_cache.return_value["charmed-pgbouncer"]
         self.charm.on.install.emit()
 
         _install.assert_called_once_with(packages=SNAP_PACKAGES)
@@ -222,29 +223,29 @@ class TestCharm(unittest.TestCase):
 
         # Test for problem with snap update.
         with self.assertRaises(snap.SnapError):
-            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+            self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
         _snap_cache.assert_called_once_with()
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
 
         # Test with a not found package.
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
         _snap_package.ensure.side_effect = snap.SnapNotFoundError
         with self.assertRaises(snap.SnapNotFoundError):
-            self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
+            self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
         _snap_cache.assert_called_once_with()
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
 
         # Then test a valid one.
         _snap_cache.reset_mock()
         _snap_package.reset_mock()
         _snap_package.ensure.side_effect = None
-        self.charm._install_snap_packages([("postgresql", {"channel": "14/edge"})])
+        self.charm._install_snap_packages([("pgbouncer", {"channel": "1/edge"})])
         _snap_cache.assert_called_once_with()
-        _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
-        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="14/edge")
+        _snap_cache.return_value.__getitem__.assert_called_once_with("pgbouncer")
+        _snap_package.ensure.assert_called_once_with(snap.SnapState.Latest, channel="1/edge")
         _snap_package.hold.assert_not_called()
 
         # Test revision
@@ -503,6 +504,46 @@ class TestCharm(unittest.TestCase):
         _update_leader.assert_called_once_with()
         _update_status.assert_called_once_with()
         _collect_readonly_dbs.assert_called_once_with()
+
+    @patch(
+        "charm.BackendDatabaseRequires.auth_user",
+        new_callable=PropertyMock,
+        return_value="auth_user",
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.postgres_databag",
+        new_callable=PropertyMock,
+        return_value={},
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.relation", new_callable=PropertyMock, return_value=Mock()
+    )
+    @patch_network_get(private_address="1.1.1.1")
+    def test_get_readonly_dbs(self, _backend_rel, _postgres_databag, _):
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.rel_id, self.charm.app.name, {"readonly_dbs": '["includedb"]'}
+            )
+
+        # Returns empty if no wildcard
+        assert self.charm._get_readonly_dbs({}) == {}
+
+        # Returns empty if no readonly backends
+        assert self.charm._get_readonly_dbs({"*": {"name": "*", "auth_dbname": "authdb"}}) == {}
+
+        _postgres_databag.return_value = {
+            "endpoints": "HOST:PORT",
+            "read-only-endpoints": "HOST2:PORT,HOST3:PORT",
+        }
+        assert self.charm._get_readonly_dbs({"*": {"name": "*", "auth_dbname": "authdb"}}) == {
+            "includedb_readonly": {
+                "auth_dbname": "authdb",
+                "auth_user": "auth_user",
+                "dbname": "includedb",
+                "host": "HOST2,HOST3",
+                "port": "PORT",
+            }
+        }
 
     @patch("charm.BackendDatabaseRequires.postgres")
     @patch(

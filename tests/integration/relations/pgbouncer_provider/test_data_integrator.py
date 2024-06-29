@@ -3,10 +3,8 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
-from typing import Dict
 
 import pytest
-from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME, PGB_CONF_DIR
@@ -19,7 +17,7 @@ from ...helpers.helpers import (
     get_unit_cores,
 )
 from ...juju_ import juju_major_version
-from .helpers import check_exposed_connection
+from .helpers import check_exposed_connection, fetch_action_get_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +37,6 @@ else:
     else:
         tls_channel = "latest/stable"
     tls_config = {"ca-common-name": "Test CA"}
-
-
-async def fetch_action_get_credentials(unit: Unit) -> Dict:
-    """Helper to run an action to fetch connection info.
-
-    Args:
-        unit: The juju unit on which to run the get_credentials action for credentials
-    Returns:
-        A dictionary with the username, password and access info for the service
-    """
-    action = await unit.run_action(action_name="get-credentials")
-    result = await action.wait()
-    return result.results
 
 
 @pytest.mark.group(1)
