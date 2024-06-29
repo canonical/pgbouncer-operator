@@ -47,6 +47,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         new_callable=PropertyMock,
         return_value=sentinel.client_rels,
     )
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
@@ -83,6 +84,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         _pg_databag,
         _pg,
         _check_backend,
+        _render_pgb_config,
         _,
     ):
         self.harness.set_leader()
@@ -130,6 +132,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             "1": {"name": "test-db", "legacy": False},
             "*": {"name": "*", "auth_dbname": "test-db"},
         })
+        _render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
 
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(

@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import PGB, SNAP_PACKAGES
+from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PGB, SNAP_PACKAGES
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -90,7 +90,15 @@ class PgbouncerUpgrade(DataUpgrade):
         if self.charm.unit.is_leader():
             self.charm.generate_relation_databases()
 
+        self.charm.create_instance_directories()
         self.charm.render_pgb_config()
+        if (
+            (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
+            and self.charm.backend.auth_user
+            and self.charm.backend.auth_user in auth_file
+        ):
+            self.charm.render_auth_file(auth_file)
+
         self.charm.render_utility_files()
         self.charm.reload_pgbouncer()
         if self.charm.backend.postgres:
