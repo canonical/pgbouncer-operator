@@ -24,7 +24,7 @@ from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_k8s.v1.charm_tracing import trace_charm
 from charms.tempo_k8s.v2.tracing import TracingEndpointRequirer
 from jinja2 import Template
-from ops import JujuVersion
+from ops import ActionEvent, JujuVersion
 from ops.charm import CharmBase, StartEvent
 from ops.main import main
 from ops.model import (
@@ -113,6 +113,9 @@ class PgBouncerCharm(CharmBase):
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(
+            self.on.update_readonly_dbs_action, self._on_update_readonly_dbs_action
+        )
 
         self.peers = Peers(self)
         self.backend = BackendDatabaseRequires(self)
@@ -480,6 +483,13 @@ class PgBouncerCharm(CharmBase):
             readonly_dbs = [db[0] for db in results if db and db[0] not in existing_dbs]
             readonly_dbs.sort()
             self.peers.app_databag["readonly_dbs"] = json.dumps(readonly_dbs)
+
+    def _on_update_readonly_dbs_action(self, event: ActionEvent) -> None:
+        """Action hook to collect the readonly dbs from the backend."""
+        if not self.unit.is_leader():
+            event.fail("Only the leader unit can update the readonly databases.")
+            return
+        self._collect_readonly_dbs()
 
     def _on_update_status(self, _) -> None:
         """Update Status hook.
