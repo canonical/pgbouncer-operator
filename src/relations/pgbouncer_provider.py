@@ -49,7 +49,12 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
+from ops.charm import (
+    CharmBase,
+    RelationBrokenEvent,
+    RelationCreatedEvent,
+    RelationDepartedEvent,
+)
 from ops.framework import Object
 from ops.model import (
     Application,
@@ -84,6 +89,9 @@ class PgBouncerProvider(Object):
         self.database_provides = DatabaseProvides(self.charm, relation_name=self.relation_name)
 
         self.framework.observe(
+            charm.on[self.relation_name].relation_created, self._on_relation_created
+        )
+        self.framework.observe(
             self.database_provides.on.database_requested, self._on_database_requested
         )
         self.framework.observe(
@@ -98,6 +106,9 @@ class PgBouncerProvider(Object):
 
     def _unit_departing(self, relation):
         return self.charm.peers.unit_databag.get(self._depart_flag(relation), None) == "true"
+
+    def _on_relation_created(self, event: RelationCreatedEvent) -> None:
+        event.relation.data[self.charm.unit].update({"state": "setup"})
 
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Handle the client relation-requested event.
@@ -168,6 +179,7 @@ class PgBouncerProvider(Object):
             return
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.set_ready()
 
         # Share the credentials and updated connection info with the client application.
         self.database_provides.set_credentials(rel_id, user, password)
@@ -250,6 +262,11 @@ class PgBouncerProvider(Object):
 
         self.charm.unit.status = initial_status
         self.charm.update_status()
+
+    def set_ready(self) -> None:
+        """Marks the unit as ready for all database relations."""
+        for relation in self.model.relations[self.relation_name]:
+            relation.data[self.charm.unit].update({"state": "ready"})
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
