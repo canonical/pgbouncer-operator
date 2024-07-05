@@ -1,0 +1,76 @@
+>This is part of the [PgBouncer Tutorial](/t/12288)
+
+# Enable TLS
+
+## Transport Layer Security (TLS)
+
+[Transport Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security) is a protocol used to encrypt data exchanged between two applications. Essentially, it secures data transmitted over a network.
+
+Typically, enabling TLS internally within a highly available database or between a highly available database and client/server applications, requires domain-specific knowledge and a high level of expertise. This has all been encoded into Charmed PgBouncer. This means (re-)configuring TLS on this charm is readily available and requires minimal effort on your end.
+
+Again, integrations come in handy here, as TLS is enabled by relating Charmed PostgreSQL to the [Self Signed Certificates Charm](https://charmhub.io/self-signed-certificates). This charm centralises TLS certificate management consistently and handles operations like providing, requesting, and renewing TLS certificates.
+
+In this section, we will learn how to set up the `pgbouncer`, `data-integrator`, `postgresql`, and `self-signed-certificates` charms to enable TLS encryption.
+ 
+[note type="caution"]
+**Disclaimer:** In this tutorial, we use [self-signed certificates](https://en.wikipedia.org/wiki/Self-signed_certificate) provided by the [`self-signed-certificates-operator`](https://github.com/canonical/self-signed-certificates-operator).
+
+**This is not recommended for a production environment.**
+
+For production environments, check the collection of [Charmhub operators](https://charmhub.io/?q=tls-certificates) that implement the `tls-certificate` interface, and choose the most suitable for your use-case.
+[/note]
+
+### Configure TLS
+
+Before enabling TLS on Charmed PostgreSQL VM, we must deploy the `self-signed-certificates` charm:
+```shell
+juju deploy self-signed-certificates --config ca-common-name="Tutorial CA"
+```
+
+Wait until the `self-signed-certificates` is up and active, using `juju status --watch 1s` to monitor the progress:
+```shell
+Model     Controller  Cloud/Region         Version  SLA          Timestamp
+tutorial  overlord    localhost/localhost  3.1.7    unsupported  13:56:00+01:00
+
+App                       Version  Status  Scale  Charm                     Channel    Rev  Exposed  Message     
+data-integrator                    active      1  data-integrator           stable      19  no                                             
+pgbouncer                 1.21.0   active      1  pgbouncer                 1/stable    88  no                                     
+postgresql                14.10    active      2  postgresql                14/stable  363  no                                             
+self-signed-certificates           active      1  self-signed-certificates  stable      72  no     
+                                                                                                                               
+Unit                         Workload  Agent  Machine  Public address  Ports     Message                                       
+data-integrator/0*           active    idle   4        10.89.24.109                                                               
+  pgbouncer/0*               active    idle            10.89.24.109                                                                        
+postgresql/0*                active    idle   0        10.89.24.187    5432/tcp  Primary                                                   
+postgresql/1                 active    idle   1        10.89.24.149    5432/tcp                                                 
+self-signed-certificates/0*  active    idle   3        10.89.24.189                                                                        
+                                                                                               
+Machine  State    Address       Inst id        Base          AZ  Message                    
+0        started  10.89.24.187  juju-151b7f-0  ubuntu@22.04      Running                            
+1        started  10.89.24.149  juju-151b7f-1  ubuntu@22.04      Running                  
+3        started  10.89.24.189  juju-151b7f-3  ubuntu@22.04      Running                  
+4        started  10.89.24.109  juju-151b7f-4  ubuntu@22.04      Running                  
+```
+
+### Add external TLS certificate
+
+Since we are using the external application `data-integrator`, PgBouncer will open a port to listen to TCP traffic. In this case, because PgBouncer is exposed, it is recommended to enable TLS encryption. 
+
+Enable TLS for PgBouncer by integrating it with `self-signed-certificates`:
+ ```shell
+juju integrate pgbouncer self-signed-certificates
+```
+
+Enable TLS the same way for PostgreSQL:
+```shell
+juju integrate postgresql self-signed-certificates
+```
+Congratulations! Your connections between `data-integrator` and PgBouncer and between PgBouncer and PostgreSQL is now using TLS certificate generated by the external application `self-signed-certificates`.
+
+### Remove external TLS certificate
+
+To remove the TLS certificates, simply remove the integrations:
+```shell
+juju remove-relation pgbouncer self-signed-certificates
+juju remove-relation postgresql self-signed-certificates
+```
