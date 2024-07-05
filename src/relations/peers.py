@@ -143,10 +143,6 @@ class Peers(Object):
         )
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.unit_databag["pgb_dbs"] = pgb_dbs_hash
-        if self.unit_databag.get("auth_file_set", "false") == "true" and self.unit_databag.get(
-            "backend_relation"
-        ):
-            self.charm.client_relation.set_ready()
 
     def _on_departed(self, _):
         self.update_leader()

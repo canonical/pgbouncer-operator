@@ -52,7 +52,6 @@ from charms.postgresql_k8s.v0.postgresql import (
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,
-    RelationCreatedEvent,
     RelationDepartedEvent,
 )
 from ops.framework import Object
@@ -89,9 +88,6 @@ class PgBouncerProvider(Object):
         self.database_provides = DatabaseProvides(self.charm, relation_name=self.relation_name)
 
         self.framework.observe(
-            charm.on[self.relation_name].relation_created, self._on_relation_created
-        )
-        self.framework.observe(
             self.database_provides.on.database_requested, self._on_database_requested
         )
         self.framework.observe(
@@ -107,9 +103,6 @@ class PgBouncerProvider(Object):
     def _unit_departing(self, relation):
         return self.charm.peers.unit_databag.get(self._depart_flag(relation), None) == "true"
 
-    def _on_relation_created(self, event: RelationCreatedEvent) -> None:
-        event.relation.data[self.charm.unit].update({"state": "setup"})
-
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Handle the client relation-requested event.
 
@@ -118,6 +111,9 @@ class PgBouncerProvider(Object):
         Deferrals:
             - If backend relation is not fully initialised
         """
+        rel_id = event.relation.id
+        self.database_provides.set_subordinated(rel_id)
+
         if not self.charm.backend.check_backend():
             event.defer()
             return
@@ -132,7 +128,6 @@ class PgBouncerProvider(Object):
         # Retrieve the database name and extra user roles using the charm library.
         database = event.database
         extra_user_roles = event.extra_user_roles or ""
-        rel_id = event.relation.id
 
         dbs = self.charm.generate_relation_databases()
         dbs[str(event.relation.id)] = {"name": database, "legacy": False}

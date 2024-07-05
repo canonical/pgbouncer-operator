@@ -2606,6 +2606,16 @@ class DatabaseProviderData(ProviderData):
         """
         self.update_relation_data(relation_id, {"version": version})
 
+    def set_subordinated(self, relation_id: int) -> None:
+        """Raises the subordinated flag in the application relation databag.
+
+        The flag will be used to evaluate additional checks before emitting provider events.
+
+        Args:
+            relation_id: the identifier for a particular relation.
+        """
+        self.update_relation_data(relation_id, {"subordinated": "true"})
+
 
 class DatabaseProviderEventHandlers(EventHandlers):
     """Provider-side of the database relation handlers."""
@@ -2842,21 +2852,23 @@ class DatabaseRequirerEventHandlers(RequirerEventHandlers):
 
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
         """Event emitted when the database relation has changed."""
-        remote_units = [
-            key
-            for key in event.relation.data.keys()
-            if isinstance(key, Unit) and key.name.startswith(event.relation.app.name)
-        ]
-        # Check that provider units have joined.
-        if len(remote_units) == 0:
-            logger.debug("No provider units are available.")
-            return
-        elif (
-            len(remote_units) == 1
-            and event.relation.data[remote_units[0]].get("state", "ready") != "ready"
-        ):
-            logger.debug("Subordinate provider unit not ready.")
-            return
+        is_subordinated = False
+        remote_unit_data = None
+        for key in event.relation.data.keys():
+            if isinstance(key, Unit) and not key.name.startswith(self.charm.app.name):
+                remote_unit_data = event.relation.data[key]
+            elif isinstance(key, Application) and key.name != self.charm.app.name:
+                is_subordinated = event.relation.data[key].get("subordinated") == "true"
+
+        if is_subordinated:
+            # Check that provider units have joined.
+            if not remote_unit_data:
+                logger.debug("No provider units are available.")
+                return
+
+            if remote_unit_data.get("state") != "ready":
+                logger.debug("Subordinate provider unit not ready.")
+                return
 
         # Check which data has changed to emit customs events.
         diff = self._diff(event)

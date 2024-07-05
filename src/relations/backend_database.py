@@ -181,7 +181,7 @@ class BackendDatabaseRequires(Object):
             self.charm.render_pgb_config(reload_pgbouncer=True)
             self.charm.render_prometheus_service()
             self.charm.update_status()
-            self.charm.peers.unit_databag.update({"backend_relation": str(self.relation.id)})
+            self.charm.client_relation.set_ready()
             return
 
         logger.info("initialising pgbouncer backend relation")
@@ -216,7 +216,7 @@ class BackendDatabaseRequires(Object):
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
         self.charm.render_prometheus_service()
-        self.charm.peers.unit_databag.update({"backend_relation": str(self.relation.id)})
+        self.charm.client_relation.set_ready()
 
         self.charm.update_status()
 
