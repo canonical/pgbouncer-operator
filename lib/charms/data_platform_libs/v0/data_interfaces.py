@@ -331,7 +331,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 37
+LIBPATCH = 38
 
 PYDEPS = ["ops>=2.0.0"]
 
@@ -2852,15 +2852,15 @@ class DatabaseRequirerEventHandlers(RequirerEventHandlers):
 
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
         """Event emitted when the database relation has changed."""
-        is_subordinated = False
+        is_subordinate = False
         remote_unit_data = None
         for key in event.relation.data.keys():
             if isinstance(key, Unit) and not key.name.startswith(self.charm.app.name):
                 remote_unit_data = event.relation.data[key]
             elif isinstance(key, Application) and key.name != self.charm.app.name:
-                is_subordinated = event.relation.data[key].get("subordinated") == "true"
+                is_subordinate = event.relation.data[key].get("subordinated") == "true"
 
-        if is_subordinated:
+        if is_subordinate:
             # Check that provider units have joined.
             if not remote_unit_data:
                 logger.debug("No provider units are available.")
