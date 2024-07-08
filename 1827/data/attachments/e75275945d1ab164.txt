@@ -1,0 +1,49 @@
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app (waiting for exactly 1 units, current : 2)
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/5 [idle] active: 
+  another-application/0 [idle] active: 
+  another-postgresql/0 [idle] active: 
+  another-postgresql/1 [idle] active: Primary
+  another-pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_pgbouncer_provider:test_pgbouncer_provider.py:343 {'databases': {'postgresql_test_app_first_database': 'host=10.110.117.37 dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'postgresql_test_app_first_database_readonly': 'host=10.110.117.42 dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', '*': 'host=10.110.117.37 auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'another_database_readonly': 'host=10.110.117.42 dbname=another_database auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'postgresql_test_app_multiple_database_clusters_readonly': 'host=10.110.117.42 dbname=postgresql_test_app_multiple_database_clusters auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6'}, 'peers': {'1': 'host=/tmp/pgbouncer/instance_0 port=6432'}, 'pgbouncer': {'peer_id': '1', 'listen_addr': '127.0.0.1', 'listen_port': '6432', 'logfile': '/var/snap/charmed-pgbouncer/common/var/log/pgbouncer/pgbouncer/instance_0/pgbouncer.log', 'pidfile': '/tmp/pgbouncer/instance_0/pgbouncer.pid', 'stats_users': 'pgbouncer_stats_pgbouncer', 'auth_type': 'md5', 'user': 'snap_daemon', 'max_client_conn': '10000', 'ignore_startup_parameters': 'extra_float_digits,options', 'server_tls_sslmode': 'prefer', 'so_reuseport': '1', 'unix_socket_dir': '/tmp/pgbouncer/instance_0', 'pool_mode': 'session', 'max_db_connections': '100', 'default_pool_size': '50', 'min_pool_size': '25', 'reserve_pool_size': '25', 'auth_query': 'SELECT username, password FROM pgbouncer_auth_relation_6.get_auth($1)', 'auth_file': '/var/snap/charmed-pgbouncer/current/etc/pgbouncer/pgbouncer/userlist.txt'}}
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_pgbouncer_provider:test_pgbouncer_provider.py:345 Checking connection for postgresql-test-app/1
+[32mINFO    [0m root:helpers.py:78 running query: 
+ CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('41cea12f-0a29-4e1b-9db8-1ab88990fa9e');SELECT data FROM quick_test WHERE data = '41cea12f-0a29-4e1b-9db8-1ab88990fa9e';
+[32mINFO    [0m root:helpers.py:79 {'dbname': 'postgresql_test_app_first_database', 'query': "CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('41cea12f-0a29-4e1b-9db8-1ab88990fa9e');SELECT data FROM quick_test WHERE data = '41cea12f-0a29-4e1b-9db8-1ab88990fa9e';", 'relation-id': 17, 'relation-name': 'first-database', 'readonly': False}
+[32mINFO    [0m root:helpers.py:82 query results: {'results': '[["41cea12f-0a29-4e1b-9db8-1ab88990fa9e"]]', 'return-code': 0}
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql-test-app/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/2 [executing] active: received database credentials of the first database
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql-test-app/2 [idle] active: received database credentials of the second database
+  pgbouncer/5 [executing] active: 
+  pgbouncer/9 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  pgbouncer/5 [idle] active: 
+  pgbouncer/9 [idle] active: 
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_pgbouncer_provider:test_pgbouncer_provider.py:357 {'databases': {'postgresql_test_app_first_database': 'host=10.110.117.37 dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'postgresql_test_app_first_database_readonly': 'host=10.110.117.42 dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', '*': 'host=10.110.117.37 auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'another_database_readonly': 'host=10.110.117.42 dbname=another_database auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6', 'postgresql_test_app_multiple_database_clusters_readonly': 'host=10.110.117.42 dbname=postgresql_test_app_multiple_database_clusters auth_dbname=postgresql_test_app_first_database port=5432 auth_user=pgbouncer_auth_relation_6'}, 'peers': {'1': 'host=/tmp/pgbouncer/instance_0 port=6432'}, 'pgbouncer': {'peer_id': '1', 'listen_addr': '127.0.0.1', 'listen_port': '6432', 'logfile': '/var/snap/charmed-pgbouncer/common/var/log/pgbouncer/pgbouncer/instance_0/pgbouncer.log', 'pidfile': '/tmp/pgbouncer/instance_0/pgbouncer.pid', 'stats_users': 'pgbouncer_stats_pgbouncer', 'auth_type': 'md5', 'user': 'snap_daemon', 'max_client_conn': '10000', 'ignore_startup_parameters': 'extra_float_digits,options', 'server_tls_sslmode': 'prefer', 'so_reuseport': '1', 'unix_socket_dir': '/tmp/pgbouncer/instance_0', 'pool_mode': 'session', 'max_db_connections': '100', 'default_pool_size': '50', 'min_pool_size': '25', 'reserve_pool_size': '25', 'auth_query': 'SELECT username, password FROM pgbouncer_auth_relation_6.get_auth($1)', 'auth_file': '/var/snap/charmed-pgbouncer/current/etc/pgbouncer/pgbouncer/userlist.txt'}}
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_pgbouncer_provider:test_pgbouncer_provider.py:359 Checking connection for postgresql-test-app/1
+[32mINFO    [0m root:helpers.py:78 running query: 
+ CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('4e26db8d-d537-49d5-891c-e0cc0952d7c5');SELECT data FROM quick_test WHERE data = '4e26db8d-d537-49d5-891c-e0cc0952d7c5';
+[32mINFO    [0m root:helpers.py:79 {'dbname': 'postgresql_test_app_first_database', 'query': "CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('4e26db8d-d537-49d5-891c-e0cc0952d7c5');SELECT data FROM quick_test WHERE data = '4e26db8d-d537-49d5-891c-e0cc0952d7c5';", 'relation-id': 17, 'relation-name': 'first-database', 'readonly': False}
+[32mINFO    [0m root:helpers.py:82 query results: {'results': '[["4e26db8d-d537-49d5-891c-e0cc0952d7c5"]]', 'return-code': 0}
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_pgbouncer_provider:test_pgbouncer_provider.py:359 Checking connection for postgresql-test-app/2
+[32mINFO    [0m root:helpers.py:78 running query: 
+ CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('67a8ddb1-f5f9-4f1a-8e93-0cac9b765377');SELECT data FROM quick_test WHERE data = '67a8ddb1-f5f9-4f1a-8e93-0cac9b765377';
+[32mINFO    [0m root:helpers.py:79 {'dbname': 'postgresql_test_app_first_database', 'query': "CREATE TABLE IF NOT EXISTS quick_test(data TEXT);INSERT INTO quick_test(data) VALUES('67a8ddb1-f5f9-4f1a-8e93-0cac9b765377');SELECT data FROM quick_test WHERE data = '67a8ddb1-f5f9-4f1a-8e93-0cac9b765377';", 'relation-id': 17, 'relation-name': 'first-database', 'readonly': False}
+[32mINFO    [0m root:helpers.py:82 query results: {'results': '[["67a8ddb1-f5f9-4f1a-8e93-0cac9b765377"]]', 'return-code': 0}
