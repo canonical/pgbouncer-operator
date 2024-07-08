@@ -49,7 +49,11 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
+from ops.charm import (
+    CharmBase,
+    RelationBrokenEvent,
+    RelationDepartedEvent,
+)
 from ops.framework import Object
 from ops.model import (
     Application,
@@ -107,6 +111,9 @@ class PgBouncerProvider(Object):
         Deferrals:
             - If backend relation is not fully initialised
         """
+        rel_id = event.relation.id
+        self.database_provides.set_subordinated(rel_id)
+
         if not self.charm.backend.check_backend():
             event.defer()
             return
@@ -121,7 +128,6 @@ class PgBouncerProvider(Object):
         # Retrieve the database name and extra user roles using the charm library.
         database = event.database
         extra_user_roles = event.extra_user_roles or ""
-        rel_id = event.relation.id
 
         dbs = self.charm.generate_relation_databases()
         dbs[str(event.relation.id)] = {"name": database, "legacy": False}
@@ -168,6 +174,7 @@ class PgBouncerProvider(Object):
             return
 
         self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.set_ready()
 
         # Share the credentials and updated connection info with the client application.
         self.database_provides.set_credentials(rel_id, user, password)
@@ -250,6 +257,11 @@ class PgBouncerProvider(Object):
 
         self.charm.unit.status = initial_status
         self.charm.update_status()
+
+    def set_ready(self) -> None:
+        """Marks the unit as ready for all database relations."""
+        for relation in self.model.relations[self.relation_name]:
+            relation.data[self.charm.unit].update({"state": "ready"})
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
