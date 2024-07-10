@@ -216,14 +216,12 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("failed to install snap packages")
             return
 
-        # Try to disable pgbackrest service
         try:
             cache = snap.SnapCache()
             selected_snap = cache[PGBOUNCER_SNAP_NAME]
             selected_snap.alias("psql")
-        except snap.SnapError as e:
-            error_message = "Failed to stop and disable pgbackrest snap service"
-            logger.exception(error_message, exc_info=e)
+        except snap.SnapError:
+            logger.warning("Unable to create alias")
 
         self.create_instance_directories()
         self.render_pgb_config()
