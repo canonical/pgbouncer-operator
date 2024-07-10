@@ -57,6 +57,7 @@ class TestCharm(unittest.TestCase):
     def use_caplog(self, caplog):
         self._caplog = caplog
 
+    @patch("charm.logger.warning")
     @patch("builtins.open", unittest.mock.mock_open())
     @patch("charm.snap.SnapCache")
     @patch("charm.PgBouncerCharm._install_snap_packages")
@@ -80,6 +81,7 @@ class TestCharm(unittest.TestCase):
         _stop,
         _install,
         _snap_cache,
+        _warning,
     ):
         pg_snap = _snap_cache.return_value["charmed-pgbouncer"]
         self.charm.on.install.emit()
@@ -97,6 +99,13 @@ class TestCharm(unittest.TestCase):
         pg_snap.alias.assert_called_once_with("psql")
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)
+
+        # Log warning if alias fails
+        pg_snap.alias.side_effect = snap.SnapError
+
+        self.charm.on.install.emit()
+
+        _warning.assert_called_once_with("Unable to create alias")
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.ready",
