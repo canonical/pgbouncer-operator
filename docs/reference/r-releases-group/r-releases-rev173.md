@@ -5,11 +5,11 @@
 
 Dear community,
 
-We'd like to announce that Canonical's newest Charmed PgBouncer operator has been published in the 1/stable [channel](https://charmhub.io/pgbouncer?channel=1/stable) :tada: :
+We'd like to announce that Canonical's newest Charmed PgBouncer operator has been published in the 1/stable [channel](https://charmhub.io/pgbouncer?channel=1/stable) :tada: 
 
-|   |AMD64|ARM64|
-|---:|:---:|:---:|
-| Revisions: | [174 (`jammy`) / 175 (`focal`)](https://charmhub.io/pgbouncer/docs/r-releases-rev173?channel=1/stable) | [173 (`jammy`) / 176 (`focal`)](https://charmhub.io/pgbouncer/docs/r-releases-rev173?channel=1/stable) |
+|AMD64|ARM64|
+|---|---|
+| [174 (`jammy`) </br>175 (`focal`)](https://charmhub.io/pgbouncer/docs/r-releases-rev173?channel=1/stable) | [173 (`jammy`) </br> 176 (`focal`)](https://charmhub.io/pgbouncer/docs/r-releases-rev173?channel=1/stable) |
 
 [note]
 If you are jumping over several stable revisions, make sure to check [previous release notes](/t/12285?channel=1/stable) before upgrading to this revision.
