@@ -9,6 +9,7 @@ Here you will find release notes for the main revisions of this charm that are a
 
 |  Channel  | amd64 | arm64 |
 |---------:|:-----:|:-----:|
+| `1/candidate`   | [256 (`jammy`) / 255 (`focal`)](/t/14666?channel=1/stable) |   [257 (`jammy`) / 254 (`focal`)](/t/14666?channel=1/stable)   |
 | `1/stable`   | [174 (`jammy`) / 175 (`focal`)](/t/14069?channel=1/stable) |   [173 (`jammy`) / 176 (`focal`)](/t/14069?channel=1/stable)   |
 |           | [88 (`jammy`) / 89 (`focal`)](/t/13126?channel=1/stable) |   -   |
 |           | [81 (`jammy`) / 80 (`focal`)](/t/12766?channel=1/stable) |   -   |

@@ -49,6 +49,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 1. [Reference](reference)
   1. [Release Notes](reference/r-releases-group)
     1. [All releases](reference/r-releases-group/r-releases.md)
+    1. [Revision 254-257](reference/r-releases-group/r-releases-rev254.md)
     1. [Revision 173-176](reference/r-releases-group/r-releases-rev173.md)
     1. [Revision 89](reference/r-releases-group/r-releases-rev89.md)
     1. [Revision 81](reference/r-releases-group/r-releases-rev81.md)
