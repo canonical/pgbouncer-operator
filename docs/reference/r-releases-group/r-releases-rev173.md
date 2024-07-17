@@ -1,5 +1,5 @@
 >Reference > Release Notes > [All revisions](/t/12285) > Revision 173/174/175/176  
-# Revision 173/174/175/176
+# Revisions 173/174/175/176
 
 <sub>18 May, 2024</sub>
 

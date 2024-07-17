@@ -1,11 +1,7 @@
 >Reference > Release Notes > [All revisions](/t/12285) > Revisions 254/255/256/257
 
-[note type="caution"]
-This page is under construction, and describes a future release. The latest stable revision is [Revision 176](https://charmhub.io/pgbouncer/docs/r-releases-rev173?channel=1/stable).
-[/note]
-
-# Revisions 254-257
-<sub>XX 07, 2024</sub>
+# Revisions 254/255/256/257
+<sub>Jul 16, 2024</sub>
 
 Dear community,
 
