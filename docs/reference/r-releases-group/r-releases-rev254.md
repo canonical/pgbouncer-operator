@@ -22,7 +22,7 @@ If you are jumping over several stable revisions, make sure to check [previous r
 <!--TODO: add notable features-->
 
 * [PR #210](https://github.com/canonical/pgbouncer-operator/pull/210) - Added support for multiple databases
-* [PR #238](https://github.com/canonical/pgbouncer-operator/pull/238) - Added support for tracing through `tempo-k8s`
+* [PR #238](https://github.com/canonical/pgbouncer-operator/pull/238) - [Added support for tracing](/t/14788) through `tempo-k8s`
 
 ## Bugfixes and improvements
 
