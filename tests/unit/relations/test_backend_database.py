@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from charms.pgbouncer_k8s.v0.pgb import get_hashed_password
-from ops.model import WaitingStatus
+from ops.model import ModelError, WaitingStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
@@ -115,6 +115,16 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         mock_event = MagicMock()
         mock_event.username = "mock_user"
+
+        # Defer on model error
+        _get_secret.side_effect = ModelError
+
+        self.backend._on_database_created(mock_event)
+
+        mock_event.defer.assert_called_once_with()
+        mock_event.defer.reset_mock()
+        _get_secret.reset_mock()
+        _get_secret.side_effect = None
 
         self.backend._on_database_created(mock_event)
 
