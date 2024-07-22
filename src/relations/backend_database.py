@@ -62,6 +62,7 @@ from ops.model import (
     Application,
     BlockedStatus,
     MaintenanceStatus,
+    ModelError,
     Relation,
     WaitingStatus,
 )
@@ -164,12 +165,17 @@ class BackendDatabaseRequires(Object):
         """
         # When the subordinate is booting up the relation may have already been initialised
         # or removed and re-added.
-        if (
-            not (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
-            or not self.auth_user
-            or self.auth_user not in auth_file
-        ):
-            auth_file = None
+        try:
+            if (
+                not (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
+                or not self.auth_user
+                or self.auth_user not in auth_file
+            ):
+                auth_file = None
+        except ModelError:
+            event.defer()
+            logger.error("deferring database-created hook - cannot access secrets")
+            return
         if not self.charm.unit.is_leader() or (
             auth_file and self.auth_user and self.auth_user in auth_file
         ):
