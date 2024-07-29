@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
-TEST_DBNAME = "postgresql_test_app_first_database"
+TEST_DBNAME = "postgresql_test_app_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG_2 = "another-postgresql"
 PGB_2 = "another-pgbouncer"

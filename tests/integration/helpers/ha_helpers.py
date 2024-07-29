@@ -86,7 +86,7 @@ async def count_writes(
             host = member["host"]
 
             connection_string = (
-                f"dbname='{CLIENT_APP_NAME.replace('-', '_')}_first_database' user='operator'"
+                f"dbname='{CLIENT_APP_NAME.replace('-', '_')}_database' user='operator'"
                 f" host='{host}' password='{password}' connect_timeout=10"
             )
 
