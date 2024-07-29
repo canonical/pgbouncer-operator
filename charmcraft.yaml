@@ -28,6 +28,9 @@ parts:
       rustup default stable
       craftctl default
     charm-strict-dependencies: true
+    charm-binary-python-packages:
+      # fails on setuptools 72
+      - requests
     build-snaps:
       - rustup/latest/stable
     build-packages:
