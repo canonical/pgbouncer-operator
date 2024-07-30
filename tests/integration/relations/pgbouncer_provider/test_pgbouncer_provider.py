@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
-TEST_DBNAME = "postgresql_test_app_first_database"
+TEST_DBNAME = "postgresql_test_app_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
 PG_2 = "another-postgresql"
 PGB_2 = "another-pgbouncer"
@@ -73,10 +73,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG, CLIENT_APP_NAME], timeout=1200)
         # Relate the charms and wait for them exchanging some connection data.
-        global client_relation
-        client_relation = await ops_test.model.add_relation(
-            f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
-        )
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
 
     await ops_test.model.wait_for_idle(status="active", timeout=600)
 
@@ -122,7 +119,6 @@ async def test_database_usage(ops_test: OpsTest):
         unit_name=CLIENT_UNIT_NAME,
         query=update_query,
         dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "some data" in json.loads(run_update_query["results"])[0]
@@ -137,13 +133,19 @@ async def test_database_version(ops_test: OpsTest):
         unit_name=CLIENT_UNIT_NAME,
         query=version_query,
         dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     # Get the version of the database and compare with the information that was retrieved directly
     # from the database.
+    relations = [
+        relation
+        for relation in ops_test.model.applications[PGB].relations
+        if not relation.is_peer
+        and f"{relation.requires.application_name}:{relation.requires.name}"
+        == f"{CLIENT_APP_NAME}:database"
+    ]
     app_unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    databag = await get_app_relation_databag(ops_test, app_unit.name, client_relation.id)
+    databag = await get_app_relation_databag(ops_test, app_unit.name, relations[0].id)
     version = databag.get("version", None)
     assert version, f"Version is not available in databag: {databag}"
     assert version in json.loads(run_version_query["results"])[0][0]
@@ -158,7 +160,6 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         unit_name=CLIENT_UNIT_NAME,
         query=create_database_query,
         dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_database_query["results"])
@@ -169,7 +170,6 @@ async def test_database_admin_permissions(ops_test: OpsTest):
         unit_name=CLIENT_UNIT_NAME,
         query=create_user_query,
         dbname=TEST_DBNAME,
-        relation_id=client_relation.id,
         relation_name=FIRST_DATABASE_RELATION_NAME,
     )
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
@@ -186,13 +186,19 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
-            relation_id=client_relation.id,
             relation_name=FIRST_DATABASE_RELATION_NAME,
             dbname=TEST_DBNAME,
         )
 
+    relations = [
+        relation
+        for relation in ops_test.model.applications[PGB].relations
+        if not relation.is_peer
+        and f"{relation.requires.application_name}:{relation.requires.name}"
+        == f"{CLIENT_APP_NAME}:database"
+    ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
+    databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
     assert not databag.get(
         "read-only-endpoints", None
     ), f"read-only-endpoints in pgb databag: {databag}"
@@ -210,12 +216,18 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
-            relation_id=client_relation.id,
             relation_name=FIRST_DATABASE_RELATION_NAME,
             dbname=TEST_DBNAME,
         )
+    relations = [
+        relation
+        for relation in ops_test.model.applications[PGB].relations
+        if not relation.is_peer
+        and f"{relation.requires.application_name}:{relation.requires.name}"
+        == f"{CLIENT_APP_NAME}:database"
+    ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
-    databag = await get_app_relation_databag(ops_test, unit.name, client_relation.id)
+    databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
     assert not databag.get(
         "read-only-endpoints", None
     ), f"read-only-endpoints in pgb databag: {databag}"
@@ -313,10 +325,7 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     This occurs using a new relation per interface (for now).
     """
     # Relate the charms and wait for them exchanging some connection data.
-    global client_relation
-    client_relation = await ops_test.model.add_relation(
-        f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB
-    )
+    await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
     # Relate the charms using another relation and wait for them exchanging some connection data.
     await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}", PGB_2)
     async with ops_test.fast_forward():
@@ -346,7 +355,6 @@ async def test_scaling(ops_test: OpsTest):
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
-            relation_id=client_relation.id,
             relation_name=FIRST_DATABASE_RELATION_NAME,
             dbname=TEST_DBNAME,
         )
@@ -360,7 +368,6 @@ async def test_scaling(ops_test: OpsTest):
         await check_new_relation(
             ops_test,
             unit_name=unit.name,
-            relation_id=client_relation.id,
             relation_name=FIRST_DATABASE_RELATION_NAME,
             dbname=TEST_DBNAME,
         )
