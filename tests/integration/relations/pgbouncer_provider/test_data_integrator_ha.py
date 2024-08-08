@@ -10,12 +10,12 @@ from pytest_operator.plugin import OpsTest
 from constants import BACKEND_RELATION_NAME
 
 from ... import architecture
+from ...helpers.ha_helpers import get_unit_ip
 from ...helpers.helpers import (
     PG,
     PGB,
 )
 from ...juju_ import juju_major_version
-from ..helpers.hahelpers import get_unit_ip
 from .helpers import check_exposed_connection, fetch_action_get_credentials
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
             ops_test.model.deploy(
                 DATA_INTEGRATOR_APP_NAME,
                 channel="edge",
-                num_units=2,
+                num_units=3,
                 config=config,
             ),
             ops_test.model.deploy(
@@ -72,7 +72,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
             ops_test.model.deploy(
                 HACLUSTER_NAME,
                 channel="2.4/stable",
-                num_units=None,
+                num_units=0,
             ),
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -83,20 +83,20 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
 
     await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1200)
     ip_addresses = [
-        await get_unit_ip(unit_name)
+        await get_unit_ip(ops_test, unit_name)
         for unit_name in ops_test.model.units.keys()
         if unit_name.startswith(DATA_INTEGRATOR_APP_NAME) or unit_name.startswith(PG)
     ]
 
     # Try to generate a vip
-    base, last_octet = ip_addresses[0].lsplit(".")
+    base, last_octet = ip_addresses[0].rsplit(".", 1)
     last_octet = int(last_octet)
     vip = None
     for _ in range(len(ip_addresses)):
         last_octet += 1
         if last_octet > 254:
             last_octet = 2
-        addr = ".".join([base, last_octet])
+        addr = ".".join([base, str(last_octet)])
         if addr not in ip_addresses:
             vip = addr
             break
