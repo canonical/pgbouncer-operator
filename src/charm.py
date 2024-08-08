@@ -510,6 +510,19 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("backend database relation not ready")
             return
 
+        if self.hacluster.relation and not self._is_exposed:
+            self.unit.status = BlockedStatus("ha integration used without data-intgrator")
+            return
+
+        vip = self.config.get("vip")
+        if self.hacluster.relation and not vip:
+            self.unit.status = BlockedStatus("ha integration used without vip configuration")
+            return
+
+        if vip and not self._is_exposed:
+            self.unit.status = BlockedStatus("vip configuration without data-intgrator")
+            return
+
         if self.check_pgb_running():
             self.unit.status = ActiveStatus()
 
@@ -524,8 +537,8 @@ class PgBouncerCharm(CharmBase):
             event.defer()
             return
 
-        old_vip = self.peers.app_databag.get("current_vip", "None")
-        vip = self.config.get("vip", "None")
+        old_vip = self.peers.app_databag.get("current_vip", "none")
+        vip = self.config.get("vip", "none")
         vip_changed = old_vip != vip
         if vip_changed and self._is_exposed:
             self.hacluster.set_vip(self.config.get("vip"))
@@ -533,8 +546,6 @@ class PgBouncerCharm(CharmBase):
         old_port = self.peers.app_databag.get("current_port")
         port_changed = old_port != str(self.config["listen_port"])
         if port_changed and self._is_exposed:
-            if self.unit.is_leader():
-                self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
             try:
                 if old_port:
@@ -542,6 +553,10 @@ class PgBouncerCharm(CharmBase):
                 self.unit.open_port("tcp", self.config["listen_port"])
             except ModelError:
                 logger.exception("failed to open port")
+
+        if self.unit.is_leader():
+            self.peers.app_databag["current_port"] = str(self.config["listen_port"])
+            self.peers.app_databag["current_vip"] = str(vip)
 
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label

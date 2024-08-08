@@ -81,3 +81,4 @@ class HaCluster(Object):
             "json_resources": json_resources,
             "json_resource_params": json_resource_params,
         })
+        self.charm.update_status()
