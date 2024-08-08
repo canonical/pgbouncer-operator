@@ -524,7 +524,11 @@ class PgBouncerCharm(CharmBase):
             event.defer()
             return
 
-        self.hacluster.set_vip(self.config.get("vip"))
+        old_vip = self.peers.app_databag.get("current_vip", "None")
+        vip = self.config.get("vip", "None")
+        vip_changed = old_vip != vip
+        if vip_changed and self._is_exposed:
+            self.hacluster.set_vip(self.config.get("vip"))
 
         old_port = self.peers.app_databag.get("current_port")
         port_changed = old_port != str(self.config["listen_port"])
@@ -551,8 +555,8 @@ class PgBouncerCharm(CharmBase):
         if self.backend.postgres:
             self.render_prometheus_service()
 
-        # If port or vip changed we should update the client info
-        self.update_client_connection_info()
+        if port_changed or vip_changed:
+            self.update_client_connection_info()
 
     def check_pgb_running(self):
         """Checks that pgbouncer service is running, and updates status accordingly."""
@@ -918,14 +922,13 @@ class PgBouncerCharm(CharmBase):
     #  Relation Utilities
     # =====================
 
-    def update_client_connection_info(self, port: Optional[str] = None):
+    def update_client_connection_info(self):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
         if not self.backend.postgres or not self.unit.is_leader():
             return
 
-        if port is None:
-            port = self.config["listen_port"]
+        port = self.config["listen_port"]
 
         for relation in self.model.relations.get("db", []):
             self.legacy_db_relation.update_connection_info(relation, port)
