@@ -24,17 +24,18 @@ from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_k8s.v1.charm_tracing import trace_charm
 from charms.tempo_k8s.v2.tracing import TracingEndpointRequirer
 from jinja2 import Template
-from ops import JujuVersion
-from ops.charm import CharmBase, StartEvent
-from ops.main import main
-from ops.model import (
+from ops import (
     ActiveStatus,
     BlockedStatus,
+    CharmBase,
+    JujuVersion,
     MaintenanceStatus,
     ModelError,
     Relation,
+    StartEvent,
     WaitingStatus,
 )
+from ops.main import main
 
 from constants import (
     APP_SCOPE,
@@ -65,6 +66,7 @@ from constants import (
 )
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
+from relations.hacluster import HaCluster
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
@@ -120,6 +122,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
+        self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
         self.pgb_services = [
@@ -520,6 +523,9 @@ class PgBouncerCharm(CharmBase):
             logger.debug("Defer on_config_changed: Cluster is upgrading")
             event.defer()
             return
+
+        if vip := self.config.get("vip"):
+            self.hacluster.set_vip(vip)
 
         old_port = self.peers.app_databag.get("current_port")
         port_changed = old_port != str(self.config["listen_port"])
