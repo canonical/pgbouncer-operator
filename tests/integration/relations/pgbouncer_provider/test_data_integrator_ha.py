@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+import asyncio
+import logging
+
+import pytest
+from pytest_operator.plugin import OpsTest
+
+from constants import BACKEND_RELATION_NAME
+
+from ... import architecture
+from ...helpers.helpers import (
+    PG,
+    PGB,
+)
+from ...juju_ import juju_major_version
+from ..helpers.hahelpers import get_unit_ip
+from .helpers import check_exposed_connection, fetch_action_get_credentials
+
+logger = logging.getLogger(__name__)
+
+DATA_INTEGRATOR_APP_NAME = "data-integrator"
+HACLUSTER_NAME = "hacluster"
+
+if juju_major_version < 3:
+    tls_certificates_app_name = "tls-certificates-operator"
+    if architecture.architecture == "arm64":
+        tls_channel = "legacy/edge"
+    else:
+        tls_channel = "legacy/stable"
+    tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+else:
+    tls_certificates_app_name = "self-signed-certificates"
+    if architecture.architecture == "arm64":
+        tls_channel = "latest/edge"
+    else:
+        tls_channel = "latest/stable"
+    tls_config = {"ca-common-name": "Test CA"}
+
+
+@pytest.mark.group(1)
+@pytest.mark.abort_on_fail
+async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
+    """Test basic functionality of database relation interface."""
+    # Deploy both charms (multiple units for each application to test that later they correctly
+    # set data in the relation application databag using only the leader unit).
+    config = {"database-name": "test-database"}
+    async with ops_test.fast_forward():
+        await asyncio.gather(
+            ops_test.model.deploy(
+                pgb_charm_jammy,
+                application_name=PGB,
+                num_units=None,
+            ),
+            ops_test.model.deploy(
+                PG,
+                application_name=PG,
+                num_units=2,
+                channel="14/edge",
+                config={"profile": "testing"},
+            ),
+            ops_test.model.deploy(
+                DATA_INTEGRATOR_APP_NAME,
+                channel="edge",
+                num_units=2,
+                config=config,
+            ),
+            ops_test.model.deploy(
+                tls_certificates_app_name, config=tls_config, channel=tls_channel
+            ),
+            ops_test.model.deploy(
+                HACLUSTER_NAME,
+                channel="2.4/stable",
+                num_units=None,
+            ),
+        )
+        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
+        await ops_test.model.add_relation(f"{PGB}:ha", f"{HACLUSTER_NAME}:ha")
+        await ops_test.model.add_relation(
+            f"{DATA_INTEGRATOR_APP_NAME}:juju-info", f"{HACLUSTER_NAME}:juju-info"
+        )
+
+    await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1200)
+    ip_addresses = [
+        await get_unit_ip(unit_name)
+        for unit_name in ops_test.model.units.keys()
+        if unit_name.startswith(DATA_INTEGRATOR_APP_NAME) or unit_name.startswith(PG)
+    ]
+
+    # Try to generate a vip
+    base, last_octet = ip_addresses[0].lsplit(".")
+    last_octet = int(last_octet)
+    vip = None
+    for _ in range(len(ip_addresses)):
+        last_octet += 1
+        if last_octet > 254:
+            last_octet = 2
+        addr = ".".join([base, last_octet])
+        if addr not in ip_addresses:
+            vip = addr
+            break
+    logger.info(f"Setting VIP to {vip}")
+
+    await ops_test.model.applications[PGB].set_config({"vip": vip})
+    await ops_test.model.add_relation(PGB, DATA_INTEGRATOR_APP_NAME)
+    await ops_test.model.wait_for_idle(status="active", timeout=600)
+
+    credentials = await fetch_action_get_credentials(
+        ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
+    )
+    check_exposed_connection(credentials, False)
+
+
+@pytest.mark.group(1)
+async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
+    await ops_test.model.add_relation(PGB, tls_certificates_app_name)
+    await ops_test.model.wait_for_idle(status="active")
+
+    credentials = await fetch_action_get_credentials(
+        ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
+    )
+    check_exposed_connection(credentials, True)
+
+
+@pytest.mark.group(1)
+async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
+    await ops_test.model.applications[PGB].remove_relation(
+        f"{PGB}:certificates", f"{tls_certificates_app_name}:certificates"
+    )
+    await ops_test.model.wait_for_idle(status="active")
+
+    credentials = await fetch_action_get_credentials(
+        ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
+    )
+    check_exposed_connection(credentials, False)
