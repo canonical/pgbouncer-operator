@@ -48,6 +48,9 @@ class HaCluster(Object):
 
     def set_vip(self, vip: Optional[str]) -> None:
         """Adds the requested virtual IP to the integration."""
+        if not self.relation:
+            return
+
         if not self._is_clustered():
             logger.debug("early exit set_vip: ha relation not yet clustered")
             return
