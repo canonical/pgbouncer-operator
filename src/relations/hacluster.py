@@ -74,7 +74,6 @@ class HaCluster(Object):
             json_resource_params = json.dumps({vip_key: vip_params})
 
         else:
-            # TODO clear the correct keys
             json_resources = "{}"
             json_resource_params = "{}"
 

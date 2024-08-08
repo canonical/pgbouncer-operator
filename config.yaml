@@ -18,7 +18,7 @@ options:
 
   vip:
     description: |
-      Virtual IP to use to front pgbouncer units.
+      Virtual IP to use to front pgbouncer units. Used only in case of external node connection.
     type: string
 
   pool_mode:
