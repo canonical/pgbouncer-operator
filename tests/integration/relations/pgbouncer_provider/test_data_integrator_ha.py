@@ -91,6 +91,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     # Try to generate a vip
     base, last_octet = ip_addresses[0].rsplit(".", 1)
     last_octet = int(last_octet)
+    global vip
     vip = None
     for _ in range(len(ip_addresses)):
         last_octet += 1
@@ -110,6 +111,9 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
     )
     check_exposed_connection(credentials, False)
+    host, _ = credentials["postgresql"]["endpoints"].split(":")
+    logger.info(f"Data integrator host is {host}")
+    assert host == vip
 
 
 @pytest.mark.group(1)
@@ -134,3 +138,17 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
     )
     check_exposed_connection(credentials, False)
+
+
+@pytest.mark.group(1)
+async def test_remove_vip(ops_test: OpsTest):
+    async with ops_test.fast_forward():
+        await ops_test.model.applications[PGB].set_config({"vip": ""})
+        await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
+
+    credentials = await fetch_action_get_credentials(
+        ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
+    )
+    host, _ = credentials["postgresql"]["endpoints"].split(":")
+    logger.info(f"Data integrator host is {host}")
+    assert host != vip
