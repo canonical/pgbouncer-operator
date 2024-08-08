@@ -35,16 +35,16 @@ class HaCluster(Object):
     def _is_clustered(self) -> bool:
         for key, value in self.relation.data.items():
             if isinstance(key, Unit) and key != self.charm.unit:
-                if isinstance(value, bool):
-                    return value
-                elif value in ("yes", "true"):
+                clustered = value.get("clustered")
+                if isinstance(clustered, bool):
+                    return clustered
+                elif clustered in ("yes", "true"):
                     return True
                 break
         return False
 
     def _on_changed(self, event: RelationChangedEvent) -> None:
-        if vip := self.charm.config.get("vip"):
-            self.set_vip(vip)
+        self.set_vip(self.charm.config.get("vip"))
 
     def set_vip(self, vip: Optional[str]) -> None:
         """Adds the requested virtual IP to the integration."""
