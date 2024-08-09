@@ -540,8 +540,8 @@ class PgBouncerCharm(CharmBase):
             event.defer()
             return
 
-        old_vip = self.peers.app_databag.get("current_vip", "none")
-        vip = self.config.get("vip", "none")
+        old_vip = self.peers.app_databag.get("current_vip", "")
+        vip = self.config.get("vip", "")
         vip_changed = old_vip != vip
         if vip_changed and self._is_exposed:
             self.hacluster.set_vip(self.config.get("vip"))
@@ -551,15 +551,16 @@ class PgBouncerCharm(CharmBase):
         if port_changed and self._is_exposed:
             # Open port
             try:
-                if old_port:
-                    self.unit.close_port("tcp", old_port)
-                self.unit.open_port("tcp", self.config["listen_port"])
+                self.unit.set_ports(self.config["listen_port"])
             except ModelError:
                 logger.exception("failed to open port")
 
         if self.unit.is_leader():
             self.peers.app_databag["current_port"] = str(self.config["listen_port"])
-            self.peers.app_databag["current_vip"] = str(vip)
+            if vip:
+                self.peers.app_databag["current_vip"] = str(vip)
+            else:
+                self.peers.app_databag.pop("current_vip")
 
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
