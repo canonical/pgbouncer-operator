@@ -560,7 +560,7 @@ class PgBouncerCharm(CharmBase):
             if vip:
                 self.peers.app_databag["current_vip"] = str(vip)
             else:
-                self.peers.app_databag.pop("current_vip")
+                self.peers.app_databag.pop("current_vip", None)
 
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
