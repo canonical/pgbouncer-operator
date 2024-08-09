@@ -71,3 +71,8 @@ requires:
     interface: tracing
     limit: 1
     optional: true
+
+  ha:
+    interface: hacluster
+    limit: 1
+    optional: true

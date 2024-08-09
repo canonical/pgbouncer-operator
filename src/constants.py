@@ -36,6 +36,7 @@ DB_ADMIN_RELATION_NAME = "db-admin"
 BACKEND_RELATION_NAME = "backend-database"
 PEER_RELATION_NAME = "pgb-peers"
 CLIENT_RELATION_NAME = "database"
+HACLUSTER_RELATION_NAME = "ha"
 
 TLS_KEY_FILE = "key.pem"
 TLS_CA_FILE = "ca.pem"

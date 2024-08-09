@@ -26,6 +26,7 @@ from charm import PgBouncerCharm
 from constants import (
     AUTH_FILE_NAME,
     BACKEND_RELATION_NAME,
+    EXTENSIONS_BLOCKING_MESSAGE,
     PEER_RELATION_NAME,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
@@ -583,6 +584,99 @@ class TestCharm(unittest.TestCase):
         self.charm._collect_readonly_dbs()
 
         assert self.charm.peers.app_databag["readonly_dbs"] == '["includeddb"]'
+
+    @patch("charm.HaCluster.relation", new_callable=PropertyMock, return_value=True)
+    @patch("charm.PgBouncerCharm._is_exposed", new_callable=PropertyMock, return_value=False)
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.ready",
+        new_callable=PropertyMock,
+        return_value=False,
+    )
+    @patch("charm.BackendDatabaseRequires.postgres", new_callable=PropertyMock, return_value=None)
+    @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
+    def test_update_status(self, _check_pgb_running, _postgres, _ready, _is_exposed, _ha_relation):
+        # Doesn't clear extensions blocking
+        self.charm.unit.status = BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE
+
+        # Blocks if no backend
+        self.charm.unit.status = ActiveStatus()
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert (
+            self.charm.unit.status.message == "waiting for backend database relation to initialise"
+        )
+
+        # Blocks if backend is not ready
+        self.charm.unit.status = ActiveStatus()
+        _postgres.return_value = True
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "backend database relation not ready"
+
+        # Blocks if using hacluster and not exposed
+        self.charm.unit.status = ActiveStatus()
+        _ready.return_value = True
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "ha integration used without data-intgrator"
+
+        # Blocks if using hacluster and not set vip
+        self.charm.unit.status = ActiveStatus()
+        _is_exposed.return_value = True
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "ha integration used without vip configuration"
+
+        # Blocks if vip is set and not exposed
+        self.charm.unit.status = ActiveStatus()
+        _is_exposed.return_value = False
+        _ha_relation.return_value = False
+        with self.harness.hooks_disabled():
+            self.harness.update_config({"vip": "1.2.3.4"})
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "vip configuration without data-intgrator"
+
+        # Unblocks if running check passes
+        self.charm.unit.status = BlockedStatus()
+        _is_exposed.return_value = True
+        _ha_relation.return_value = True
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, ActiveStatus)
+
+        # Keeps status if checks don't pass
+        self.charm.unit.status = BlockedStatus()
+        _check_pgb_running.return_value = False
+
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+
+        # Leader sets vip in unit status
+        _check_pgb_running.return_value = True
+        with self.harness.hooks_disabled():
+            self.harness.set_leader()
+
+        self.charm.update_status()
+
+        assert self.charm.unit.status.message == "VIP: 1.2.3.4"
 
     #
     # Secrets
