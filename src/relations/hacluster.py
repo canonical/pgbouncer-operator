@@ -35,10 +35,7 @@ class HaCluster(Object):
     def _is_clustered(self) -> bool:
         for key, value in self.relation.data.items():
             if isinstance(key, Unit) and key != self.charm.unit:
-                clustered = value.get("clustered")
-                if isinstance(clustered, bool):
-                    return clustered
-                elif clustered in ("yes", "true"):
+                if value.get("clustered") in ("yes", "true"):
                     return True
                 break
         return False

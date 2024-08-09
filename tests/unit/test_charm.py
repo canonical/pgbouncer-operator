@@ -594,7 +594,7 @@ class TestCharm(unittest.TestCase):
     )
     @patch("charm.BackendDatabaseRequires.postgres", new_callable=PropertyMock, return_value=None)
     @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
-    def test_update_status(self, _check_pgb_runnig, _postgres, _ready, _is_exposed, _ha_relation):
+    def test_update_status(self, _check_pgb_running, _postgres, _ready, _is_exposed, _ha_relation):
         # Doesn't clear extensions blocking
         self.charm.unit.status = BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
 
@@ -663,11 +663,20 @@ class TestCharm(unittest.TestCase):
 
         # Keeps status if checks don't pass
         self.charm.unit.status = BlockedStatus()
-        _check_pgb_runnig.return_value = False
+        _check_pgb_running.return_value = False
 
         self.charm.update_status()
 
         assert isinstance(self.charm.unit.status, BlockedStatus)
+
+        # Leader sets vip in app status
+        _check_pgb_running.return_value = True
+        with self.harness.hooks_disabled():
+            self.harness.set_leader()
+
+        self.charm.update_status()
+
+        assert self.charm.app.status.message == "VIP: 1.2.3.4"
 
     #
     # Secrets

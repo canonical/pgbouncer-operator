@@ -525,6 +525,8 @@ class PgBouncerCharm(CharmBase):
 
         if self.check_pgb_running():
             self.unit.status = ActiveStatus()
+            if self.unit.is_leader() and vip:
+                self.app.status = ActiveStatus(f"VIP: {vip}")
 
     def _on_config_changed(self, event) -> None:
         """Config changed handler.
