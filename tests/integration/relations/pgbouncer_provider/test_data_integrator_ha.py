@@ -146,7 +146,7 @@ async def test_remove_vip(ops_test: OpsTest):
         await ops_test.model.applications[PGB].set_config({"vip": ""})
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=300)
         assert (
-            ops_test.applications[PGB].units[0].workload_status_message
+            ops_test.model.applications[PGB].units[0].workload_status_message
             == "ha integration used without vip configuration"
         )
 
