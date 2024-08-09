@@ -669,14 +669,14 @@ class TestCharm(unittest.TestCase):
 
         assert isinstance(self.charm.unit.status, BlockedStatus)
 
-        # Leader sets vip in app status
+        # Leader sets vip in unit status
         _check_pgb_running.return_value = True
         with self.harness.hooks_disabled():
             self.harness.set_leader()
 
         self.charm.update_status()
 
-        assert self.charm.app.status.message == "VIP: 1.2.3.4"
+        assert self.charm.unit.status.message == "VIP: 1.2.3.4"
 
     #
     # Secrets
