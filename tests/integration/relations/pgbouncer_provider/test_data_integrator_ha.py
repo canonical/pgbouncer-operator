@@ -144,6 +144,13 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
 async def test_remove_vip(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.applications[PGB].set_config({"vip": ""})
+        await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=300)
+        assert (
+            ops_test.applications[PGB].units[0].workload_status_message
+            == "ha integration used without vip configuration"
+        )
+
+        await ops_test.model.applications[PGB].remove_relation(f"{PGB}:ha", f"{HACLUSTER_NAME}:ha")
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
     credentials = await fetch_action_get_credentials(
