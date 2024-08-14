@@ -176,7 +176,7 @@ def check_exposed_connection(credentials, tls):
     table_name = "expose_test"
     smoke_val = str(uuid4())
 
-    uri = credentials["postgresql"]["uri"]
+    uri = credentials["postgresql"]["uris"]
     if tls:
         sslmode = "require"
     else:
