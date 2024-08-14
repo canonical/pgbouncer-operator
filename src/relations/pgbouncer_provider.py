@@ -37,6 +37,7 @@ f"{dbname}_readonly".
 
 import logging
 from hashlib import shake_128
+from urllib.parse import quote
 
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseProvides,
@@ -228,23 +229,39 @@ class PgBouncerProvider(Object):
 
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
-        # Set the read/write endpoint.
-        exposed = bool(
-            self.database_provides.fetch_relation_field(relation.id, "external-node-connectivity")
-        )
         if not self.charm.unit.is_leader():
             return
+
+        # Set the read/write endpoint.
+        rel_data = self.database_provides.fetch_relation_data(
+            [relation.id], ["external-node-connectivity", "database", "password"]
+        ).get(relation.id, {})
+        exposed = bool(rel_data.get("external-node-connectivity", False))
+        database = rel_data.get("database")
+        user = f"relation_id_{relation.id}"
+        password = self.database_provides.fetch_my_relation_field(relation.id, "password")
+
+        host = self.charm.leader_ip if exposed else "localhost"
+        port = self.charm.config["listen_port"]
+        uri_host = quote(
+            self.charm.leader_ip
+            if exposed
+            else f"/tmp/snap-private-tmp/snap.charmed-pgbouncer/tmp/{self.charm.app.name}/instance_0",
+            safe="",
+        )
+
         initial_status = self.charm.unit.status
         self.charm.unit.status = MaintenanceStatus(
             f"Updating {self.relation_name} relation connection information"
         )
-        if exposed:
-            rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
-        else:
-            rw_endpoint = f"localhost:{self.charm.config['listen_port']}"
+        rw_endpoint = f"{host}:{port}"
         self.database_provides.set_endpoints(
             relation.id,
             rw_endpoint,
+        )
+        # Set connection string URI.
+        self.database_provides.set_uris(
+            relation.id, f"postgresql://{user}:{password}@{uri_host}:{port}/{database}"
         )
         if exposed:
             self.update_read_only_endpoints()
