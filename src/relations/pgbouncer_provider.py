@@ -234,7 +234,7 @@ class PgBouncerProvider(Object):
 
         # Set the read/write endpoint.
         rel_data = self.database_provides.fetch_relation_data(
-            [relation.id], ["external-node-connectivity", "database", "password"]
+            [relation.id], ["external-node-connectivity", "database"]
         ).get(relation.id, {})
         exposed = bool(rel_data.get("external-node-connectivity", False))
         database = rel_data.get("database")
