@@ -244,7 +244,10 @@ class PgBouncerProvider(Object):
         host = self.charm.leader_ip if exposed else "localhost"
         port = self.charm.config["listen_port"]
         uri_host = quote(
-            self.charm.leader_ip
+            ",".join([
+                self.charm.leader_ip,
+                *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
+            ])
             if exposed
             else f"/tmp/snap-private-tmp/snap.charmed-pgbouncer/tmp/{self.charm.app.name}/instance_0",
             safe="",
