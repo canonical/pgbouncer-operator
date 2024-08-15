@@ -239,7 +239,11 @@ class PgBouncerProvider(Object):
             f"Updating {self.relation_name} relation connection information"
         )
         if exposed:
-            rw_endpoint = f"{self.charm.leader_ip}:{self.charm.config['listen_port']}"
+            if vip := self.charm.config.get("vip"):
+                ip = vip
+            else:
+                ip = self.charm.leader_ip
+            rw_endpoint = f"{ip}:{self.charm.config['listen_port']}"
         else:
             rw_endpoint = f"localhost:{self.charm.config['listen_port']}"
         self.database_provides.set_endpoints(
@@ -265,7 +269,7 @@ class PgBouncerProvider(Object):
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or self.charm.config.get("vip"):
             return
 
         # Get the current relation or all the relations if this is triggered by another type of

@@ -24,17 +24,18 @@ from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_k8s.v1.charm_tracing import trace_charm
 from charms.tempo_k8s.v2.tracing import TracingEndpointRequirer
 from jinja2 import Template
-from ops import JujuVersion
-from ops.charm import CharmBase, StartEvent
-from ops.main import main
-from ops.model import (
+from ops import (
     ActiveStatus,
     BlockedStatus,
+    CharmBase,
+    JujuVersion,
     MaintenanceStatus,
     ModelError,
     Relation,
+    StartEvent,
     WaitingStatus,
 )
+from ops.main import main
 
 from constants import (
     APP_SCOPE,
@@ -65,6 +66,7 @@ from constants import (
 )
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
+from relations.hacluster import HaCluster
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
@@ -120,6 +122,7 @@ class PgBouncerCharm(CharmBase):
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
         self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
+        self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
         self.pgb_services = [
@@ -507,8 +510,24 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("backend database relation not ready")
             return
 
+        if self.hacluster.relation and not self._is_exposed:
+            self.unit.status = BlockedStatus("ha integration used without data-intgrator")
+            return
+
+        vip = self.config.get("vip")
+        if self.hacluster.relation and not vip:
+            self.unit.status = BlockedStatus("ha integration used without vip configuration")
+            return
+
+        if vip and not self._is_exposed:
+            self.unit.status = BlockedStatus("vip configuration without data-intgrator")
+            return
+
         if self.check_pgb_running():
-            self.unit.status = ActiveStatus()
+            if self.unit.is_leader() and vip:
+                self.unit.status = ActiveStatus(f"VIP: {vip}")
+            else:
+                self.unit.status = ActiveStatus()
 
     def _on_config_changed(self, event) -> None:
         """Config changed handler.
@@ -521,18 +540,27 @@ class PgBouncerCharm(CharmBase):
             event.defer()
             return
 
+        old_vip = self.peers.app_databag.get("current_vip", "")
+        vip = self.config.get("vip", "")
+        vip_changed = old_vip != vip
+        if vip_changed and self._is_exposed:
+            self.hacluster.set_vip(self.config.get("vip"))
+
         old_port = self.peers.app_databag.get("current_port")
         port_changed = old_port != str(self.config["listen_port"])
         if port_changed and self._is_exposed:
-            if self.unit.is_leader():
-                self.peers.app_databag["current_port"] = str(self.config["listen_port"])
             # Open port
             try:
-                if old_port:
-                    self.unit.close_port("tcp", old_port)
-                self.unit.open_port("tcp", self.config["listen_port"])
+                self.unit.set_ports(self.config["listen_port"])
             except ModelError:
                 logger.exception("failed to open port")
+
+        if self.unit.is_leader():
+            self.peers.app_databag["current_port"] = str(self.config["listen_port"])
+            if vip:
+                self.peers.app_databag["current_vip"] = str(vip)
+            else:
+                self.peers.app_databag.pop("current_vip", None)
 
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
@@ -545,6 +573,9 @@ class PgBouncerCharm(CharmBase):
 
         if self.backend.postgres:
             self.render_prometheus_service()
+
+        if port_changed or vip_changed:
+            self.update_client_connection_info()
 
     def check_pgb_running(self):
         """Checks that pgbouncer service is running, and updates status accordingly."""
@@ -910,14 +941,13 @@ class PgBouncerCharm(CharmBase):
     #  Relation Utilities
     # =====================
 
-    def update_client_connection_info(self, port: Optional[str] = None):
+    def update_client_connection_info(self):
         """Update ports in backend relations to match updated pgbouncer port."""
         # Skip updates if backend.postgres doesn't exist yet.
         if not self.backend.postgres or not self.unit.is_leader():
             return
 
-        if port is None:
-            port = self.config["listen_port"]
+        port = self.config["listen_port"]
 
         for relation in self.model.relations.get("db", []):
             self.legacy_db_relation.update_connection_info(relation, port)
