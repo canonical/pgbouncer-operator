@@ -241,17 +241,21 @@ class PgBouncerProvider(Object):
         user = f"relation_id_{relation.id}"
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
-        host = self.charm.leader_ip if exposed else "localhost"
-        port = self.charm.config["listen_port"]
-        uri_host = quote(
-            ",".join([
-                self.charm.leader_ip,
-                *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
-            ])
-            if exposed
-            else f"/tmp/snap-private-tmp/snap.charmed-pgbouncer/tmp/{self.charm.app.name}/instance_0",
-            safe="",
+        host = "localhost"
+        uri_host = (
+            f"/tmp/snap-private-tmp/snap.charmed-pgbouncer/tmp/{self.charm.app.name}/instance_0"
         )
+        if exposed:
+            if vip := self.charm.config.get("vip"):
+                host = vip
+                uri_host = vip
+            else:
+                host = self.charm.leader_ip
+                uri_host = ",".join([
+                    self.charm.leader_ip,
+                    *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
+                ])
+        port = self.charm.config["listen_port"]
 
         initial_status = self.charm.unit.status
         self.charm.unit.status = MaintenanceStatus(
@@ -264,7 +268,8 @@ class PgBouncerProvider(Object):
         )
         # Set connection string URI.
         self.database_provides.set_uris(
-            relation.id, f"postgresql://{user}:{password}@{uri_host}:{port}/{database}"
+            relation.id,
+            f"postgresql://{user}:{password}@{quote(uri_host, safe=",")}:{port}/{database}",
         )
         if exposed:
             self.update_read_only_endpoints()
@@ -285,7 +290,7 @@ class PgBouncerProvider(Object):
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or self.charm.config.get("vip"):
             return
 
         # Get the current relation or all the relations if this is triggered by another type of
