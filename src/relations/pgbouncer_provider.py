@@ -269,7 +269,7 @@ class PgBouncerProvider(Object):
         # Set connection string URI.
         self.database_provides.set_uris(
             relation.id,
-            f"postgresql://{user}:{password}@{quote(uri_host, safe=",")}:{port}/{database}",
+            f"postgresql://{user}:{password}@{quote(uri_host, safe=',')}:{port}/{database}",
         )
         if exposed:
             self.update_read_only_endpoints()
