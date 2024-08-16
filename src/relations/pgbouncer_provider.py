@@ -242,9 +242,7 @@ class PgBouncerProvider(Object):
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
         host = "localhost"
-        uri_host = (
-            f"/tmp/snap-private-tmp/snap.charmed-pgbouncer/tmp/{self.charm.app.name}/instance_0"
-        )
+        uri_host = host
         if exposed:
             if vip := self.charm.config.get("vip"):
                 host = vip
