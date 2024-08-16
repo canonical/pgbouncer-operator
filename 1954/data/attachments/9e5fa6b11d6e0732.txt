@@ -1,0 +1,99 @@
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/3 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.5    unsupported  02:35:18Z
+
+App        Version  Status   Scale  Charm      Channel  Rev  Exposed  Message
+pgbouncer           unknown      0  pgbouncer             0  no       
+
+Machine  State    Address       Inst id        Base          AZ  Message
+1        stopped  10.45.11.34   juju-e30b54-1  ubuntu@22.04      Running
+2        stopped  10.45.11.95   juju-e30b54-2  ubuntu@22.04      Running
+6        stopped  10.45.11.158  juju-e30b54-6  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-2: 02:18:19 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:18:19 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 02:18:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:18:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:18:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 02:18:23 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 02:18:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:18:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 02:18:23 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:18:25 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:18:28 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 02:18:29 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:21:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:21:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 02:21:44 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 02:21:48 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:21:48 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:21:48 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:21:51 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:21:51 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:21:51 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-6: 02:31:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:31:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-3: 02:31:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-3: 02:31:58 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-pgbouncer-0: 02:34:25 ERROR unit.pgbouncer/0.juju-log backend-database:7: Failed to get PostgreSQL version: connection to server at "10.45.11.116", port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+unit-pgbouncer-0: 02:34:25 ERROR unit.pgbouncer/0.juju-log backend-database:7: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 435, in get_postgresql_version
+    with self._connect_to_database() as connection, connection.cursor() as cursor:
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 131, in _connect_to_database
+    connection = psycopg2.connect(
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server at "10.45.11.116", port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 977, in <module>
+    main(PgBouncerCharm)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/main.py", line 551, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/main.py", line 530, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/main.py", line 519, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/main.py", line 147, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 348, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 860, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 950, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/relations/backend_database.py", line 250, in _on_relation_departed
+    self.charm.update_client_connection_info()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 959, in update_client_connection_info
+    self.client_relation.update_connection_info(relation)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/relations/pgbouncer_provider.py", line 259, in update_connection_info
+    relation.id, self.charm.backend.postgres.get_postgresql_version()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 441, in get_postgresql_version
+    raise PostgreSQLGetPostgreSQLVersionError()
+charms.postgresql_k8s.v0.postgresql.PostgreSQLGetPostgreSQLVersionError
+unit-pgbouncer-0: 02:34:25 ERROR juju.worker.uniter.operation hook "backend-database-relation-departed" (via hook dispatching script: dispatch) failed: exit status 1
+machine-2: 02:35:17 ERROR juju.api.watcher error trying to stop watcher: websocket: close sent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
