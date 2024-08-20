@@ -96,8 +96,13 @@ Please [contact us](/t/12305) if you need different versions/series.
 
 <a href="#heading--architectures"><h3 id="heading--architectures"> Architectures </h3></a>
 
-Currently, the charm supports architecture `amd64` and arm64 only. For more technical details, see the [Supported architectures](/t/12307?channel=1/stable) reference.
+Currently, the charm supports architecture `amd64` and `arm64` only. For more technical details, see the [Supported architectures](/t/12307?channel=1/stable) reference.
 
+<a href="#heading--architectures"><h3 id="heading--interfaces"> Interfaces </h3></a>
+
+The modern charm also support the legacy interface `pgsql` (endpoints `db` and `db-admin`) ([see Integrations](https://charmhub.io/pgbouncer/integrations?channel=1/stable#db)) however migration to the modern interface `postgresql_client` is [trivial and highly recommended](https://charmhub.io/postgresql/docs/h-integrate-with-your-charm).
+
+The legacy charm also supports interface `ha` which is not yet supported by modern charm. Feel free to contact us if you are interested in the `ha` interface support.
 
 <a href="#heading--contact-us"><h2 id="heading--contact-us"> Report issues </h2></a>
 
