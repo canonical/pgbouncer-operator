@@ -50,6 +50,7 @@ from constants import (
     PGB,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
+    PGB_RUN_DIR,
     PGBOUNCER_EXECUTABLE,
     PGBOUNCER_SNAP_NAME,
     SECRET_DELETED_LABEL,
@@ -165,11 +166,14 @@ class PgBouncerCharm(CharmBase):
         """Create configuration directories for pgbouncer instances."""
         pg_user = pwd.getpwnam(PG_USER)
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
+        app_run_dir = f"{PGB_RUN_DIR}/{self.app.name}"
 
         # Make a directory for each service to store configs.
         for service_id in self.service_ids:
             os.makedirs(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", 0o700, exist_ok=True)
             os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
+            os.makedirs(f"{app_run_dir}/{INSTANCE_DIR}{service_id}", 0o777, exist_ok=True)
+            os.chown(f"{app_run_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
 
     @property
     def tracing_endpoint(self) -> Optional[str]:
@@ -259,6 +263,7 @@ class PgBouncerCharm(CharmBase):
 
         shutil.rmtree(f"{PGB_CONF_DIR}/{self.app.name}")
         shutil.rmtree(f"{PGB_LOG_DIR}/{self.app.name}")
+        shutil.rmtree(f"{PGB_RUN_DIR}/{self.app.name}")
         shutil.rmtree(f"{SNAP_TMP_DIR}/{self.app.name}")
 
         systemd.daemon_reload()
@@ -766,6 +771,7 @@ class PgBouncerCharm(CharmBase):
         # PgbConfig objects, and is modified below to implement individual services.
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
         app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
+        app_run_dir = f"{PGB_RUN_DIR}/{self.app.name}"
         app_temp_dir = f"/tmp/{self.app.name}"
 
         max_db_connections = self.config["max_db_connections"]
@@ -797,7 +803,7 @@ class PgBouncerCharm(CharmBase):
                             databases=databases,
                             readonly_databases=readonly_dbs,
                             peer_id=service_id,
-                            base_socket_dir=f"{app_temp_dir}/{INSTANCE_DIR}",
+                            base_socket_dir=f"{app_run_dir}/{INSTANCE_DIR}",
                             peers=self.service_ids,
                             log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
                             pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",

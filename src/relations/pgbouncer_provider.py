@@ -50,19 +50,17 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import (
+from ops import (
+    Application,
+    BlockedStatus,
     CharmBase,
+    MaintenanceStatus,
+    Object,
     RelationBrokenEvent,
     RelationDepartedEvent,
 )
-from ops.framework import Object
-from ops.model import (
-    Application,
-    BlockedStatus,
-    MaintenanceStatus,
-)
 
-from constants import CLIENT_RELATION_NAME
+from constants import CLIENT_RELATION_NAME, PGB_RUN_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +240,7 @@ class PgBouncerProvider(Object):
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
         host = "localhost"
-        uri_host = host
+        uri_host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
         if exposed:
             if vip := self.charm.config.get("vip"):
                 host = vip

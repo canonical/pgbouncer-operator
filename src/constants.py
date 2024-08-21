@@ -15,7 +15,7 @@ PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
 SNAP_PACKAGES = [
     (
         PGBOUNCER_SNAP_NAME,
-        {"revision": {"aarch64": "4", "x86_64": "3"}, "channel": "1/stable"},
+        {"revision": {"aarch64": "13", "x86_64": "14"}, "channel": "1/stable"},
     )
 ]
 
@@ -23,6 +23,7 @@ SNAP_COMMON_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/common"
 SNAP_CURRENT_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/current"
 
 PGB_CONF_DIR = f"{SNAP_CURRENT_PATH}/etc/pgbouncer"
+PGB_RUN_DIR = f"{SNAP_CURRENT_PATH}/run/pgbouncer"
 PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
 SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"
