@@ -54,28 +54,24 @@ async def test_config_parameters(ops_test: OpsTest, pgb_charm_jammy) -> None:
     unit = ops_test.model.applications[PGB].units[0]
     test_string = "abcXYZ123"
 
-    configs = [
-        {"listen_port": ["0", "6432"]},
-        {"metrics_port": ["0", "9127"]},
-        {"vip": [test_string, ""]},
-        {"pool_mode": [test_string, "session"]},
-        {"max_db_connections": ["-1", "100"]},
-    ]
+    configs = {
+        "listen_port": "0",
+        "metrics_port": "0",
+        "vip": test_string,
+        "pool_mode": test_string,
+        "max_db_connections": "-1",
+    }
 
-    charm_config = {}
-    for config in configs:
-        for k, v in config.items():
-            logger.info(k)
-            charm_config[k] = v[0]
-            await ops_test.model.applications[PGB].set_config(charm_config)
-            await ops_test.model.block_until(
-                lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "blocked",
-                timeout=100,
-            )
-            assert "Configuration Error" in unit.workload_status_message
-            charm_config[k] = v[1]
+    for key, val in configs.items():
+        logger.info(key)
+        await ops_test.model.applications[PGB].set_config({key: val})
+        await ops_test.model.block_until(
+            lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "blocked",
+            timeout=100,
+        )
+        assert "Configuration Error" in unit.workload_status_message
 
-    await ops_test.model.applications[PGB].set_config(charm_config)
+    await ops_test.model.applications[PGB].reset_config([key])
     await ops_test.model.block_until(
         lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "active",
         timeout=100,

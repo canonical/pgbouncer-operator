@@ -227,7 +227,7 @@ class PgBouncerProvider(Object):
 
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or not self.charm.configuration_check():
             return
 
         # Set the read/write endpoint.

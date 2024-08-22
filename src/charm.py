@@ -508,13 +508,19 @@ class PgBouncerCharm(TypedCharmBase):
         self.peers.update_leader()
         self._collect_readonly_dbs()
 
-    def update_status(self):
-        """Health check to update pgbouncer status based on charm state."""
+    def configuration_check(self) -> bool:
+        """Check that configuration is valid."""
         try:
             self.config
+            return True
         except ValueError:
             self.unit.status = BlockedStatus("Configuration Error. Please check the logs")
             logger.exception("Invalid configuration")
+            return False
+
+    def update_status(self):
+        """Health check to update pgbouncer status based on charm state."""
+        if not self.configuration_check():
             return
 
         if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
@@ -557,11 +563,7 @@ class PgBouncerCharm(TypedCharmBase):
             event.defer()
             return
 
-        try:
-            self.config
-        except ValueError:
-            self.unit.status = BlockedStatus("Configuration Error. Please check the logs")
-            logger.exception("Invalid configuration")
+        if not self.configuration_check():
             return
 
         old_vip = self.peers.app_databag.get("current_vip", "")
@@ -766,7 +768,7 @@ class PgBouncerCharm(TypedCharmBase):
             }
         return pgb_dbs
 
-    def render_pgb_config(self, reload_pgbouncer=False, restart=False):
+    def render_pgb_config(self, reload_pgbouncer=False, restart=False) -> None:
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -774,6 +776,9 @@ class PgBouncerCharm(TypedCharmBase):
         """
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("updating PgBouncer config")
+
+        if not self.configuration_check():
+            return
 
         # If exposed relation, open the listen port for all units
         if self._is_exposed:
@@ -971,13 +976,11 @@ class PgBouncerCharm(TypedCharmBase):
         if not self.backend.postgres or not self.unit.is_leader():
             return
 
-        port = self.config.listen_port
-
         for relation in self.model.relations.get("db", []):
-            self.legacy_db_relation.update_connection_info(relation, port)
+            self.legacy_db_relation.update_connection_info(relation)
 
         for relation in self.model.relations.get("db-admin", []):
-            self.legacy_db_admin_relation.update_connection_info(relation, port)
+            self.legacy_db_admin_relation.update_connection_info(relation)
 
         for relation in self.model.relations.get(CLIENT_RELATION_NAME, []):
             self.client_relation.update_connection_info(relation)

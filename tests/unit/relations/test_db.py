@@ -179,9 +179,7 @@ class TestDb(unittest.TestCase):
         # Call the function
         self.db_relation._on_relation_changed(event)
 
-        _update_connection_info.assert_called_with(
-            event.relation, self.charm.config["listen_port"]
-        )
+        _update_connection_info.assert_called_with(event.relation)
         _update_databags.assert_called_with(
             event.relation,
             {
@@ -206,6 +204,8 @@ class TestDb(unittest.TestCase):
         user = "test_user"
         password = "test_pw"
         port = "5555"
+        with self.harness.hooks_disabled():
+            self.harness.update_config({"listen_port": int(port)})
 
         _get_databags.return_value[0] = {
             "database": database,
@@ -228,7 +228,7 @@ class TestDb(unittest.TestCase):
             standby_dbconnstr = dict(master_dbconnstr)
             standby_dbconnstr.update({"host": standby_hostname, "dbname": f"{database}_standby"})
 
-        self.db_relation.update_connection_info(relation, port)
+        self.db_relation.update_connection_info(relation)
         _update_databags.assert_called_with(
             relation,
             {

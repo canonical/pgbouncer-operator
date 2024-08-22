@@ -41,6 +41,10 @@ class HaCluster(Object):
         return False
 
     def _on_changed(self, event: RelationChangedEvent) -> None:
+        if not self.charm.configuration_check():
+            event.defer()
+            return
+
         self.set_vip(self.charm.config.vip)
 
     def set_vip(self, vip: Optional[Union[IPv4Address, IPv6Address]]) -> None:
