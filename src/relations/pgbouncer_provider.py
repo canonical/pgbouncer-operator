@@ -60,7 +60,7 @@ from ops import (
     RelationDepartedEvent,
 )
 
-from constants import CLIENT_RELATION_NAME, PGB_RUN_DIR
+from constants import CLIENT_RELATION_NAME
 
 logger = logging.getLogger(__name__)
 
