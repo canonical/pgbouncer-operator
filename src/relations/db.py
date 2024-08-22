@@ -324,12 +324,12 @@ class DbProvides(Object):
                 "state": "master",
             },
         )
-        self.update_connection_info(change_event.relation, self.charm.config["listen_port"])
+        self.update_connection_info(change_event.relation, self.charm.config.listen_port)
 
     def update_connection_info(self, relation: Relation, port: str = None):
         """Updates databag connection information."""
         if not port:
-            port = self.charm.config["listen_port"]
+            port = self.charm.config.listen_port
 
         databag = self.get_databags(relation)[0]
         database = databag.get("database")

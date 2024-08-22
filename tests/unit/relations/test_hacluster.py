@@ -1,6 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+from ipaddress import IPv4Address
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -46,11 +47,11 @@ class TestHaCluster(TestCase):
     @patch("charm.HaCluster.set_vip", return_value=True)
     def test_on_changed(self, _set_vip):
         with self.harness.hooks_disabled():
-            self.harness.update_config({"vip": "test_vip"})
+            self.harness.update_config({"vip": "1.2.3.4"})
 
         self.charm.hacluster._on_changed(Mock())
 
-        _set_vip.assert_called_once_with("test_vip")
+        _set_vip.assert_called_once_with(IPv4Address('1.2.3.4'))
 
     @patch("charm.HaCluster._is_clustered", return_value=False)
     @patch("charm.HaCluster.relation", new_callable=PropertyMock, return_value=False)

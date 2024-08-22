@@ -41,7 +41,7 @@ class HaCluster(Object):
         return False
 
     def _on_changed(self, event: RelationChangedEvent) -> None:
-        self.set_vip(self.charm.config.get("vip"))
+        self.set_vip(self.charm.config.vip)
 
     def set_vip(self, vip: Optional[str]) -> None:
         """Adds the requested virtual IP to the integration."""

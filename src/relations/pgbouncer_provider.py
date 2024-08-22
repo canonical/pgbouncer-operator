@@ -240,22 +240,22 @@ class PgBouncerProvider(Object):
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
         if exposed:
-            if vip := self.charm.config.get("vip"):
-                host = vip
-                uri_host = vip
+            if self.charm.config.vip:
+                host = self.charm.config.vip
+                uri_host = self.charm.config.vip
             else:
                 host = self.charm.leader_ip
                 uri_host = ",".join([
                     self.charm.leader_ip,
                     *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
                 ])
-        elif self.charm.config["local_connection_type"] == "socket":
+        elif self.charm.config.local_connection_type == "socket":
             host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
             uri_host = host
         else:
             host = "localhost"
             uri_host = host
-        port = self.charm.config["listen_port"]
+        port = self.charm.config.listen_port
 
         initial_status = self.charm.unit.status
         self.charm.unit.status = MaintenanceStatus(
@@ -290,14 +290,14 @@ class PgBouncerProvider(Object):
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
-        if not self.charm.unit.is_leader() or self.charm.config.get("vip"):
+        if not self.charm.unit.is_leader() or self.charm.config.vip:
             return
 
         # Get the current relation or all the relations if this is triggered by another type of
         # event.
         relations = [event.relation] if event else self.model.relations[self.relation_name]
 
-        port = self.charm.config["listen_port"]
+        port = self.charm.config.listen_port
         ips = self.charm.peers.units_ips
         ips.discard(self.charm.peers.leader_ip)
         ips = list(ips)

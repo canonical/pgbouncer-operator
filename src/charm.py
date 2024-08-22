@@ -17,6 +17,7 @@ from typing import Dict, List, Literal, Optional, Union, get_args
 
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
+from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
@@ -27,7 +28,6 @@ from jinja2 import Template
 from ops import (
     ActiveStatus,
     BlockedStatus,
-    CharmBase,
     JujuVersion,
     MaintenanceStatus,
     ModelError,
@@ -37,6 +37,7 @@ from ops import (
 )
 from ops.main import main
 
+from config import CharmConfig
 from constants import (
     APP_SCOPE,
     AUTH_FILE_DATABAG_KEY,
@@ -91,8 +92,10 @@ INSTANCE_DIR = "instance_"
         PostgreSQLTLS,
     ),
 )
-class PgBouncerCharm(CharmBase):
+class PgBouncerCharm(TypedCharmBase):
     """A class implementing charmed PgBouncer."""
+
+    config_type = CharmConfig
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -133,7 +136,7 @@ class PgBouncerCharm(CharmBase):
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
-                {"path": "/metrics", "port": self.config["metrics_port"]},
+                {"path": "/metrics", "port": self.config.metrics_port},
             ],
             log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
             refresh_events=[self.on.config_changed],
@@ -519,18 +522,17 @@ class PgBouncerCharm(CharmBase):
             self.unit.status = BlockedStatus("ha integration used without data-intgrator")
             return
 
-        vip = self.config.get("vip")
-        if self.hacluster.relation and not vip:
+        if self.hacluster.relation and not self.config.vip:
             self.unit.status = BlockedStatus("ha integration used without vip configuration")
             return
 
-        if vip and not self._is_exposed:
+        if self.config.vip and not self._is_exposed:
             self.unit.status = BlockedStatus("vip configuration without data-intgrator")
             return
 
         if self.check_pgb_running():
-            if self.unit.is_leader() and vip:
-                self.unit.status = ActiveStatus(f"VIP: {vip}")
+            if self.unit.is_leader() and self.config.vip:
+                self.unit.status = ActiveStatus(f"VIP: {self.config.vip}")
             else:
                 self.unit.status = ActiveStatus()
 
@@ -546,22 +548,22 @@ class PgBouncerCharm(CharmBase):
             return
 
         old_vip = self.peers.app_databag.get("current_vip", "")
-        vip = self.config.get("vip", "")
+        vip = self.config.vip if self.config.vip else ""
         vip_changed = old_vip != vip
         if vip_changed and self._is_exposed:
-            self.hacluster.set_vip(self.config.get("vip"))
+            self.hacluster.set_vip(self.config.vip)
 
         old_port = self.peers.app_databag.get("current_port")
-        port_changed = old_port != str(self.config["listen_port"])
+        port_changed = old_port != str(self.config.listen_port)
         if port_changed and self._is_exposed:
             # Open port
             try:
-                self.unit.set_ports(self.config["listen_port"])
+                self.unit.set_ports(self.config.listen_port)
             except ModelError:
                 logger.exception("failed to open port")
 
         if self.unit.is_leader():
-            self.peers.app_databag["current_port"] = str(self.config["listen_port"])
+            self.peers.app_databag["current_port"] = str(self.config.listen_port)
             if vip:
                 self.peers.app_databag["current_vip"] = str(vip)
             else:
@@ -759,7 +761,7 @@ class PgBouncerCharm(CharmBase):
         if self._is_exposed:
             # Open port
             try:
-                self.unit.open_port("tcp", self.config["listen_port"])
+                self.unit.open_port("tcp", self.configlisten_port)
             except ModelError:
                 logger.exception("failed to open port")
 
@@ -773,13 +775,12 @@ class PgBouncerCharm(CharmBase):
         app_run_dir = f"{PGB_RUN_DIR}/{self.app.name}"
         app_temp_dir = f"/tmp/{self.app.name}"
 
-        max_db_connections = self.config["max_db_connections"]
-        if max_db_connections == 0:
+        if self.config.max_db_connections == 0:
             default_pool_size = 20
             min_pool_size = 10
             reserve_pool_size = 10
         else:
-            effective_db_connections = max_db_connections / self.instances_count
+            effective_db_connections = self.config.max_db_connections / self.instances_count
             default_pool_size = math.ceil(effective_db_connections / 2)
             min_pool_size = math.ceil(effective_db_connections / 4)
             reserve_pool_size = math.ceil(effective_db_connections / 4)
@@ -807,9 +808,9 @@ class PgBouncerCharm(CharmBase):
                             log_file=f"{app_log_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.log",
                             pid_file=f"{app_temp_dir}/{INSTANCE_DIR}{service_id}/pgbouncer.pid",
                             listen_addr=addr,
-                            listen_port=self.config["listen_port"],
-                            pool_mode=self.config["pool_mode"],
-                            max_db_connections=max_db_connections,
+                            listen_port=self.config.listen_port,
+                            pool_mode=self.config.pool_mode,
+                            max_db_connections=self.config.max_db_connections,
                             default_pool_size=default_pool_size,
                             min_pool_size=min_pool_size,
                             reserve_pool_size=reserve_pool_size,
@@ -840,8 +841,8 @@ class PgBouncerCharm(CharmBase):
             stats_user=self.backend.stats_user,
             pgb_service=f"{PGB}-{self.app.name}",
             stats_password=self.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY),
-            listen_port=self.config["listen_port"],
-            metrics_port=self.config["metrics_port"],
+            listen_port=self.config.listen_port,
+            metrics_port=self.config.metrics_port,
         )
 
         service = f"{PGB}-{self.app.name}-prometheus"
@@ -952,7 +953,7 @@ class PgBouncerCharm(CharmBase):
         if not self.backend.postgres or not self.unit.is_leader():
             return
 
-        port = self.config["listen_port"]
+        port = self.config.listen_port
 
         for relation in self.model.relations.get("db", []):
             self.legacy_db_relation.update_connection_info(relation, port)
