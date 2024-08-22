@@ -239,8 +239,6 @@ class PgBouncerProvider(Object):
         user = f"relation_id_{relation.id}"
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
-        host = "localhost"
-        uri_host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
         if exposed:
             if vip := self.charm.config.get("vip"):
                 host = vip
@@ -251,6 +249,12 @@ class PgBouncerProvider(Object):
                     self.charm.leader_ip,
                     *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
                 ])
+        elif self.charm.config["local_connection_type"] == "socket":
+            host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
+            uri_host = host
+        else:
+            host = "localhost"
+            uri_host = host
         port = self.charm.config["listen_port"]
 
         initial_status = self.charm.unit.status

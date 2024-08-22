@@ -579,8 +579,7 @@ class PgBouncerCharm(CharmBase):
         if self.backend.postgres:
             self.render_prometheus_service()
 
-        if port_changed or vip_changed:
-            self.update_client_connection_info()
+        self.update_client_connection_info()
 
     def check_pgb_running(self):
         """Checks that pgbouncer service is running, and updates status accordingly."""
