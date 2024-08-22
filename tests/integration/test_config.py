@@ -7,8 +7,9 @@ from asyncio import gather
 import pytest as pytest
 from pytest_operator.plugin import OpsTest
 
+from constants import BACKEND_RELATION_NAME
+
 from .helpers.helpers import (
-    BACKEND_RELATION_NAME,
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
     PG,
