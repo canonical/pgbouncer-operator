@@ -133,14 +133,17 @@ class PgBouncerCharm(TypedCharmBase):
             f"{PGB}-{self.app.name}@{service_id}" for service_id in self.service_ids
         ]
 
-        self._grafana_agent = COSAgentProvider(
-            self,
-            metrics_endpoints=[
-                {"path": "/metrics", "port": self.config.metrics_port},
-            ],
-            log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
-            refresh_events=[self.on.config_changed],
-        )
+        try:
+            self._grafana_agent = COSAgentProvider(
+                self,
+                metrics_endpoints=[
+                    {"path": "/metrics", "port": self.config.metrics_port},
+                ],
+                log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
+                refresh_events=[self.on.config_changed],
+            )
+        except ValueError:
+            logger.warning("Unable to set COS agent, invalid config")
 
         self.upgrade = PgbouncerUpgrade(
             self,
@@ -507,6 +510,13 @@ class PgBouncerCharm(TypedCharmBase):
 
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
+        try:
+            self.config
+        except ValueError:
+            self.unit.status = BlockedStatus("Configuration Error. Please check the logs")
+            logger.exception("Invalid configuration")
+            return
+
         if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
             return
 
@@ -546,6 +556,8 @@ class PgBouncerCharm(TypedCharmBase):
             logger.debug("Defer on_config_changed: Cluster is upgrading")
             event.defer()
             return
+
+        self.update_status()
 
         old_vip = self.peers.app_databag.get("current_vip", "")
         vip = self.config.vip if self.config.vip else ""

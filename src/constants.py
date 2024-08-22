@@ -15,7 +15,7 @@ PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
 SNAP_PACKAGES = [
     (
         PGBOUNCER_SNAP_NAME,
-        {"revision": {"aarch64": "13", "x86_64": "14"}, "channel": "1/stable"},
+        {"revision": {"aarch64": "15", "x86_64": "16"}, "channel": "1/stable"},
     )
 ]
 
