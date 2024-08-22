@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -57,20 +57,20 @@ class TestHaCluster(TestCase):
     @patch("charm.HaCluster.relation", new_callable=PropertyMock, return_value=False)
     def test_set_vip_no_relation(self, _relation, _is_clustered):
         # Not rel
-        self.charm.hacluster.set_vip("1.2.3.4")
+        self.charm.hacluster.set_vip(IPv4Address("1.2.3.4"))
 
         assert not _is_clustered.called
 
     @patch("charm.HaCluster._is_clustered", return_value=False)
     def test_set_vip(self, _is_clustered):
         # Not clustered
-        self.charm.hacluster.set_vip("1.2.3.4")
+        self.charm.hacluster.set_vip(IPv4Address("1.2.3.4"))
         assert self.harness.get_relation_data(self.rel_id, self.charm.unit) == {}
 
         # ipv4 address
         _is_clustered.return_value = True
 
-        self.charm.hacluster.set_vip("1.2.3.4")
+        self.charm.hacluster.set_vip(IPv4Address("1.2.3.4"))
 
         assert self.harness.get_relation_data(self.rel_id, self.charm.unit) == {
             "json_resource_params": '{"res_pgbouncer_d716ce1885885a_vip": " params '
@@ -82,7 +82,7 @@ class TestHaCluster(TestCase):
         }
 
         # ipv6 address
-        self.charm.hacluster.set_vip("::1")
+        self.charm.hacluster.set_vip(IPv6Address("::1"))
 
         assert self.harness.get_relation_data(self.rel_id, self.charm.unit) == {
             "json_resource_params": '{"res_pgbouncer_61b6532057c944_vip": " params '

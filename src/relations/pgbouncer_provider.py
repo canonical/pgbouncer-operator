@@ -241,8 +241,8 @@ class PgBouncerProvider(Object):
 
         if exposed:
             if self.charm.config.vip:
-                host = self.charm.config.vip
-                uri_host = self.charm.config.vip
+                host = str(self.charm.config.vip)
+                uri_host = host
             else:
                 host = self.charm.leader_ip
                 uri_host = ",".join([
