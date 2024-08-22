@@ -51,7 +51,7 @@ class TestHaCluster(TestCase):
 
         self.charm.hacluster._on_changed(Mock())
 
-        _set_vip.assert_called_once_with(IPv4Address('1.2.3.4'))
+        _set_vip.assert_called_once_with(IPv4Address("1.2.3.4"))
 
     @patch("charm.HaCluster._is_clustered", return_value=False)
     @patch("charm.HaCluster.relation", new_callable=PropertyMock, return_value=False)
