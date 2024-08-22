@@ -557,7 +557,12 @@ class PgBouncerCharm(TypedCharmBase):
             event.defer()
             return
 
-        self.update_status()
+        try:
+            self.config
+        except ValueError:
+            self.unit.status = BlockedStatus("Configuration Error. Please check the logs")
+            logger.exception("Invalid configuration")
+            return
 
         old_vip = self.peers.app_databag.get("current_vip", "")
         vip = self.config.vip if self.config.vip else ""
@@ -594,6 +599,7 @@ class PgBouncerCharm(TypedCharmBase):
             self.render_prometheus_service()
 
         self.update_client_connection_info()
+        self.update_status()
 
     def check_pgb_running(self):
         """Checks that pgbouncer service is running, and updates status accordingly."""
