@@ -761,7 +761,7 @@ class PgBouncerCharm(TypedCharmBase):
         if self._is_exposed:
             # Open port
             try:
-                self.unit.open_port("tcp", self.configlisten_port)
+                self.unit.open_port("tcp", self.config.listen_port)
             except ModelError:
                 logger.exception("failed to open port")
 
