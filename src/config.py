@@ -8,7 +8,7 @@ import logging
 from typing import Literal, Optional
 
 from charms.data_platform_libs.v0.data_models import BaseConfigModel
-from pydantic import IPvAnyAddress, PositiveInt
+from pydantic import IPvAnyAddress, PositiveInt, conint
 
 logger = logging.getLogger(__name__)
 
@@ -21,4 +21,4 @@ class CharmConfig(BaseConfigModel):
     vip: Optional[IPvAnyAddress]
     local_connection_type: Literal["localhost", "socket"]
     pool_mode: Literal["session", "transaction", "statement"]
-    max_db_connections: int
+    max_db_connections: conint(ge=0)

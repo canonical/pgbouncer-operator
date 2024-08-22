@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+import logging
+from asyncio import gather
+
+import pytest as pytest
+from pytest_operator.plugin import OpsTest
+
+from .helpers.helpers import (
+    BACKEND_RELATION_NAME,
+    CLIENT_APP_NAME,
+    FIRST_DATABASE_RELATION_NAME,
+    PG,
+    PGB,
+)
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.mark.group(1)
+@pytest.mark.abort_on_fail
+async def test_config_parameters(ops_test: OpsTest, pgb_charm_jammy) -> None:
+    """Build and deploy one unit of PostgreSQL and then test config with wrong parameters."""
+    # Build and deploy the PostgreSQL charm.
+    async with ops_test.fast_forward():
+        await gather(
+            ops_test.model.deploy(
+                CLIENT_APP_NAME,
+                application_name=CLIENT_APP_NAME,
+                channel="edge",
+            ),
+            ops_test.model.deploy(
+                pgb_charm_jammy,
+                application_name=PGB,
+                num_units=None,
+            ),
+            ops_test.model.deploy(
+                PG,
+                application_name=PG,
+                num_units=1,
+                channel="14/edge",
+                config={"profile": "testing"},
+            ),
+        )
+        await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
+        await ops_test.model.wait_for_idle(apps=[PG, CLIENT_APP_NAME], timeout=1200)
+        # Relate the charms and wait for them exchanging some connection data.
+        await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
+
+    await ops_test.model.wait_for_idle(status="active", timeout=600)
+
+    unit = ops_test.model.applications[PGB].units[0]
+    test_string = "abcXYZ123"
+
+    configs = [
+        {"listen_port": ["0", "6432"]},
+        {"metrics_port": ["0", "9127"]},
+        {"vip": [test_string, ""]},
+        {"local_connection_type": [test_string, "localhost"]},
+        {"pool_mode": [test_string, "session"]},
+        {"max_db_connections": ["-1", "100"]},
+    ]
+
+    charm_config = {}
+    for config in configs:
+        for k, v in config.items():
+            logger.info(k)
+            charm_config[k] = v[0]
+            await ops_test.model.applications[PGB].set_config(charm_config)
+            await ops_test.model.block_until(
+                lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "blocked",
+                timeout=100,
+            )
+            assert "Configuration Error" in unit.workload_status_message
+            charm_config[k] = v[1]
+
+    await ops_test.model.applications[PGB].set_config(charm_config)
+    await ops_test.model.block_until(
+        lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "active",
+        timeout=100,
+    )
