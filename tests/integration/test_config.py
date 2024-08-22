@@ -58,7 +58,6 @@ async def test_config_parameters(ops_test: OpsTest, pgb_charm_jammy) -> None:
         {"listen_port": ["0", "6432"]},
         {"metrics_port": ["0", "9127"]},
         {"vip": [test_string, ""]},
-        {"local_connection_type": [test_string, "localhost"]},
         {"pool_mode": [test_string, "session"]},
         {"max_db_connections": ["-1", "100"]},
     ]

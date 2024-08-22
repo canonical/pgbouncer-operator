@@ -21,12 +21,6 @@ options:
       Virtual IP to use to front pgbouncer units. Used only in case of external node connection.
     type: string
 
-  local_connection_type:
-    default: localhost
-    description: |
-      Type of local connectivity to provide. Must be either 'localhost' or 'socket'. Only applies to the database interface.
-    type: string
-
   pool_mode:
     default: session
     description: |
