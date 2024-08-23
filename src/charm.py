@@ -520,10 +520,10 @@ class PgBouncerCharm(TypedCharmBase):
 
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
-        if not self.configuration_check():
+        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
             return
 
-        if self.unit.status.message == EXTENSIONS_BLOCKING_MESSAGE:
+        if not self.configuration_check():
             return
 
         if self.backend.postgres is None:

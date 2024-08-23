@@ -71,8 +71,8 @@ async def test_config_parameters(ops_test: OpsTest, pgb_charm_jammy) -> None:
         )
         assert "Configuration Error" in unit.workload_status_message
 
-    await ops_test.model.applications[PGB].reset_config([key])
-    await ops_test.model.block_until(
-        lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "active",
-        timeout=100,
-    )
+        await ops_test.model.applications[PGB].reset_config([key])
+        await ops_test.model.block_until(
+            lambda: ops_test.model.units[f"{PGB}/0"].workload_status == "active",
+            timeout=100,
+        )

@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from ops.testing import Harness
 
@@ -28,6 +28,26 @@ class TestPeers(unittest.TestCase):
         self.harness.add_relation("upgrade", self.charm.app.name)
 
         self.rel_id = self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
+
+    @patch("charm.PgBouncerCharm.configuration_check", return_value=True)
+    @patch("charm.PgBouncerProvider.update_read_only_endpoints")
+    @patch("charm.Peers._on_changed")
+    def test_on_peers_joined(self, _on_changed, _update_read_only_endpoints, _configuration_check):
+        with self.harness.hooks_disabled():
+            self.harness.set_leader()
+
+        event = Mock()
+        self.charm.peers._on_joined(event)
+        _on_changed.assert_called_once_with(event)
+        _update_read_only_endpoints.assert_called_once_with()
+        _update_read_only_endpoints.reset_mock()
+        _on_changed.reset_mock()
+
+        # Misconfiguration guard
+        _configuration_check.return_value = False
+        self.charm.peers._on_joined(event)
+        _on_changed.assert_called_once_with(event)
+        assert not _update_read_only_endpoints.called
 
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.render_auth_file")

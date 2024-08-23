@@ -44,8 +44,17 @@ class TestHaCluster(TestCase):
 
         assert self.charm.hacluster._is_clustered()
 
+    @patch("charm.PgBouncerCharm.configuration_check", return_value=False)
     @patch("charm.HaCluster.set_vip", return_value=True)
-    def test_on_changed(self, _set_vip):
+    def test_on_changed(self, _set_vip, _configuration_check):
+        # Defer on invalid configuration
+        event = Mock()
+        self.charm.hacluster._on_changed(event)
+
+        event.defer.assert_called_once_with()
+        assert not _set_vip.called
+
+        _configuration_check.return_value = True
         with self.harness.hooks_disabled():
             self.harness.update_config({"vip": "1.2.3.4"})
 
