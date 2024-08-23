@@ -61,6 +61,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
                 pgb_charm_jammy,
                 application_name=PGB,
                 num_units=None,
+                config={"local_connection_type": "socket"},
             ),
             ops_test.model.deploy(
                 PG,
