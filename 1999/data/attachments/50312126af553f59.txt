@@ -1,0 +1,51 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.5    unsupported  02:22:57Z
+
+App                       Version  Status   Scale  Charm                     Channel        Rev  Exposed  Message
+data-integrator                    blocked      2  data-integrator           latest/edge     41  no       Please relate the data-integrator with the desired product
+pgbouncer                 1.21.0   error        2  pgbouncer                                  0  no       hook failed: "backend-database-relation-changed"
+postgresql                14.12    active       2  postgresql                14/edge        464  no       
+self-signed-certificates           active       1  self-signed-certificates  latest/stable  155  no       
+
+Unit                         Workload  Agent      Machine  Public address  Ports     Message
+data-integrator/0*           blocked   executing  1        10.236.246.184            Please relate the data-integrator with the desired product
+  pgbouncer/0*               active    executing           10.236.246.184  6432/tcp  
+data-integrator/1            blocked   executing  2        10.236.246.124            Please relate the data-integrator with the desired product
+  pgbouncer/1                error     idle                10.236.246.124  6432/tcp  hook failed: "backend-database-relation-changed"
+postgresql/0*                active    executing  3        10.236.246.232  5432/tcp  Primary
+postgresql/1                 waiting   executing  4        10.236.246.11   5432/tcp  awaiting for cluster to start
+self-signed-certificates/0*  active    idle       0        10.236.246.78             
+
+Machine  State    Address         Inst id        Base          AZ  Message
+0        started  10.236.246.78   juju-abdd74-0  ubuntu@22.04      Running
+1        started  10.236.246.184  juju-abdd74-1  ubuntu@22.04      Running
+2        started  10.236.246.124  juju-abdd74-2  ubuntu@22.04      Running
+3        started  10.236.246.232  juju-abdd74-3  ubuntu@22.04      Running
+4        started  10.236.246.11   juju-abdd74-4  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-0: 02:20:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:20:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 02:20:24 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:20:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:20:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-data-integrator-0: 02:20:28 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:20:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:20:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:20:35 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 02:20:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:20:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 02:20:36 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-data-integrator-1: 02:20:37 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 02:20:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:20:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:20:39 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:20:44 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:22:03 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:22:22 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - postgres database not ready
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
