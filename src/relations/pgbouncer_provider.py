@@ -50,16 +50,14 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
-from ops.charm import (
-    CharmBase,
-    RelationBrokenEvent,
-    RelationDepartedEvent,
-)
-from ops.framework import Object
-from ops.model import (
+from ops import (
     Application,
     BlockedStatus,
+    CharmBase,
     MaintenanceStatus,
+    Object,
+    RelationBrokenEvent,
+    RelationDepartedEvent,
 )
 
 from constants import CLIENT_RELATION_NAME
@@ -229,7 +227,7 @@ class PgBouncerProvider(Object):
 
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or not self.charm.configuration_check():
             return
 
         # Set the read/write endpoint.
@@ -244,16 +242,16 @@ class PgBouncerProvider(Object):
         host = "localhost"
         uri_host = host
         if exposed:
-            if vip := self.charm.config.get("vip"):
-                host = vip
-                uri_host = vip
+            if self.charm.config.vip:
+                host = str(self.charm.config.vip)
+                uri_host = host
             else:
                 host = self.charm.leader_ip
                 uri_host = ",".join([
                     self.charm.leader_ip,
                     *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
                 ])
-        port = self.charm.config["listen_port"]
+        port = self.charm.config.listen_port
 
         initial_status = self.charm.unit.status
         self.charm.unit.status = MaintenanceStatus(
@@ -288,14 +286,14 @@ class PgBouncerProvider(Object):
 
     def update_read_only_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read-only endpoint only if there are replicas."""
-        if not self.charm.unit.is_leader() or self.charm.config.get("vip"):
+        if not self.charm.unit.is_leader() or self.charm.config.vip:
             return
 
         # Get the current relation or all the relations if this is triggered by another type of
         # event.
         relations = [event.relation] if event else self.model.relations[self.relation_name]
 
-        port = self.charm.config["listen_port"]
+        port = self.charm.config.listen_port
         ips = self.charm.peers.units_ips
         ips.discard(self.charm.peers.leader_ip)
         ips = list(ips)

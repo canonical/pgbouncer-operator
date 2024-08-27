@@ -143,7 +143,7 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
 @pytest.mark.group(1)
 async def test_remove_vip(ops_test: OpsTest):
     async with ops_test.fast_forward():
-        await ops_test.model.applications[PGB].set_config({"vip": ""})
+        await ops_test.model.applications[PGB].reset_config(["vip"])
         await ops_test.model.wait_for_idle(apps=[PGB], status="blocked", timeout=300)
         assert (
             ops_test.model.applications[PGB].units[0].workload_status_message

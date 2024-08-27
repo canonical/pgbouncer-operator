@@ -5,8 +5,8 @@
 import json
 import logging
 from hashlib import shake_128
-from ipaddress import IPv4Address, ip_address
-from typing import Optional
+from ipaddress import IPv4Address, IPv6Address
+from typing import Optional, Union
 
 from ops import CharmBase, Object, Relation, RelationChangedEvent, Unit
 
@@ -41,9 +41,13 @@ class HaCluster(Object):
         return False
 
     def _on_changed(self, event: RelationChangedEvent) -> None:
-        self.set_vip(self.charm.config.get("vip"))
+        if not self.charm.configuration_check():
+            event.defer()
+            return
 
-    def set_vip(self, vip: Optional[str]) -> None:
+        self.set_vip(self.charm.config.vip)
+
+    def set_vip(self, vip: Optional[Union[IPv4Address, IPv6Address]]) -> None:
         """Adds the requested virtual IP to the integration."""
         if not self.relation:
             return
@@ -54,10 +58,9 @@ class HaCluster(Object):
 
         if vip:
             # TODO Add nic support
-            ipaddr = ip_address(vip)
-            vip_key = f"res_{self.charm.app.name}_{shake_128(vip.encode()).hexdigest(7)}_vip"
+            vip_key = f"res_{self.charm.app.name}_{shake_128(str(vip).encode()).hexdigest(7)}_vip"
             vip_params = " params"
-            if isinstance(ipaddr, IPv4Address):
+            if isinstance(vip, IPv4Address):
                 vip_resources = "ocf:heartbeat:IPaddr2"
                 vip_params += f' ip="{vip}"'
             else:

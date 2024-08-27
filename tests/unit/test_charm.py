@@ -30,6 +30,7 @@ from constants import (
     PEER_RELATION_NAME,
     PGB_CONF_DIR,
     PGB_LOG_DIR,
+    PGB_RUN_DIR,
     SECRET_INTERNAL_LABEL,
     SNAP_PACKAGES,
 )
@@ -396,7 +397,7 @@ class TestCharm(unittest.TestCase):
             readonly_databases={},
             peer_id=0,
             peers=range(1),
-            base_socket_dir="/tmp/pgbouncer/instance_",
+            base_socket_dir=f"{PGB_RUN_DIR}/pgbouncer/instance_",
             log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_0/pgbouncer.log",
             pid_file="/tmp/pgbouncer/instance_0/pgbouncer.pid",
             listen_addr="127.0.0.1",
@@ -442,7 +443,7 @@ class TestCharm(unittest.TestCase):
             readonly_databases={},
             peer_id=0,
             peers=range(1),
-            base_socket_dir="/tmp/pgbouncer/instance_",
+            base_socket_dir=f"{PGB_RUN_DIR}/pgbouncer/instance_",
             log_file=f"{PGB_LOG_DIR}/pgbouncer/instance_0/pgbouncer.log",
             pid_file="/tmp/pgbouncer/instance_0/pgbouncer.pid",
             listen_addr="127.0.0.1",
@@ -677,6 +678,15 @@ class TestCharm(unittest.TestCase):
         self.charm.update_status()
 
         assert self.charm.unit.status.message == "VIP: 1.2.3.4"
+
+    @patch("charm.PgBouncerCharm.config", new_callable=PropertyMock, return_value={})
+    def test_configuration_check(self, _config):
+        assert self.charm.configuration_check()
+
+        _config.side_effect = ValueError
+        assert not self.charm.configuration_check()
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "Configuration Error. Please check the logs"
 
     #
     # Secrets
