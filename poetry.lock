@@ -418,13 +418,13 @@ files = [
 
 [[package]]
 name = "cosl"
-version = "0.0.23"
+version = "0.0.24"
 description = "Utils for COS Lite charms"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cosl-0.0.23-py3-none-any.whl", hash = "sha256:576fe2663c822c3f06139e67f7dc2d1dff8b8aa3e77800f39b58e63588dd604c"},
-    {file = "cosl-0.0.23.tar.gz", hash = "sha256:60c8dbe1cc85f1392c5e1e77d71d9c1dee9d97f9f62e23bb26e96bcdb8ff2454"},
+    {file = "cosl-0.0.24-py3-none-any.whl", hash = "sha256:684cb675c28124379e1508b6967d517d8442e60e9dcbadbf6b798e61e59c1aa0"},
+    {file = "cosl-0.0.24.tar.gz", hash = "sha256:7744095a747382bff640ecb03ac0b3015bf01a407e133cb326d1954ff3dc7199"},
 ]
 
 [package.dependencies]
@@ -651,13 +651,13 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.64.0"
+version = "1.65.0"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "googleapis_common_protos-1.64.0-py2.py3-none-any.whl", hash = "sha256:d1bfc569f70ed2e96ccf06ead265c2cf42b5abfc817cda392e3835f3b67b5c59"},
-    {file = "googleapis_common_protos-1.64.0.tar.gz", hash = "sha256:7d77ca6b7c0c38eb6b1bab3b4c9973acf57ce4f2a6d3a4136acba10bcbfb3025"},
+    {file = "googleapis_common_protos-1.65.0-py2.py3-none-any.whl", hash = "sha256:2972e6c496f435b92590fd54045060867f3fe9be2c82ab148fc8885035479a63"},
+    {file = "googleapis_common_protos-1.65.0.tar.gz", hash = "sha256:334a29d07cddc3aa01dee4988f9afd9b2916ee2ff49d6b757155dc0d197852c0"},
 ]
 
 [package.dependencies]
@@ -2459,4 +2459,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "4ba120bba2ffcc1001459f628b2707e706e5e94414a7a13a8998ecf5a82bfe60"
+content-hash = "04fc2d079d04b5c50adfe93c06cedd3b02e50e29e1577e78cf94cf0586560a1b"
