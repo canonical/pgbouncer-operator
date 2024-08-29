@@ -1,0 +1,90 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:127 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:131 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:134 Get leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:138 Run pre-upgrade-check action
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:149 Inject dependency fault
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:154 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:157 Wait for upgrade to fail
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:164 Ensure continuous_writes while in failure state on remaining units
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:167 Re-run pre-upgrade-check action
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:171 Re-refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:174 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:180 Wait for application to recover
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [idle] blocked: ready to rollback application
+  pgbouncer/1 [idle] waiting: other units upgrading first...
+  pgbouncer/2 [idle] waiting: other units upgrading first...
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:184 Ensure continuous_writes after rollback procedure
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:189 Checking whether no writes were lost
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.5    unsupported  02:34:43Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   active      3  pgbouncer                           2  no       
+postgresql           14.12    active      3  postgresql           14/edge      464  no       
+postgresql-test-app           active      3  postgresql-test-app  latest/edge  235  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0   active    idle   0        10.136.208.251            received database credentials of the first database
+  pgbouncer/1           active    idle            10.136.208.251            
+postgresql-test-app/1*  active    idle   1        10.136.208.104            received database credentials of the first database
+  pgbouncer/0*          active    idle            10.136.208.104            
+postgresql-test-app/2   active    idle   2        10.136.208.176            received database credentials of the first database
+  pgbouncer/2           active    idle            10.136.208.176            
+postgresql/0*           active    idle   3        10.136.208.87   5432/tcp  Primary
+postgresql/1            active    idle   4        10.136.208.25   5432/tcp  
+postgresql/2            active    idle   5        10.136.208.150  5432/tcp  
+
+Machine  State    Address         Inst id        Base          AZ  Message
+0        started  10.136.208.251  juju-bbf18f-0  ubuntu@22.04      Running
+1        started  10.136.208.104  juju-bbf18f-1  ubuntu@22.04      Running
+2        started  10.136.208.176  juju-bbf18f-2  ubuntu@22.04      Running
+3        started  10.136.208.87   juju-bbf18f-3  ubuntu@22.04      Running
+4        started  10.136.208.25   juju-bbf18f-4  ubuntu@22.04      Running
+5        started  10.136.208.150  juju-bbf18f-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-1: 02:22:53 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:22:53 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:22:53 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:22:53 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 02:22:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-0: 02:22:55 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 02:22:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:22:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 02:22:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:22:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:22:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:22:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 02:23:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:23:03 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:23:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:23:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 02:23:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:23:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 02:23:06 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:23:06 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 02:23:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:25:14 ERROR unit.postgresql/0.juju-log restart:5: Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:25:21 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:25:29 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:25:41 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:25:49 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:25:58 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:10 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:20 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:22 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:32 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:41 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:26:49 ERROR unit.pgbouncer/0.juju-log deferring database-created hook - postgres database not ready
+unit-pgbouncer-0: 02:33:35 ERROR unit.pgbouncer/0.juju-log charms.data_platform_libs.v0.upgrade.VersionError - {'message': 'Versions incompatible, snap 1.18.0 can not be upgraded to 15.0', 'cause': 'Upgrades only supported for specific versions, snap versions satisfying requirement ^15', 'resolution': ''}
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
