@@ -986,11 +986,6 @@ class PgBouncerCharm(TypedCharmBase):
             self.client_relation.update_connection_info(relation)
 
     @property
-    def leader_ip(self) -> str:
-        """Gets leader ip."""
-        return self.peers.leader_ip
-
-    @property
     def client_relations(self) -> List[Relation]:
         """Return the list of established client relations."""
         relations = []
