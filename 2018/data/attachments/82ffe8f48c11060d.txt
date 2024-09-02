@@ -1,0 +1,106 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:766 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-468
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: agent initialising
+  postgresql/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  postgresql/2 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [executing] waiting: waiting to start PostgreSQL
+  postgresql/2 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] active: Primary
+  postgresql/2 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] active: Primary
+  postgresql/2 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] maintenance: reconfiguring cluster
+  postgresql/2 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] maintenance: reconfiguring cluster
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] maintenance: reconfiguring cluster
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] maintenance: reconfiguring cluster
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [executing] maintenance: reconfiguring cluster
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/2 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] waiting: awaiting for member to start
+  postgresql/2 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for member to start
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] active: Primary
+  postgresql/2 [executing] active: 
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-test-app-237
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [executing] blocked: backend database relation not ready
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [executing] maintenance: updating PgBouncer config
+[32mINFO    [0m integration.relations.test_backend_database:test_backend_database.py:56 {'databases': {'postgresql_test_app_database': 'host=10.226.33.135 dbname=postgresql_test_app_database port=5432 auth_user=pgbouncer_auth_relation_5', 'postgresql_test_app_database_readonly': 'host=10.226.33.140,10.226.33.211 dbname=postgresql_test_app_database port=5432 auth_user=pgbouncer_auth_relation_5', '*': 'host=10.226.33.135 auth_dbname=postgresql_test_app_database port=5432 auth_user=pgbouncer_auth_relation_5'}, 'peers': {'1': 'host=/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0 port=6432'}, 'pgbouncer': {'peer_id': '1', 'listen_addr': '127.0.0.1', 'listen_port': '6432', 'logfile': '/var/snap/charmed-pgbouncer/common/var/log/pgbouncer/pgbouncer/instance_0/pgbouncer.log', 'pidfile': '/tmp/pgbouncer/instance_0/pgbouncer.pid', 'stats_users': 'pgbouncer_stats_pgbouncer', 'auth_type': 'md5', 'user': 'snap_daemon', 'max_client_conn': '10000', 'ignore_startup_parameters': 'extra_float_digits,options', 'server_tls_sslmode': 'prefer', 'so_reuseport': '1', 'unix_socket_dir': '/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0', 'pool_mode': 'session', 'max_db_connections': '100', 'default_pool_size': '50', 'min_pool_size': '25', 'reserve_pool_size': '25', 'auth_query': 'SELECT username, password FROM pgbouncer_auth_relation_5.get_auth($1)', 'auth_file': '/var/snap/charmed-pgbouncer/current/etc/pgbouncer/pgbouncer/userlist.txt'}}
+[32mINFO    [0m root:helpers.py:96 (0, '{"pgbouncer/0":{"workload-version":"1.21.0","machine":"3","opened-ports":null,"public-address":"10.226.33.85","charm":"local:jammy/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":5,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.226.33.135:5432","password":"XNgl43V9xGs1aoVU","read-only-endpoints":"10.226.33.140:5432,10.226.33.211:5432","uris":"postgresql://relation-5:XNgl43V9xGs1aoVU@10.226.33.135:5432/pgbouncer","username":"relation-5","version":"14.12"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.226.33.211/32","ingress-address":"10.226.33.211","private-address":"10.226.33.211"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.226.33.135/32","ingress-address":"10.226.33.135","private-address":"10.226.33.135"}},"postgresql/2":{"in-scope":true,"data":{"egress-subnets":"10.226.33.140/32","ingress-address":"10.226.33.140","private-address":"10.226.33.140"}}}},{"relation-id":7,"endpoint":"database","related-endpoint":"database","application-data":{"database":"postgresql_test_app_database","extra-user-roles":"CREATEDB,CREATEROLE","requested-secrets":"[\\"username\\", \\"password\\", \\"tls\\", \\"tls-ca\\", \\"uris\\"]"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql-test-app/0":{"in-scope":true,"data":{"data":"{\\"database\\": \\"postgresql_test_app_database\\", \\"endpoints\\": \\"localhost:6432\\", \\"secret-user\\": \\"secret://cdd61ce5-dfcf-4963-8e49-e33569e79bd8/crai6gu164f2f552p17g\\", \\"subordinated\\": \\"true\\", \\"version\\": \\"14.12\\"}","egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","private-address":"10.226.33.85"}}}},{"relation-id":3,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.226.33.85","pgb_dbs_config":"{\\"7\\": {\\"name\\": \\"postgresql_test_app_database\\", \\"legacy\\": false}, \\"*\\": {\\"name\\": \\"*\\", \\"auth_dbname\\": \\"postgresql_test_app_database\\"}}","readonly_dbs":"[]"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","pgb_dbs":"57a52b293f70dc4b97154b40cf23a625","private-address":"10.226.33.85"}}},{"relation-id":4,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","private-address":"10.226.33.85","state":"idle"}}}]}}\n', '')
+[32mINFO    [0m root:helpers.py:96 (0, '{"pgbouncer/0":{"workload-version":"1.21.0","machine":"3","opened-ports":null,"public-address":"10.226.33.85","charm":"local:jammy/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":5,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.226.33.135:5432","password":"XNgl43V9xGs1aoVU","read-only-endpoints":"10.226.33.140:5432,10.226.33.211:5432","uris":"postgresql://relation-5:XNgl43V9xGs1aoVU@10.226.33.135:5432/pgbouncer","username":"relation-5","version":"14.12"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.226.33.211/32","ingress-address":"10.226.33.211","private-address":"10.226.33.211"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.226.33.135/32","ingress-address":"10.226.33.135","private-address":"10.226.33.135"}},"postgresql/2":{"in-scope":true,"data":{"egress-subnets":"10.226.33.140/32","ingress-address":"10.226.33.140","private-address":"10.226.33.140"}}}},{"relation-id":7,"endpoint":"database","related-endpoint":"database","application-data":{"database":"postgresql_test_app_database","extra-user-roles":"CREATEDB,CREATEROLE","requested-secrets":"[\\"username\\", \\"password\\", \\"tls\\", \\"tls-ca\\", \\"uris\\"]"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql-test-app/0":{"in-scope":true,"data":{"data":"{\\"database\\": \\"postgresql_test_app_database\\", \\"endpoints\\": \\"localhost:6432\\", \\"secret-user\\": \\"secret://cdd61ce5-dfcf-4963-8e49-e33569e79bd8/crai6gu164f2f552p17g\\", \\"subordinated\\": \\"true\\", \\"version\\": \\"14.12\\"}","egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","private-address":"10.226.33.85"}}}},{"relation-id":3,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.226.33.85","pgb_dbs_config":"{\\"7\\": {\\"name\\": \\"postgresql_test_app_database\\", \\"legacy\\": false}, \\"*\\": {\\"name\\": \\"*\\", \\"auth_dbname\\": \\"postgresql_test_app_database\\"}}","readonly_dbs":"[]"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","pgb_dbs":"57a52b293f70dc4b97154b40cf23a625","private-address":"10.226.33.85"}}},{"relation-id":4,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.226.33.85/32","ingress-address":"10.226.33.85","private-address":"10.226.33.85","state":"idle"}}}]}}\n', '')
+[32mINFO    [0m integration.relations.test_backend_database:test_backend_database.py:65 {'data': '{"database": "pgbouncer", "extra-user-roles": "SUPERUSER", "requested-secrets": "[\\"username\\", \\"password\\", \\"tls\\", \\"tls-ca\\", \\"uris\\"]"}', 'database': 'pgbouncer', 'endpoints': '10.226.33.135:5432', 'password': 'XNgl43V9xGs1aoVU', 'read-only-endpoints': '10.226.33.140:5432,10.226.33.211:5432', 'uris': 'postgresql://relation-5:XNgl43V9xGs1aoVU@10.226.33.135:5432/pgbouncer', 'username': 'relation-5', 'version': '14.12'}
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] active: Primary
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [executing] active: 
+[32mINFO    [0m integration.relations.test_backend_database:test_backend_database.py:87 {'databases': {}, 'peers': {'1': 'host=/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0 port=6432'}, 'pgbouncer': {'peer_id': '1', 'listen_addr': '127.0.0.1', 'listen_port': '6432', 'logfile': '/var/snap/charmed-pgbouncer/common/var/log/pgbouncer/pgbouncer/instance_0/pgbouncer.log', 'pidfile': '/tmp/pgbouncer/instance_0/pgbouncer.pid', 'stats_users': '', 'auth_type': 'md5', 'user': 'snap_daemon', 'max_client_conn': '10000', 'ignore_startup_parameters': 'extra_float_digits,options', 'server_tls_sslmode': 'prefer', 'so_reuseport': '1', 'unix_socket_dir': '/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0', 'pool_mode': 'session', 'max_db_connections': '100', 'default_pool_size': '50', 'min_pool_size': '25', 'reserve_pool_size': '25', 'auth_query': '', 'auth_file': '/var/snap/charmed-pgbouncer/current/etc/pgbouncer/pgbouncer/userlist.txt'}}
