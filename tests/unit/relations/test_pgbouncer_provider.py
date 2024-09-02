@@ -156,9 +156,79 @@ class TestPgbouncerProvider(unittest.TestCase):
 
         _set_rel_dbs.assert_called_once_with({})
 
-    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_field")
+    @patch(
+        "charm.Peers.units_ips",
+        new_callable=PropertyMock,
+        return_value={"1.1.1.1", "1.1.1.2"},
+    )
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_my_relation_field")
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_data")
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_uris")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
-    def test_update_read_only_endpoints(self, _set_read_only_endpoints, _fetch_relation_field):
-        self.harness.set_leader()
-        self.client_relation.update_read_only_endpoints()
-        _set_read_only_endpoints.assert_called()
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
+    def test_update_connection_info(
+        self,
+        _set_endpoints,
+        _set_ro_endpoints,
+        _set_uris,
+        _fetch_relation_data,
+        _fetch_my_relation_field,
+        _,
+    ):
+        self.harness.set_leader(False)
+        _fetch_relation_data.return_value = {
+            self.client_rel_id: {
+                "database": "test_db",
+                "external-node-connectivity": False,
+            }
+        }
+        _fetch_my_relation_field.return_value = "test_password"
+        rel = self.charm.model.get_relation("db", self.client_rel_id)
+
+        # Early exit if not leader
+        self.client_relation.update_connection_info(rel)
+
+        assert not _set_endpoints.called
+
+        # Test local connection
+        self.harness.set_leader(True)
+        self.client_relation.update_connection_info(rel)
+
+        _set_endpoints.assert_called_once_with(self.client_rel_id, "localhost:6432")
+        _set_uris.assert_called_once_with(
+            self.client_rel_id,
+            f"postgresql://relation_id_{self.client_rel_id}:test_password@localhost:6432/test_db",
+        )
+        assert not _set_ro_endpoints.called
+        _set_endpoints.reset_mock()
+        _set_uris.reset_mock()
+
+        # Test exposed connection without vip
+        _fetch_relation_data.return_value[self.client_rel_id]["external-node-connectivity"] = True
+
+        self.client_relation.update_connection_info(rel)
+
+        _set_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.1:6432")
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.2:6432")
+        _set_uris.assert_called_once_with(
+            self.client_rel_id,
+            f"postgresql://relation_id_{self.client_rel_id}:test_password@1.1.1.1,1.1.1.2:6432/test_db",
+        )
+        _set_endpoints.reset_mock()
+        _set_ro_endpoints.reset_mock()
+        _set_uris.reset_mock()
+
+        # Test exposed connection with vip
+        self.harness.update_config({"vip": "1.2.3.4"})
+
+        self.client_relation.update_connection_info(rel)
+
+        _set_endpoints.assert_called_once_with(self.client_rel_id, "1.2.3.4:6432")
+        assert not _set_ro_endpoints.called
+        _set_uris.assert_called_once_with(
+            self.client_rel_id,
+            f"postgresql://relation_id_{self.client_rel_id}:test_password@1.2.3.4:6432/test_db",
+        )
+        _set_endpoints.reset_mock()
+        _set_ro_endpoints.reset_mock()
+        _set_uris.reset_mock()
