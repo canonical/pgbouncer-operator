@@ -55,12 +55,13 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 1 | reference | [Reference]() |
 | 2 | r-releases-group | [Release Notes]() |
 | 3 | r-releases | [All releases](/t/12285) |
-| 3 | r-releases-rev278 | [Revision 278-281](/t/14853) |
-| 3 | r-releases-rev254 | [Revision 254-257](/t/14666) |
-| 3 | r-releases-rev173 | [Revision 173-176](/t/14069) |
-| 3 | r-releases-rev89 | [Revision 89](/t/13126) |
-| 3 | r-releases-rev81 | [Revision 81](/t/12766) |
-| 3 | r-releases-rev77 | [Revision 77](/t/12286) |
+| 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
+| 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
+| 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
+| 3 | r-revision-173-176 | [Revision 173-176](/t/14069) |
+| 3 | r-revision-89 | [Revision 89](/t/13126) |
+| 3 | r-revision-81 | [Revision 81](/t/12766) |
+| 3 | r-revision-77 | [Revision 77](/t/12286) |
 | 2 | r-requirements | [Requirements](/t/12307) |
 | 2 | r-contributing | [Contributing](https://github.com/canonical/pgbouncer-operator/blob/main/CONTRIBUTING.md) |
 | 2 | r-testing | [Testing](/t/12306) |
