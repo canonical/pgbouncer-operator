@@ -148,7 +148,6 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.BackendDatabaseRequires.ready", return_value=False, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
     def test_pre_upgrade_check_backend_not_ready(self, _check_pgb_running: Mock, _, __):
-        print(self.charm.backend.ready)
         with pytest.raises(ClusterNotReadyError):
             self.charm.upgrade.pre_upgrade_check()
 
