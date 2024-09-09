@@ -40,6 +40,7 @@ async def test_build_and_deploy(ops_test: OpsTest, pgb_charm_jammy):
                 pgb_charm_jammy,
                 application_name=PGB,
                 num_units=None,
+                config={"local_connection_type": "uds"},
             ),
             ops_test.model.deploy(
                 PG,
