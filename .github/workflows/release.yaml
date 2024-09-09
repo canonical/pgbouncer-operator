@@ -13,6 +13,7 @@ on:
       - pyproject.toml
       - '.github/workflows/ci.yaml'
       - '.github/workflows/lib-check.yaml'
+      - '.github/workflows/sync_docs.yaml'
 
 jobs:
   ci-tests:
@@ -24,14 +25,14 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.1
 
   release:
     name: Release charm
     needs:
       - ci-tests
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v21.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v21.0.1
     with:
       channel: 1/edge
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}

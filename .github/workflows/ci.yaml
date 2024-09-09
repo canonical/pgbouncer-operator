@@ -14,6 +14,7 @@ on:
       - 'LICENSE'
       - '**.md'
       - .github/renovate.json5
+      - '.github/workflows/sync_docs.yaml'
   schedule:
     - cron: '53 0 * * *' # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
@@ -22,7 +23,7 @@ on:
 jobs:
   lint:
     name: Lint
-    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v21.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v21.0.1
 
   unit-test:
     name: Unit test charm
@@ -44,7 +45,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.1
     with:
       cache: true
 
@@ -71,7 +72,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v21.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v21.0.1
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       architecture: ${{ matrix.architecture }}

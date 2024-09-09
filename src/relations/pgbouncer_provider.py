@@ -244,10 +244,10 @@ class PgBouncerProvider(Object):
                 host = str(self.charm.config.vip)
                 uri_host = host
             else:
-                host = self.charm.leader_ip
+                host = self.charm.peers.leader_ip
                 uri_host = ",".join([
-                    self.charm.leader_ip,
-                    *[ip for ip in self.charm.peers.units_ips if ip != self.charm.leader_ip],
+                    self.charm.peers.leader_ip,
+                    *[ip for ip in self.charm.peers.units_ips if ip != self.charm.peers.leader_ip],
                 ])
         elif self.charm.config.local_connection_type == "socket":
             host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
