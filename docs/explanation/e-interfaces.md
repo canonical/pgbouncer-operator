@@ -16,15 +16,15 @@ juju deploy postgresql-test-app
 
 # Relate all applications
 juju integrate postgresql pgbouncer
-juju integrate pgbouncer postgresql-test-app:first-database
+juju integrate pgbouncer postgresql-test-app:database
 
 # Check established relation (using postgresql_client interface):
 juju status --relations
 
 # Example of the properly established relation:
-# > Integration provider     Requirer                              Interface              Type     Message
-# > pgbouncer:database       postgresql-test-app:first-database    postgresql_client      regular  
-# > postgresql:database      pgbouncer:backend-database            postgresql_client      regular  
+# > Integration provider     Requirer                          Interface              Type     Message
+# > pgbouncer:database       postgresql-test-app:database      postgresql_client      regular  
+# > postgresql:database      pgbouncer:backend-database        postgresql_client      regular  
 # > ...
 ```
 

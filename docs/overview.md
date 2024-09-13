@@ -2,7 +2,7 @@
 
 The PgBouncer Operator delivers automated operations management from day 0 to day 2 on the [PgBouncer](http://www.pgbouncer.org/) - the  lightweight connection pooler for PostgreSQL. It is an open source, end-to-end, production-ready data platform on top of [Juju](https://juju.is/).
 
-![image|690x423](upload://fqMd5JlHeegw0PlUjhWKRu858Nc.png)
+![image|690x423](https://assets.ubuntu.com/v1/6c2781e9-psql_diagram.png)
 
 PostgreSQL is a powerful, open source object-relational database system that uses and extends the SQL language combined with many features that safely store and scale the most complicated data workloads. Consider to use [Charmed PostgreSQL](https://charmhub.io/postgresql).
 
