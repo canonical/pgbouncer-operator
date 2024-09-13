@@ -1,0 +1,129 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:766 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/self-signed-certificates-155
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-471
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/data-integrator-45
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  data-integrator/0 [allocating] waiting: waiting for machine
+  data-integrator/1 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [executing] maintenance: installing charm software
+  postgresql/0 [executing] maintenance: installing charm software
+  postgresql/1 [executing] maintenance: installing charm software
+  data-integrator/0 [executing] maintenance: installing charm software
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/1 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [executing] waiting: Waiting to start PgBouncer
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [executing] waiting: awaiting passwords generation
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [idle] maintenance: Initialising backend-database relation
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] maintenance: updating PgBouncer config
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] maintenance: reconfiguring cluster
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] maintenance: reconfiguring cluster
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [idle] active: 
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  data-integrator/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  pgbouncer/0 [idle] active:
