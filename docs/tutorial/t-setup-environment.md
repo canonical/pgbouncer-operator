@@ -4,7 +4,7 @@ This is part of the [PgBouncer Tutorial](/t/12288). Please refer to this page fo
 
 ## Minimum requirements
 
-Before we start, make sure your machine meets [the following requirements](/t/TODO).
+Before we start, make sure your machine meets [the following requirements](/t/12307).
 
 ## Multipass environment
 
