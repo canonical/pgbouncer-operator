@@ -801,7 +801,7 @@ class TestCharmSecrets(unittest.TestCase):
         self._caplog = caplog
 
     @parameterized.expand([("app", "monitoring-password"), ("unit", "csr")])
-    def test_get_secret_secrets(self, scope, field, _):
+    def test_get_secret_secrets(self, _, scope, field):
         with self.harness.hooks_disabled():
             self.harness.set_leader()
 
@@ -810,7 +810,7 @@ class TestCharmSecrets(unittest.TestCase):
         assert self.charm.get_secret(scope, field) == "test"
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    def test_set_reset_new_secret(self, scope, is_leader, _):
+    def test_set_reset_new_secret(self, _, scope, is_leader):
         """NOTE: currently ops.testing seems to allow for non-leader to set secrets too!"""
         # App has to be leader, unit can be eithe
         with self.harness.hooks_disabled():
@@ -829,7 +829,7 @@ class TestCharmSecrets(unittest.TestCase):
         assert self.harness.charm.get_secret(scope, "new-secret2") == "blablabla"
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    def test_invalid_secret(self, scope, is_leader, _):
+    def test_invalid_secret(self, _, scope, is_leader):
         # App has to be leader, unit can be either
         with self.harness.hooks_disabled():
             self.harness.set_leader(is_leader)
