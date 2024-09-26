@@ -23,9 +23,9 @@ jobs:
     permissions:
       contents: write  # Needed for Allure Report beta
 
-  # build:
-  #   name: Build charm
-  #   uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.1
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.1
 
   release:
     name: Release charm
