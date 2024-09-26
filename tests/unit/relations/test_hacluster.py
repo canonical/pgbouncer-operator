@@ -10,10 +10,7 @@ from ops.testing import Harness
 from charm import PgBouncerCharm
 from constants import HACLUSTER_RELATION_NAME
 
-from ..helpers import patch_network_get
 
-
-@patch_network_get(private_address="1.1.1.1")
 class TestHaCluster(TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)

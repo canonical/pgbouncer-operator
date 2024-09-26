@@ -35,8 +35,6 @@ from constants import (
     SNAP_PACKAGES,
 )
 
-from .helpers import patch_network_get
-
 DATA_DIR = "tests/unit/data"
 TEST_VALID_INI = f"{DATA_DIR}/test.ini"
 
@@ -208,7 +206,6 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
-    @patch_network_get(private_address="1.1.1.1")
     def test_on_config_changed(self, _app_databag, _render):
         self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
         self.harness.set_leader()
@@ -506,7 +503,6 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm._collect_readonly_dbs")
     @patch("charm.PgBouncerCharm.update_status")
     @patch("charm.Peers.update_leader")
-    @patch_network_get(private_address="1.1.1.1")
     def test_on_update_status(self, _update_leader, _update_status, _collect_readonly_dbs):
         event = Mock()
 
@@ -529,7 +525,6 @@ class TestCharm(unittest.TestCase):
     @patch(
         "charm.BackendDatabaseRequires.relation", new_callable=PropertyMock, return_value=Mock()
     )
-    @patch_network_get(private_address="1.1.1.1")
     def test_get_readonly_dbs(self, _backend_rel, _postgres_databag, _):
         with self.harness.hooks_disabled():
             self.harness.update_relation_data(
@@ -560,7 +555,6 @@ class TestCharm(unittest.TestCase):
     @patch(
         "charm.PgBouncerCharm.get_relation_databases", return_value={"1": {"name": "excludeddb"}}
     )
-    @patch_network_get(private_address="1.1.1.1")
     def test_collect_readonly_dbs(self, _get_relation_databases, _postgres):
         _postgres._connect_to_database().__enter__().cursor().__enter__().fetchall.return_value = (
             ("includeddb",),
@@ -697,7 +691,6 @@ class TestCharm(unittest.TestCase):
         assert self.charm._scope_obj("unit") == self.charm.framework.model.unit
         assert self.charm._scope_obj("test") is None
 
-    @patch_network_get(private_address="1.1.1.1")
     def test_get_secret(self):
         # App level changes require leader privileges
         with self.harness.hooks_disabled():
@@ -719,7 +712,6 @@ class TestCharm(unittest.TestCase):
         )
         assert self.charm.get_secret("unit", "password") == "test-password"
 
-    @patch_network_get(private_address="1.1.1.1")
     def test_set_secret(self):
         with self.harness.hooks_disabled():
             self.harness.set_leader()
@@ -748,7 +740,6 @@ class TestCharm(unittest.TestCase):
             self.charm.set_secret("test", "password", "test")
 
     @pytest.mark.usefixtures("use_caplog")
-    @patch_network_get(private_address="1.1.1.1")
     def test_delete_password(self):
         """NOTE: currently ops.testing seems to allow for non-leader to remove secrets too!"""
         with self.harness.hooks_disabled():
@@ -810,7 +801,6 @@ class TestCharmSecrets(unittest.TestCase):
         self._caplog = caplog
 
     @parameterized.expand([("app", "monitoring-password"), ("unit", "csr")])
-    @patch_network_get(private_address="1.1.1.1")
     def test_get_secret_secrets(self, scope, field, _):
         with self.harness.hooks_disabled():
             self.harness.set_leader()
@@ -820,7 +810,6 @@ class TestCharmSecrets(unittest.TestCase):
         assert self.charm.get_secret(scope, field) == "test"
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch_network_get(private_address="1.1.1.1")
     def test_set_reset_new_secret(self, scope, is_leader, _):
         """NOTE: currently ops.testing seems to allow for non-leader to set secrets too!"""
         # App has to be leader, unit can be eithe
@@ -840,7 +829,6 @@ class TestCharmSecrets(unittest.TestCase):
         assert self.harness.charm.get_secret(scope, "new-secret2") == "blablabla"
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch_network_get(private_address="1.1.1.1")
     def test_invalid_secret(self, scope, is_leader, _):
         # App has to be leader, unit can be either
         with self.harness.hooks_disabled():
@@ -852,7 +840,6 @@ class TestCharmSecrets(unittest.TestCase):
         self.harness.charm.set_secret(scope, "somekey", "")
         assert self.harness.charm.get_secret(scope, "somekey") is None
 
-    @patch_network_get(private_address="1.1.1.1")
     @pytest.mark.usefixtures("use_caplog")
     def test_delete_existing_password_secrets(self, _):
         """NOTE: currently ops.testing seems to allow for non-leader to remove secrets too!"""
@@ -893,7 +880,6 @@ class TestCharmSecrets(unittest.TestCase):
             )
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch_network_get(private_address="1.1.1.1")
     @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
     def test_migration_from_databag(self, scope, is_leader, _, __):
         """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
@@ -915,7 +901,6 @@ class TestCharmSecrets(unittest.TestCase):
         )
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch_network_get(private_address="1.1.1.1")
     @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
     def test_migration_from_single_secret(self, scope, is_leader, _, __):
         """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""

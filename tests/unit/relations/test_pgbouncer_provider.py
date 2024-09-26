@@ -13,11 +13,8 @@ from constants import (
     PEER_RELATION_NAME,
 )
 
-from ..helpers import patch_network_get
-
 
 class TestPgbouncerProvider(unittest.TestCase):
-    @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -159,7 +156,7 @@ class TestPgbouncerProvider(unittest.TestCase):
     @patch(
         "charm.Peers.units_ips",
         new_callable=PropertyMock,
-        return_value={"1.1.1.1", "1.1.1.2"},
+        return_value={"192.0.2.0", "192.0.2.1"},
     )
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_my_relation_field")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_data")
@@ -208,11 +205,11 @@ class TestPgbouncerProvider(unittest.TestCase):
 
         self.client_relation.update_connection_info(rel)
 
-        _set_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.1:6432")
-        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.2:6432")
+        _set_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.0:6432")
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.1:6432")
         _set_uris.assert_called_once_with(
             self.client_rel_id,
-            f"postgresql://relation_id_{self.client_rel_id}:test_password@1.1.1.1,1.1.1.2:6432/test_db",
+            f"postgresql://relation_id_{self.client_rel_id}:test_password@192.0.2.0,192.0.2.1:6432/test_db",
         )
         _set_endpoints.reset_mock()
         _set_ro_endpoints.reset_mock()
