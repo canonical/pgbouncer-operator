@@ -11,12 +11,8 @@ from ops.testing import Harness
 from charm import PgBouncerCharm
 from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME, PGB_CONF_DIR
 
-from ..helpers import patch_network_get
 
-
-@patch_network_get(private_address="1.1.1.1")
 class TestBackendDatabaseRelation(unittest.TestCase):
-    @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -175,7 +171,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _render_pgb.reset_mock()
         _update_client_conn.reset_mock()
 
-    @patch_network_get(private_address="1.1.1.1")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
         new_callable=PropertyMock,
