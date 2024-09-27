@@ -133,7 +133,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
         _set_rel_dbs.assert_called_once_with({
-            "2": {"name": "test-db", "legacy": False},
+            str(rel_id): {"name": "test-db", "legacy": False},
             "*": {"name": "*", "auth_dbname": "test-db"},
         })
         _render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
