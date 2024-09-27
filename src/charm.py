@@ -34,8 +34,8 @@ from ops import (
     Relation,
     StartEvent,
     WaitingStatus,
+    main,
 )
-from ops.main import main
 
 from config import CharmConfig
 from constants import (
