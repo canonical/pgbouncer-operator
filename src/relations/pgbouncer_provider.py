@@ -238,6 +238,8 @@ class PgBouncerProvider(Object):
         database = rel_data.get("database")
         user = f"relation_id_{relation.id}"
         password = self.database_provides.fetch_my_relation_field(relation.id, "password")
+        if not database or not password:
+            return
 
         host = "localhost"
         uri_host = host
