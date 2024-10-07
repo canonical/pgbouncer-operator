@@ -8,6 +8,13 @@ PostgreSQL is a powerful, open source object-relational database system that use
 
 The PgBouncer operator comes in two flavours to deploy and operate PostgreSQL on [physical/virtual machines](https://github.com/canonical/pgbouncer-operator) and [Kubernetes](https://github.com/canonical/pgbouncer-operator). Both offer identical features and simplifies deployment, scaling, configuration and management of PgBouncer in production at scale in a reliable way.
 
+## In this documentation
+
+| | |
+|--|--|
+|  [Tutorials]()</br>  Get started - a hands-on introduction to using PgBouncer operator for new users </br> |  [How-to guides]() </br> Step-by-step guides covering key operations and common tasks |
+| [Reference](https://charmhub.io/pgbouncer/actions) </br> Technical information - specifications, APIs, architecture | [Explanation]() </br> Concepts - discussion and clarification of key topics  |
+
 ## Project and community
 
 This PgBouncer charm is an official distribution of PgBouncer. It’s an open-source project that welcomes community contributions, suggestions, fixes and constructive feedback.
@@ -17,12 +24,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 - Explore [Canonical Data Fabric solutions](https://canonical.com/data)
 -  [Contacts us]() for all further questions
 
-## In this documentation
 
-| | |
-|--|--|
-|  [Tutorials]()</br>  Get started - a hands-on introduction to using PgBouncer operator for new users </br> |  [How-to guides]() </br> Step-by-step guides covering key operations and common tasks |
-| [Reference](https://charmhub.io/pgbouncer/actions) </br> Technical information - specifications, APIs, architecture | [Explanation]() </br> Concepts - discussion and clarification of key topics  |
 
 # Navigation
 
@@ -53,8 +55,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | h-enable-monitoring | [Monitor (COS)](/t/12308) |
 | 3 | h-enable-tracing | [Tracing (COS)](/t/14788) |
 | 1 | reference | [Reference]() |
-| 2 | r-releases-group | [Release Notes]() |
-| 3 | r-releases | [All releases](/t/12285) |
+| 2 | r-releases | [Release Notes](/t/12285) |
 | 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
 | 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
 | 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |

@@ -1,8 +1,12 @@
-# PgBouncer revision 89
+# PgBouncer Revision 88/89
 
 <sub>February 21, 2024</sub>
 
 Dear community, we are excited to announce that the new Charmed PgBouncer operator is published in the `1/stable` [charmhub](https://charmhub.io/pgbouncer?channel=1/stable) channel for IAAS/VM.
+
+The PgBouncer charm releases multiple revisions simultaneously:
+* Revision 88 is built for `amd64` on Ubuntu 22.04 LTS
+* Revision 89 is built for `amd64` on Ubuntu 20.04 LTS
 
 ## New features
 

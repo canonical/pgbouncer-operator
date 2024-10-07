@@ -24,7 +24,7 @@ where `<arch>` can be `amd64` or `arm64`.
 ---
 
 ## Highlights 
-* [Added HA cluster interface](https://charmhub.io/pgbouncer/integrations?channel=1/candidate#ha) ([PR #317](https://github.com/canonical/pgbouncer-operator/pull/317)) ([DPE-4066](https://warthogs.atlassian.net/browse/DPE-4066))
+* [Added HA cluster interface](https://charmhub.io/pgbouncer/integrations?channel=1/stable#ha) ([PR #317](https://github.com/canonical/pgbouncer-operator/pull/317)) ([DPE-4066](https://warthogs.atlassian.net/browse/DPE-4066))
 * Added URI to relation data (improves UX) ([PR #324](https://github.com/canonical/pgbouncer-operator/pull/324)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
 * Add Unix socket access for principal charm (including strict SNAPs) ([PR #337](https://github.com/canonical/pgbouncer-operator/pull/337)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
 

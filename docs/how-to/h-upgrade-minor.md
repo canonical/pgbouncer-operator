@@ -7,12 +7,17 @@ We strongly recommend to **NOT** perform any other extraordinary operations on C
 3. Changes in workload configuration
 4. Upgrading other connected/related/integrated applications simultaneously
 
-The concurrency with other operations is not supported, and it can lead the cluster into inconsistent states.
+Concurrency with other operations is not supported, and it can lead the cluster into inconsistent states.
 
-> **:warning: NOTE:** Make sure to have a [Charmed PostgreSQL backups](/t/9683) of your data when running any type of upgrades.
+[note type="caution"]
+Make sure to have a [Charmed PostgreSQL backups](/t/9683) of your data when running any type of upgrades.
+[/note]
 
-> **:warning: TIP:** The "PgBouncer" upgrade should follow first, before "Charmed PostgreSQL" upgrade!!!
+[note]
+The "PgBouncer" upgrade should follow first, before "Charmed PostgreSQL" upgrade!!!
+[/note]
 
+---
 ## Minor upgrade steps
 
 1. **Collect** all necessary pre-upgrade information. It will be necessary for the rollback (if requested). Do NOT skip this step, it is better safe the sorry!
@@ -25,8 +30,9 @@ The concurrency with other operations is not supported, and it can lead the clus
 8. Post-upgrade **Check**. Make sure all units are in the proper state and the cluster is healthy.
 
 ## Step 1: Collect
-
-> **:information_source: NOTE:** The step is only valid when deploying from charmhub. If the [local charm](https://juju.is/docs/sdk/deploy-a-charm) deployed (revision is small, e.g. 0-10), make sure the proper/current local revision of the `.charm` file is available BEFORE going further. You might need it for rollback.
+[note]
+The step is only valid when deploying from charmhub. If the [local charm](https://juju.is/docs/sdk/deploy-a-charm) deployed (revision is small, e.g. 0-10), make sure the proper/current local revision of the `.charm` file is available BEFORE going further. You might need it for rollback.
+[/note]
 
 The first step is to record the revision of the running application, as a safety measure for a rollback action. You can find the revisions of the deployed Charmed PostgreSQL and PgBouncer applications with `juju status`.  Store them safely to use in case of rollback!
 <!--
@@ -77,8 +83,8 @@ juju refresh postgresql --channel 8.0/edge
 
 juju refresh postgresql --revision=89
 ```
-[note type="caution"]
-Important notes:
+[note]
+Note that:
 * The PostgreSQL upgrade will execute only on the **highest ordinal unit**. 
 * It is expected to have some status changes during the process: `waiting`, `maintenance`, `active`. **Do not trigger `rollback` procedure during the running `upgrade` procedure.** Make sure `upgrade` has failed or stopped and cannot be fixed/continued before triggering a rollback!
 * The unit should recover shortly after, but the time can vary depending on the amount of data written to the cluster while the unit was not part of the cluster. **Large installations might take some extra time to recover.**
