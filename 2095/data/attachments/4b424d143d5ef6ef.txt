@@ -1,0 +1,133 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:766 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-test-app-256
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/ubuntu-advantage-113
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-487
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/landscape-client-69
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: agent initialising
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [executing] maintenance: installing charm software
+  postgresql-test-app/1 [idle] active: 
+  postgresql-test-app/2 [executing] active: 
+  postgresql/0 [executing] waiting: agent initialising
+  postgresql/1 [allocating] waiting: agent initialising
+  postgresql/2 [allocating] waiting: agent initialising
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/1 [executing] maintenance: installing charm software
+  pgbouncer/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql-test-app/2 [idle] active: 
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  postgresql/2 [executing] maintenance: installing charm software
+  pgbouncer/0 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/1 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/2 [executing] blocked: failed to install snap packages
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql-test-app/2 [idle] active: 
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  postgresql/2 [executing] blocked: failed to install snap packages
+  pgbouncer/0 [executing] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [executing] blocked: PgBouncer service pgbouncer-pgbouncer@0 not running
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  postgresql/2 [executing] blocked: failed to install snap packages
+  pgbouncer/0 [executing] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [executing] blocked: PgBouncer service pgbouncer-pgbouncer@0 not running
