@@ -1,0 +1,165 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:26:25Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer                     error       3  pgbouncer                           0  no       hook failed: "pgb-peers-relation-changed"
+postgresql           14.13    active      3  postgresql           14/edge      488  no       
+postgresql-test-app           active      3  postgresql-test-app  latest/edge  256  no       
+
+Unit                    Workload  Agent      Machine  Public address  Ports     Message
+postgresql-test-app/0   active    idle       0        10.243.216.120            
+  pgbouncer/2           error     idle                10.243.216.120            hook failed: "pgb-peers-relation-changed"
+postgresql-test-app/1   active    idle       1        10.243.216.113            
+  pgbouncer/1           error     idle                10.243.216.113            hook failed: "pgb-peers-relation-changed"
+postgresql-test-app/2*  active    idle       2        10.243.216.44             
+  pgbouncer/0*          blocked   executing           10.243.216.44             PgBouncer service pgbouncer-pgbouncer@0 not running
+postgresql/0            active    idle       3        10.243.216.190  5432/tcp  
+postgresql/1*           active    idle       4        10.243.216.196  5432/tcp  Primary
+postgresql/2            active    idle       5        10.243.216.252  5432/tcp  
+
+Machine  State    Address         Inst id        Base          AZ  Message
+0        started  10.243.216.120  juju-412306-0  ubuntu@22.04      Running
+1        started  10.243.216.113  juju-412306-1  ubuntu@22.04      Running
+2        started  10.243.216.44   juju-412306-2  ubuntu@22.04      Running
+3        started  10.243.216.190  juju-412306-3  ubuntu@22.04      Running
+4        started  10.243.216.196  juju-412306-4  ubuntu@22.04      Running
+5        started  10.243.216.252  juju-412306-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-2: 02:13:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:13:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 02:13:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:14:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:14:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 02:14:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:14:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 02:14:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:14:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 02:14:08 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:14:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 02:14:13 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:14:17 ERROR unit.pgbouncer/0.juju-log An exception occurred when installing charmed-pgbouncer. Reason: Snap: 'charmed-pgbouncer'; command ['snap', 'install', 'charmed-pgbouncer', '--channel="1/stable"', '--revision="16"'] failed with output = ''
+unit-pgbouncer-1: 02:14:21 ERROR unit.pgbouncer/1.juju-log An exception occurred when installing charmed-pgbouncer. Reason: Snap: 'charmed-pgbouncer'; command ['snap', 'install', 'charmed-pgbouncer', '--channel="1/stable"', '--revision="16"'] failed with output = ''
+unit-pgbouncer-2: 02:14:23 ERROR unit.pgbouncer/2.juju-log An exception occurred when installing charmed-pgbouncer. Reason: Snap: 'charmed-pgbouncer'; command ['snap', 'install', 'charmed-pgbouncer', '--channel="1/stable"', '--revision="16"'] failed with output = ''
+unit-pgbouncer-0: 02:14:23 ERROR unit.pgbouncer/0.juju-log Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:25 ERROR unit.pgbouncer/0.juju-log Unable to get Pgbouncer version
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 281, in version
+    output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
+  File "/usr/lib/python3.10/subprocess.py", line 421, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "/usr/lib/python3.10/subprocess.py", line 503, in run
+    with Popen(*popenargs, **kwargs) as process:
+  File "/usr/lib/python3.10/subprocess.py", line 971, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.10/subprocess.py", line 1863, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'charmed-pgbouncer.pgbouncer'
+unit-pgbouncer-0: 02:14:25 ERROR unit.pgbouncer/0.juju-log Command ['systemctl', 'start', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to start pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:26 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:27 ERROR unit.pgbouncer/1.juju-log Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:27 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:29 ERROR unit.pgbouncer/1.juju-log Unable to get Pgbouncer version
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/./src/charm.py", line 281, in version
+    output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
+  File "/usr/lib/python3.10/subprocess.py", line 421, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "/usr/lib/python3.10/subprocess.py", line 503, in run
+    with Popen(*popenargs, **kwargs) as process:
+  File "/usr/lib/python3.10/subprocess.py", line 971, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.10/subprocess.py", line 1863, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'charmed-pgbouncer.pgbouncer'
+unit-pgbouncer-1: 02:14:29 ERROR unit.pgbouncer/1.juju-log Command ['systemctl', 'start', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to start pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:30 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:30 ERROR unit.pgbouncer/2.juju-log Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:32 ERROR unit.pgbouncer/2.juju-log Unable to get Pgbouncer version
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-2/charm/./src/charm.py", line 281, in version
+    output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
+  File "/usr/lib/python3.10/subprocess.py", line 421, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "/usr/lib/python3.10/subprocess.py", line 503, in run
+    with Popen(*popenargs, **kwargs) as process:
+  File "/usr/lib/python3.10/subprocess.py", line 971, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.10/subprocess.py", line 1863, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'charmed-pgbouncer.pgbouncer'
+unit-pgbouncer-2: 02:14:32 ERROR unit.pgbouncer/2.juju-log Command ['systemctl', 'start', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to start pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:32 ERROR unit.pgbouncer/1.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:32 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:34 ERROR unit.pgbouncer/2.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:34 ERROR unit.pgbouncer/1.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:35 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:36 ERROR unit.pgbouncer/1.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:36 ERROR unit.pgbouncer/2.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:37 ERROR unit.pgbouncer/1.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:38 ERROR unit.pgbouncer/2.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-1: 02:14:39 ERROR unit.pgbouncer/1.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:39 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:39 ERROR unit.pgbouncer/2.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:14:41 ERROR unit.pgbouncer/0.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-2: 02:14:42 ERROR unit.pgbouncer/2.juju-log pgb-peers:1: Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+machine-4: 02:18:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:18:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:18:01 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:18:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:18:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:18:06 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:18:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:18:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 02:18:15 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...

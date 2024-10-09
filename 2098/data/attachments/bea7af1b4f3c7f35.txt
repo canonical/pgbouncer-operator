@@ -1,0 +1,73 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:25:10Z
+
+App            Version  Status  Scale  Charm          Channel        Rev  Exposed  Message
+mailman3-core           active      1  mailman3-core  latest/stable   18  no       Ready (source version/commit e1d5a03)
+pgbouncer               error       1  pgbouncer                       0  no       hook failed: "config-changed"
+postgresql     14.13    active      2  postgresql     14/edge        488  no       
+
+Unit              Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*  active    idle   2        10.183.24.100   25/tcp    Ready (source version/commit e1d5a03)
+  pgbouncer/0*    error     idle            10.183.24.100             hook failed: "config-changed"
+postgresql/0      active    idle   0        10.183.24.5     5432/tcp  
+postgresql/1*     active    idle   1        10.183.24.49    5432/tcp  Primary
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.183.24.5    juju-8252c3-0  ubuntu@22.04      Running
+1        started  10.183.24.49   juju-8252c3-1  ubuntu@22.04      Running
+2        started  10.183.24.100  juju-8252c3-2  ubuntu@20.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-1: 02:13:03 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:13:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:13:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 02:13:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:13:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:13:08 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 02:21:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:21:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-mailman3-core-0: 02:21:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:24:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:25:00 ERROR unit.pgbouncer/0.juju-log An exception occurred when installing charmed-pgbouncer. Reason: Snap: 'charmed-pgbouncer'; command ['snap', 'install', 'charmed-pgbouncer', '--channel="1/stable"', '--revision="16"'] failed with output = ''
+unit-pgbouncer-0: 02:25:09 ERROR unit.pgbouncer/0.juju-log Command ['systemctl', 'restart', 'pgbouncer-pgbouncer@0'] failed with returncode 5. systemctl output:
+Failed to restart pgbouncer-pgbouncer@0.service: Unit pgbouncer-pgbouncer@0.service not found.
+
+unit-pgbouncer-0: 02:25:09 ERROR unit.pgbouncer/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "./src/charm.py", line 999, in <module>
+    main(PgBouncerCharm)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/__init__.py", line 343, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "./src/charm.py", line 601, in _on_config_changed
+    self.render_prometheus_service()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "./src/charm.py", line 872, in render_prometheus_service
+    self.render_file(f"/etc/systemd/system/{service}.service", rendered, perms=0o644)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "./src/charm.py", line 955, in render_file
+    u = pwd.getpwnam(PG_USER)
+KeyError: "getpwnam(): name not found: 'snap_daemon'"
+unit-pgbouncer-0: 02:25:10 ERROR juju.worker.uniter.operation hook "config-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...

@@ -1,0 +1,2 @@
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app (waiting for exactly 1 units, current : 2)
