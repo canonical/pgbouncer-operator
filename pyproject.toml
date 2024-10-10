@@ -31,7 +31,7 @@ cosl = "*"
 # tls_certificates_interface/v2/tls_certificates.py
 cryptography = "*"
 jsonschema = "*"
-# tempo_k8s/v1/charm_tracing.py
+# tempo_coordinator_k8s/v0/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
 
 
