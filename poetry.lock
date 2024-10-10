@@ -440,13 +440,13 @@ files = [
 
 [[package]]
 name = "cosl"
-version = "0.0.39"
+version = "0.0.40"
 description = "Utils for COS Lite charms"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cosl-0.0.39-py3-none-any.whl", hash = "sha256:c4e733a203e3d8a53a9b2d35e298d393f36bc2bce0ad306ac6707b3e12f2365a"},
-    {file = "cosl-0.0.39.tar.gz", hash = "sha256:1b7e8575d53167643f924a31f29a99b241a0e31c463c39568fbbe778fe00fe55"},
+    {file = "cosl-0.0.40-py3-none-any.whl", hash = "sha256:7d7d55a249b31f1d67830105ec0bf09798746b6817492bfb1a13df802d58dded"},
+    {file = "cosl-0.0.40.tar.gz", hash = "sha256:ea15d10a80e439e62d4e3ee0a57ef95bf71734c87d368692096000aec5852d97"},
 ]
 
 [package.dependencies]
@@ -1877,13 +1877,13 @@ subdirectory = "python/pytest_plugins/github_secrets"
 
 [[package]]
 name = "pytest-operator"
-version = "0.37.0"
+version = "0.38.0"
 description = "Fixtures for Operators"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pytest_operator-0.37.0-py3-none-any.whl", hash = "sha256:da5f6f527115c70676c29a0f5422551b066f9693ff3cbcf968b6b1cd93eaf33c"},
-    {file = "pytest_operator-0.37.0.tar.gz", hash = "sha256:9c03202c31e8434ac3fee21b955b32f64c7b9b440ab7bb4b2a51321cb23489da"},
+    {file = "pytest_operator-0.38.0-py3-none-any.whl", hash = "sha256:eef53d40d1301d1efd97c98021b3715e1ad9e932e720792e1897e8de3d47a8d2"},
+    {file = "pytest_operator-0.38.0.tar.gz", hash = "sha256:bf2dc92fc32eff82708b57783941f24c8500dfb3770098811c28ee31b7f292f3"},
 ]
 
 [package.dependencies]
@@ -2596,4 +2596,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "143512393e17e7c3c71061a5ca1c0c049b9370febf04db219af97e2824eac1e0"
+content-hash = "0c9e7795219493120f4b85b60af8943b0f0dfd3676c428e6f50f7a873082582a"
