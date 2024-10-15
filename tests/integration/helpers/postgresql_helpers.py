@@ -247,11 +247,11 @@ async def deploy_and_relate_bundle_with_pgbouncer(
     ops_test: OpsTest,
     bundle_name: str,
     main_application_name: str,
-    main_application_num_units: int = None,
+    main_application_num_units: Optional[int] = None,
     relation_name: str = "db",
     status: str = "active",
-    status_message: str = None,
-    overlay: Dict = None,
+    status_message: Optional[str] = None,
+    overlay: Optional[Dict] = None,
     timeout: int = 2000,
 ) -> str:
     """Helper function to deploy and relate a bundle with PostgreSQL.
