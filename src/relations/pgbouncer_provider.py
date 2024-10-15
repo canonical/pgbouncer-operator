@@ -33,7 +33,7 @@ f"{dbname}_readonly".
 │                  │ ╰──────────────────╯                                │ ╰────────────────╯ ╰───────────────╯                 │
 └──────────────────┴─────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┘
 
-"""  # noqa: W505
+"""
 
 import logging
 from hashlib import shake_128
@@ -117,12 +117,14 @@ class PgBouncerProvider(Object):
             event.defer()
             return
 
-        for key in self.charm.peers.relation.data.keys():
-            if key != self.charm.app:
-                if self.charm.peers.relation.data[key].get("auth_file_set", "false") != "true":
-                    logger.debug("Backend credentials not yet set on all units")
-                    event.defer()
-                    return
+        for key in self.charm.peers.relation.data:
+            if (
+                key != self.charm.app
+                and self.charm.peers.relation.data[key].get("auth_file_set", "false") != "true"
+            ):
+                logger.debug("Backend credentials not yet set on all units")
+                event.defer()
+                return
 
         # Retrieve the database name and extra user roles using the charm library.
         database = event.database
@@ -138,13 +140,16 @@ class PgBouncerProvider(Object):
         pgb_dbs_hash = shake_128(
             self.charm.peers.app_databag["pgb_dbs_config"].encode()
         ).hexdigest(16)
-        for key in self.charm.peers.relation.data.keys():
+        for key in self.charm.peers.relation.data:
             # We skip the leader so we don't have to wait on the defer
-            if key != self.charm.app and key != self.charm.unit:
-                if self.charm.peers.relation.data[key].get("pgb_dbs", "") != pgb_dbs_hash:
-                    logger.debug("Not all units have synced configuration")
-                    event.defer()
-                    return
+            if (
+                key != self.charm.app
+                and key != self.charm.unit
+                and self.charm.peers.relation.data[key].get("pgb_dbs", "") != pgb_dbs_hash
+            ):
+                logger.debug("Not all units have synced configuration")
+                event.defer()
+                return
 
         # Creates the user and the database for this specific relation.
         user = f"relation_id_{rel_id}"
@@ -320,6 +325,6 @@ class PgBouncerProvider(Object):
 
         TODO this is stolen from the db relation - cleanup
         """
-        for entry in relation.data.keys():
+        for entry in relation.data:
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry

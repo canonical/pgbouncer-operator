@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import psycopg2
 import requests
@@ -23,7 +23,7 @@ class ProcessError(Exception):
 
 
 async def are_writes_increasing(
-    ops_test, down_unit: str = None, use_ip_from_inside: bool = False
+    ops_test, down_unit: Optional[str] = None, use_ip_from_inside: bool = False
 ) -> None:
     """Verify new writes are continuing by counting the number of writes."""
     writes, _ = await count_writes(
@@ -58,7 +58,7 @@ async def check_writes(ops_test, use_ip_from_inside: bool = False) -> int:
 
 
 async def count_writes(
-    ops_test: OpsTest, down_unit: str = None, use_ip_from_inside: bool = False
+    ops_test: OpsTest, down_unit: Optional[str] = None, use_ip_from_inside: bool = False
 ) -> Tuple[Dict[str, int], Dict[str, int]]:
     """Count the number of writes in the database."""
     app = "postgresql"
@@ -109,7 +109,7 @@ async def get_ip_from_inside_the_unit(ops_test: OpsTest, unit_name: str) -> str:
     return stdout.splitlines()[0].strip()
 
 
-async def get_password(ops_test: OpsTest, app: str, down_unit: str = None) -> str:
+async def get_password(ops_test: OpsTest, app: str, down_unit: Optional[str] = None) -> str:
     """Use the charm action to retrieve the password from provided application.
 
     Returns:

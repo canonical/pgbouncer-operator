@@ -32,10 +32,7 @@ logger = logging.getLogger(__name__)
 
 TLS = "tls-certificates-operator"
 RELATION = "backend-database"
-if architecture.architecture == "arm64":
-    tls_channel = "legacy/edge"
-else:
-    tls_channel = "latest/stable"
+tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "latest/stable"
 
 
 @pytest.mark.group(1)
@@ -78,7 +75,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
             for attempt in Retrying(stop=stop_after_delay(3 * 60), wait=wait_fixed(3)):
                 with attempt:
                     cfg = await get_cfg(ops_test, f"{PGB}/0")
-                    if "auth_query" not in cfg["pgbouncer"].keys():
+                    if "auth_query" not in cfg["pgbouncer"]:
                         break
         except RetryError:
             assert False, "pgbouncer config files failed to update in 3 minutes"

@@ -4,6 +4,7 @@
 
 """Charmed PgBouncer connection pooler, to run on machine charms."""
 
+import contextlib
 import json
 import logging
 import math
@@ -190,7 +191,7 @@ class PgBouncerCharm(TypedCharmBase):
     def render_utility_files(self):
         """Render charm utility services and configuration."""
         # Render pgbouncer service file and reload systemd
-        with open("templates/pgbouncer.service.j2", "r") as file:
+        with open("templates/pgbouncer.service.j2") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
         rendered = template.render(
@@ -202,7 +203,7 @@ class PgBouncerCharm(TypedCharmBase):
         )
         systemd.daemon_reload()
         # Render the logrotate config
-        with open("templates/logrotate.j2", "r") as file:
+        with open("templates/logrotate.j2") as file:
             template = Template(file.read())
         # Logrotate expects the file to be owned by root
         with open(f"/etc/logrotate.d/{PGB}-{self.app.name}", "w+") as file:
@@ -245,15 +246,9 @@ class PgBouncerCharm(TypedCharmBase):
     def remove_exporter_service(self) -> None:
         """Stops and removes the pgbouncer_exporter service if it exists."""
         prom_service = f"{PGB}-{self.app.name}-prometheus"
-        try:
+        with contextlib.suppress(systemd.SystemdError, FileNotFoundError):
             systemd.service_stop(prom_service)
-        except systemd.SystemdError:
-            pass
-
-        try:
             os.remove(f"/etc/systemd/system/{prom_service}.service")
-        except FileNotFoundError:
-            pass
 
     def _on_remove(self, _) -> None:
         """On Remove hook.
@@ -278,7 +273,8 @@ class PgBouncerCharm(TypedCharmBase):
     def version(self) -> str:
         """Returns the version Pgbouncer."""
         try:
-            output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])
+            # Input is hardcoded
+            output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])  # noqa: S603
             if output:
                 return output.decode().split("\n")[0].split(" ")[1]
         except Exception:
@@ -511,7 +507,7 @@ class PgBouncerCharm(TypedCharmBase):
     def configuration_check(self) -> bool:
         """Check that configuration is valid."""
         try:
-            self.config
+            _ = self.config
             return True
         except ValueError:
             self.unit.status = BlockedStatus("Configuration Error. Please check the logs")
@@ -658,25 +654,26 @@ class PgBouncerCharm(TypedCharmBase):
         if "pgb_dbs_config" in self.peers.app_databag:
             return json.loads(self.peers.app_databag["pgb_dbs_config"])
         # Nothing set in the config peer data trying to regenerate based on old data in case of update.
-        elif not self.unit.is_leader():
-            if cfg := self.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY):
-                try:
-                    parser = ConfigParser()
-                    parser.optionxform = str
-                    parser.read_string(cfg)
-                    old_cfg = dict(parser)
-                    if databases := old_cfg.get("databases"):
-                        databases.pop("DEFAULT", None)
-                        result = {}
-                        i = 1
-                        for database in dict(databases):
-                            if database.endswith("_standby") or database.endswith("_readonly"):
-                                continue
-                            result[str(i)] = {"name": database, "legacy": False}
-                            i += 1
-                        return result
-                except Exception:
-                    logger.exception("Unable to parse legacy config format")
+        elif not self.unit.is_leader() and (
+            cfg := self.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)
+        ):
+            try:
+                parser = ConfigParser()
+                parser.optionxform = str
+                parser.read_string(cfg)
+                old_cfg = dict(parser)
+                if databases := old_cfg.get("databases"):
+                    databases.pop("DEFAULT", None)
+                    result = {}
+                    i = 1
+                    for database in dict(databases):
+                        if database.endswith("_standby") or database.endswith("_readonly"):
+                            continue
+                        result[str(i)] = {"name": database, "legacy": False}
+                        i += 1
+                    return result
+            except Exception:
+                logger.exception("Unable to parse legacy config format")
         return {}
 
     def generate_relation_databases(self) -> Dict[str, Dict[str, Union[str, bool]]]:
@@ -796,7 +793,8 @@ class PgBouncerCharm(TypedCharmBase):
         app_conf_dir = f"{PGB_CONF_DIR}/{self.app.name}"
         app_log_dir = f"{PGB_LOG_DIR}/{self.app.name}"
         app_run_dir = f"{PGB_RUN_DIR}/{self.app.name}"
-        app_temp_dir = f"/tmp/{self.app.name}"
+        # Expected tmp location
+        app_temp_dir = f"/tmp/{self.app.name}"  # noqa: S108
 
         if self.config.max_db_connections == 0:
             default_pool_size = 20
@@ -807,15 +805,12 @@ class PgBouncerCharm(TypedCharmBase):
             default_pool_size = math.ceil(effective_db_connections / 2)
             min_pool_size = math.ceil(effective_db_connections / 4)
             reserve_pool_size = math.ceil(effective_db_connections / 4)
-        with open("templates/pgb_config.j2", "r") as file:
+        with open("templates/pgb_config.j2") as file:
             template = Template(file.read())
             databases = self._get_relation_config()
             readonly_dbs = self._get_readonly_dbs(databases)
             enable_tls = all(self.tls.get_tls_files()) and self._is_exposed
-            if self._is_exposed:
-                addr = "*"
-            else:
-                addr = "127.0.0.1"
+            addr = "*" if self._is_exposed else "127.0.0.1"
             # Modify & render config files for each service instance
             for service_id in self.service_ids:
                 self.unit.status = MaintenanceStatus("updating PgBouncer config")
@@ -848,7 +843,7 @@ class PgBouncerCharm(TypedCharmBase):
                         0o700,
                     )
                 except FileNotFoundError:
-                    logger.warning("Service %s not yet rendered" % service_id)
+                    logger.warning(f"Service {service_id} not yet rendered")
         self.unit.status = initial_status
 
         if reload_pgbouncer:
@@ -857,7 +852,7 @@ class PgBouncerCharm(TypedCharmBase):
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""
         # Render prometheus exporter service file
-        with open("templates/prometheus-exporter.service.j2", "r") as file:
+        with open("templates/prometheus-exporter.service.j2") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
         rendered = template.render(

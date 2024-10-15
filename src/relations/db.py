@@ -82,7 +82,7 @@ Some example relation data is below. All values are examples, generated in a run
 │                  │                     │ │  version          12.12                                     │ │
 │                  │                     │ ╰─────────────────────────────────────────────────────────────╯ │
 ------------------------------------------------------------------------------------------------------------
-"""  # noqa: W505
+"""
 
 import json
 import logging
@@ -491,6 +491,6 @@ class DbProvides(Object):
 
     def get_external_app(self, relation):
         """Gets external application, as an Application object."""
-        for entry in relation.data.keys():
+        for entry in relation.data:
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry

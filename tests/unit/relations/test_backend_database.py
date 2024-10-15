@@ -218,18 +218,19 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     def test_initialise_auth_function(self, _postgres, _auth_user):
-        install_script = open("src/relations/sql/pgbouncer-install.sql", "r").read()
-        dbs = ["test-db"]
+        with open("src/relations/sql/pgbouncer-install.sql") as f:
+            install_script = f.read()
+            dbs = ["test-db"]
 
-        self.backend.initialise_auth_function(dbs)
+            self.backend.initialise_auth_function(dbs)
 
-        _postgres.return_value._connect_to_database.assert_called_with(dbs[0])
-        conn = _postgres.return_value._connect_to_database().__enter__()
-        cursor = conn.cursor().__enter__()
-        cursor.execute.assert_called_with(
-            install_script.replace("auth_user", self.backend.auth_user)
-        )
-        conn.close.assert_called()
+            _postgres.return_value._connect_to_database.assert_called_with(dbs[0])
+            conn = _postgres.return_value._connect_to_database().__enter__()
+            cursor = conn.cursor().__enter__()
+            cursor.execute.assert_called_with(
+                install_script.replace("auth_user", self.backend.auth_user)
+            )
+            conn.close.assert_called()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.ready",

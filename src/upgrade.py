@@ -54,7 +54,7 @@ class PgbouncerUpgrade(DataUpgrade):
         """Builds ordered iterable of all application unit.ids to upgrade in."""
         return [
             int(unit.name.split("/")[-1])
-            for unit in [self.charm.unit] + list(self.charm.peers.units)
+            for unit in [self.charm.unit, *list(self.charm.peers.units)]
         ]
 
     @override
