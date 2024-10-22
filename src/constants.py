@@ -63,5 +63,4 @@ SECRET_KEY_OVERRIDES = {
 # Expected socket location
 SOCKET_LOCATION = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp/pgbouncer/instance_0"  # noqa: S108
 
-TRACING_RELATION_NAME = "tracing"
 TRACING_PROTOCOL = "otlp_http"

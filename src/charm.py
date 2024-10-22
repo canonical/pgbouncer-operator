@@ -19,12 +19,11 @@ from typing import Dict, List, Literal, Optional, Union, get_args
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
-from charms.grafana_agent.v0.cos_agent import COSAgentProvider
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
-from charms.tempo_coordinator_k8s.v0.tracing import TracingEndpointRequirer
 from jinja2 import Template
 from ops import (
     ActiveStatus,
@@ -64,7 +63,6 @@ from constants import (
     TLS_CERT_FILE,
     TLS_KEY_FILE,
     TRACING_PROTOCOL,
-    TRACING_RELATION_NAME,
     UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -142,19 +140,18 @@ class PgBouncerCharm(TypedCharmBase):
                 ],
                 log_slots=[f"{PGBOUNCER_SNAP_NAME}:logs"],
                 refresh_events=[self.on.config_changed],
+                tracing_protocols=[TRACING_PROTOCOL],
             )
+            self._tracing_endpoint_config, _ = charm_tracing_config(self._grafana_agent, None)
         except ValueError:
             logger.warning("Unable to set COS agent, invalid config")
+            self._tracing_endpoint_config = None
 
         self.upgrade = PgbouncerUpgrade(
             self,
             model=get_pgbouncer_dependencies_model(),
             relation_name="upgrade",
             substrate="vm",
-        )
-
-        self._tracing = TracingEndpointRequirer(
-            self, relation_name=TRACING_RELATION_NAME, protocols=[TRACING_PROTOCOL]
         )
 
     @property
@@ -185,8 +182,7 @@ class PgBouncerCharm(TypedCharmBase):
     @property
     def tracing_endpoint(self) -> Optional[str]:
         """Otlp http endpoint for charm instrumentation."""
-        if self._tracing.is_ready():
-            return self._tracing.get_endpoint(TRACING_PROTOCOL)
+        return self._tracing_endpoint_config
 
     def render_utility_files(self):
         """Render charm utility services and configuration."""
