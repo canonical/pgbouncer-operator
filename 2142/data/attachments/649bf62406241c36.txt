@@ -1,0 +1,314 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:09:17Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+landscape-client              blocked      6  landscape-client     latest/edge   70  no       Failed to add PPA!
+pgbouncer            1.21.0   active       3  pgbouncer                           0  no       
+postgresql           14.13    active       3  postgresql           14/edge      507  no       
+postgresql-test-app           active       3  postgresql-test-app  latest/edge  275  no       received database credentials of the first database
+ubuntu-advantage              active       6  ubuntu-advantage     latest/edge  137  no       Attached (esm-apps,esm-infra)
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0   active    idle   0        10.179.14.85              received database credentials of the first database
+  landscape-client/0*   blocked   idle            10.179.14.85              Failed to add PPA!
+  pgbouncer/2           active    idle            10.179.14.85              
+  ubuntu-advantage/1    active    idle            10.179.14.85              Attached (esm-apps,esm-infra)
+postgresql-test-app/1*  active    idle   1        10.179.14.83              received database credentials of the first database
+  landscape-client/1    active    idle            10.179.14.83              Client registered!
+  pgbouncer/0*          active    idle            10.179.14.83              
+  ubuntu-advantage/2    active    idle            10.179.14.83              Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active    idle   2        10.179.14.127             received database credentials of the first database
+  landscape-client/5    active    idle            10.179.14.127             Client registered!
+  pgbouncer/1           active    idle            10.179.14.127             
+  ubuntu-advantage/0*   active    idle            10.179.14.127             Attached (esm-apps,esm-infra)
+postgresql/0            active    idle   3        10.179.14.7     5432/tcp  
+  landscape-client/4    active    idle            10.179.14.7               Client registered!
+  ubuntu-advantage/3    active    idle            10.179.14.7               Attached (esm-apps,esm-infra)
+postgresql/1            active    idle   4        10.179.14.71    5432/tcp  
+  landscape-client/6    active    idle            10.179.14.71              Client registered!
+  ubuntu-advantage/5    active    idle            10.179.14.71              Attached (esm-apps,esm-infra)
+postgresql/2*           active    idle   5        10.179.14.98    5432/tcp  Primary
+  landscape-client/2    blocked   idle            10.179.14.98              Failed to add PPA!
+  ubuntu-advantage/4    active    idle            10.179.14.98              Attached (esm-apps,esm-infra)
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.179.14.85   juju-fb6e02-0  ubuntu@22.04      Running
+1        started  10.179.14.83   juju-fb6e02-1  ubuntu@22.04      Running
+2        started  10.179.14.127  juju-fb6e02-2  ubuntu@22.04      Running
+3        started  10.179.14.7    juju-fb6e02-3  ubuntu@22.04      Running
+4        started  10.179.14.71   juju-fb6e02-4  ubuntu@22.04      Running
+5        started  10.179.14.98   juju-fb6e02-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-5: 01:53:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:53:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:53:01 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 01:53:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:53:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:53:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:53:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:53:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:53:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:53:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:53:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:53:14 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-1: 01:53:14 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-2: 01:53:15 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-0: 01:53:15 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 01:53:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:53:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:53:18 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:53:25 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:53:25 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:53:26 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-0: 01:59:16 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-0: 01:59:16 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-1: 01:59:16 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-4: 01:59:17 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-5: 01:59:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-6: 01:59:21 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-4: 01:59:21 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-2: 01:59:21 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-5: 01:59:22 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-3: 01:59:51 ERROR unit.unit-ubuntu-advantage-3.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-3/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-3: 01:59:51 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-1: 01:59:52 ERROR unit.unit-ubuntu-advantage-1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-1/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-1: 01:59:53 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-2: 01:59:55 ERROR unit.unit-ubuntu-advantage-2.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-2/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-2: 01:59:56 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-landscape-client-0: 02:00:11 CRITICAL unit.landscape-client/0.juju-log   File "/var/lib/juju/agents/unit-landscape-client-0/charm/./src/charm.py", line 274, in <module>
+    main(LandscapeClientCharm)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/main.py", line 45, in main
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/./src/charm.py", line 227, in _on_config_changed
+    self.add_ppa()
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/./src/charm.py", line 158, in add_ppa
+    if not process_helper(["add-apt-repository", "-y", landscape_ppa]):
+  File "/var/lib/juju/agents/unit-landscape-client-0/charm/./src/charm.py", line 117, in process_helper
+    log_error("".join(traceback.format_stack()))
+
+unit-landscape-client-0: 02:00:11 CRITICAL unit.landscape-client/0.juju-log Repository: 'deb https://ppa.launchpadcontent.net/landscape/self-hosted-beta/ubuntu/ jammy main'
+Description:
+Dependencies for Landscape Server Self-Hosted Beta.
+More info: https://launchpad.net/~landscape/+archive/ubuntu/self-hosted-beta
+Adding repository.
+Found existing deb entry in /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Adding deb entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Found existing deb-src entry in /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Adding disabled deb-src entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Traceback (most recent call last):
+  File "/usr/bin/add-apt-repository", line 364, in <module>
+    sys.exit(0 if addaptrepo.main() else 1)
+  File "/usr/bin/add-apt-repository", line 357, in main
+    shortcut.add()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 222, in add
+    self.add_key()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 398, in add_key
+    if not all((self.trustedparts_file, self.trustedparts_content)):
+  File "/usr/lib/python3/dist-packages/softwareproperties/ppa.py", line 141, in trustedparts_content
+    key = self.lpppa.getSigningKeyData()
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/resource.py", line 592, in __call__
+    response, content = self.root._browser._request(
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/_browser.py", line 429, in _request
+    raise error
+lazr.restfulclient.errors.ServerError: HTTP Error 500: Internal Server Error
+Response headers:
+---
+connection: close
+content-length: 30
+content-type: text/plain;charset=utf-8
+date: Fri, 01 Nov 2024 02:00:11 GMT
+server: gunicorn
+status: 500
+x-lazr-oopsid: OOPS-393b66c26081c2741142062c45f974f4
+x-powered-by: Zope (www.zope.org), Python (www.python.org)
+x-request-id: dc876583-194c-4d51-a742-39a39cbb5931
+x-vcs-revision: 22ade00ab50b929fac63b8ee7252243aceda294a
+---
+Response body:
+---
+b'GPGKeyTemporarilyNotFoundError'
+---
+
+
+unit-landscape-client-2: 02:01:21 CRITICAL unit.landscape-client/2.juju-log   File "/var/lib/juju/agents/unit-landscape-client-2/charm/./src/charm.py", line 274, in <module>
+    main(LandscapeClientCharm)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/main.py", line 45, in main
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/./src/charm.py", line 227, in _on_config_changed
+    self.add_ppa()
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/./src/charm.py", line 158, in add_ppa
+    if not process_helper(["add-apt-repository", "-y", landscape_ppa]):
+  File "/var/lib/juju/agents/unit-landscape-client-2/charm/./src/charm.py", line 117, in process_helper
+    log_error("".join(traceback.format_stack()))
+
+unit-landscape-client-2: 02:01:21 CRITICAL unit.landscape-client/2.juju-log Repository: 'deb https://ppa.launchpadcontent.net/landscape/self-hosted-beta/ubuntu/ jammy main'
+Description:
+Dependencies for Landscape Server Self-Hosted Beta.
+More info: https://launchpad.net/~landscape/+archive/ubuntu/self-hosted-beta
+Adding repository.
+Found existing deb entry in /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Adding deb entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Found existing deb-src entry in /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Adding disabled deb-src entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Traceback (most recent call last):
+  File "/usr/bin/add-apt-repository", line 364, in <module>
+    sys.exit(0 if addaptrepo.main() else 1)
+  File "/usr/bin/add-apt-repository", line 357, in main
+    shortcut.add()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 222, in add
+    self.add_key()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 398, in add_key
+    if not all((self.trustedparts_file, self.trustedparts_content)):
+  File "/usr/lib/python3/dist-packages/softwareproperties/ppa.py", line 141, in trustedparts_content
+    key = self.lpppa.getSigningKeyData()
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/resource.py", line 592, in __call__
+    response, content = self.root._browser._request(
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/_browser.py", line 429, in _request
+    raise error
+lazr.restfulclient.errors.ServerError: HTTP Error 500: Internal Server Error
+Response headers:
+---
+connection: close
+content-length: 30
+content-type: text/plain;charset=utf-8
+date: Fri, 01 Nov 2024 02:01:20 GMT
+server: gunicorn
+status: 500
+x-lazr-oopsid: OOPS-f64ccb1e94096f6ea2c206ac888780b2
+x-powered-by: Zope (www.zope.org), Python (www.python.org)
+x-request-id: 1e5214c8-16c6-472f-ae88-e1281dc07a9c
+x-vcs-revision: 22ade00ab50b929fac63b8ee7252243aceda294a
+---
+Response body:
+---
+b'GPGKeyTemporarilyNotFoundError'
+---
+
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
