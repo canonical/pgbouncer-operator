@@ -50,9 +50,9 @@ async def check_writes(ops_test, use_ip_from_inside: bool = False) -> int:
         ops_test, use_ip_from_inside=use_ip_from_inside
     )
     for member, count in actual_writes.items():
-        assert (
-            count == max_number_written[member]
-        ), f"{member}: writes to the db were missed: count of actual writes different from the max number written."
+        assert count == max_number_written[member], (
+            f"{member}: writes to the db were missed: count of actual writes different from the max number written."
+        )
         assert total_expected_writes == count, f"{member}: writes to the db were missed."
     return total_expected_writes
 
