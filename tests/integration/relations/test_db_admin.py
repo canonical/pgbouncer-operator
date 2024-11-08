@@ -36,7 +36,7 @@ async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: 
         ops_test,
         pgb_charm_jammy,
         db_units=DATABASE_UNITS,
-        pgb_series="jammy",
+        pgb_base="ubuntu@22.04",
         pg_config={"profile": "testing"},
         pgb_config={"max_db_connections": "40", "pool_mode": "transaction"},
     )

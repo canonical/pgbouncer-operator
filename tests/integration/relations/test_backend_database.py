@@ -39,7 +39,7 @@ tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "latest
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_series="jammy")
+    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_base="ubuntu@22.04")
     async with ops_test.fast_forward():
         await ops_test.model.deploy(
             CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
@@ -88,7 +88,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
 
 @pytest.mark.group(1)
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
-    await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, series="focal")
+    await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, base="ubuntu@20.04")
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")
@@ -110,7 +110,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
-            ops_test, MAILMAN3, MAILMAN3, series="focal"
+            ops_test, MAILMAN3, MAILMAN3, base="ubuntu@20.04"
         )
 
         pgb_user, _ = await get_backend_user_pass(ops_test, relation)

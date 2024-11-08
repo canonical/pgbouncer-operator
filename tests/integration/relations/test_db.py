@@ -47,14 +47,14 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
             pgb_charm_focal,
             db_units=DATABASE_UNITS,
             pgb_config={"listen_port": 5432},
-            pgb_series="focal",
+            pgb_base="ubuntu@20.04",
         )
         db_relation = await deploy_and_relate_application_with_pgbouncer_bundle(
             ops_test,
             MAILMAN3,
             MAILMAN3,
             config=mailman_config,
-            series="focal",
+            base="ubuntu@20.04",
         )
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)

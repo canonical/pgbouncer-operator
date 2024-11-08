@@ -256,7 +256,7 @@ async def deploy_postgres_bundle(
     ops_test: OpsTest,
     pgb_charm,
     pgb_config: Optional[Dict] = None,
-    pgb_series: str = "jammy",
+    pgb_base: str = "ubuntu@22.04",
     pg_config: Optional[Dict] = None,
     db_units=3,
 ):
@@ -274,7 +274,7 @@ async def deploy_postgres_bundle(
             application_name=PGB,
             config=pgb_config,
             num_units=None,
-            series=pgb_series,
+            base=pgb_base,
         ),
         ops_test.model.deploy(
             PG,
@@ -301,7 +301,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: Optional[Dict] = None,
     channel: str = "stable",
     relation: str = "db",
-    series: str = "jammy",
+    base: str = "ubuntu@22.04",
     force: bool = False,
     wait: bool = True,
 ):
@@ -318,8 +318,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         channel: The channel to use for the charm.
         relation: Name of the pgbouncer relation to relate
             the application to.
-        series: The series on which to deploy.
-        force: Allow charm to be deployed to a machine running an unsupported series.
+        base: The base on which to deploy.
+        force: Allow charm to be deployed to a machine running an unsupported base.
         wait: Wait for model to idle
 
     Returns:
@@ -334,7 +334,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         application_name=application_name,
         num_units=number_of_units,
         config=config,
-        series=series,
+        base=base,
         force=force,
     )
 
