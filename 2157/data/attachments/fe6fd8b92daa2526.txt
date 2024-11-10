@@ -1,0 +1,54 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:05:39Z
+
+App                       Version  Status       Scale  Charm                     Channel        Rev  Exposed  Message
+data-integrator                    maintenance      3  data-integrator           latest/edge     72  no       installing charm software
+hacluster                          maintenance      3  hacluster                 2.4/stable     131  no       Installing apt packages
+pgbouncer                          unknown          0  pgbouncer                                  0  no       
+postgresql                         error            2  postgresql                14/edge        513  no       hook failed: "leader-elected"
+self-signed-certificates           active           1  self-signed-certificates  latest/stable  155  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports  Message
+data-integrator/0            maintenance  executing  0        10.237.167.185         (leader-settings-changed) installing charm software
+  hacluster/1                maintenance  executing           10.237.167.185         (install) Installing apt packages
+data-integrator/1            maintenance  executing  1        10.237.167.170         (leader-settings-changed) installing charm software
+  hacluster/2                maintenance  executing           10.237.167.170         (install) Installing apt packages
+data-integrator/2*           maintenance  executing  2        10.237.167.94          installing charm software
+  hacluster/0*               maintenance  executing           10.237.167.94          (install) Installing apt packages
+postgresql/0                 waiting      executing  4        10.237.167.254         awaiting passwords generation
+postgresql/1*                error        idle       5        10.237.167.135         hook failed: "leader-elected"
+self-signed-certificates/0*  active       idle       3        10.237.167.106         
+
+Machine  State    Address         Inst id        Base          AZ  Message
+0        started  10.237.167.185  juju-c134d7-0  ubuntu@22.04      Running
+1        started  10.237.167.170  juju-c134d7-1  ubuntu@22.04      Running
+2        started  10.237.167.94   juju-c134d7-2  ubuntu@22.04      Running
+3        started  10.237.167.106  juju-c134d7-3  ubuntu@22.04      Running
+4        started  10.237.167.254  juju-c134d7-4  ubuntu@22.04      Running
+5        started  10.237.167.135  juju-c134d7-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-2: 02:03:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:03:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-data-integrator-2: 02:03:36 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:03:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:03:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:03:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:03:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:03:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-data-integrator-0: 02:03:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:03:53 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:03:53 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-data-integrator-1: 02:03:55 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:03:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 02:03:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:03:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-hacluster-1: 02:04:02 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
