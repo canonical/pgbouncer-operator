@@ -32,6 +32,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
             pgb_charm_jammy,
             application_name=PGB,
             num_units=None,
+            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             PG,

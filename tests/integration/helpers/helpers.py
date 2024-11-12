@@ -258,6 +258,7 @@ async def deploy_postgres_bundle(
     pgb_config: Optional[Dict] = None,
     pgb_base: str = "ubuntu@22.04",
     pg_config: Optional[Dict] = None,
+    pg_base: str = "ubuntu@22.04",
     db_units=3,
 ):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
@@ -281,6 +282,7 @@ async def deploy_postgres_bundle(
             channel="14/edge",
             num_units=db_units,
             config={"profile": "testing", **pg_config},
+            base=pg_base,
         ),
     )
     async with ops_test.fast_forward():
