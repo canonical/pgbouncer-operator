@@ -1,6 +1,7 @@
 >Reference > Release Notes > [All revisions] > Revision 394/395/396/397
 
 # Revision 394/395/396/397
+September 11, 2024
 
 Dear community,
 
@@ -23,15 +24,18 @@ where `<arch>` can be `amd64` or `arm64`.
 ---
 
 ## Highlights 
-* Added HA cluster interface ([PR #317](https://github.com/canonical/pgbouncer-operator/pull/317)) ([DPE-4066](https://warthogs.atlassian.net/browse/DPE-4066))
-* Added URI to relation data ([PR #324](https://github.com/canonical/pgbouncer-operator/pull/324)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
-* Typed configuration ([PR #337](https://github.com/canonical/pgbouncer-operator/pull/337)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
-* Shortened integration test job name ([PR #292](https://github.com/canonical/pgbouncer-operator/pull/292))
-* Moved scheduled tests ([PR #297](https://github.com/canonical/pgbouncer-operator/pull/297))
+* [Added HA cluster interface](https://charmhub.io/pgbouncer/integrations?channel=1/stable#ha) ([PR #317](https://github.com/canonical/pgbouncer-operator/pull/317)) ([DPE-4066](https://warthogs.atlassian.net/browse/DPE-4066))
+* Added URI to relation data (improves UX) ([PR #324](https://github.com/canonical/pgbouncer-operator/pull/324)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
+* Add Unix socket access for principal charm (including strict SNAPs) ([PR #337](https://github.com/canonical/pgbouncer-operator/pull/337)) ([DPE-4683](https://warthogs.atlassian.net/browse/DPE-4683))
+
+## Bugfixes
+
 * Use poetry package-mode=false ([PR #308](https://github.com/canonical/pgbouncer-operator/pull/308))
 * Switched test app interface ([PR #310](https://github.com/canonical/pgbouncer-operator/pull/310))
 * Bumped data_interface and tempo libs ([PR #318](https://github.com/canonical/pgbouncer-operator/pull/318))
-* Removed locales ([PR #328](https://github.com/canonical/pgbouncer-operator/pull/328))
+* Removed no longer necessary locales dependency ([PR #328](https://github.com/canonical/pgbouncer-operator/pull/328))
+* Moved scheduled tests ([PR #297](https://github.com/canonical/pgbouncer-operator/pull/297))
+ * Shortened integration test job name ([PR #292](https://github.com/canonical/pgbouncer-operator/pull/292))
 
 ## Dependencies and automations
 * Switched Jira issue sync from workflow to bot ([PR #327](https://github.com/canonical/pgbouncer-operator/pull/327))

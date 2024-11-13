@@ -17,11 +17,8 @@ from constants import (
     PEER_RELATION_NAME,
 )
 
-from ..helpers import patch_network_get
-
 
 class TestDb(unittest.TestCase):
-    @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -298,18 +295,18 @@ class TestDb(unittest.TestCase):
 
     def test_get_allowed_subnets(self):
         rel = self.charm.model.get_relation("db", self.db_rel_id)
-        for key in rel.data.keys():
+        for key in rel.data:
             if isinstance(key, Unit):
                 rel.data[key]["egress-subnets"] = "10.0.0.10,10.0.0.11"
 
-        assert "10.0.0.10,10.0.0.11" == self.charm.legacy_db_relation.get_allowed_subnets(rel)
+        assert self.charm.legacy_db_relation.get_allowed_subnets(rel) == "10.0.0.10,10.0.0.11"
 
     def test_get_allowed_units(self):
         rel = self.charm.model.get_relation("db", self.db_rel_id)
 
-        assert "client_app/0" == self.charm.legacy_db_relation.get_allowed_units(rel)
+        assert self.charm.legacy_db_relation.get_allowed_units(rel) == "client_app/0"
 
     def test_get_external_app(self):
         rel = self.charm.model.get_relation("db", self.db_rel_id)
 
-        assert "client_app" == self.charm.legacy_db_relation.get_external_app(rel).name
+        assert self.charm.legacy_db_relation.get_external_app(rel).name == "client_app"

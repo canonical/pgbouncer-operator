@@ -8,7 +8,7 @@ import logging
 from configparser import ConfigParser
 from multiprocessing import ProcessError
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import yaml
 from juju.unit import Unit
@@ -112,7 +112,7 @@ async def cat_file_from_unit(ops_test: OpsTest, filepath: str, unit_name: str) -
     return output
 
 
-async def get_cfg(ops_test: OpsTest, unit_name: str, path: str = None) -> dict:
+async def get_cfg(ops_test: OpsTest, unit_name: str, path: Optional[str] = None) -> dict:
     """Gets pgbouncer config from unit filesystem."""
     if path is None:
         app_name = unit_name.split("/")[0]
@@ -255,9 +255,9 @@ def relation_exited(ops_test: OpsTest, endpoint_one: str, endpoint_two: str) -> 
 async def deploy_postgres_bundle(
     ops_test: OpsTest,
     pgb_charm,
-    pgb_config: dict = {},
+    pgb_config: Optional[Dict] = None,
     pgb_series: str = "jammy",
-    pg_config: dict = {},
+    pg_config: Optional[Dict] = None,
     db_units=3,
 ):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
@@ -265,6 +265,9 @@ async def deploy_postgres_bundle(
     Returns:
         libjuju Relation object describing the relation between pgbouncer and postgres.
     """
+    pg_config = pg_config if pg_config else {}
+    pgb_config = pgb_config if pgb_config else {}
+
     await asyncio.gather(
         ops_test.model.deploy(
             pgb_charm,
@@ -295,7 +298,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     charm: str,
     application_name: str,
     number_of_units: int = 1,
-    config: dict = {},
+    config: Optional[Dict] = None,
     channel: str = "stable",
     relation: str = "db",
     series: str = "jammy",
@@ -322,6 +325,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     Returns:
         the id of the created relation.
     """
+    config = config if config else {}
+
     # Deploy application.
     await ops_test.model.deploy(
         charm,

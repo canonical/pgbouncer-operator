@@ -13,11 +13,8 @@ from constants import (
     PEER_RELATION_NAME,
 )
 
-from ..helpers import patch_network_get
-
 
 class TestPgbouncerProvider(unittest.TestCase):
-    @patch_network_get(private_address="1.1.1.1")
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -68,12 +65,17 @@ class TestPgbouncerProvider(unittest.TestCase):
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_credentials")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_version")
+    @patch(
+        "charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_my_relation_field",
+        return_value="test_pass",
+    )
     @patch("charm.PgBouncerCharm.set_relation_databases")
     @patch("charm.PgBouncerCharm.generate_relation_databases")
     def test_on_database_requested(
         self,
         _gen_rel_dbs,
         _set_rel_dbs,
+        _dbp_fetch_my_relation_field,
         _dbp_set_version,
         _dbp_set_endpoints,
         _dbp_set_credentials,
@@ -91,11 +93,13 @@ class TestPgbouncerProvider(unittest.TestCase):
         _gen_rel_dbs.return_value = {}
 
         event = MagicMock()
-        rel_id = event.relation.id = 1
+        rel_id = event.relation.id = self.client_rel_id
         database = event.database = "test-db"
         event.extra_user_roles = "SUPERUSER"
         event.external_node_connectivity = False
         user = f"relation_id_{rel_id}"
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(rel_id, "application", {"database": "test-db"})
 
         # check we exit immediately if backend doesn't exist.
         _check_backend.return_value = False
@@ -129,7 +133,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             rel_id, f"localhost:{self.charm.config['listen_port']}"
         )
         _set_rel_dbs.assert_called_once_with({
-            "1": {"name": "test-db", "legacy": False},
+            str(rel_id): {"name": "test-db", "legacy": False},
             "*": {"name": "*", "auth_dbname": "test-db"},
         })
         _render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
@@ -159,7 +163,7 @@ class TestPgbouncerProvider(unittest.TestCase):
     @patch(
         "charm.Peers.units_ips",
         new_callable=PropertyMock,
-        return_value={"1.1.1.1", "1.1.1.2"},
+        return_value={"192.0.2.0", "192.0.2.1"},
     )
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_my_relation_field")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_data")
@@ -208,11 +212,11 @@ class TestPgbouncerProvider(unittest.TestCase):
 
         self.client_relation.update_connection_info(rel)
 
-        _set_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.1:6432")
-        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "1.1.1.2:6432")
+        _set_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.0:6432")
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.1:6432")
         _set_uris.assert_called_once_with(
             self.client_rel_id,
-            f"postgresql://relation_id_{self.client_rel_id}:test_password@1.1.1.1,1.1.1.2:6432/test_db",
+            f"postgresql://relation_id_{self.client_rel_id}:test_password@192.0.2.0,192.0.2.1:6432/test_db",
         )
         _set_endpoints.reset_mock()
         _set_ro_endpoints.reset_mock()

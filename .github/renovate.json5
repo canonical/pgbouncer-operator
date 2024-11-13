@@ -14,6 +14,12 @@
       "matchDatasources": ["pypi"],
       "allowedVersions": "<3",
       "groupName": "Juju agents"
+    },
+    {
+      "matchManagers": ["poetry"],
+      "matchPackageNames": ["coverage"],
+      "matchDatasources": ["pypi"],
+      "enabled": false
     }
   ],
   "regexManagers": [

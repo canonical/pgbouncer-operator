@@ -36,7 +36,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 34
+LIBPATCH = 36
 
 INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE = "invalid role(s) for extra user roles"
 
@@ -83,6 +83,10 @@ class PostgreSQLGetLastArchivedWALError(Exception):
     """Exception raised when retrieving last archived WAL fails."""
 
 
+class PostgreSQLGetCurrentTimelineError(Exception):
+    """Exception raised when retrieving current timeline id for the PostgreSQL unit fails."""
+
+
 class PostgreSQLGetPostgreSQLVersionError(Exception):
     """Exception raised when retrieving PostgreSQL version fails."""
 
@@ -113,6 +117,25 @@ class PostgreSQL:
         self.password = password
         self.database = database
         self.system_users = system_users
+
+    def _configure_pgaudit(self, enable: bool) -> None:
+        connection = None
+        try:
+            connection = self._connect_to_database()
+            connection.autocommit = True
+            with connection.cursor() as cursor:
+                if enable:
+                    cursor.execute("ALTER SYSTEM SET pgaudit.log = 'ROLE,DDL,MISC,MISC_SET';")
+                    cursor.execute("ALTER SYSTEM SET pgaudit.log_client TO off;")
+                    cursor.execute("ALTER SYSTEM SET pgaudit.log_parameter TO off")
+                else:
+                    cursor.execute("ALTER SYSTEM RESET pgaudit.log;")
+                    cursor.execute("ALTER SYSTEM RESET pgaudit.log_client;")
+                    cursor.execute("ALTER SYSTEM RESET pgaudit.log_parameter;")
+                cursor.execute("SELECT pg_reload_conf();")
+        finally:
+            if connection is not None:
+                connection.close()
 
     def _connect_to_database(
         self, database: str = None, database_host: str = None
@@ -325,6 +348,7 @@ class PostgreSQL:
                             if enable
                             else f"DROP EXTENSION IF EXISTS {extension};"
                         )
+            self._configure_pgaudit(ordered_extensions.get("pgaudit", False))
         except psycopg2.errors.UniqueViolation:
             pass
         except psycopg2.errors.DependentObjectsStillExist:
@@ -398,6 +422,16 @@ WHERE lomowner = (SELECT oid FROM pg_roles WHERE rolname = '{}');""".format(user
         except psycopg2.Error as e:
             logger.error(f"Failed to get PostgreSQL last archived WAL: {e}")
             raise PostgreSQLGetLastArchivedWALError()
+
+    def get_current_timeline(self) -> str:
+        """Get the timeline id for the current PostgreSQL unit."""
+        try:
+            with self._connect_to_database() as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT timeline_id FROM pg_control_checkpoint();")
+                return cursor.fetchone()[0]
+        except psycopg2.Error as e:
+            logger.error(f"Failed to get PostgreSQL current timeline id: {e}")
+            raise PostgreSQLGetCurrentTimelineError()
 
     def get_postgresql_text_search_configs(self) -> Set[str]:
         """Returns the PostgreSQL available text search configs.

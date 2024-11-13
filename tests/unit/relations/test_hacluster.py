@@ -10,10 +10,7 @@ from ops.testing import Harness
 from charm import PgBouncerCharm
 from constants import HACLUSTER_RELATION_NAME
 
-from ..helpers import patch_network_get
 
-
-@patch_network_get(private_address="1.1.1.1")
 class TestHaCluster(TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)
@@ -87,7 +84,7 @@ class TestHaCluster(TestCase):
             'migration-threshold=\\"INFINITY\\" '
             'failure-timeout=\\"5s\\" op monitor '
             'timeout=\\"20s\\" interval=\\"10s\\" depth=\\"0\\""}',
-            "json_resources": '{"res_pgbouncer_d716ce1885885a_vip": ' '"ocf:heartbeat:IPaddr2"}',
+            "json_resources": '{"res_pgbouncer_d716ce1885885a_vip": "ocf:heartbeat:IPaddr2"}',
         }
 
         # ipv6 address
@@ -99,7 +96,7 @@ class TestHaCluster(TestCase):
             'migration-threshold=\\"INFINITY\\" '
             'failure-timeout=\\"5s\\" op monitor '
             'timeout=\\"20s\\" interval=\\"10s\\" depth=\\"0\\""}',
-            "json_resources": '{"res_pgbouncer_61b6532057c944_vip": ' '"ocf:heartbeat:IPv6addr"}',
+            "json_resources": '{"res_pgbouncer_61b6532057c944_vip": "ocf:heartbeat:IPv6addr"}',
         }
 
         # unset data

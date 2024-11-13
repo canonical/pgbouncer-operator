@@ -7,8 +7,6 @@ Dear community,
 
 We'd like to announce that Canonical's newest Charmed PgBouncer operator has been published in the 1/stable [channel](https://charmhub.io/pgbouncer?channel=1/stable) :tada: :
 
-<!--TODO: different revisions for focal/jammy? amd/arm?-->
-
 |AMD64|ARM64|
 |---|---|
  255 (focal) </br> 256 (jammy)  | 254 (focal) </br> 257 (jammy) |
@@ -18,8 +16,6 @@ If you are jumping over several stable revisions, make sure to check [previous r
 [/note]  
 
 ## Features you can start using today
-
-<!--TODO: add notable features-->
 
 * [PR #210](https://github.com/canonical/pgbouncer-operator/pull/210) - Added support for multiple databases
 * [PR #238](https://github.com/canonical/pgbouncer-operator/pull/238) - [Added support for tracing](/t/14788) through `tempo-k8s`
@@ -35,8 +31,6 @@ Canonical Data issues are now public on both [Jira](https://warthogs.atlassian.n
 [GitHub Releases](https://github.com/canonical/pgbouncer-operator/releases) provide a detailed list of bugfixes, PRs, and commits for each revision.  
 
 ## Inside the charms
-
-<!--TODO: check that the ppa and snap versions in this section are up to date-->
 
 * Charmed PgBouncer ships the latest PgBouncer `1.21.0-0ubuntu0.22.04.1~ppa1`
 * The Prometheus pgbouncer-exporter is “`0.7.0-0ubuntu0.22.04.1~ppa1`”

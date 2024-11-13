@@ -200,9 +200,9 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get(
-        "read-only-endpoints", None
-    ), f"read-only-endpoints in pgb databag: {databag}"
+    assert not databag.get("read-only-endpoints", None), (
+        f"read-only-endpoints in pgb databag: {databag}"
+    )
 
 
 @pytest.mark.group(1)
@@ -229,9 +229,9 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get(
-        "read-only-endpoints", None
-    ), f"read-only-endpoints in pgb databag: {databag}"
+    assert not databag.get("read-only-endpoints", None), (
+        f"read-only-endpoints in pgb databag: {databag}"
+    )
 
 
 @pytest.mark.group(1)
@@ -330,7 +330,7 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     # Relate the charms using another relation and wait for them exchanging some connection data.
     await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{SECOND_DATABASE_RELATION_NAME}", PGB_2)
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=APP_NAMES + [PGB, PGB_2], status="active")
+        await ops_test.model.wait_for_idle(apps=[*APP_NAMES, PGB, PGB_2], status="active")
 
     # Get the connection strings to connect to both databases.
     first_database_connection_string = await build_connection_string(

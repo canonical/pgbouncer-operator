@@ -12,10 +12,7 @@ from constants import (
     PEER_RELATION_NAME,
 )
 
-from ..helpers import patch_network_get
 
-
-@patch_network_get(private_address="1.1.1.1")
 class TestPeers(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(PgBouncerCharm)

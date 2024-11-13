@@ -2,11 +2,18 @@
 
 The PgBouncer Operator delivers automated operations management from day 0 to day 2 on the [PgBouncer](http://www.pgbouncer.org/) - the  lightweight connection pooler for PostgreSQL. It is an open source, end-to-end, production-ready data platform on top of [Juju](https://juju.is/).
 
-![image|690x423](upload://fqMd5JlHeegw0PlUjhWKRu858Nc.png)
+![image|690x423](https://assets.ubuntu.com/v1/6c2781e9-psql_diagram.png)
 
 PostgreSQL is a powerful, open source object-relational database system that uses and extends the SQL language combined with many features that safely store and scale the most complicated data workloads. Consider to use [Charmed PostgreSQL](https://charmhub.io/postgresql).
 
-The PgBouncer operator comes in two flavours to deploy and operate PostgreSQL on [physical/virtual machines](https://github.com/canonical/pgbouncer-operator) and [Kubernetes](https://github.com/canonical/pgbouncer-operator). Both offer identical features and simplifies deployment, scaling, configuration and management of PgBouncer in production at scale in a reliable way.
+The PgBouncer operator comes in two flavours to deploy and operate PostgreSQL on [physical/virtual machines](https://github.com/canonical/pgbouncer-operator) and [Kubernetes](https://github.com/canonical/pgbouncer-k8s-operator). Both offer identical features and simplifies deployment, scaling, configuration and management of PgBouncer in production at scale in a reliable way.
+
+## In this documentation
+
+| | |
+|--|--|
+|  [Tutorials]()</br>  Get started - a hands-on introduction to using PgBouncer operator for new users </br> |  [How-to guides]() </br> Step-by-step guides covering key operations and common tasks |
+| [Reference](https://charmhub.io/pgbouncer/actions) </br> Technical information - specifications, APIs, architecture | [Explanation]() </br> Concepts - discussion and clarification of key topics  |
 
 ## Project and community
 
@@ -17,12 +24,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 - Explore [Canonical Data Fabric solutions](https://canonical.com/data)
 -  [Contacts us]() for all further questions
 
-## In this documentation
 
-| | |
-|--|--|
-|  [Tutorials]()</br>  Get started - a hands-on introduction to using PgBouncer operator for new users </br> |  [How-to guides]() </br> Step-by-step guides covering key operations and common tasks |
-| [Reference](https://charmhub.io/pgbouncer/actions) </br> Technical information - specifications, APIs, architecture | [Explanation]() </br> Concepts - discussion and clarification of key topics  |
 
 # Navigation
 
@@ -43,18 +45,18 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | h-manage-units | [Manage units](/t/12309) |
 | 3 | h-enable-encryption | [Enable encryption](/t/12310) |
 | 3 | h-manage-app | [Manage applications](/t/12311) |
+| 3 | h-external-access | [External access](/t/15741) |
+| 2 | h-monitoring | [Monitoring]() |
+| 3 | h-enable-monitoring | [Monitor (COS)](/t/12308) |
+| 3 | h-enable-tracing | [Tracing (COS)](/t/14788) |
 | 2 | h-upgrade | [Upgrade]() |
 | 3 | h-upgrade-intro | [Intro](/t/12313) |
 | 3 | h-upgrade-major | [Major upgrade](/t/12314) |
 | 3 | h-rollback-major | [Major rollback](/t/12315) |
 | 3 | h-upgrade-minor | [Minor upgrade](/t/12317) |
 | 3 | h-rollback-minor | [Minor rollback](/t/12316) |
-| 2 | h-monitoring | [Monitoring]() |
-| 3 | h-enable-monitoring | [Monitor (COS)](/t/12308) |
-| 3 | h-enable-tracing | [Tracing (COS)](/t/14788) |
 | 1 | reference | [Reference]() |
-| 2 | r-releases-group | [Release Notes]() |
-| 3 | r-releases | [All releases](/t/12285) |
+| 2 | r-releases | [Release Notes](/t/12285) |
 | 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
 | 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
 | 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |

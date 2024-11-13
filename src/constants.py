@@ -12,12 +12,7 @@ AUTH_FILE_NAME = "userlist.txt"
 # Snap constants.
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
 PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
-SNAP_PACKAGES = [
-    (
-        PGBOUNCER_SNAP_NAME,
-        {"revision": {"aarch64": "15", "x86_64": "16"}, "channel": "1/stable"},
-    )
-]
+SNAP_PACKAGES = [(PGBOUNCER_SNAP_NAME, {"revision": {"aarch64": "15", "x86_64": "16"}})]
 
 SNAP_COMMON_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/common"
 SNAP_CURRENT_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/current"
@@ -26,7 +21,8 @@ PGB_CONF_DIR = f"{SNAP_CURRENT_PATH}/etc/pgbouncer"
 PGB_RUN_DIR = f"{SNAP_CURRENT_PATH}/run/pgbouncer"
 PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
-SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"
+# Expected tmp location
+SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"  # noqa: S108
 
 # PGB config
 DATABASES = "databases"
@@ -43,15 +39,16 @@ TLS_KEY_FILE = "key.pem"
 TLS_CA_FILE = "ca.pem"
 TLS_CERT_FILE = "cert.pem"
 
-MONITORING_PASSWORD_KEY = "monitoring_password"
 CFG_FILE_DATABAG_KEY = "cfg_file"
 AUTH_FILE_DATABAG_KEY = "auth_file"
 
 EXTENSIONS_BLOCKING_MESSAGE = "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
 
-SECRET_LABEL = "secret"
-SECRET_INTERNAL_LABEL = "internal-secret"
-SECRET_DELETED_LABEL = "None"
+# Labels are not confidential
+MONITORING_PASSWORD_KEY = "monitoring_password"  # noqa: S105
+SECRET_LABEL = "secret"  # noqa: S105
+SECRET_INTERNAL_LABEL = "internal-secret"  # noqa: S105
+SECRET_DELETED_LABEL = "None"  # noqa: S105
 
 APP_SCOPE = "app"
 UNIT_SCOPE = "unit"
@@ -63,7 +60,7 @@ SECRET_KEY_OVERRIDES = {
     "ca": "cauth",
 }
 
-SOCKET_LOCATION = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp/pgbouncer/instance_0"
+# Expected socket location
+SOCKET_LOCATION = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp/pgbouncer/instance_0"  # noqa: S108
 
-TRACING_RELATION_NAME = "tracing"
 TRACING_PROTOCOL = "otlp_http"
