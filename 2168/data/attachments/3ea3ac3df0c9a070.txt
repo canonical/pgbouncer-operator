@@ -1,0 +1,137 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:focal/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/tls-certificates-operator-22
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  tls-certificates-operator/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] waiting: Awaiting restart operation
+  postgresql/2 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  postgresql/2 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/focal/mailman3-core-18
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Updating apt cache
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing mailman3,postfix,postfix-policyd-spf-python,spamassassin,spamc
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing python3-mailman-hyperkitty
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [executing] active: Ready (source version/commit e1d5a03)
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  pgbouncer/1 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  pgbouncer/1 [executing] maintenance: Initialising backend-database relation
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m root:helpers.py:96 (0, '{"pgbouncer/1":{"workload-version":"1.21.0","machine":"5","opened-ports":null,"public-address":"10.67.134.246","charm":"local:focal/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":10,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.67.134.201:5432","read-only-endpoints":"10.67.134.166:5432,10.67.134.167:5432","secret-tls":"secret://12bd9f60-3f7a-42b2-8c29-ba19984e7309/csqlr3mei431j5elkr2g","secret-user":"secret://12bd9f60-3f7a-42b2-8c29-ba19984e7309/csqlr3eei431j5elkr20","version":"14.13"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.67.134.201/32","ingress-address":"10.67.134.201","private-address":"10.67.134.201"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.67.134.167/32","ingress-address":"10.67.134.167","private-address":"10.67.134.167"}},"postgresql/2":{"in-scope":true,"data":{"egress-subnets":"10.67.134.166/32","ingress-address":"10.67.134.166","private-address":"10.67.134.166"}}}},{"relation-id":13,"endpoint":"db","related-endpoint":"db","application-data":{},"local-unit":{"in-scope":false,"data":null},"related-units":{"mailman3-core/0":{"in-scope":true,"data":{"database":"mailman3","egress-subnets":"10.67.134.246/32","ingress-address":"10.67.134.246","private-address":"10.67.134.246"}}}},{"relation-id":8,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.67.134.246","pgb_dbs_config":"{\\"13\\": {\\"name\\": \\"mailman3\\", \\"legacy\\": true}}","pgbouncer_user_13_test":"{\\"user\\": \\"pgbouncer_user_13_test\\", \\"password\\": \\"ac296e5RmBH0f1zZvJI4mNfy\\", \\"database\\": \\"mailman3\\"}","readonly_dbs":"[\\"postgresql_test_app_database\\"]"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.67.134.246/32","ingress-address":"10.67.134.246","pgb_dbs":"6f95661222dd47ebbaa1e3d98a7a61f3","private-address":"10.67.134.246"}}},{"relation-id":9,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.67.134.246/32","ingress-address":"10.67.134.246","private-address":"10.67.134.246","state":"idle"}}}]}}\n', '')
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:17:39Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Exposed  Message
+mailman3-core                       active      1  mailman3-core              latest/stable   18  no       Ready (source version/commit e1d5a03)
+pgbouncer                  1.21.0   active      1  pgbouncer                                   0  no       
+postgresql                 14.13    active      3  postgresql                 14/edge        515  no       
+tls-certificates-operator           active      1  tls-certificates-operator  latest/stable   22  no       
+
+Unit                          Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*              active    idle   5        10.67.134.246   25/tcp    Ready (source version/commit e1d5a03)
+  pgbouncer/1*                active    idle            10.67.134.246             
+postgresql/0*                 active    idle   0        10.67.134.201   5432/tcp  Primary
+postgresql/1                  active    idle   1        10.67.134.167   5432/tcp  
+postgresql/2                  active    idle   2        10.67.134.166   5432/tcp  
+tls-certificates-operator/0*  active    idle   4        10.67.134.103             
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.67.134.201  juju-4e7309-0  ubuntu@22.04      Running
+1        started  10.67.134.167  juju-4e7309-1  ubuntu@22.04      Running
+2        started  10.67.134.166  juju-4e7309-2  ubuntu@22.04      Running
+4        started  10.67.134.103  juju-4e7309-4  ubuntu@22.04      Running
+5        started  10.67.134.246  juju-4e7309-5  ubuntu@20.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-0: 01:54:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:54:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:54:09 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:54:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:54:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:54:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:54:12 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:54:12 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:54:12 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:03:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 02:03:50 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:03:54 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-4: 02:07:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:07:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-tls-certificates-operator-0: 02:07:27 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:12:58 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:12:58 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-mailman3-core-0: 02:12:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:16:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
