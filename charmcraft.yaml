@@ -17,24 +17,30 @@ bases:
     architectures: [arm64]
 
 parts:
-  charm:
+  poetry-deps:
+    plugin: nil
+    build-packages:
+      - curl
+    override-build: |
+      python3 -m pip install --upgrade pip==24.3.1
+      curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4
+      ln -sf $HOME/.local/bin/poetry /usr/local/bin/poetry
+  foo:
+    plugin: poetry
+    source: .
+    after:
+      - poetry-deps
+    poetry-with:
+      - charm-libs
     build-snaps:
       - rustup
     build-packages:
       - libffi-dev
       - libssl-dev
       - pkg-config
-      - libpq-dev
     override-build: |
       rustup default stable
-
-      # Convert subset of poetry.lock to requirements.txt
-      curl -sSL https://install.python-poetry.org | python3 -
-      /root/.local/bin/poetry export --only main,charm-libs --output requirements.txt
-
       craftctl default
-    charm-strict-dependencies: true
-    charm-requirements: [requirements.txt]
   libpq:
     build-packages:
       - libpq-dev
