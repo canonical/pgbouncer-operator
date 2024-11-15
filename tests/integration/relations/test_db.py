@@ -54,7 +54,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
             MAILMAN3,
             MAILMAN3,
             config=mailman_config,
-            base="ubuntu@20.04",
+            series="focal",
         )
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)

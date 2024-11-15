@@ -110,7 +110,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
 
         # Deploy and test the deployment of Weebl.
         await deploy_and_relate_application_with_pgbouncer_bundle(
-            ops_test, MAILMAN3, MAILMAN3, base="ubuntu@20.04"
+            ops_test, MAILMAN3, MAILMAN3, series="focal"
         )
 
         pgb_user, _ = await get_backend_user_pass(ops_test, relation)

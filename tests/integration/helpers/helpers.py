@@ -303,7 +303,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: Optional[Dict] = None,
     channel: str = "stable",
     relation: str = "db",
-    base: str = "ubuntu@22.04",
+    base: Optional[str] = None,
+    series: Optional[str] = None,
     force: bool = False,
     wait: bool = True,
 ):
@@ -321,6 +322,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         relation: Name of the pgbouncer relation to relate
             the application to.
         base: The base on which to deploy.
+        series: The series on which to deploy (lesser precedence than base).
         force: Allow charm to be deployed to a machine running an unsupported base.
         wait: Wait for model to idle
 
@@ -329,6 +331,15 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     """
     config = config if config else {}
 
+    if not base and not series:
+        base = "ubuntu@22.04"
+
+    extra_deploy_params = {}
+    if base:
+        extra_deploy_params["base"] = base
+    elif series:
+        extra_deploy_params["series"] = series
+
     # Deploy application.
     await ops_test.model.deploy(
         charm,
@@ -336,8 +347,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         application_name=application_name,
         num_units=number_of_units,
         config=config,
-        base=base,
         force=force,
+        **extra_deploy_params,
     )
 
     async with ops_test.fast_forward():
