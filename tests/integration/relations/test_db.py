@@ -140,9 +140,9 @@ async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
         )
         for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(1), reraise=True):
             with attempt:
-                assert (
-                    len(ops_test.model.applications[PGB].units) == 0
-                ), "pgb units were not removed"
+                assert len(ops_test.model.applications[PGB].units) == 0, (
+                    "pgb units were not removed"
+                )
 
         config = {"plugin_pg_trgm_enable": "True", "plugin_unaccent_enable": "True"}
         await ops_test.model.applications[PG].set_config(config)

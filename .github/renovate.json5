@@ -1,36 +1,56 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>canonical/data-platform//renovate_presets/charm.json5"],
-  "reviewers": ["team:data-platform-postgresql"],
-  "packageRules": [
-    // Later rules override earlier rules
-    {
-      "matchPackageNames": ["pydantic"],
-      "allowedVersions": "<2.0.0"
-    },
-    {
-      "matchManagers": ["regex"],
-      "matchDepNames": ["juju"],
-      "matchDatasources": ["pypi"],
-      "allowedVersions": "<3",
-      "groupName": "Juju agents"
-    },
-    {
-      "matchManagers": ["poetry"],
-      "matchPackageNames": ["coverage"],
-      "matchDatasources": ["pypi"],
-      "enabled": false
-    }
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'github>canonical/data-platform//renovate_presets/charm.json5',
   ],
-  "regexManagers": [
+  reviewers: [
+    'team:data-platform-postgresql',
+  ],
+  packageRules: [
     {
-      "fileMatch": ["^\\.github/workflows/[^/]+\\.ya?ml$"],
-      "matchStrings": [
-        "(libjuju: )==(?<currentValue>.*?) +# renovate: latest libjuju 2"
+      matchPackageNames: [
+        'pydantic',
       ],
-      "depNameTemplate": "juju",
-      "datasourceTemplate": "pypi",
-      "versioningTemplate": "loose"
-    }
-  ]
+      allowedVersions: '<2.0.0',
+    },
+    {
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchDepNames: [
+        'juju',
+      ],
+      matchDatasources: [
+        'pypi',
+      ],
+      allowedVersions: '<3',
+      groupName: 'Juju agents',
+    },
+    {
+      matchManagers: [
+        'poetry',
+      ],
+      matchPackageNames: [
+        'coverage',
+      ],
+      matchDatasources: [
+        'pypi',
+      ],
+      enabled: false,
+    },
+  ],
+  customManagers: [
+    {
+      customType: 'regex',
+      fileMatch: [
+        '^\\.github/workflows/[^/]+\\.ya?ml$',
+      ],
+      matchStrings: [
+        '(libjuju: )==(?<currentValue>.*?) +# renovate: latest libjuju 2',
+      ],
+      depNameTemplate: 'juju',
+      datasourceTemplate: 'pypi',
+      versioningTemplate: 'loose',
+    },
+  ],
 }

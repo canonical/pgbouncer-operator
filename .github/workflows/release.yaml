@@ -25,14 +25,15 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v23.0.4
+    # self-hosted-builders branch is a temporary solution to reduce runner costs until https://github.com/canonical/charmcraftcache-hub/issues/111 is fixed 
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@self-hosted-builders
 
   release:
     name: Release charm
     needs:
       - ci-tests
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v23.0.4
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v23.0.5
     with:
       channel: 1/edge
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
