@@ -32,6 +32,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
             pgb_charm_jammy,
             application_name=PGB,
             num_units=None,
+            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             PG,
@@ -48,6 +49,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
             config={"token": github_secrets["UBUNTU_PRO_TOKEN"]},
             channel="latest/edge",
             num_units=0,
+            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             LS_CLIENT,
@@ -58,6 +60,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
             },
             channel="latest/edge",
             num_units=0,
+            base="ubuntu@22.04",
         ),
     )
     await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
