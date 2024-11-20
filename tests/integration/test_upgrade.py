@@ -50,6 +50,7 @@ async def test_deploy_latest(ops_test: OpsTest, pgb_charm_jammy) -> None:
             PGB,
             channel="1/edge",
             num_units=None,
+            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             CLIENT_APP_NAME,

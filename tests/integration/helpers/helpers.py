@@ -256,8 +256,9 @@ async def deploy_postgres_bundle(
     ops_test: OpsTest,
     pgb_charm,
     pgb_config: Optional[Dict] = None,
-    pgb_series: str = "jammy",
+    pgb_base: str = "ubuntu@22.04",
     pg_config: Optional[Dict] = None,
+    pg_base: str = "ubuntu@22.04",
     db_units=3,
 ):
     """Build pgbouncer charm, deploy and relate it to postgresql charm.
@@ -274,13 +275,14 @@ async def deploy_postgres_bundle(
             application_name=PGB,
             config=pgb_config,
             num_units=None,
-            series=pgb_series,
+            base=pgb_base,
         ),
         ops_test.model.deploy(
             PG,
             channel="14/edge",
             num_units=db_units,
             config={"profile": "testing", **pg_config},
+            base=pg_base,
         ),
     )
     async with ops_test.fast_forward():
@@ -301,7 +303,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: Optional[Dict] = None,
     channel: str = "stable",
     relation: str = "db",
-    series: str = "jammy",
+    base: Optional[str] = None,
+    series: Optional[str] = None,
     force: bool = False,
     wait: bool = True,
 ):
@@ -318,14 +321,24 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         channel: The channel to use for the charm.
         relation: Name of the pgbouncer relation to relate
             the application to.
-        series: The series on which to deploy.
-        force: Allow charm to be deployed to a machine running an unsupported series.
+        base: The base on which to deploy.
+        series: The series on which to deploy (lesser precedence than base).
+        force: Allow charm to be deployed to a machine running an unsupported base.
         wait: Wait for model to idle
 
     Returns:
         the id of the created relation.
     """
     config = config if config else {}
+
+    if not base and not series:
+        base = "ubuntu@22.04"
+
+    extra_deploy_params = {}
+    if base:
+        extra_deploy_params["base"] = base
+    elif series:
+        extra_deploy_params["series"] = series
 
     # Deploy application.
     await ops_test.model.deploy(
@@ -334,8 +347,8 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         application_name=application_name,
         num_units=number_of_units,
         config=config,
-        series=series,
         force=force,
+        **extra_deploy_params,
     )
 
     async with ops_test.fast_forward():

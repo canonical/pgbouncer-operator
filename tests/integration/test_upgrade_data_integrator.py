@@ -40,6 +40,7 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
             PGB,
             channel="1/stable",
             num_units=None,
+            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             DATA_INTEGRATOR_APP_NAME,
