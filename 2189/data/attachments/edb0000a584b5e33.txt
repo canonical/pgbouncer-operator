@@ -1,0 +1,78 @@
+[32mINFO    [0m integration.relations.test_db:test_db.py:113 Deploying test app
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-test-app-287
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-1
+[32mINFO    [0m integration.relations.test_db:test_db.py:125 Relating without enabling extensions
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer-jammy/0 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer-jammy/0 [executing] active: 
+[32mINFO    [0m integration.relations.test_db:test_db.py:137 Relating with enabled extensions
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy/1 [executing] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  03:22:16Z
+
+App                  Version  Status   Scale  Charm                Channel        Rev  Exposed  Message
+mailman3-core                 active       1  mailman3-core        latest/stable   18  no       Ready (source version/commit e1d5a03)
+pgbouncer                     unknown      0  pgbouncer                             0  no       
+pgbouncer-jammy      1.21.0   active       1  pgbouncer                             1  no       
+postgresql           14.13    active       2  postgresql           14/edge        517  no       
+postgresql-test-app           active       1  postgresql-test-app  latest/edge    287  no       
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*        active    idle   2        10.75.93.188    25/tcp    Ready (source version/commit e1d5a03)
+postgresql-test-app/0*  active    idle   3        10.75.93.22               
+  pgbouncer-jammy/1*    active    idle            10.75.93.22               
+postgresql/0*           active    idle   0        10.75.93.98     5432/tcp  Primary
+postgresql/1            active    idle   1        10.75.93.213    5432/tcp  
+
+Machine  State    Address       Inst id        Base          AZ  Message
+0        started  10.75.93.98   juju-41fe27-0  ubuntu@22.04      Running
+1        started  10.75.93.213  juju-41fe27-1  ubuntu@22.04      Running
+2        started  10.75.93.188  juju-41fe27-2  ubuntu@20.04      Running
+3        started  10.75.93.22   juju-41fe27-3  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-0: 03:05:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:05:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 03:05:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 03:06:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:06:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 03:06:17 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 03:11:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:11:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-mailman3-core-0: 03:11:45 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 03:15:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 03:19:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:19:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 03:19:50 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-jammy-0: 03:19:54 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-pgbouncer-jammy-0: 03:20:31 ERROR unit.pgbouncer-jammy/0.juju-log db:11: ERROR - `extensions` (pg_trgm:public, unaccent:public) cannot be requested through relations - Please enable extensions through `juju config` and add the relation again.
+unit-pgbouncer-jammy-1: 03:21:27 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...
