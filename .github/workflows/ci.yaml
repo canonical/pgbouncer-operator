@@ -45,8 +45,7 @@ jobs:
 
   build:
     name: Build charm
-    # self-hosted-builders branch is a temporary solution to reduce runner costs until https://github.com/canonical/charmcraftcache-hub/issues/111 is fixed 
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@self-hosted-builders
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v23.0.5
     with:
       cache: true
 
