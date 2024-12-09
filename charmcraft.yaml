@@ -2,22 +2,35 @@
 # See LICENSE file for licensing details.
 
 type: charm
-bases:
-  - name: ubuntu
-    channel: "20.04"
-    architectures: [amd64]
-  - name: ubuntu
-    channel: "20.04"
-    architectures: [arm64]
-  - name: ubuntu
-    channel: "22.04"
-    architectures: [amd64]
-  - name: ubuntu
-    channel: "22.04"
-    architectures: [arm64]
-
+# Use upcoming ST124 syntax
+# To pack this charm, a temporary compatibility wrapper https://github.com/canonical/charmcraftst124
+# is required until ST124 support is added to charmcraft
+# (ST124 syntax is needed to enable multi-base charms with Ubuntu 24.04. We use ST124 syntax across
+# all of our charms [even those that aren't multi base] for consistency and to simplify CI/CD
+# maintenance & tooling)
+platforms:
+  ubuntu@20.04:amd64:
+  ubuntu@20.04:arm64:
+  ubuntu@22.04:amd64:
+  ubuntu@22.04:arm64:
 parts:
-  charm:
+  # "poetry-deps" part name is a magic constant
+  # https://github.com/canonical/craft-parts/pull/901
+  poetry-deps:
+    plugin: nil
+    build-packages:
+      - curl
+    override-build: |
+      python3 -m pip install --upgrade pip==24.3.1
+      curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4
+      ln -sf $HOME/.local/bin/poetry /usr/local/bin/poetry
+  foo:
+    plugin: poetry
+    source: .
+    after:
+      - poetry-deps
+    poetry-with:
+      - charm-libs
     build-snaps:
       - rustup
     build-packages:
@@ -27,14 +40,22 @@ parts:
       - libpq-dev
     override-build: |
       rustup default stable
-
-      # Convert subset of poetry.lock to requirements.txt
-      curl -sSL https://install.python-poetry.org | python3 -
-      /root/.local/bin/poetry export --only main,charm-libs --output requirements.txt
+      craftctl default
+  files:
+    plugin: dump
+    source: .
+    build-packages:
+      - git
+    override-build: |
+      # Workaround to add unique identifier (git hash) to charm version while specification
+      # DA053 - Charm versioning
+      # (https://docs.google.com/document/d/1Jv1jhWLl8ejK3iJn7Q3VbCIM9GIhp8926bgXpdtx-Sg/edit?pli=1)
+      # is pending review.
+      python3 -c 'import pathlib; import shutil; import subprocess; git_hash=subprocess.run(["git", "describe", "--always", "--dirty"], capture_output=True, check=True, encoding="utf-8").stdout; file = pathlib.Path("charm_version"); shutil.copy(file, pathlib.Path("charm_version.backup")); version = file.read_text().strip(); file.write_text(f"{version}+{git_hash}")'
 
       craftctl default
-    charm-strict-dependencies: true
-    charm-requirements: [requirements.txt]
+    prime:
+      - LICENSE
   libpq:
     build-packages:
       - libpq-dev
