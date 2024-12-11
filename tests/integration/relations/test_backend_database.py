@@ -119,10 +119,8 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm
         postgresql_primary_unit = await get_postgres_primary(ops_test)
         mailman_ssl_log = f"connection authorized: user={pgb_user} database=mailman3 SSL enabled"
         postgresql_logs = "/var/snap/charmed-postgresql/common/var/log/postgresql/postgresql-*.log"
-        for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(5), reraise=True):
-            with attempt:
-                await run_command_on_unit(
-                    ops_test,
-                    postgresql_primary_unit,
-                    f"grep '{mailman_ssl_log}' {postgresql_logs}",
-                )
+        await run_command_on_unit(
+            ops_test,
+            postgresql_primary_unit,
+            f"grep '{mailman_ssl_log}' {postgresql_logs}",
+        )
