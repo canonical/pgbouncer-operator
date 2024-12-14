@@ -303,8 +303,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     config: Optional[Dict] = None,
     channel: str = "stable",
     relation: str = "db",
-    base: Optional[str] = None,
-    series: Optional[str] = None,
+    base: str = "ubuntu@22.04",
     force: bool = False,
     wait: bool = True,
 ):
@@ -334,12 +333,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
     if not base and not series:
         base = "ubuntu@22.04"
 
-    extra_deploy_params = {}
-    if base:
-        extra_deploy_params["base"] = base
-    elif series:
-        extra_deploy_params["series"] = series
-
     # Deploy application.
     await ops_test.model.deploy(
         charm,
@@ -348,7 +341,7 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         num_units=number_of_units,
         config=config,
         force=force,
-        **extra_deploy_params,
+        base=base,
     )
 
     async with ops_test.fast_forward():
