@@ -321,7 +321,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         relation: Name of the pgbouncer relation to relate
             the application to.
         base: The base on which to deploy.
-        series: The series on which to deploy (lesser precedence than base).
         force: Allow charm to be deployed to a machine running an unsupported base.
         wait: Wait for model to idle
 
@@ -329,9 +328,6 @@ async def deploy_and_relate_application_with_pgbouncer_bundle(
         the id of the created relation.
     """
     config = config if config else {}
-
-    if not base and not series:
-        base = "ubuntu@22.04"
 
     # Deploy application.
     await ops_test.model.deploy(
