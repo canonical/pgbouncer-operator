@@ -13,6 +13,7 @@ from .helpers.postgresql_helpers import get_leader_unit
 
 @pytest.fixture(scope="module")
 async def pgb_charm_focal(ops_test: OpsTest):
+    pytest.skip("no focal")
     """Build the pgbouncer charm."""
     if architecture.architecture == "amd64":
         index = 0
@@ -32,7 +33,7 @@ async def pgb_charm_jammy(ops_test: OpsTest):
         index = 3
     else:
         raise ValueError(architecture.architecture)
-    return await ops_test.build_charm(".", bases_index=index)
+    return await ops_test.build_charm(".")
 
 
 @pytest.fixture()
