@@ -1913,8 +1913,8 @@ pyyaml = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "beta-charmcraftst124"
-resolved_reference = "21e4258d2aa93cd666dbd50f7c8b965e490bb51a"
+reference = "charmcraftst124"
+resolved_reference = "9002cf404ae7fda5622a35a8c78c1299b407f60d"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
@@ -2625,4 +2625,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9 || >=3.10,<4"
-content-hash = "7f0c1af4cd7b5b81cb374a53fb159079a0600f9cd8390a3b93b6dd4e582fa856"
+content-hash = "82c2335c044af9207bddc09258162eccc48d21f621b9ad8c05a872cd6bc52776"

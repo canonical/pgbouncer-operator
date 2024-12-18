@@ -45,7 +45,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@beta-charmcraftst124
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@charmcraftst124
     with:
       charmcraft-snap-channel: 3.x/edge
 
