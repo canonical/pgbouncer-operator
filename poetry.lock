@@ -450,13 +450,13 @@ files = [
 
 [[package]]
 name = "cosl"
-version = "0.0.47"
+version = "0.0.48"
 description = "Utils for COS Lite charms"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cosl-0.0.47-py3-none-any.whl", hash = "sha256:469e0760773322ffe45554bb5545e9f673fcef501345c8d0b15c9456af6712eb"},
-    {file = "cosl-0.0.47.tar.gz", hash = "sha256:42aaa2fcda3c73b5f52076e6790356642f9acaefdc1a49b1379395e8978f0c98"},
+    {file = "cosl-0.0.48-py3-none-any.whl", hash = "sha256:36b57cdd7f9e143616eddd934a1d95478a5d4610c2ffe036780a9032d6e301ae"},
+    {file = "cosl-0.0.48.tar.gz", hash = "sha256:f02f540335db8c742cf87ef41891298033e6c2edbcf8cfa2ef2afa378fd3cf42"},
 ]
 
 [package.dependencies]
@@ -1046,13 +1046,13 @@ requests = "*"
 
 [[package]]
 name = "lightkube"
-version = "0.15.8"
+version = "0.16.0"
 description = "Lightweight kubernetes client library"
 optional = false
 python-versions = "*"
 files = [
-    {file = "lightkube-0.15.8-py3-none-any.whl", hash = "sha256:236f6d11e9281764a8ae896ab2c28a4bc943dc0576822445064577eaa90677ba"},
-    {file = "lightkube-0.15.8.tar.gz", hash = "sha256:ac950d24ddbb59904708730f13ce254b05b6255a471dfab027cbe44c4123bfc6"},
+    {file = "lightkube-0.16.0-py3-none-any.whl", hash = "sha256:8fc6f8cdefb83885d219f4d1edd3fac4fad53baff97bd6432f40a729fe9cada5"},
+    {file = "lightkube-0.16.0.tar.gz", hash = "sha256:1fafd0cdfe0559ce165600b7a25714c63b4835e1dcbeaea59a43363edfc75e9c"},
 ]
 
 [package.dependencies]
@@ -1065,13 +1065,13 @@ dev = ["pytest", "pytest-asyncio (<0.17.0)", "respx"]
 
 [[package]]
 name = "lightkube-models"
-version = "1.31.1.8"
+version = "1.32.0.8"
 description = "Models and Resources for lightkube module"
 optional = false
 python-versions = "*"
 files = [
-    {file = "lightkube-models-1.31.1.8.tar.gz", hash = "sha256:14fbfa990b4d3393fa4ac3e9e46d67514c4d659508e296b30f1a5d254eecc097"},
-    {file = "lightkube_models-1.31.1.8-py3-none-any.whl", hash = "sha256:50c0e2dd2c125cd9b50e93269e2d212bcbec19f7b00de91aa66a5ec320772fae"},
+    {file = "lightkube-models-1.32.0.8.tar.gz", hash = "sha256:97f6c2ab554a23a69554dd56ffbd94173fb416af6490c3a21b1e0b8e13a2bafe"},
+    {file = "lightkube_models-1.32.0.8-py3-none-any.whl", hash = "sha256:73786dac63085521f4c88aa69d86bfdc76a67da997c1770e5bdcef8482e4b2a0"},
 ]
 
 [[package]]
@@ -2623,4 +2623,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9 || >=3.10,<4"
-content-hash = "31e09120fce62818ee8e91933578a903dedeeb0effa81bbdf146c4ea4774ac98"
+content-hash = "a1ae8f586e3cfeb4be81d3509dbb61d9c463c75323fa99290dd9d466009b73ec"
