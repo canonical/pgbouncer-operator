@@ -57,6 +57,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | h-rollback-minor | [Minor rollback](/t/12316) |
 | 1 | reference | [Reference]() |
 | 2 | r-releases | [Release Notes](/t/12285) |
+| 3 | r-revision-555-558  | [Revision 555-558](/t/16135) |
 | 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
 | 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
 | 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
