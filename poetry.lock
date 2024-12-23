@@ -450,13 +450,13 @@ files = [
 
 [[package]]
 name = "cosl"
-version = "0.0.48"
+version = "0.0.50"
 description = "Utils for COS Lite charms"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cosl-0.0.48-py3-none-any.whl", hash = "sha256:36b57cdd7f9e143616eddd934a1d95478a5d4610c2ffe036780a9032d6e301ae"},
-    {file = "cosl-0.0.48.tar.gz", hash = "sha256:f02f540335db8c742cf87ef41891298033e6c2edbcf8cfa2ef2afa378fd3cf42"},
+    {file = "cosl-0.0.50-py3-none-any.whl", hash = "sha256:b059b2af5db9c124ab7b7eba6cbbc61fc1c99c513c00f031587a963c73b9af38"},
+    {file = "cosl-0.0.50.tar.gz", hash = "sha256:d81e2db6b8ccdb417e90b39eb53be7d53275103e05a66867a82c1345147d7896"},
 ]
 
 [package.dependencies]
@@ -927,13 +927,13 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<9.0.0)"]
 
 [[package]]
 name = "jinja2"
-version = "3.1.4"
+version = "3.1.5"
 description = "A very fast and expressive template engine."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "jinja2-3.1.4-py3-none-any.whl", hash = "sha256:bc5dd2abb727a5319567b7a813e6a2e7318c39f4f487cfe6c89c6f9c7d25197d"},
-    {file = "jinja2-3.1.4.tar.gz", hash = "sha256:4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369"},
+    {file = "jinja2-3.1.5-py3-none-any.whl", hash = "sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb"},
+    {file = "jinja2-3.1.5.tar.gz", hash = "sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb"},
 ]
 
 [package.dependencies]
@@ -2623,4 +2623,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9 || >=3.10,<4"
-content-hash = "697c7ce965031307b5bbbf22710120d37a4c83a9f409adfd9be922ab35063683"
+content-hash = "f8276652b0c252e8c924ff56b044e3d94fed03142ccc5cfcfed1b565a59cf44c"
