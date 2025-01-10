@@ -18,7 +18,7 @@ def pgb_charm_focal(ops_test: OpsTest):
     if architecture.architecture == "amd64":
         return pathlib.Path("pgbouncer_ubuntu@20.04-amd64.charm")
     elif architecture.architecture == "arm64":
-        return pathlib.Path("pgbouncer_ubuntu@20.04-amd64.charm")
+        return pathlib.Path("pgbouncer_ubuntu@20.04-arm64.charm")
     else:
         raise ValueError(architecture.architecture)
 
