@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
+import pathlib
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -12,27 +13,20 @@ from .helpers.postgresql_helpers import get_leader_unit
 
 
 @pytest.fixture(scope="module")
-async def pgb_charm_focal(ops_test: OpsTest):
+def pgb_charm_focal(ops_test: OpsTest):
     """Build the pgbouncer charm."""
     if architecture.architecture == "amd64":
-        index = 0
+        return pathlib.Path("pgbouncer_ubuntu@20.04-amd64.charm")
     elif architecture.architecture == "arm64":
-        index = 1
+        return pathlib.Path("pgbouncer_ubuntu@20.04-amd64.charm")
     else:
         raise ValueError(architecture.architecture)
-    return await ops_test.build_charm(".", bases_index=index)
 
 
 @pytest.fixture(scope="module")
 async def pgb_charm_jammy(ops_test: OpsTest):
     """Build the pgbouncer charm."""
-    if architecture.architecture == "amd64":
-        index = 2
-    elif architecture.architecture == "arm64":
-        index = 3
-    else:
-        raise ValueError(architecture.architecture)
-    return await ops_test.build_charm(".", bases_index=index)
+    return await ops_test.build_charm(".")
 
 
 @pytest.fixture()
