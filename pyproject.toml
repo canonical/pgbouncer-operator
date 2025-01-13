@@ -3,6 +3,7 @@
 
 [tool.poetry]
 package-mode = false
+requires-poetry = ">=2.0.0"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9 || >=3.10,<4"
