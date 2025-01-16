@@ -68,7 +68,7 @@ class Peers(Object):
         """Returns the relations in this model , or None if peer is not initialised."""
         return self.charm.model.get_relation(PEER_RELATION_NAME)
 
-    def scoped_peer_data(self, scope: Scopes) -> dict | None:
+    def scoped_peer_data(self, scope: Scopes) -> Optional[dict]:
         """Returns peer data based on scope."""
         if scope == APP_SCOPE:
             return self.app_databag
