@@ -8,15 +8,9 @@ requires-poetry = ">=2.0.0"
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9 || >=3.10,<4"
 ops = "^2.17.1"
-pgconnstr = "^1.0.1"
 tenacity = "^9.0.0"
-cosl = "^0.0.48"
 pydantic = "^1.10.19"
-poetry-core = "^1.9.1"
-cryptography = "^44.0.0"
-jsonschema = "^4.23.0"
 psycopg2 = "^2.9.10"
-psycopg = {extras = ["c"], version = "^3.2.3"}
 jinja2 = "^3.1.4"
 
 [tool.poetry.group.charm-libs.dependencies]
@@ -25,8 +19,8 @@ ops = ">=2.0.0"
 # data_platform_libs/v0/upgrade.py
 poetry-core = "*"
 # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
-# grafana_agent/v0/cos_agent.py requires pydantic <2
-pydantic = "^1.10, <2"
+# grafana_agent/v0/cos_agent.py requires pydantic
+pydantic = "^1.10"
 # grafana_agent/v0/cos_agent.py
 cosl = "*"
 # tls_certificates_interface/v2/tls_certificates.py
