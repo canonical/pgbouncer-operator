@@ -11,6 +11,7 @@ ops = "^2.17.1"
 tenacity = "^9.0.0"
 pydantic = "^1.10.19"
 psycopg2 = "^2.9.10"
+psycopg = {extras = ["c"], version = "^3.2.3"}  # Used by data_interfaces.py
 jinja2 = "^3.1.4"
 
 [tool.poetry.group.charm-libs.dependencies]
