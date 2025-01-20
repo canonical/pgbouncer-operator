@@ -33,7 +33,7 @@ from ops.charm import CharmBase, HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
-from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PEER_RELATION_NAME
+from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PEER_RELATION_NAME, UNIT_SCOPE, Scopes
 
 ADDRESS_KEY = "private-address"
 LEADER_ADDRESS_KEY = "leader_ip"
@@ -67,6 +67,13 @@ class Peers(Object):
     def relation(self) -> Relation:
         """Returns the relations in this model , or None if peer is not initialised."""
         return self.charm.model.get_relation(PEER_RELATION_NAME)
+
+    def scoped_peer_data(self, scope: Scopes) -> Optional[dict]:
+        """Returns peer data based on scope."""
+        if scope == APP_SCOPE:
+            return self.app_databag
+        elif scope == UNIT_SCOPE:
+            return self.unit_databag
 
     @property
     def app_databag(self):
