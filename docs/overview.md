@@ -37,7 +37,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 2 | t-setup-environment | [2. Set up the environment](/t/12289) |
 | 2 | t-deploy-charm | [3. Deploy PgBouncer](/t/12290) |
 | 2 | t-managing-units | [4. Manage units](/t/12291) |
-| 2 | t-enable-security | [5. Enable security](/t/12292) |
+| 2 | t-enable-security | [5. Enable TLS](/t/12292) |
 | 2 | t-cleanup-environment | [6. Cleanup environment](/t/12293) |
 | 1 | how-to | [How To]() |
 | 2 | h-setup | [Setup]() |
@@ -57,6 +57,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | h-rollback-minor | [Minor rollback](/t/12316) |
 | 1 | reference | [Reference]() |
 | 2 | r-releases | [Release Notes](/t/12285) |
+| 3 | r-revision-555-558  | [Revision 555-558](/t/16135) |
 | 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
 | 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
 | 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
