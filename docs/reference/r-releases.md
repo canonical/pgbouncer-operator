@@ -15,6 +15,7 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|
+|[555], [556], [557], [558] (`1/candidate`) | `1.21.0` | `3.4.6+` | ![check] | ![check] | ![check]
 |[394], [395], [396], [397]| `1.21.0` | `3.4.5+` | ![check] | ![check] | ![check]
 |[278], [279], [280], [281]| `1.21.0` | `3.4.5+` | ![check] | ![check] | ![check]
 |[254], [255], [256], [257]| `1.21.0` | `3.1.8+` | ![check] | ![check] | ![check]
@@ -28,8 +29,16 @@ For each release, this table shows:
 Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subordinate-charms) nature of this charm, several [revisions](https://juju.is/docs/sdk/revision) are released simultaneously for different [bases/series](https://juju.is/docs/juju/base) using the same charm code. In other words, one release contains multiple revisions.
 
 > If you do not specify a revision on deploy time, Juju will automatically choose the revision that matches your base and architecture.
+> 
+> See: [`juju info`](https://juju.is/docs/juju/juju-info).
 
-> If you deploy a specific revision, **you must make sure it matches your base and architecture** via the tables below or with [`juju info`](https://juju.is/docs/juju/juju-info).
+### Release 555-558 (`1/candidate`)
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
+|:-----:|:--------:|:--------:|:-----:|:-----:|
+| [555] |          | ![check] | ![check] |          |
+| [556] |          | ![check] |          | ![check] |
+| [557] | ![check] |          | ![check] | |
+| [558] |  ![check]  | | |  ![check] 
 
 ### Release 394-397 (`1/stable`)
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
@@ -106,6 +115,10 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 [/note]
 
 <!--LINKS-->
+[555]: /t/16135
+[556]: /t/16135
+[557]: /t/16135
+[558]: /t/16135
 [394]: /t/15379
 [395]: /t/15379
 [396]: /t/15379
