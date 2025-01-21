@@ -1991,19 +1991,19 @@ name = "pytest-operator-cache"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.8"
+python-versions = ">=3.8"
 groups = ["integration"]
 files = []
 develop = false
 
 [package.dependencies]
-pyyaml = "*"
+pyyaml = ">=6.0.2"
 
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v29.0.0"
-resolved_reference = "90077c956fd22995aec4c1e5b86cf6248717d8c7"
+reference = "test-poetry-2"
+resolved_reference = "98926a5a71271c9c5736c426ebfbad94af206d46"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
@@ -2742,4 +2742,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.8,<3.9 || >=3.10,<4"
-content-hash = "f94808cb8532230b5e628b1f44027b905ed6112807ecb38b71682f49791f5be7"
+content-hash = "1cf750111468c1da95e63491de1a2a80f4f07fb912cf974561f7e0500fd788dd"
