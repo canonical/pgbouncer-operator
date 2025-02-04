@@ -3,6 +3,8 @@
 
 """Literals for the PgBouncer charm."""
 
+from typing import Literal
+
 PGB = "pgbouncer"
 PG = "postgres"
 PG_USER = "snap_daemon"
@@ -52,6 +54,7 @@ SECRET_DELETED_LABEL = "None"  # noqa: S105
 
 APP_SCOPE = "app"
 UNIT_SCOPE = "unit"
+Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
 
 SECRET_KEY_OVERRIDES = {
     "cfg_file": "cfg-file",
