@@ -1,0 +1,299 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:929 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.6.2    unsupported  01:52:59Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+landscape-client              active       6  landscape-client     latest/edge   71  no       Client registered!
+pgbouncer            1.21.0   active       3  pgbouncer                           0  no       
+postgresql           14.15    active       3  postgresql           14/edge      557  no       
+postgresql-test-app           active       3  postgresql-test-app  latest/edge  352  no       received database credentials of the first database
+ubuntu-advantage              blocked      6  ubuntu-advantage     latest/edge  137  no       Failed running command '['ubuntu-advantage', 'attach', 'C1bipjyaJ58dLZABFCxiXrNXSrCKS']' [exit status: 2].
+stderr: Th...
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.95.135.144             received database credentials of the first database
+  landscape-client/3    active    idle            10.95.135.144             Client registered!
+  pgbouncer/0*          active    idle            10.95.135.144             
+  ubuntu-advantage/2    active    idle            10.95.135.144             Attached (esm-apps,esm-infra)
+postgresql-test-app/1   active    idle   1        10.95.135.57              received database credentials of the first database
+  landscape-client/2    active    idle            10.95.135.57              Client registered!
+  pgbouncer/1           active    idle            10.95.135.57              
+  ubuntu-advantage/1    active    idle            10.95.135.57              Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active    idle   2        10.95.135.156             received database credentials of the first database
+  landscape-client/0*   active    idle            10.95.135.156             Client registered!
+  pgbouncer/2           active    idle            10.95.135.156             
+  ubuntu-advantage/0    active    idle            10.95.135.156             Attached (esm-apps,esm-infra)
+postgresql/0            active    idle   3        10.95.135.97    5432/tcp  
+  landscape-client/8    active    idle            10.95.135.97              Client registered!
+  ubuntu-advantage/4    active    idle            10.95.135.97              Attached (esm-apps,esm-infra)
+postgresql/1            active    idle   4        10.95.135.149   5432/tcp  
+  landscape-client/5    active    idle            10.95.135.149             Client registered!
+  ubuntu-advantage/3*   blocked   idle            10.95.135.149             Failed running command '['ubuntu-advantage', 'attach', 'C1bipjyaJ58dLZABFCxiXrNXSrCKS']' [exit status: 2].
+stderr: Th...
+postgresql/2*         active  idle  5  10.95.135.95  5432/tcp  Primary
+  landscape-client/7  active  idle     10.95.135.95            Client registered!
+  ubuntu-advantage/5  active  idle     10.95.135.95            Attached (esm-apps,esm-infra)
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.95.135.144  juju-88dc68-0  ubuntu@22.04      Running
+1        started  10.95.135.57   juju-88dc68-1  ubuntu@22.04      Running
+2        started  10.95.135.156  juju-88dc68-2  ubuntu@22.04      Running
+3        started  10.95.135.97   juju-88dc68-3  ubuntu@22.04      Running
+4        started  10.95.135.149  juju-88dc68-4  ubuntu@22.04      Running
+5        started  10.95.135.95   juju-88dc68-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:935 Juju error logs:
+
+machine-5: 01:36:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:36:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:36:36 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 01:36:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:36:39 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 01:36:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:36:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:36:42 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:36:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:36:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 01:36:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:36:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:36:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:36:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:36:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 01:36:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-2: 01:36:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 01:36:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:36:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:36:53 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-2: 01:38:22 ERROR unit.postgresql/2.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 445, in request
+    self.endheaders()
+  File "/usr/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 276, in connect
+    self.sock = self._new_conn()
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7f5145fe41f0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='10.95.135.95', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f5145fe41f0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/src/cluster.py", line 548, in are_replicas_up
+    response = requests.get(
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.95.135.95', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f5145fe41f0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-landscape-client-0: 01:42:56 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-2: 01:42:56 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-3: 01:42:56 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-5: 01:42:56 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-8: 01:43:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-4: 01:43:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-7: 01:43:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-5: 01:43:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-0: 01:43:33 ERROR unit.unit-ubuntu-advantage-0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-0/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-0/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-1: 01:43:33 ERROR unit.unit-ubuntu-advantage-1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-1/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-1/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-0: 01:43:34 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-1: 01:43:34 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-2: 01:43:35 ERROR unit.unit-ubuntu-advantage-2.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-2/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-2/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-2: 01:43:35 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-3: 01:43:36 ERROR unit.unit-ubuntu-advantage-3.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2183, in _run
+    result = run(args, **kwargs)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('/var/lib/juju/tools/unit-ubuntu-advantage-3/config-get', '--format=json')' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/main.py", line 426, in main
+    charm = charm_class(framework)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 233, in __init__
+    self._setup_proxy_env()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/./src/charm.py", line 249, in _setup_proxy_env
+    self.proxy_env["http_proxy"] = self.config.get(
+  File "/usr/lib/python3.10/_collections_abc.py", line 824, in get
+    return self[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 547, in __getitem__
+    return self._data[key]
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 531, in _data
+    data = self._lazy_data = self._load()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 1092, in _load
+    return self._backend.config_get()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2299, in config_get
+    out = self._run('config-get', return_output=True, use_json=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-3/charm/venv/ops/model.py", line 2189, in _run
+    raise ModelError(e.stderr)
+ops.model.ModelError: b'ERROR not implemented for restricted context not implemented\n'
+unit-ubuntu-advantage-3: 01:43:36 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-ubuntu-advantage-0: 01:44:25 ERROR unit.ubuntu-advantage/0.juju-log Error running status. stderr 
+stdout: {"environment_vars": [], "errors": [{"additional_info": {"body": "<html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "code": 502, "url": "/v1/resources"}, "message": "Error connecting to /v1/resources: 502 <html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "message_code": "external-api-error", "service": null, "type": "system"}], "result": "failure", "services": [], "warnings": []}
+
+unit-ubuntu-advantage-1: 01:44:25 ERROR unit.ubuntu-advantage/1.juju-log Error running status. stderr 
+stdout: {"environment_vars": [], "errors": [{"additional_info": {"body": "<html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "code": 502, "url": "/v1/resources"}, "message": "Error connecting to /v1/resources: 502 <html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "message_code": "external-api-error", "service": null, "type": "system"}], "result": "failure", "services": [], "warnings": []}
+
+unit-ubuntu-advantage-5: 01:44:26 ERROR unit.ubuntu-advantage/5.juju-log Error running status. stderr 
+stdout: {"environment_vars": [], "errors": [{"additional_info": {"body": "<html>\r\n<head><title>500 Internal Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal Server Error</h1></center>\r\n<hr><center>nginx/1.18.0 (Ubuntu)</center>\r\n</body>\r\n</html>\r\n", "code": 500, "url": "/v1/resources"}, "message": "Error connecting to /v1/resources: 500 <html>\r\n<head><title>500 Internal Server Error</title></head>\r\n<body>\r\n<center><h1>500 Internal Server Error</h1></center>\r\n<hr><center>nginx/1.18.0 (Ubuntu)</center>\r\n</body>\r\n</html>\r\n", "message_code": "external-api-error", "service": null, "type": "system"}], "result": "failure", "services": [], "warnings": []}
+
+unit-ubuntu-advantage-5: 01:44:31 ERROR unit.ubuntu-advantage/5.juju-log Error running status. stderr 
+stdout: {"environment_vars": [], "errors": [{"additional_info": {"body": "<html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "code": 502, "url": "/v1/resources"}, "message": "Error connecting to /v1/resources: 502 <html><body><h1>502 Bad Gateway</h1>\nThe server returned an invalid or incomplete response.\n</body></html>\n\n", "message_code": "external-api-error", "service": null, "type": "system"}], "result": "failure", "services": [], "warnings": []}
+
+unit-ubuntu-advantage-3: 01:44:38 ERROR unit.ubuntu-advantage/3.juju-log Error running attach. stderr Error connecting to /v1/contracts/cAD0c6_4IRnMcAdUOmuq-yIzGntDnt2ELCaN1usqh8tg/machine-activity/ba94e4ba8a0a43678602474008c90514: 502 <html><body><h1>502 Bad Gateway</h1>
+The server returned an invalid or incomplete response.
+</body></html>
+
+
+
+stdout: Enabling Ubuntu Pro: ESM Apps
+Ubuntu Pro: ESM Apps enabled
+Enabling Ubuntu Pro: ESM Infra
+Ubuntu Pro: ESM Infra enabled
+
+unit-ubuntu-advantage-3: 01:44:39 ERROR unit.ubuntu-advantage/3.juju-log Error running attach. stderr This machine is already attached to 'Canonical Data Platform'
+To use a different subscription first run: sudo pro detach.
+
+stdout: 
+unit-ubuntu-advantage-3: 01:44:41 ERROR unit.ubuntu-advantage/3.juju-log Error running attach. stderr This machine is already attached to 'Canonical Data Platform'
+To use a different subscription first run: sudo pro detach.
+
+stdout: 
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1017 Forgetting model main...
