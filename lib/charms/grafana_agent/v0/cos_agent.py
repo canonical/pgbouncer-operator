@@ -254,7 +254,7 @@ if TYPE_CHECKING:
 
 LIBID = "dc15fa84cef84ce58155fb84f6c6213a"
 LIBAPI = 0
-LIBPATCH = 18
+LIBPATCH = 19
 
 PYDEPS = ["cosl >= 0.0.50", "pydantic"]
 
@@ -936,6 +936,8 @@ class COSAgentRequirer(Object):
             events.relation_joined, self._on_relation_data_changed
         )  # TODO: do we need this?
         self.framework.observe(events.relation_changed, self._on_relation_data_changed)
+        self.framework.observe(events.relation_departed, self._on_relation_departed)
+
         for event in self._refresh_events:
             self.framework.observe(event, self.trigger_refresh)  # pyright: ignore
 
@@ -962,6 +964,26 @@ class COSAgentRequirer(Object):
         # subordinate leader, for updating the app data of the outgoing o11y relations.
         if self._charm.unit.is_leader():
             self.on.data_changed.emit()  # pyright: ignore
+
+    def _on_relation_departed(self, event):
+        """Remove provider's (principal's) alert rules and dashboards from peer data when the cos-agent relation to the principal is removed."""
+        if not self.peer_relation:
+            event.defer()
+            return
+        # empty the departing unit's alert rules and dashboards from peer data
+        data = CosAgentPeersUnitData(
+            unit_name=event.unit.name,
+            relation_id=str(event.relation.id),
+            relation_name=event.relation.name,
+            metrics_alert_rules={},
+            log_alert_rules={},
+            dashboards=[],
+        )
+        self.peer_relation.data[self._charm.unit][
+            f"{CosAgentPeersUnitData.KEY}-{event.unit.name}"
+        ] = data.json()
+
+        self.on.data_changed.emit()  # pyright: ignore
 
     def _on_relation_data_changed(self, event: RelationChangedEvent):
         # Peer data is the only means of communication between subordinate units.
