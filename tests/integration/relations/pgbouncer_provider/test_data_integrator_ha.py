@@ -33,9 +33,8 @@ else:
     tls_config = {"ca-common-name": "Test CA"}
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
+async def test_deploy_and_relate(ops_test: OpsTest, charm):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
@@ -43,7 +42,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=PGB,
                 num_units=None,
             ),
@@ -110,8 +109,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     assert host == vip
 
 
-@pytest.mark.group(1)
-async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
+async def test_add_tls(ops_test: OpsTest, charm):
     await ops_test.model.add_relation(PGB, tls_certificates_app_name)
     await ops_test.model.wait_for_idle(status="active")
 
@@ -121,8 +119,7 @@ async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
     check_exposed_connection(credentials, True)
 
 
-@pytest.mark.group(1)
-async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
+async def test_remove_tls(ops_test: OpsTest, charm):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:certificates", f"{tls_certificates_app_name}:certificates"
     )
@@ -134,7 +131,6 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
     check_exposed_connection(credentials, False)
 
 
-@pytest.mark.group(1)
 async def test_remove_vip(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.applications[PGB].reset_config(["vip"])
