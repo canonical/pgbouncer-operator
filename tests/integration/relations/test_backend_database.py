@@ -4,7 +4,6 @@
 import asyncio
 import logging
 
-import pytest
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
@@ -35,11 +34,10 @@ RELATION = "backend-database"
 tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "latest/stable"
 
 
-@pytest.mark.group(1)
-async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
+async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, charm):
     """Test that the pgbouncer and postgres charms can relate to one another."""
     # Build, deploy, and relate charms.
-    relation = await deploy_postgres_bundle(ops_test, pgb_charm_jammy, pgb_base="ubuntu@22.04")
+    relation = await deploy_postgres_bundle(ops_test, charm, pgb_base="ubuntu@22.04")
     async with ops_test.fast_forward():
         await ops_test.model.deploy(
             CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
@@ -86,9 +84,8 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, pgb_charm_jammy):
     await ops_test.model.remove_application(PGB, block_until_done=True)
 
 
-@pytest.mark.group(1)
-async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, pgb_charm_focal):
-    await ops_test.model.deploy(pgb_charm_focal, PGB, num_units=None, base="ubuntu@20.04")
+async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, charm_focal):
+    await ops_test.model.deploy(charm_focal, PGB, num_units=None, base="ubuntu@20.04")
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")

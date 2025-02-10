@@ -4,7 +4,6 @@
 import json
 import logging
 
-import pytest
 from landscape_api.base import run_query
 from pytest_operator.plugin import OpsTest
 
@@ -29,12 +28,11 @@ DATABASE_UNITS = 2
 RELATION_NAME = "db-admin"
 
 
-@pytest.mark.group(1)
-async def test_landscape_scalable_bundle_db(ops_test: OpsTest, pgb_charm_jammy: str) -> None:
+async def test_landscape_scalable_bundle_db(ops_test: OpsTest, charm: str) -> None:
     """Deploy Landscape Scalable Bundle to test the 'db-admin' relation."""
     backend_relation = await deploy_postgres_bundle(
         ops_test,
-        pgb_charm_jammy,
+        charm,
         db_units=DATABASE_UNITS,
         pgb_base="ubuntu@22.04",
         pg_config={"profile": "testing"},
