@@ -116,7 +116,7 @@ async def test_extensions(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 charm,
                 application_name=pgb_jammy,
-                num_units=None,
+                num_units=0,
             ),
         )
         logger.info("Relating without enabling extensions")

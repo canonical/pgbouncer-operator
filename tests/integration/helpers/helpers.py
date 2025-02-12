@@ -274,7 +274,7 @@ async def deploy_postgres_bundle(
             pgb_charm,
             application_name=PGB,
             config=pgb_config,
-            num_units=None,
+            num_units=0,
             base=pgb_base,
         ),
         ops_test.model.deploy(
