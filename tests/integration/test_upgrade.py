@@ -48,7 +48,7 @@ async def test_deploy_latest(ops_test: OpsTest, charm) -> None:
         ops_test.model.deploy(
             PGB,
             channel="1/edge",
-            num_units=None,
+            num_units=0,
             base="ubuntu@22.04",
         ),
         ops_test.model.deploy(

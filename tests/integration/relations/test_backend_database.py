@@ -85,7 +85,7 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, charm):
 
 
 async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, charm_focal):
-    await ops_test.model.deploy(charm_focal, PGB, num_units=None, base="ubuntu@20.04")
+    await ops_test.model.deploy(charm_focal, PGB, num_units=0, base="ubuntu@20.04")
     async with ops_test.fast_forward():
         # Relate PgBouncer to PostgreSQL.
         relation = await ops_test.model.add_relation(f"{PGB}:{RELATION}", f"{PG}:database")

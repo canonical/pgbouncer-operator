@@ -59,7 +59,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 charm,
                 application_name=PGB,
-                num_units=None,
+                num_units=0,
             ),
             ops_test.model.deploy(
                 PG,
@@ -258,7 +258,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(ops_test
             ops_test.model.deploy(
                 charm,
                 application_name=PGB_2,
-                num_units=None,
+                num_units=0,
                 config={"listen_port": 7432, "metrics_port": 9128},
             ),
             ops_test.model.deploy(

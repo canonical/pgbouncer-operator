@@ -31,7 +31,7 @@ async def test_deploy(ops_test: OpsTest, charm):
         ops_test.model.deploy(
             charm,
             application_name=PGB,
-            num_units=None,
+            num_units=0,
             base="ubuntu@22.04",
         ),
         ops_test.model.deploy(

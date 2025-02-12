@@ -32,7 +32,7 @@ async def test_deploy_at_scale(ops_test, charm):
             ops_test.model.deploy(
                 charm,
                 application_name=PGB,
-                num_units=None,
+                num_units=0,
             ),
         )
         # Relate the charms and wait for them exchanging some connection data.
