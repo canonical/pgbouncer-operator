@@ -35,9 +35,8 @@ logger = logging.getLogger(__name__)
 TIMEOUT = 600
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy_latest(ops_test: OpsTest, pgb_charm_jammy) -> None:
+async def test_deploy_latest(ops_test: OpsTest, charm) -> None:
     """Simple test to ensure that the PostgreSQL and application charms get deployed."""
     await asyncio.gather(
         ops_test.model.deploy(
@@ -70,7 +69,6 @@ async def test_deploy_latest(ops_test: OpsTest, pgb_charm_jammy) -> None:
     assert len(ops_test.model.applications[PGB].units) == 3
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_pre_upgrade_check(ops_test: OpsTest) -> None:
     """Test that the pre-upgrade-check action runs successfully."""
@@ -83,9 +81,8 @@ async def test_pre_upgrade_check(ops_test: OpsTest) -> None:
     await action.wait()
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_upgrade_from_edge(ops_test: OpsTest, continuous_writes, pgb_charm_jammy) -> None:
+async def test_upgrade_from_edge(ops_test: OpsTest, continuous_writes, charm) -> None:
     # Start an application that continuously writes data to the database.
     logger.info("starting continuous writes to the database")
     await start_continuous_writes(ops_test, PGB)
@@ -97,7 +94,7 @@ async def test_upgrade_from_edge(ops_test: OpsTest, continuous_writes, pgb_charm
     application = ops_test.model.applications[PGB]
 
     logger.info("Refresh the charm")
-    await application.refresh(path=pgb_charm_jammy)
+    await application.refresh(path=charm)
 
     logger.info("Wait for upgrade to start")
     await ops_test.model.block_until(
@@ -121,9 +118,8 @@ async def test_upgrade_from_edge(ops_test: OpsTest, continuous_writes, pgb_charm
     await check_writes(ops_test)
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_fail_and_rollback(ops_test, continuous_writes, pgb_charm_jammy) -> None:
+async def test_fail_and_rollback(ops_test, continuous_writes, charm) -> None:
     # Start an application that continuously writes data to the database.
     logger.info("starting continuous writes to the database")
     await start_continuous_writes(ops_test, PGB)
@@ -140,12 +136,9 @@ async def test_fail_and_rollback(ops_test, continuous_writes, pgb_charm_jammy) -
     action = await leader_unit.run_action("pre-upgrade-check")
     await action.wait()
 
-    if isinstance(pgb_charm_jammy, str):
-        filename = pgb_charm_jammy.split("/")[-1]
-    else:
-        filename = pgb_charm_jammy.name
+    filename = Path(charm).name
     fault_charm = Path("/tmp/", filename)
-    shutil.copy(pgb_charm_jammy, fault_charm)
+    shutil.copy(charm, fault_charm)
 
     logger.info("Inject dependency fault")
     await inject_dependency_fault(ops_test, PGB, fault_charm)
@@ -170,7 +163,7 @@ async def test_fail_and_rollback(ops_test, continuous_writes, pgb_charm_jammy) -
     await action.wait()
 
     logger.info("Re-refresh the charm")
-    await application.refresh(path=pgb_charm_jammy)
+    await application.refresh(path=charm)
 
     logger.info("Wait for upgrade to start")
     await ops_test.model.block_until(

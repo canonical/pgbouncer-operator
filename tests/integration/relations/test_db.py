@@ -34,9 +34,8 @@ DATABASE_UNITS = 2
 RELATION_NAME = "db"
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
+async def test_mailman3_core_db(ops_test: OpsTest, charm_focal) -> None:
     """Deploy Mailman3 Core to test the 'db' relation."""
     async with ops_test.fast_forward():
         # Extra config option for Mailman3 Core.
@@ -44,7 +43,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         # Deploy and test the deployment of Mailman3 Core.
         backend_relation = await deploy_postgres_bundle(
             ops_test,
-            pgb_charm_focal,
+            charm_focal,
             db_units=DATABASE_UNITS,
             pgb_config={"listen_port": 5432},
             pgb_base="ubuntu@20.04",
@@ -95,7 +94,6 @@ async def test_mailman3_core_db(ops_test: OpsTest, pgb_charm_focal) -> None:
         assert domain_name not in [domain.mail_host for domain in client.domains]
 
 
-@pytest.mark.group(1)
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(f"{PGB}:db", f"{MAILMAN3}:db")
     async with ops_test.fast_forward():
@@ -106,8 +104,7 @@ async def test_remove_relation(ops_test: OpsTest):
             assert len(ops_test.model.applications[PGB].units) == 0, "pgb units were not removed"
 
 
-@pytest.mark.group(1)
-async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
+async def test_extensions(ops_test: OpsTest, charm):
     """Test that PGB blocks on disabled extension request and allows enabled ones."""
     async with ops_test.fast_forward():
         logger.info("Deploying test app")
@@ -117,7 +114,7 @@ async def test_extensions(ops_test: OpsTest, pgb_charm_jammy):
                 CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
             ),
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=pgb_jammy,
                 num_units=None,
             ),

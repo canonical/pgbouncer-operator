@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 import logging
+import os
 from asyncio import gather
 
 import pytest
@@ -24,12 +25,11 @@ UBUNTU_PRO_APP_NAME = "ubuntu-advantage"
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
+async def test_deploy(ops_test: OpsTest, charm):
     await gather(
         ops_test.model.deploy(
-            pgb_charm_jammy,
+            charm,
             application_name=PGB,
             num_units=None,
             base="ubuntu@22.04",
@@ -46,7 +46,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
         ),
         ops_test.model.deploy(
             UBUNTU_PRO_APP_NAME,
-            config={"token": github_secrets["UBUNTU_PRO_TOKEN"]},
+            config={"token": os.environ["UBUNTU_PRO_TOKEN"]},
             channel="latest/edge",
             num_units=0,
             base="ubuntu@22.04",
@@ -54,8 +54,8 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
         ops_test.model.deploy(
             LS_CLIENT,
             config={
-                "account-name": github_secrets["LANDSCAPE_ACCOUNT_NAME"],
-                "registration-key": github_secrets["LANDSCAPE_REGISTRATION_KEY"],
+                "account-name": os.environ["LANDSCAPE_ACCOUNT_NAME"],
+                "registration-key": os.environ["LANDSCAPE_REGISTRATION_KEY"],
                 "ppa": "ppa:landscape/self-hosted-beta",
             },
             channel="latest/edge",
@@ -81,8 +81,7 @@ async def test_deploy(ops_test: OpsTest, pgb_charm_jammy, github_secrets):
     )
 
 
-@pytest.mark.group(1)
-async def test_scale_up(ops_test: OpsTest, github_secrets):
+async def test_scale_up(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 4)
 
     await ops_test.model.wait_for_idle(
@@ -92,8 +91,7 @@ async def test_scale_up(ops_test: OpsTest, github_secrets):
     )
 
 
-@pytest.mark.group(1)
-async def test_scale_down(ops_test: OpsTest, github_secrets):
+async def test_scale_down(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 3)
 
     await ops_test.model.wait_for_idle(

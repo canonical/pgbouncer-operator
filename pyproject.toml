@@ -35,7 +35,7 @@ opentelemetry-exporter-otlp-proto-http = "1.21.0"
 optional = true
 
 [tool.poetry.group.format.dependencies]
-ruff = "^0.9.5"
+ruff = "^0.9.6"
 
 [tool.poetry.group.lint]
 optional = true
@@ -56,10 +56,7 @@ optional = true
 
 [tool.poetry.group.integration.dependencies]
 pytest = "^8.3.4"
-pytest-github-secrets = {git = "https://github.com/canonical/data-platform-workflows", tag = "v29.1.0", subdirectory = "python/pytest_plugins/github_secrets"}
 pytest-operator = "^0.39.0"
-pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v29.1.0", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
-pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v29.1.0", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
 # renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
 juju = "<=3.6.1.0"
 tenacity = "*"
@@ -67,7 +64,7 @@ mailmanclient = "^3.3.5"
 psycopg2-binary = "^2.9.10"
 landscape-api-py3 = "^0.9.0"
 allure-pytest = "^2.13.5"
-allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v29.1.0", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
+allure-pytest-default-results = "^0.1.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -87,7 +84,7 @@ exclude_lines = [
 minversion = "6.0"
 log_cli_level = "INFO"
 asyncio_mode = "auto"
-markers = ["unstable", "juju2", "juju3", "juju_secrets"]
+markers = ["juju2", "juju3", "juju_secrets"]
 
 # Formatting tools configuration
 [tool.black]
