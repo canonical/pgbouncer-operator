@@ -1,0 +1,8 @@
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  data-integrator/0 [idle] active: 
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
