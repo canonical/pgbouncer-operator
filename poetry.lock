@@ -453,14 +453,14 @@ files = [
 
 [[package]]
 name = "cosl"
-version = "0.0.54"
+version = "0.0.55"
 description = "Utils for COS Lite charms"
 optional = false
 python-versions = ">=3.8"
 groups = ["charm-libs"]
 files = [
-    {file = "cosl-0.0.54-py3-none-any.whl", hash = "sha256:b16520d73c72ac83cb42f0abe997d36510732d4f8499f70e9068cfa05f0d02fa"},
-    {file = "cosl-0.0.54.tar.gz", hash = "sha256:6baa889cc4468b0c0f746cc6319892a30ea8fbe38cbf5c49c6885f6fdf89d6a9"},
+    {file = "cosl-0.0.55-py3-none-any.whl", hash = "sha256:bf641d611f982c8f494f3cf72ac4181b24e30c69504cfbd55aa8f54964797f90"},
+    {file = "cosl-0.0.55.tar.gz", hash = "sha256:d3b8ee6f78302ac111d3a15d36c42a38c298a806161d762869513d348d778316"},
 ]
 
 [package.dependencies]
@@ -1038,14 +1038,14 @@ websockets = ">=8.1,<14.0"
 
 [[package]]
 name = "kubernetes"
-version = "32.0.0"
+version = "32.0.1"
 description = "Kubernetes python client"
 optional = false
 python-versions = ">=3.6"
 groups = ["integration"]
 files = [
-    {file = "kubernetes-32.0.0-py2.py3-none-any.whl", hash = "sha256:60fd8c29e8e43d9c553ca4811895a687426717deba9c0a66fb2dcc3f5ef96692"},
-    {file = "kubernetes-32.0.0.tar.gz", hash = "sha256:319fa840345a482001ac5d6062222daeb66ec4d1bcb3087402aed685adf0aecb"},
+    {file = "kubernetes-32.0.1-py2.py3-none-any.whl", hash = "sha256:35282ab8493b938b08ab5526c7ce66588232df00ef5e1dbe88a419107dc10998"},
+    {file = "kubernetes-32.0.1.tar.gz", hash = "sha256:42f43d49abd437ada79a79a16bd48a604d3471a117a8347e87db693f2ba0ba28"},
 ]
 
 [package.dependencies]
