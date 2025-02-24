@@ -27,7 +27,9 @@ The legacy charm was a [**principal charm**](https://juju.is/docs/sdk/charm-taxo
 
 The legacy charm provided SQL endpoints `db` and `db-admin` (for the interface `pgsql`). The modern charm provides those old endpoints and a new endpoint `database` (for the interface `postgresql_client`). Read more details about the available endpoints and interfaces [here](https://charmhub.io/pgbouncer/docs/e-interfaces?channel=1/stable).
 
-Non-SQL legacy charm interfaces (e.g. `hacluster`, `pgbouncer-extra-config`, `nrpe-external-master`) are currently NOT supported by the modern charm. [Contact us](/t/12307) with your use cases for those interfaces!
+The interface `hacluster` [supported](/t/15741) on both legacy and modern charms.
+
+Non-SQL legacy charm interfaces (e.g. `pgbouncer-extra-config`, `nrpe-external-master`) are currently NOT supported by the modern charm. [Contact us](/t/12307) with your use cases for those interfaces!
 
 **Note**: Please choose one endpoint to use. No need to relate all of them simultaneously!
 
