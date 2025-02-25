@@ -1,8 +1,20 @@
-# Optimal PgBouncer Setup
+# How to connect from outside the local network
 
-For optimal performance, it is recommended that [PgBouncer](https://www.pgbouncer.org/) is run alongside your application. Co-locating PgBouncer with your application results in increased network performance since an additional network hop from your application to PgBouncer is avoided. Furthermore, it can also lead increased security since traffic is not routed externally through potentially untrusted machines. 
+This page goes over the set-up and operation of PgBouncer when an external application must connect to a PostgreSQL database from outside the local area network.
 
-When your application implements the modern (preferred) interface in  [PgBouncer's supported interfaces](https://discourse.charmhub.io/t/pgbouncer-how-to-manage-app/12311) , the PgBouncer charm is deployed as a subordinate of your application charm and your application.
+[note]
+For optimal performance, it is recommended that PgBouncer is run alongside your application, as it avoids an additional network hop from your application to PgBouncer. 
+
+This also increases security, since traffic is not routed externally through potentially untrusted machines.
+[/note]
+
+<!--When your application implements the modern (preferred) interface in  [PgBouncer's supported interfaces](https://discourse.charmhub.io/t/pgbouncer-how-to-manage-app/12311), the PgBouncer charm is deployed as a subordinate of your application charm and your application.-->
+
+## Summary
+* [Accessing PgBouncer outside of Juju](#accessing-pgbouncer-outside-of-juju)
+* [Using a Virtual IP to connect to PgBouncer](#using-a-virtual-ip-to-connect-to-pgbouncer)
+
+---
 
 ## Accessing PgBouncer outside of Juju
 
