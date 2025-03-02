@@ -171,7 +171,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
-async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
+async def test_localhost_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
@@ -194,12 +194,12 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get("read-only-endpoints", None), (
-        f"read-only-endpoints in pgb databag: {databag}"
+    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
+        f"read-only-endpoints not in pgb databag: {databag}"
     )
 
 
-async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
+async def test_localhost_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME, PGB], status="active")
@@ -222,8 +222,8 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get("read-only-endpoints", None), (
-        f"read-only-endpoints in pgb databag: {databag}"
+    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
+        f"read-only-endpoints not in pgb databag: {databag}"
     )
 
 
