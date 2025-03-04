@@ -167,7 +167,6 @@ class TestPgbouncerProvider(unittest.TestCase):
     )
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_my_relation_field")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.fetch_relation_data")
-    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_uris")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_uris")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
@@ -176,7 +175,6 @@ class TestPgbouncerProvider(unittest.TestCase):
         _set_endpoints,
         _set_ro_endpoints,
         _set_uris,
-        _set_read_only_uris,
         _fetch_relation_data,
         _fetch_my_relation_field,
         _,
@@ -205,14 +203,9 @@ class TestPgbouncerProvider(unittest.TestCase):
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@localhost:6432/test_db",
         )
-        _set_read_only_uris.assert_called_once_with(
-            self.client_rel_id,
-            f"postgresql://relation_id_{self.client_rel_id}:test_password@localhost:6432/test_db_readonly",
-        )
         _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "localhost:6432")
         _set_endpoints.reset_mock()
         _set_uris.reset_mock()
-        _set_read_only_uris.reset_mock()
         _set_ro_endpoints.reset_mock()
 
         # Test exposed connection without vip
@@ -226,14 +219,9 @@ class TestPgbouncerProvider(unittest.TestCase):
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@192.0.2.0,192.0.2.1:6432/test_db",
         )
-        _set_read_only_uris.assert_called_once_with(
-            self.client_rel_id,
-            f"postgresql://relation_id_{self.client_rel_id}:test_password@192.0.2.1,192.0.2.0:6432/test_db_readonly",
-        )
         _set_endpoints.reset_mock()
         _set_ro_endpoints.reset_mock()
         _set_uris.reset_mock()
-        _set_read_only_uris.reset_mock()
 
         # Test exposed connection with vip
         self.harness.update_config({"vip": "1.2.3.4"})
@@ -246,11 +234,6 @@ class TestPgbouncerProvider(unittest.TestCase):
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@1.2.3.4:6432/test_db",
         )
-        _set_read_only_uris.assert_called_once_with(
-            self.client_rel_id,
-            f"postgresql://relation_id_{self.client_rel_id}:test_password@192.0.2.1,192.0.2.0:6432/test_db_readonly",
-        )
         _set_endpoints.reset_mock()
         _set_ro_endpoints.reset_mock()
         _set_uris.reset_mock()
-        _set_read_only_uris.reset_mock()

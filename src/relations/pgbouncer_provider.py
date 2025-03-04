@@ -342,24 +342,28 @@ class PgBouncerProvider(Object):
                 self.database_provides.set_read_only_endpoints(
                     relation.id, exposed_read_only_endpoints
                 )
-                self.database_provides.set_read_only_uris(
-                    relation.id,
+                read_only_uri = (
                     f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly",
                 )
             elif self.charm.config.vip:
                 self.database_provides.set_read_only_endpoints(
                     relation.id, f"{self.charm.config.vip}:{port}"
                 )
-                self.database_provides.set_read_only_uris(
-                    relation.id,
+                read_only_uri = (
                     f"postgresql://{user}:{password}@{self.charm.cnofig.vip}:{port}/{database}_readonly",
                 )
             else:
                 self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
-                self.database_provides.set_read_only_uris(
-                    relation.id,
+                read_only_uri = (
                     f"postgresql://{user}:{password}@localhost:{port}/{database}_readonly",
                 )
+            # Make sure that the URI will be a secret
+            if (
+                secret_fields := self.database_provides.fetch_relation_field(
+                    relation.id, "requested-secrets"
+                )
+            ) and "read-only-uris" in secret_fields:
+                self.database_provides.set_read_only_uris(relation.id, read_only_uri)
             # Reset the creds for the next iteration
             user = None
             password = None
