@@ -22,6 +22,7 @@ from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
+from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 from jinja2 import Template
@@ -697,16 +698,23 @@ class PgBouncerCharm(TypedCharmBase):
             fields=["database", "extra-user-roles"]
         ).items():
             database = data.get("database")
-            roles = data.get("extra-user-roles", "").lower().split(",")
+            extra_user_roles = data.get("extra-user-roles")
+            extra_user_roles = self.client_relation.sanitize_extra_roles(extra_user_roles)
             if database:
                 databases[str(rel_id)] = {
                     "name": database,
                     "legacy": False,
                 }
-            if "admin" in roles or "superuser" in roles or "createdb" in roles:
+            if (
+                PERMISSIONS_GROUP_ADMIN in extra_user_roles
+                or "superuser" in extra_user_roles
+                or "createdb" in extra_user_roles
+            ):
                 add_wildcard = True
+
         if add_wildcard:
             databases["*"] = {"name": "*", "auth_dbname": database, "legacy": False}
+
         self.set_relation_databases(databases)
         return databases
 
