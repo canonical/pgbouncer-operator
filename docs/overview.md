@@ -53,15 +53,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | h-upgrade-minor | [Perform a minor upgrade](/t/12317) |
 | 3 | h-rollback-minor | [Perform a minor rollback](/t/12316) |
 | 1 | reference | [Reference](/t/16794) |
-| 2 | r-releases | [Release Notes](/t/12285) |
-| 3 | r-revision-639-642 | [Revision 639-642](/t/16135) |
-| 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
-| 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
-| 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
-| 3 | r-revision-173-176 | [Revision 173-176](/t/14069) |
-| 3 | r-revision-89 | [Revision 89](/t/13126) |
-| 3 | r-revision-81 | [Revision 81](/t/12766) |
-| 3 | r-revision-77 | [Revision 77](/t/12286) |
+| 2 | r-releases | [Releases](/t/12285) |
 | 2 | r-requirements | [System requirements](/t/12307) |
 | 2 | r-testing | [Software testing](/t/12306) |
 | 2 | r-contacts | [Contacts](/t/12305) |
@@ -76,6 +68,15 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 <!-- Archived
 | 3 | h-upgrade-major | [Major upgrade](/t/12314) |
 | 3 | h-rollback-major | [Major rollback](/t/12315) |
+
+| 3 | r-revision-639-642 | [Revision 639-642](/t/16135) |
+| 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
+| 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
+| 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
+| 3 | r-revision-173-176 | [Revision 173-176](/t/14069) |
+| 3 | r-revision-89 | [Revision 89](/t/13126) |
+| 3 | r-revision-81 | [Revision 81](/t/12766) |
+| 3 | r-revision-77 | [Revision 77](/t/12286) |
 -->
 # Redirects
 
