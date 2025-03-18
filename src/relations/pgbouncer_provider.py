@@ -365,7 +365,7 @@ class PgBouncerProvider(Object):
                     relation.id, f"{self.charm.config.vip}:{port}"
                 )
                 read_only_uri = (
-                    f"postgresql://{user}:{password}@{self.charm.cnofig.vip}:{port}/{database}_readonly",
+                    f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly",
                 )
             else:
                 self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
