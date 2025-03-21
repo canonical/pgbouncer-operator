@@ -25,12 +25,18 @@ from ..helpers.postgresql_helpers import (
     check_database_users_existence,
     get_postgres_primary,
 )
+from ..juju_ import juju_major_version
 
 logger = logging.getLogger(__name__)
 
-TLS = "tls-certificates-operator"
+if juju_major_version < 3:
+    TLS = "tls-certificates-operator"
+    tls_channel = "legacy/stable"
+    tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+else:
+    TLS = "self-signed-certificates"
+    tls_channel = "latest/stable"
 RELATION = "backend-database"
-tls_channel = "latest/stable"
 
 
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, charm):
@@ -91,8 +97,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, charm_foc
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=1000)
 
         # Deploy TLS Certificates operator.
-        config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-        await ops_test.model.deploy(TLS, config=config, channel=tls_channel)
+        await ops_test.model.deploy(TLS, config=tls_config, channel=tls_channel)
         await ops_test.model.wait_for_idle(apps=[TLS], status="active", timeout=1000)
 
         # Relate it to the PostgreSQL to enable TLS.
