@@ -9,7 +9,6 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from ... import architecture
 from ...helpers.ha_helpers import get_unit_ip
 from ...helpers.helpers import (
     PG,
@@ -25,11 +24,11 @@ HACLUSTER_NAME = "hacluster"
 
 if juju_major_version < 3:
     tls_certificates_app_name = "tls-certificates-operator"
-    tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
+    tls_channel = "legacy/stable"
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
 else:
     tls_certificates_app_name = "self-signed-certificates"
-    tls_channel = "latest/edge" if architecture.architecture == "arm64" else "latest/stable"
+    tls_channel = "latest/stable"
     tls_config = {"ca-common-name": "Test CA"}
 
 

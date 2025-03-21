@@ -7,7 +7,6 @@ import logging
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
-from .. import architecture
 from ..helpers.helpers import (
     CLIENT_APP_NAME,
     FIRST_DATABASE_RELATION_NAME,
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 TLS = "tls-certificates-operator"
 RELATION = "backend-database"
-tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "latest/stable"
+tls_channel = "latest/stable"
 
 
 async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, charm):
