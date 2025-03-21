@@ -207,9 +207,10 @@ class TestPgbouncerProvider(unittest.TestCase):
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@localhost:6432/test_db",
         )
-        assert not _set_ro_endpoints.called
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "localhost:6432")
         _set_endpoints.reset_mock()
         _set_uris.reset_mock()
+        _set_ro_endpoints.reset_mock()
 
         # Test exposed connection without vip
         _fetch_relation_data.return_value[self.client_rel_id]["external-node-connectivity"] = True
@@ -232,7 +233,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_relation.update_connection_info(rel)
 
         _set_endpoints.assert_called_once_with(self.client_rel_id, "1.2.3.4:6432")
-        assert not _set_ro_endpoints.called
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.1:6432")
         _set_uris.assert_called_once_with(
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@1.2.3.4:6432/test_db",
