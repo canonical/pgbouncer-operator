@@ -8,7 +8,7 @@ import logging
 from typing import Literal, Optional
 
 from charms.data_platform_libs.v0.data_models import BaseConfigModel
-from pydantic import IPvAnyAddress, PositiveInt, conint
+from pydantic.v1 import IPvAnyAddress, PositiveInt, conint
 
 logger = logging.getLogger(__name__)
 

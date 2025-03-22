@@ -9,7 +9,7 @@ requires-poetry = ">=2.0.0"
 python = ">=3.8,<3.9 || >=3.10,<4"
 ops = "^2.19.4"
 tenacity = "^9.0.0"
-pydantic = "^1.10.21"
+pydantic = "^2.10.6"
 psycopg2 = "^2.9.10"
 psycopg = {extras = ["c"], version = "^3.2.6"}  # Used by data_interfaces.py
 jinja2 = "^3.1.6"
@@ -21,7 +21,7 @@ ops = ">=2.0.0"
 poetry-core = "*"
 # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
 # grafana_agent/v0/cos_agent.py requires pydantic
-pydantic = "^1.10"
+pydantic = "*"
 # grafana_agent/v0/cos_agent.py
 cosl = "*"
 # tls_certificates_interface/v2/tls_certificates.py
