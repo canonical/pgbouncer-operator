@@ -161,10 +161,12 @@ except ModuleNotFoundError:
     import pydantic
 from ops.charm import ActionEvent, CharmBase, RelationEvent
 from ops.model import RelationDataContent
+
 try:
     from pydantic.v1 import BaseModel, ValidationError
 except ModuleNotFoundError:
     from pydantic import BaseModel, ValidationError
+
 
 # The unique Charmhub library identifier, never change it
 LIBID = "cb2094c5b07d47e1bf346aaee0fcfcfe"
@@ -174,9 +176,9 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 5
+LIBPATCH = 6
 
-PYDEPS = ["ops>=2.0.0", "pydantic"]
+PYDEPS = ["ops>=2.0.0", "pydantic<3"]
 
 G = TypeVar("G")
 T = TypeVar("T", bound=BaseModel)
