@@ -16,7 +16,7 @@ from charms.data_platform_libs.v0.upgrade import (
 )
 from charms.operator_libs_linux.v1 import systemd
 from ops.model import MaintenanceStatus
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
