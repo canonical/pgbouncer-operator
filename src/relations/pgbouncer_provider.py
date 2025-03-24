@@ -354,15 +354,16 @@ class PgBouncerProvider(Object):
                     relation.id, "external-node-connectivity"
                 )
             ):
-                self.database_provides.set_read_only_endpoints(
-                    relation.id, exposed_read_only_endpoints
-                )
-                read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
-            elif self.charm.config.vip:
-                self.database_provides.set_read_only_endpoints(
-                    relation.id, f"{self.charm.config.vip}:{port}"
-                )
-                read_only_uri = f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly"
+                if self.charm.config.vip:
+                    self.database_provides.set_read_only_endpoints(
+                        relation.id, f"{self.charm.config.vip}:{port}"
+                    )
+                    read_only_uri = f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly"
+                else:
+                    self.database_provides.set_read_only_endpoints(
+                        relation.id, exposed_read_only_endpoints
+                    )
+                    read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
             else:
                 self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
                 read_only_uri = (

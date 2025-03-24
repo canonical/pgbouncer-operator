@@ -233,7 +233,7 @@ class TestPgbouncerProvider(unittest.TestCase):
         self.client_relation.update_connection_info(rel)
 
         _set_endpoints.assert_called_once_with(self.client_rel_id, "1.2.3.4:6432")
-        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.1:6432")
+        _set_ro_endpoints.assert_called_once_with(self.client_rel_id, "1.2.3.4:6432")
         _set_uris.assert_called_once_with(
             self.client_rel_id,
             f"postgresql://relation_id_{self.client_rel_id}:test_password@1.2.3.4:6432/test_db",
@@ -241,3 +241,58 @@ class TestPgbouncerProvider(unittest.TestCase):
         _set_endpoints.reset_mock()
         _set_ro_endpoints.reset_mock()
         _set_uris.reset_mock()
+
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_uris")
+    @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_read_only_endpoints")
+    def test_update_read_only_endpoints(self, _set_read_only_endpoints, _set_read_only_uris):
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.client_rel_id,
+                "application",
+                {
+                    "requested-secrets": '["read-only-uris"]',
+                    "database": "testdb",
+                },
+            )
+
+        # Exits if not leader
+        self.client_relation.update_read_only_endpoints()
+        assert not _set_read_only_endpoints.called
+
+        self.harness.set_leader()
+
+        # Local connection
+        self.client_relation.update_read_only_endpoints()
+        _set_read_only_endpoints.assert_called_once_with(self.client_rel_id, "localhost:6432")
+        _set_read_only_uris.assert_called_once_with(
+            self.client_rel_id, "postgresql://relation_id_2:None@localhost:6432/testdb_readonly"
+        )
+        _set_read_only_endpoints.reset_mock()
+        _set_read_only_uris.reset_mock()
+
+        # Exposed connection
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.client_rel_id,
+                "application",
+                {"external-node-connectivity": "true"},
+            )
+        self.client_relation.update_read_only_endpoints()
+        _set_read_only_endpoints.assert_called_once_with(self.client_rel_id, "192.0.2.0:6432")
+        _set_read_only_uris.assert_called_once_with(
+            self.client_rel_id, "postgresql://relation_id_2:None@192.0.2.0:6432/testdb_readonly"
+        )
+        _set_read_only_endpoints.reset_mock()
+        _set_read_only_uris.reset_mock()
+
+        # vIP connection
+        with self.harness.hooks_disabled():
+            self.harness.update_config({"vip": "1.2.3.4"})
+
+        self.client_relation.update_read_only_endpoints()
+        _set_read_only_endpoints.assert_called_once_with(self.client_rel_id, "1.2.3.4:6432")
+        _set_read_only_uris.assert_called_once_with(
+            self.client_rel_id, "postgresql://relation_id_2:None@1.2.3.4:6432/testdb_readonly"
+        )
+        _set_read_only_endpoints.reset_mock()
+        _set_read_only_uris.reset_mock()
