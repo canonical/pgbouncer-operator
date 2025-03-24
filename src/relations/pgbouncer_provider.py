@@ -381,10 +381,6 @@ class PgBouncerProvider(Object):
             password = None
             database = None
 
-    def get_database(self, relation):
-        """Gets database name from relation."""
-        return relation.data.get(self.get_external_app(relation)).get("database", None)
-
     def get_external_app(self, relation):
         """Gets external application, as an Application object.
 

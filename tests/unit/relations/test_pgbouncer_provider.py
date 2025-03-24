@@ -61,7 +61,6 @@ class TestPgbouncerProvider(unittest.TestCase):
     )
     @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test_pass")
     @patch("relations.pgbouncer_provider.PgBouncerProvider.update_read_only_endpoints")
-    @patch("relations.pgbouncer_provider.PgBouncerProvider.get_database", return_value="test-db")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_credentials")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_endpoints")
     @patch("charms.data_platform_libs.v0.data_interfaces.DatabaseProvides.set_version")
@@ -79,7 +78,6 @@ class TestPgbouncerProvider(unittest.TestCase):
         _dbp_set_version,
         _dbp_set_endpoints,
         _dbp_set_credentials,
-        _get_database,
         _update_read_only_endpoints,
         _password,
         _auth_user,
