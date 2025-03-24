@@ -354,21 +354,20 @@ class PgBouncerProvider(Object):
                     relation.id, "external-node-connectivity"
                 )
             ):
-                self.database_provides.set_read_only_endpoints(
-                    relation.id, exposed_read_only_endpoints
-                )
-                read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
-            elif self.charm.config.vip:
-                self.database_provides.set_read_only_endpoints(
-                    relation.id, f"{self.charm.config.vip}:{port}"
-                )
-                read_only_uri = (
-                    f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly",
-                )
+                if self.charm.config.vip:
+                    self.database_provides.set_read_only_endpoints(
+                        relation.id, f"{self.charm.config.vip}:{port}"
+                    )
+                    read_only_uri = f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly"
+                else:
+                    self.database_provides.set_read_only_endpoints(
+                        relation.id, exposed_read_only_endpoints
+                    )
+                    read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
             else:
                 self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
                 read_only_uri = (
-                    f"postgresql://{user}:{password}@localhost:{port}/{database}_readonly",
+                    f"postgresql://{user}:{password}@localhost:{port}/{database}_readonly"
                 )
             # Make sure that the URI will be a secret
             if (
@@ -381,10 +380,6 @@ class PgBouncerProvider(Object):
             user = None
             password = None
             database = None
-
-    def get_database(self, relation):
-        """Gets database name from relation."""
-        return relation.data.get(self.get_external_app(relation)).get("database", None)
 
     def get_external_app(self, relation):
         """Gets external application, as an Application object.
