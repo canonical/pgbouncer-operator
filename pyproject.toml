@@ -7,7 +7,7 @@ requires-poetry = ">=2.0.0"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9 || >=3.10,<4"
-ops = "^2.19.4"
+ops = "^2.20.0"
 tenacity = "^9.0.0"
 pydantic = "^1.10.21"
 psycopg2 = "^2.9.10"
