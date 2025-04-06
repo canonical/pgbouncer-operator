@@ -1,0 +1,70 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-590
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-1
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [allocating] waiting: waiting for machine
+  another-postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [allocating] waiting: waiting for machine
+  another-postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [allocating] waiting: waiting for machine
+  another-postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [allocating] waiting: agent initialising
+  another-postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] maintenance: installing PostgreSQL
+  another-postgresql/1 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] waiting: awaiting for member to start
+  another-postgresql/1 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] active: Primary (degraded)
+  another-postgresql/1 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] maintenance: reconfiguring cluster
+  another-postgresql/1 [executing] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] maintenance: reconfiguring cluster
+  another-postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [executing] active: Primary
+  another-postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-postgresql/0 [idle] active: Primary
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/2 [allocating] waiting: agent initialising
+  pgbouncer/3 [allocating] waiting: agent initialising
+  another-application/0 [idle] active: 
+  another-postgresql/0 [idle] active: Primary
+  another-postgresql/1 [idle] active: 
+  another-pgbouncer/0 [allocating] waiting: agent initialising
+  another-pgbouncer/1 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/2 [executing] blocked: waiting for backend database relation to initialise
+  pgbouncer/3 [executing] blocked: waiting for backend database relation to initialise
+  another-postgresql/0 [idle] active: Primary
+  another-postgresql/1 [idle] active: 
+  another-pgbouncer/0 [executing] blocked: waiting for backend database relation to initialise
+  another-pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: received database credentials for cluster pgbouncer
+  postgresql-test-app/1 [idle] active: received database credentials for cluster pgbouncer
+  pgbouncer/2 [executing] active: 
+  pgbouncer/3 [executing] active: 
+  another-pgbouncer/0 [executing] active: 
+  another-pgbouncer/1 [executing] maintenance: Reloading Pgbouncer
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [executing] active: received database credentials for cluster pgbouncer
+  postgresql-test-app/1 [executing] active: received database credentials for cluster pgbouncer
