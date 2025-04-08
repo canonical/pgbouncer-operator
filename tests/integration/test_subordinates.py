@@ -49,7 +49,9 @@ async def test_deploy(ops_test: OpsTest, charm):
             config={"token": os.environ["UBUNTU_PRO_TOKEN"]},
             channel="latest/edge",
             num_units=0,
-            base="ubuntu@22.04",
+            # TODO switch back to series when pylib juju can figure out the base:
+            # https://github.com/juju/python-libjuju/issues/1240
+            series="jammy",
         ),
         ops_test.model.deploy(
             LS_CLIENT,
