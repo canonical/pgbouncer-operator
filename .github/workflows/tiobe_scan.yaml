@@ -21,6 +21,7 @@ jobs:
           python3 -m venv .venv
           . .venv/bin/activate
           pip install poetry tox
+          echo PATH="$PATH" >> "$GITHUB_ENV"
 
       - name: Run coverage tests
         run: |
@@ -35,7 +36,6 @@ jobs:
         run: |
           pip install flake8 pylint pytest
           poetry install --all-groups
-          echo PATH="$PATH" >> "$GITHUB_ENV"
 
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
