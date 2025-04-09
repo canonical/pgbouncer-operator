@@ -16,6 +16,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create and activate virtual environment
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install poetry tox
+
       - name: Run coverage tests
         run: |
           tox -e unit
@@ -25,11 +31,9 @@ jobs:
           mkdir -p .cover
           mv coverage.xml .cover/cobertura.xml
 
-      - name: Create and activate virtual environment
+      - name: Install additional dependencies for TICS
         run: |
-          python3 -m venv .venv
-          . .venv/bin/activate
-          pip install flake8 poetry pylint pytest tox
+          pip install flake8 pylint pytest
           poetry install --all-groups
           echo PATH="$PATH" >> "$GITHUB_ENV"
 
