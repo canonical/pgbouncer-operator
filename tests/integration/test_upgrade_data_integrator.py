@@ -46,6 +46,7 @@ async def test_deploy_stable(ops_test: OpsTest, charm) -> None:
             num_units=2,
             channel="latest/edge",
             config={"database-name": "test-database"},
+            base="ubuntu@22.04",
         ),
     )
     logger.info("Wait for applications to become active")
