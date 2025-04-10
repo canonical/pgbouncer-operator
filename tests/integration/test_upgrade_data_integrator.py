@@ -39,13 +39,13 @@ async def test_deploy_stable(ops_test: OpsTest, charm) -> None:
             PGB,
             channel="1/stable",
             num_units=0,
-            base="ubuntu@22.04",
         ),
         ops_test.model.deploy(
             DATA_INTEGRATOR_APP_NAME,
             num_units=2,
             channel="latest/edge",
             config={"database-name": "test-database"},
+            series="jammy",
         ),
     )
     logger.info("Wait for applications to become active")

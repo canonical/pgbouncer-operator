@@ -33,7 +33,7 @@ else:
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_and_relate(ops_test: OpsTest, charm):
+async def test_deploy_and_relate(ops_test: OpsTest, charm_noble):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
@@ -41,9 +41,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                charm,
-                application_name=PGB,
-                num_units=0,
+                charm_noble, application_name=PGB, num_units=0, base="ubuntu@24.04"
             ),
             ops_test.model.deploy(
                 PG,
@@ -57,6 +55,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
                 channel="edge",
                 num_units=2,
                 config=config,
+                base="ubuntu@24.04",
             ),
             ops_test.model.deploy(
                 tls_certificates_app_name, config=tls_config, channel=tls_channel

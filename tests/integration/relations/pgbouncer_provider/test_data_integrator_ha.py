@@ -57,6 +57,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
                 channel="edge",
                 num_units=3,
                 config=config,
+                series="jammy",
             ),
             ops_test.model.deploy(
                 tls_certificates_app_name, config=tls_config, channel=tls_channel
