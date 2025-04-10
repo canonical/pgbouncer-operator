@@ -53,6 +53,17 @@ async def test_deploy(ops_test: OpsTest, charm):
             # https://github.com/juju/python-libjuju/issues/1240
             series="jammy",
         ),
+        ops_test.model.deploy(
+            LS_CLIENT,
+            config={
+                "account-name": os.environ["LANDSCAPE_ACCOUNT_NAME"],
+                "registration-key": os.environ["LANDSCAPE_REGISTRATION_KEY"],
+                "ppa": "ppa:landscape/self-hosted-beta",
+            },
+            channel="latest/edge",
+            num_units=0,
+            base="ubuntu@22.04",
+        ),
     )
     await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
     await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
@@ -63,7 +74,7 @@ async def test_deploy(ops_test: OpsTest, charm):
         timeout=3000,
     )
 
-    # TODO re-add landscape client
+    # TODO re-add LS_CLIENT
     await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.relate(f"{PG}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.wait_for_idle(
