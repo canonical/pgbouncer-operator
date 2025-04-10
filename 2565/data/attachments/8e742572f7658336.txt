@@ -1,0 +1,15 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-590
+[32mINFO    [0m pytest_operator.plugin:plugin.py:937 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.4    unsupported  01:43:13Z
+
+App               Version  Status   Scale  Charm             Channel      Rev  Exposed  Message
+landscape-client           unknown      0  landscape-client  latest/edge   72  no       
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:943 Juju error logs:
+
+
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1025 Forgetting model main...
+[33mWARNING [0m juju.client.connection:connection.py:654 RPC: Connection closed, reconnecting
