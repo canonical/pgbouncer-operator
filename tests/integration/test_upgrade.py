@@ -45,12 +45,7 @@ async def test_deploy_latest(ops_test: OpsTest, charm) -> None:
             channel="14/edge",
             config={"profile": "testing"},
         ),
-        ops_test.model.deploy(
-            PGB,
-            channel="1/edge",
-            num_units=0,
-            base="ubuntu@22.04",
-        ),
+        ops_test.model.deploy(PGB, channel="1/edge", num_units=0, series="jammy"),
         ops_test.model.deploy(
             CLIENT_APP_NAME,
             num_units=3,
