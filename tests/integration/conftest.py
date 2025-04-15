@@ -20,6 +20,14 @@ def charm():
 
 
 @pytest.fixture(scope="session")
+def charm_noble():
+    # Return str instead of pathlib.Path since python-libjuju's model.deploy(), juju deploy, and
+    # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
+    # Charmhub charms.
+    return f"./pgbouncer_ubuntu@24.04-{architecture.architecture}.charm"
+
+
+@pytest.fixture(scope="session")
 def charm_focal(charm):
     # Workaround for basic multi-base testing
     # For better multi-base testing (e.g. running the same test on multiple bases), use
