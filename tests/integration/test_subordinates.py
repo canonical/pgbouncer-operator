@@ -62,7 +62,9 @@ async def test_deploy(ops_test: OpsTest, charm):
             },
             channel="latest/edge",
             num_units=0,
-            base="ubuntu@22.04",
+            # TODO switch back to series when pylib juju can figure out the base:
+            # https://github.com/juju/python-libjuju/issues/1240
+            series="jammy",
         ),
     )
     await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
@@ -74,11 +76,12 @@ async def test_deploy(ops_test: OpsTest, charm):
         timeout=3000,
     )
 
-    # TODO re-add LS_CLIENT
+    await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{LS_CLIENT}:container")
     await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
+    await ops_test.model.relate(f"{PG}:juju-info", f"{LS_CLIENT}:container")
     await ops_test.model.relate(f"{PG}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.wait_for_idle(
-        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB], status="active"
+        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB], status="active"
     )
 
 
@@ -86,7 +89,7 @@ async def test_scale_up(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 4)
 
     await ops_test.model.wait_for_idle(
-        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
+        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
         status="active",
         timeout=1500,
     )
@@ -96,7 +99,7 @@ async def test_scale_down(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 3)
 
     await ops_test.model.wait_for_idle(
-        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
+        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
         status="active",
         timeout=1500,
     )
