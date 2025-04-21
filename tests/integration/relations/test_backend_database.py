@@ -102,7 +102,7 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, charm_foc
         await ops_test.model.wait_for_idle(apps=[TLS], status="active", timeout=1000)
 
         # Relate it to the PostgreSQL to enable TLS.
-        await ops_test.model.relate(PG, TLS)
+        await ops_test.model.relate(f"{PG}:certificates", TLS)
         await ops_test.model.wait_for_idle(apps=[PG, TLS], status="active", timeout=1000)
 
         # Enable additional logs on the PostgreSQL instance to check TLS
