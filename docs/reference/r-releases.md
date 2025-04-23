@@ -1,4 +1,4 @@
-# Release Notes
+# Releases
 
 This page provides high-level overviews of the dependencies and features that are supported by each revision in every stable release. To learn more about the different release tracks, see the [Juju documentation about risk levels](https://juju.is/docs/juju/channel?#heading--risk).
 
@@ -15,6 +15,7 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|
+|[639], [640], [641], [642] | `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check]
 |[394], [395], [396], [397]| `1.21.0` | `3.4.5+` | ![check] | ![check] | ![check]
 |[278], [279], [280], [281]| `1.21.0` | `3.4.5+` | ![check] | ![check] | ![check]
 |[254], [255], [256], [257]| `1.21.0` | `3.1.8+` | ![check] | ![check] | ![check]
@@ -28,26 +29,34 @@ For each release, this table shows:
 Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subordinate-charms) nature of this charm, several [revisions](https://juju.is/docs/sdk/revision) are released simultaneously for different [bases/series](https://juju.is/docs/juju/base) using the same charm code. In other words, one release contains multiple revisions.
 
 > If you do not specify a revision on deploy time, Juju will automatically choose the revision that matches your base and architecture.
+> 
+> See: [`juju info`](https://juju.is/docs/juju/juju-info).
 
-> If you deploy a specific revision, **you must make sure it matches your base and architecture** via the tables below or with [`juju info`](https://juju.is/docs/juju/juju-info).
+### Release 639-642
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
+|:-----:|:--------:|:--------:|:-----:|:-----:|
+| [639] | ![check] |  |  | ![check] |
+| [640] | ![check] |  | ![check] |          |
+| [641] |  | ![check] | ![check] | |
+| [642] |  | ![check] | | ![check] |
 
-### Release 394-397 (`1/stable`)
+[details=Release 394-397]
+### Release 394-397
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
 | [394] |          | ![check] | ![check] |          |
 | [395] | ![check] |          | ![check] |          |
 | [396] | ![check] |          |          | ![check] |
 | [397] |          | ![check] |          | ![check] |
+[/details]
 
 [details=Release 278-281]
-
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
 | [278] | ![check] |          |          | ![check] |
 | [279] | ![check] |          | ![check] |          |
 | [280] |          | ![check] |          | ![check] |
 | [281] |          | ![check] | ![check] |          |
-
 [/details]
 
 [details=Release 254-257]
@@ -101,34 +110,37 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 
 <br>
 
-[note]
+> **Note**:
  Our release notes are an ongoing work in progress. If there is any additional information about releases that you would like to see or suggestions for other improvements, don't hesitate to contact us on [Matrix ](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [leave a comment](https://discourse.charmhub.io/t/pgbouncer-reference-release-notes/12285).
-[/note]
 
 <!--LINKS-->
-[394]: /t/15379
-[395]: /t/15379
-[396]: /t/15379
-[397]: /t/15379
-[394, 395, 396, 397]: /t/15379
-[278]: /t/14853
-[279]: /t/14853
-[280]: /t/14853
-[281]: /t/14853
-[254]: /t/14666
-[255]: /t/14666
-[256]: /t/14666
-[257]: /t/14666
-[173]: /t/14069
-[174]: /t/14069
-[175]: /t/14069
-[176]: /t/14069
-[89]: /t/13126
-[88]: /t/13126
-[81]: /t/12766
-[80]: /t/12766
-[77]: /t/12286
-[76]: /t/12286
+[639]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev639
+[640]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev639
+[641]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev639
+[642]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev639
+[394]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
+[395]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
+[396]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
+[397]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
+[394, 395, 396, 397]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
+[278]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
+[279]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
+[280]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
+[281]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
+[254]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev254
+[255]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev254
+[256]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev254
+[257]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev254
+[173]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev173
+[174]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev173
+[175]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev173
+[176]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev173
+[89]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev88
+[88]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev88
+[81]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev80
+[80]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev80
+[77]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev76
+[76]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev76
 
 <!-- BADGES -->
 [check]: https://img.icons8.com/color/20/checkmark--v1.png

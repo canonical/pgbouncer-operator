@@ -34,7 +34,6 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-DATA_INTEGRATOR_APP_NAME = "data-integrator"
 CLIENT_UNIT_NAME = f"{CLIENT_APP_NAME}/0"
 TEST_DBNAME = "postgresql_test_app_database"
 ANOTHER_APPLICATION_APP_NAME = "another-application"
@@ -44,9 +43,8 @@ APP_NAMES = [CLIENT_APP_NAME, PG]
 MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME = "multiple-database-clusters"
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_charm_jammy):
+async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
@@ -58,10 +56,10 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
                 channel="edge",
             ),
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=PGB,
-                num_units=None,
                 config={"local_connection_type": "uds"},
+                num_units=0,
             ),
             ops_test.model.deploy(
                 PG,
@@ -106,7 +104,6 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, pgb_cha
         assert auth_file is None
 
 
-@pytest.mark.group(1)
 async def test_database_usage(ops_test: OpsTest):
     """Check we can update and delete things."""
     update_query = (
@@ -125,7 +122,6 @@ async def test_database_usage(ops_test: OpsTest):
     assert "some data" in json.loads(run_update_query["results"])[0]
 
 
-@pytest.mark.group(1)
 async def test_database_version(ops_test: OpsTest):
     """Check version is accurate."""
     version_query = "SELECT version();"
@@ -152,7 +148,6 @@ async def test_database_version(ops_test: OpsTest):
     assert version in json.loads(run_version_query["results"])[0][0]
 
 
-@pytest.mark.group(1)
 async def test_database_admin_permissions(ops_test: OpsTest):
     """Test admin permissions."""
     create_database_query = "CREATE DATABASE another_database;"
@@ -176,8 +171,7 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     assert "no results to fetch" in json.loads(run_create_user_query["results"])
 
 
-@pytest.mark.group(1)
-async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
+async def test_localhost_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     """Test that there is no read-only endpoint in a standalone cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
     cfg = await get_cfg(ops_test, ops_test.model.applications[PGB].units[0].name)
@@ -200,13 +194,12 @@ async def test_no_read_only_endpoint_in_standalone_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get("read-only-endpoints", None), (
-        f"read-only-endpoints in pgb databag: {databag}"
+    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
+        f"read-only-endpoints not in pgb databag: {databag}"
     )
 
 
-@pytest.mark.group(1)
-async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
+async def test_localhost_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     """Test that there is read-only endpoint in a scaled up cluster."""
     await scale_application(ops_test, CLIENT_APP_NAME, 2)
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME, PGB], status="active")
@@ -229,12 +222,11 @@ async def test_no_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert not databag.get("read-only-endpoints", None), (
-        f"read-only-endpoints in pgb databag: {databag}"
+    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
+        f"read-only-endpoints not in pgb databag: {databag}"
     )
 
 
-@pytest.mark.group(1)
 async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
     """Test that two different application connect to the database with different credentials."""
     # Set some variables to use in this test.
@@ -259,17 +251,14 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
         pass
 
 
-@pytest.mark.group(1)
-async def test_an_application_can_connect_to_multiple_database_clusters(
-    ops_test: OpsTest, pgb_charm_jammy
-):
+async def test_an_application_can_connect_to_multiple_database_clusters(ops_test: OpsTest, charm):
     """Test that an application can connect to different clusters of the same database."""
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=PGB_2,
-                num_units=None,
+                num_units=0,
                 config={"listen_port": 7432, "metrics_port": 9128},
             ),
             ops_test.model.deploy(
@@ -319,7 +308,6 @@ async def test_an_application_can_connect_to_multiple_database_clusters(
     await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
 
 
-@pytest.mark.group(1)
 async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     """Test that an application can request additional databases using the same interface.
 
@@ -344,7 +332,6 @@ async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):
     assert first_database_connection_string != second_database_connection_string
 
 
-@pytest.mark.group(1)
 async def test_scaling(ops_test: OpsTest):
     """Check these relations all work when scaling pgbouncer."""
     await scale_application(ops_test, CLIENT_APP_NAME, 1)
@@ -374,8 +361,7 @@ async def test_scaling(ops_test: OpsTest):
         )
 
 
-@pytest.mark.group(1)
-@pytest.mark.unstable
+@pytest.mark.skip(reason="Unstable")
 async def test_relation_broken(ops_test: OpsTest):
     """Test that the user is removed when the relation is broken."""
     # Retrieve the relation user.

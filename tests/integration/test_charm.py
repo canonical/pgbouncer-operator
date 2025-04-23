@@ -24,9 +24,8 @@ from .helpers.postgresql_helpers import restart_machine
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest, pgb_charm_jammy):
+async def test_build_and_deploy(ops_test: OpsTest, charm):
     """Build and deploy the charm-under-test.
 
     Assert on the unit status before any relations/configurations take place.
@@ -37,9 +36,8 @@ async def test_build_and_deploy(ops_test: OpsTest, pgb_charm_jammy):
                 CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
             ),
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=PGB,
-                num_units=None,
                 config={"local_connection_type": "uds"},
             ),
             ops_test.model.deploy(
@@ -60,7 +58,6 @@ async def test_build_and_deploy(ops_test: OpsTest, pgb_charm_jammy):
         await ops_test.model.wait_for_idle(apps=[PGB], status="active", timeout=600)
 
 
-@pytest.mark.group(1)
 async def test_change_config(ops_test: OpsTest):
     """Change config and assert that the pgbouncer config file looks how we expect."""
     async with ops_test.fast_forward():
@@ -87,7 +84,6 @@ async def test_change_config(ops_test: OpsTest):
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
-@pytest.mark.group(1)
 async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
 
@@ -103,7 +99,6 @@ async def test_systemd_restarts_pgbouncer_processes(ops_test: OpsTest):
     assert await get_running_instances(ops_test, unit, "pgbouncer") == 1
 
 
-@pytest.mark.group(1)
 async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
     unit = ops_test.model.units[f"{PGB}/0"]
 
@@ -119,7 +114,6 @@ async def test_systemd_restarts_exporter_process(ops_test: OpsTest):
     assert await get_running_instances(ops_test, unit, "pgbouncer_expor") == 1
 
 
-@pytest.mark.group(1)
 async def test_logrotate(ops_test: OpsTest):
     """Verify that logs will be rotated."""
     unit = ops_test.model.units[f"{PGB}/0"]
@@ -133,7 +127,6 @@ async def test_logrotate(ops_test: OpsTest):
     assert len(logs), "Log not rotated"
 
 
-@pytest.mark.group(1)
 async def test_restart_unit(ops_test: OpsTest):
     await restart_machine(ops_test, f"{CLIENT_APP_NAME}/0")
 

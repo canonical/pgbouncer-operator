@@ -25,9 +25,8 @@ TIMEOUT = 600
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
+async def test_deploy_stable(ops_test: OpsTest, charm) -> None:
     """Simple test to ensure that the PostgreSQL and application charms get deployed."""
     await asyncio.gather(
         ops_test.model.deploy(
@@ -39,14 +38,14 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
         ops_test.model.deploy(
             PGB,
             channel="1/stable",
-            num_units=None,
-            base="ubuntu@22.04",
+            num_units=0,
         ),
         ops_test.model.deploy(
             DATA_INTEGRATOR_APP_NAME,
             num_units=2,
             channel="latest/edge",
             config={"database-name": "test-database"},
+            series="jammy",
         ),
     )
     logger.info("Wait for applications to become active")
@@ -61,7 +60,6 @@ async def test_deploy_stable(ops_test: OpsTest, pgb_charm_jammy) -> None:
     assert len(ops_test.model.applications[PGB].units) == 2
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_pre_upgrade_check(ops_test: OpsTest) -> None:
     """Test that the pre-upgrade-check action runs successfully."""
@@ -74,9 +72,8 @@ async def test_pre_upgrade_check(ops_test: OpsTest) -> None:
     await action.wait()
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_upgrade_from_stable(ops_test: OpsTest, pgb_charm_jammy):
+async def test_upgrade_from_stable(ops_test: OpsTest, charm):
     """Test updating from stable channel."""
     credentials = await fetch_action_get_credentials(
         ops_test.model.applications[DATA_INTEGRATOR_APP_NAME].units[0]
@@ -87,7 +84,7 @@ async def test_upgrade_from_stable(ops_test: OpsTest, pgb_charm_jammy):
     actions = await application.get_actions()
 
     logger.info("Refresh the charm")
-    await application.refresh(path=pgb_charm_jammy)
+    await application.refresh(path=charm)
 
     logger.info("Wait for upgrade to start")
     await ops_test.model.block_until(

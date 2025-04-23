@@ -9,7 +9,6 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from ... import architecture
 from ...helpers.ha_helpers import get_unit_ip
 from ...helpers.helpers import (
     PG,
@@ -25,17 +24,16 @@ HACLUSTER_NAME = "hacluster"
 
 if juju_major_version < 3:
     tls_certificates_app_name = "tls-certificates-operator"
-    tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
+    tls_channel = "legacy/stable"
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
 else:
     tls_certificates_app_name = "self-signed-certificates"
-    tls_channel = "latest/edge" if architecture.architecture == "arm64" else "latest/stable"
+    tls_channel = "latest/stable"
     tls_config = {"ca-common-name": "Test CA"}
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
+async def test_deploy_and_relate(ops_test: OpsTest, charm):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
@@ -43,9 +41,9 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                pgb_charm_jammy,
+                charm,
                 application_name=PGB,
-                num_units=None,
+                num_units=0,
             ),
             ops_test.model.deploy(
                 PG,
@@ -59,6 +57,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
                 channel="edge",
                 num_units=3,
                 config=config,
+                series="jammy",
             ),
             ops_test.model.deploy(
                 tls_certificates_app_name, config=tls_config, channel=tls_channel
@@ -110,8 +109,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, pgb_charm_jammy):
     assert host == vip
 
 
-@pytest.mark.group(1)
-async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
+async def test_add_tls(ops_test: OpsTest, charm):
     await ops_test.model.add_relation(PGB, tls_certificates_app_name)
     await ops_test.model.wait_for_idle(status="active")
 
@@ -121,8 +119,7 @@ async def test_add_tls(ops_test: OpsTest, pgb_charm_jammy):
     check_exposed_connection(credentials, True)
 
 
-@pytest.mark.group(1)
-async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
+async def test_remove_tls(ops_test: OpsTest, charm):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:certificates", f"{tls_certificates_app_name}:certificates"
     )
@@ -134,7 +131,6 @@ async def test_remove_tls(ops_test: OpsTest, pgb_charm_jammy):
     check_exposed_connection(credentials, False)
 
 
-@pytest.mark.group(1)
 async def test_remove_vip(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.applications[PGB].reset_config(["vip"])

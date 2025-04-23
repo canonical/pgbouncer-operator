@@ -1,6 +1,8 @@
-# PgBouncer Documentation
+# PgBouncer documentation
 
-The PgBouncer Operator delivers automated operations management from day 0 to day 2 on the [PgBouncer](http://www.pgbouncer.org/) - the  lightweight connection pooler for PostgreSQL. It is an open source, end-to-end, production-ready data platform on top of [Juju](https://juju.is/).
+This charmed operator packages [PgBouncer](http://www.pgbouncer.org/), the lightweight connection pooler for PostgreSQL. It is an open source, end-to-end, production-ready data platform on top of [Juju](https://juju.is/).
+
+> **Note**: The default channel is now `1/stable`. 
 
 ![image|690x423](https://assets.ubuntu.com/v1/6c2781e9-psql_diagram.png)
 
@@ -32,31 +34,42 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 
 | Level | Path | Navlink |
 |---------|---------|-------------|
-| 1 | tutorial | [Tutorial]() |
-| 2 | t-overview | [1. Introduction](/t/12288) |
-| 2 | t-setup-environment | [2. Set up the environment](/t/12289) |
-| 2 | t-deploy-charm | [3. Deploy PgBouncer](/t/12290) |
-| 2 | t-managing-units | [4. Manage units](/t/12291) |
-| 2 | t-enable-security | [5. Enable security](/t/12292) |
-| 2 | t-cleanup-environment | [6. Cleanup environment](/t/12293) |
-| 1 | how-to | [How To]() |
-| 2 | h-setup | [Setup]() |
-| 3 | h-deploy-lxd | [Deploy on LXD](/t/12312) |
-| 3 | h-manage-units | [Manage units](/t/12309) |
-| 3 | h-enable-encryption | [Enable encryption](/t/12310) |
-| 3 | h-manage-app | [Manage applications](/t/12311) |
-| 3 | h-external-access | [External access](/t/15741) |
-| 2 | h-monitoring | [Monitoring]() |
-| 3 | h-enable-monitoring | [Monitor (COS)](/t/12308) |
-| 3 | h-enable-tracing | [Tracing (COS)](/t/14788) |
-| 2 | h-upgrade | [Upgrade]() |
-| 3 | h-upgrade-intro | [Intro](/t/12313) |
+| 1 | tutorial | [Tutorial](/t/12288) |
+| 2 | t-setup-environment | [1. Set up the environment](/t/12289) |
+| 2 | t-deploy-charm | [2. Deploy PgBouncer](/t/12290) |
+| 2 | t-managing-units | [3. Manage units](/t/12291) |
+| 2 | t-enable-security | [4. Enable TLS](/t/12292) |
+| 2 | t-cleanup-environment | [5. Clean up the environment](/t/12293) |
+| 1 | how-to | [How-to guides](/t/16791) |
+| 2 | h-deploy-lxd | [Deploy](/t/12312) |
+| 2 | h-manage-units | [Manage units](/t/12309) |
+| 2 | h-manage-app | [Manage integrations](/t/12311) |
+| 2 | h-enable-encryption | [Enable TLS](/t/12310) |
+| 2 | h-external-access | [External network access](/t/15741) |
+| 2 | h-monitoring | [Monitoring (COS)]() |
+| 3 | h-enable-monitoring | [Enable monitoring](/t/12308) |
+| 3 | h-enable-tracing | [Enable tracing](/t/14788) |
+| 2 | h-upgrade | [Upgrade](/t/12313) |
+| 3 | h-upgrade-minor | [Perform a minor upgrade](/t/12317) |
+| 3 | h-rollback-minor | [Perform a minor rollback](/t/12316) |
+| 1 | reference | [Reference](/t/16794) |
+| 2 | r-releases | [Releases](/t/12285) |
+| 2 | r-requirements | [System requirements](/t/12307) |
+| 2 | r-testing | [Software testing](/t/12306) |
+| 2 | r-contacts | [Contacts](/t/12305) |
+| 1 | explanation | [Explanation](/t/16796) |
+| 2 | e-juju-details | [Juju](/t/12302) |
+| 2 | e-interfaces | [Interfaces/endpoints](/t/12304) |
+| 2 | e-statuses | [Statuses](/t/12303) |
+| 2 | e-legacy-charm | [Legacy charm](/t/13944) |
+
+[/details]
+
+<!-- Archived
 | 3 | h-upgrade-major | [Major upgrade](/t/12314) |
 | 3 | h-rollback-major | [Major rollback](/t/12315) |
-| 3 | h-upgrade-minor | [Minor upgrade](/t/12317) |
-| 3 | h-rollback-minor | [Minor rollback](/t/12316) |
-| 1 | reference | [Reference]() |
-| 2 | r-releases | [Release Notes](/t/12285) |
+
+| 3 | r-revision-639-642 | [Revision 639-642](/t/16135) |
 | 3 | r-revision-394-397 | [Revision 394-397](/t/15379) |
 | 3 | r-revision-278-281 | [Revision 278-281](/t/14853) |
 | 3 | r-revision-254-257 | [Revision 254-257](/t/14666) |
@@ -64,18 +77,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 3 | r-revision-89 | [Revision 89](/t/13126) |
 | 3 | r-revision-81 | [Revision 81](/t/12766) |
 | 3 | r-revision-77 | [Revision 77](/t/12286) |
-| 2 | r-requirements | [Requirements](/t/12307) |
-| 2 | r-contributing | [Contributing](https://github.com/canonical/pgbouncer-operator/blob/main/CONTRIBUTING.md) |
-| 2 | r-testing | [Testing](/t/12306) |
-| 2 | r-contacts | [Contacts](/t/12305) |
-| 1 | explanation | [Explanation]() |
-| 2 | e-interfaces | [Interfaces/endpoints](/t/12304) |
-| 2 | e-statuses | [Statuses](/t/12303) |
-| 2 | e-juju-details | [Juju](/t/12302) |
-| 2 | e-legacy-charm | [Legacy charm](/t/13944) |
-
-[/details]
-
+-->
 # Redirects
 
 [details=Mapping table]
