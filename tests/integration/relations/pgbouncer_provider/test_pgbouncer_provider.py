@@ -58,6 +58,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 charm,
                 application_name=PGB,
+                config={"local_connection_type": "uds"},
                 num_units=0,
             ),
             ops_test.model.deploy(

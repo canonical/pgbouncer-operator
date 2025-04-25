@@ -63,7 +63,7 @@ from ops import (
     RelationDepartedEvent,
 )
 
-from constants import CLIENT_RELATION_NAME
+from constants import CLIENT_RELATION_NAME, PGB_RUN_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -263,8 +263,6 @@ class PgBouncerProvider(Object):
         if not database or not password:
             return
 
-        host = "localhost"
-        uri_host = host
         if exposed:
             if self.charm.config.vip:
                 host = str(self.charm.config.vip)
@@ -275,6 +273,13 @@ class PgBouncerProvider(Object):
                     self.charm.peers.leader_ip,
                     *[ip for ip in self.charm.peers.units_ips if ip != self.charm.peers.leader_ip],
                 ])
+        elif self.charm.config.local_connection_type == "uds":
+            host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
+            uri_host = host
+        else:
+            host = "localhost"
+            uri_host = host
+
         port = self.charm.config.listen_port
 
         initial_status = self.charm.unit.status

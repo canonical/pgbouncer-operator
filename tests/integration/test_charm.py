@@ -39,6 +39,7 @@ async def test_build_and_deploy(ops_test: OpsTest, charm):
                 charm,
                 application_name=PGB,
                 num_units=0,
+                config={"local_connection_type": "uds"},
             ),
             ops_test.model.deploy(
                 PG,
