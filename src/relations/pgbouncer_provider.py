@@ -370,10 +370,12 @@ class PgBouncerProvider(Object):
                     )
                     read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
             else:
+                if self.charm.config.local_connection_type == "uds":
+                    host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
+                else:
+                    host = "localhost"
                 self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
-                read_only_uri = (
-                    f"postgresql://{user}:{password}@localhost:{port}/{database}_readonly"
-                )
+                read_only_uri = f"postgresql://{user}:{password}@{quote(host, safe=',')}:{port}/{database}_readonly"
             # Make sure that the URI will be a secret
             if (
                 secret_fields := self.database_provides.fetch_relation_field(
