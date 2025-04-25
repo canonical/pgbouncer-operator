@@ -374,7 +374,7 @@ class PgBouncerProvider(Object):
                     host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
                 else:
                     host = "localhost"
-                self.database_provides.set_read_only_endpoints(relation.id, f"localhost:{port}")
+                self.database_provides.set_read_only_endpoints(relation.id, f"{host}:{port}")
                 read_only_uri = f"postgresql://{user}:{password}@{quote(host, safe=',')}:{port}/{database}_readonly"
             # Make sure that the URI will be a secret
             if (
