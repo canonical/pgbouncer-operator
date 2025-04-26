@@ -4,7 +4,6 @@
 import unittest
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
-from charms.pgbouncer_k8s.v0.pgb import get_hashed_password
 from ops.model import ModelError, WaitingStatus
 from ops.testing import Harness
 
@@ -54,10 +53,8 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="pw")
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charm.PgBouncerCharm.render_auth_file")
     def test_on_database_created(
         self,
-        _render_auth_file,
         _render_cfg_file,
         _init_auth,
         _gen_pw,
@@ -79,18 +76,12 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         mock_event = MagicMock()
         mock_event.username = "mock_user"
         self.backend._on_database_created(mock_event)
-        hash_pw = get_hashed_password(self.backend.auth_user, pw)
 
-        postgres.create_user.assert_called_with(self.backend.auth_user, hash_pw, admin=True)
+        postgres.create_user.assert_called_with(self.backend.auth_user, pw, admin=True)
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
-        hash_mon_pw = get_hashed_password(self.backend.stats_user, pw)
-        _render_auth_file.assert_any_call(
-            f'"{self.backend.auth_user}" "{hash_pw}"\n"{self.backend.stats_user}" "{hash_mon_pw}"'
-        )
-
         _render_prometheus_service.assert_called_with()
-        _render_cfg_file.assert_called_once_with(reload_pgbouncer=True)
+        _render_cfg_file.assert_called_once_with()
 
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
@@ -98,11 +89,10 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         return_value=None,
     )
     @patch("charm.PgBouncerCharm.render_prometheus_service")
-    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     def test_on_database_created_not_leader(
-        self, _get_secret, _render_pgb, _render_auth, _render_prometheus_service, _auth_user
+        self, _get_secret, _render_pgb, _render_prometheus_service, _auth_user
     ):
         self.harness.set_leader(False)
 
@@ -124,7 +114,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.backend._on_database_created(mock_event)
 
-        assert not _render_auth.called
         assert not _render_pgb.called
         _get_secret.assert_called_once_with("app", "auth_file")
         mock_event.defer.assert_called_once_with()
@@ -134,7 +123,6 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.backend._on_database_created(mock_event)
 
-        assert not _render_auth.called
         assert not _render_pgb.called
 
         # initialised leader
@@ -142,9 +130,8 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.backend._on_database_created(mock_event)
 
-        _render_auth.assert_called_once_with('"AUTH_USER"')
         _render_prometheus_service.assert_called_with()
-        _render_pgb.assert_called_once_with(reload_pgbouncer=True)
+        _render_pgb.assert_called_once_with()
 
     @patch("charm.PgBouncerCharm.update_client_connection_info")
     @patch("charm.PgBouncerCharm.render_pgb_config")
@@ -154,7 +141,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.charm.backend._on_endpoints_changed(MagicMock())
 
-        _render_pgb.assert_called_once_with(reload_pgbouncer=True)
+        _render_pgb.assert_called_once_with()
         _update_client_conn.assert_called_once_with()
 
     @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
@@ -166,7 +153,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.charm.backend._on_relation_changed(MagicMock())
 
-        _render_pgb.assert_called_once_with(reload_pgbouncer=True)
+        _render_pgb.assert_called_once_with()
         _update_client_conn.assert_called_once_with()
         _render_pgb.reset_mock()
         _update_client_conn.reset_mock()
@@ -185,7 +172,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         depart_event = MagicMock()
         depart_event.departing_unit = self.charm.unit
         self.backend._on_relation_departed(depart_event)
-        _render.assert_called_once_with(reload_pgbouncer=True)
+        _render.assert_called_once_with()
 
     @patch("charm.PgBouncerCharm.remove_exporter_service")
     @patch(
@@ -205,7 +192,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
         self.backend._on_relation_broken(event)
 
-        _render.assert_called_once_with(reload_pgbouncer=True)
+        _render.assert_called_once_with()
         _delete_file.assert_called_with(f"{PGB_CONF_DIR}/pgbouncer/userlist.txt")
         _remove_exporter.assert_called_once_with()
 

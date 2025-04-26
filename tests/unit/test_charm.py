@@ -24,7 +24,6 @@ from parameterized import parameterized
 
 from charm import PgBouncerCharm
 from constants import (
-    AUTH_FILE_NAME,
     BACKEND_RELATION_NAME,
     EXTENSIONS_BLOCKING_MESSAGE,
     PEER_RELATION_NAME,
@@ -153,7 +152,7 @@ class TestCharm(unittest.TestCase):
     @patch("charm.PgBouncerCharm.check_pgb_running")
     def test_reload_pgbouncer(self, _check_pgb_running, _restart, _reload, _running):
         # Reloads if the service is running
-        self.charm.reload_pgbouncer()
+        self.charm._reload_pgbouncer()
         _reload.assert_called_once_with("pgbouncer-pgbouncer@0")
         assert not _restart.called
         _check_pgb_running.assert_called_once()
@@ -163,14 +162,14 @@ class TestCharm(unittest.TestCase):
 
         # Restarts if service is not running
         _running.return_value = False
-        self.charm.reload_pgbouncer()
+        self.charm._reload_pgbouncer()
         _restart.assert_called_once_with("pgbouncer-pgbouncer@0")
         assert not _reload.called
         _check_pgb_running.assert_called_once()
 
         # Verify that if systemd is in error, the charm enters blocked status.
         _restart.side_effect = systemd.SystemdError()
-        self.charm.reload_pgbouncer()
+        self.charm._reload_pgbouncer()
         self.assertIsInstance(self.harness.model.unit.status, BlockedStatus)
 
     @patch("charms.operator_libs_linux.v1.systemd.service_running", return_value=False)
@@ -221,7 +220,7 @@ class TestCharm(unittest.TestCase):
         })
 
         # _read.return_value is modified on config update, but the object reference is the same.
-        _render.assert_called_with(reload_pgbouncer=True, restart=True)
+        _render.assert_called_with(restart=True)
 
     @patch("charm.snap.SnapCache")
     def test_install_snap_packages(self, _snap_cache):
@@ -324,6 +323,7 @@ class TestCharm(unittest.TestCase):
         _getpwnam.assert_called_with("snap_daemon")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
+    @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test")
     @patch(
         "relations.backend_database.DatabaseRequires.fetch_relation_field",
         return_value="BACKNEND_USER",
@@ -337,7 +337,7 @@ class TestCharm(unittest.TestCase):
         return_value={"endpoints": "HOST:PORT", "read-only-endpoints": "HOST2:PORT"},
     )
     @patch("charm.PgBouncerCharm.get_relation_databases")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
+    @patch("charm.PgBouncerCharm._reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_file")
     def test_render_pgb_config(
         self,
@@ -347,6 +347,7 @@ class TestCharm(unittest.TestCase):
         _postgres_databag,
         _backend_rel,
         _,
+        __,
     ):
         _get_dbs.return_value = {
             "1": {"name": "first_test", "legacy": True},
@@ -355,13 +356,13 @@ class TestCharm(unittest.TestCase):
 
         with open("templates/pgb_config.j2") as file:
             template = Template(file.read())
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         _reload.assert_called()
         effective_db_connections = 100
         default_pool_size = math.ceil(effective_db_connections / 2)
         min_pool_size = math.ceil(effective_db_connections / 4)
         reserve_pool_size = math.ceil(effective_db_connections / 4)
-        auth_file = f"{PGB_CONF_DIR}/pgbouncer/{AUTH_FILE_NAME}"
+        auth_file = "/dev/shm/pgbouncer_test"
 
         expected_databases = {
             "first_test": {
@@ -405,6 +406,7 @@ class TestCharm(unittest.TestCase):
             min_pool_size=min_pool_size,
             reserve_pool_size=reserve_pool_size,
             stats_user="pgbouncer_stats_pgbouncer",
+            auth_type="scram-sha-256",
             auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
             auth_file=auth_file,
             enable_tls=False,
@@ -434,7 +436,7 @@ class TestCharm(unittest.TestCase):
 
         self.charm.render_pgb_config()
 
-        assert not _reload.called
+        _reload.assert_called()
         expected_content = template.render(
             databases=expected_databases,
             readonly_databases={},
@@ -451,6 +453,7 @@ class TestCharm(unittest.TestCase):
             min_pool_size=10,
             reserve_pool_size=10,
             stats_user="pgbouncer_stats_pgbouncer",
+            auth_type="scram-sha-256",
             auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
             auth_file=auth_file,
             enable_tls=False,

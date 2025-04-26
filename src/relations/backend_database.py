@@ -183,8 +183,7 @@ class BackendDatabaseRequires(Object):
                 logger.debug("_on_database_created deferred: waiting for leader to initialise")
                 event.defer()
                 return
-            self.charm.render_auth_file(auth_file)
-            self.charm.render_pgb_config(reload_pgbouncer=True)
+            self.charm.render_pgb_config()
             self.charm.render_prometheus_service()
             self.charm.update_status()
             self.charm.client_relation.set_ready()
@@ -204,30 +203,27 @@ class BackendDatabaseRequires(Object):
             return
 
         plaintext_password = pgb.generate_password()
-        hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
-        self.postgres.create_user(self.auth_user, hashed_password, admin=True)
+        self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
         self.initialise_auth_function(self.collect_databases())
 
         # Add the monitoring user.
         if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
             monitoring_password = pgb.generate_password()
             self.charm.set_secret(APP_SCOPE, MONITORING_PASSWORD_KEY, monitoring_password)
-        hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
-        auth_file = f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
+        auth_file = f'"{self.auth_user}" "{plaintext_password}"\n"{self.stats_user}" "{monitoring_password}"'
         self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
-        self.charm.render_auth_file(auth_file)
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.render_prometheus_service()
         self.charm.client_relation.set_ready()
 
         self.charm.update_status()
 
     def _on_endpoints_changed(self, _):
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
@@ -235,7 +231,7 @@ class BackendDatabaseRequires(Object):
             logger.debug("_on_relation_changed early exit: PGB not running")
             return
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
     def _on_relation_departed(self, event: RelationDepartedEvent):
@@ -246,7 +242,7 @@ class BackendDatabaseRequires(Object):
         users we create.
         """
         if self.charm.peers.relation:
-            self.charm.render_pgb_config(reload_pgbouncer=True)
+            self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
         if event.departing_unit == self.charm.unit:
@@ -301,7 +297,7 @@ class BackendDatabaseRequires(Object):
             self.charm.remove_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
 
         self.charm.remove_exporter_service()
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.unit.status = BlockedStatus(
             "waiting for backend database relation to initialise"
         )

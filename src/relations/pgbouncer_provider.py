@@ -194,7 +194,7 @@ class PgBouncerProvider(Object):
             )
             return
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.set_ready()
 
         # Share the credentials and updated connection info with the client application.

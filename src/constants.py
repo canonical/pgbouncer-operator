@@ -9,7 +9,6 @@ PGB = "pgbouncer"
 PG = "postgres"
 PG_USER = "snap_daemon"
 INI_NAME = "pgbouncer.ini"
-AUTH_FILE_NAME = "userlist.txt"
 
 # Snap constants.
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"

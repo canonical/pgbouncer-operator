@@ -40,6 +40,7 @@ class TestUpgrade(unittest.TestCase):
             "Run `juju refresh --revision <previous-revision> pgbouncer` to initiate the rollback"
         )
 
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.create_instance_directories")
@@ -49,7 +50,6 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.PgbouncerUpgrade._cluster_checks")
     @patch("charm.PgBouncerCharm.generate_relation_databases")
     @patch("charm.PgBouncerCharm.render_prometheus_service")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_utility_files")
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
@@ -60,7 +60,6 @@ class TestUpgrade(unittest.TestCase):
         _remove_exporter_service: Mock,
         _install_snap_packages: Mock,
         _render_utility_files: Mock,
-        _reload_pgbouncer: Mock,
         _render_prometheus_service: Mock,
         _generate_relation_databases: Mock,
         _cluster_checks: Mock,
@@ -70,6 +69,7 @@ class TestUpgrade(unittest.TestCase):
         _create_instance_directories: Mock,
         _,
         __,
+        ___,
     ):
         event = Mock()
 
@@ -97,6 +97,7 @@ class TestUpgrade(unittest.TestCase):
         _on_upgrade_changed.assert_called_once_with(event)
         _generate_relation_databases.assert_called_once_with()
 
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
@@ -105,7 +106,6 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
     @patch("charm.PgbouncerUpgrade._cluster_checks")
     @patch("charm.PgBouncerCharm.render_prometheus_service")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_utility_files")
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
@@ -116,7 +116,6 @@ class TestUpgrade(unittest.TestCase):
         _remove_exporter_service: Mock,
         _install_snap_packages: Mock,
         _render_utility_files: Mock,
-        _reload_pgbouncer: Mock,
         _render_prometheus_service: Mock,
         _cluster_checks: Mock,
         _set_unit_completed: Mock,
@@ -125,6 +124,7 @@ class TestUpgrade(unittest.TestCase):
         __,
         ___,
         ____,
+        _____,
     ):
         _cluster_checks.side_effect = ClusterNotReadyError("test", "test")
 
