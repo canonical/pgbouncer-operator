@@ -411,9 +411,11 @@ class TestCharm(unittest.TestCase):
             auth_file=auth_file,
             enable_tls=False,
         )
-        _render.assert_called_once_with(
+        assert _render.call_count == 2
+        _render.assert_any_call(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
+        _render.assert_any_call("/dev/shm/pgbouncer_test", "", perms=448)
         _render.reset_mock()
         _reload.reset_mock()
 
@@ -458,9 +460,11 @@ class TestCharm(unittest.TestCase):
             auth_file=auth_file,
             enable_tls=False,
         )
-        _render.assert_called_once_with(
+        assert _render.call_count == 2
+        _render.assert_any_call(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
+        _render.assert_any_call("/dev/shm/pgbouncer_test", "", perms=448)
 
     @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})
     @patch("charm.PgBouncerCharm.get_secret")

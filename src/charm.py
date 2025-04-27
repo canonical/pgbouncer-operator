@@ -857,7 +857,10 @@ class PgBouncerCharm(TypedCharmBase):
                     logger.warning(f"Service {service_id} not yet rendered")
         self.unit.status = initial_status
 
+        self.render_file(auth_file, userlist, perms=0o700)
+        self.peers.unit_databag["auth_file_set"] = "true"
         self._reload_pgbouncer(restart)
+        self.delete_file(auth_file)
 
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""
