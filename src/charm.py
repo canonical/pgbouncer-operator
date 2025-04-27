@@ -858,7 +858,8 @@ class PgBouncerCharm(TypedCharmBase):
         self.unit.status = initial_status
 
         self.render_file(auth_file, userlist, perms=0o700)
-        self.peers.unit_databag["auth_file_set"] = "true"
+        if self.peers.relation:
+            self.peers.unit_databag["auth_file_set"] = "true"
         self._reload_pgbouncer(restart)
         self.delete_file(auth_file)
 
