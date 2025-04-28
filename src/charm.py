@@ -800,7 +800,10 @@ class PgBouncerCharm(TypedCharmBase):
         # Expected tmp location
         app_temp_dir = f"/tmp/{self.app.name}"  # noqa: S108
 
-        auth_file = f"/{SNAP_SHM_DIR}/{self.app.name}_{pgb.generate_password()}"
+        nonce = pgb.generate_password()
+        auth_file = f"{SNAP_SHM_DIR}/{self.app.name}_{nonce}"
+        # Transient file
+        conf_auth_file = f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
         userlist = self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
         if not userlist:
             userlist = ""
@@ -845,7 +848,7 @@ class PgBouncerCharm(TypedCharmBase):
                             stats_user=self.backend.stats_user,
                             auth_type=auth_type,
                             auth_query=self.backend.auth_query,
-                            auth_file=auth_file,
+                            auth_file=conf_auth_file,
                             enable_tls=enable_tls,
                             key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
                             ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",

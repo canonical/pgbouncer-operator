@@ -25,7 +25,7 @@ PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 # Expected tmp location
 SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"  # noqa: S108
 # Transient file
-SNAP_SHM_DIR = f"/dev/shm/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}"  # noqa: S108
+SNAP_SHM_DIR = f"/dev/shm/snap.{PGBOUNCER_SNAP_NAME}"  # noqa: S108
 
 # PGB config
 DATABASES = "databases"
