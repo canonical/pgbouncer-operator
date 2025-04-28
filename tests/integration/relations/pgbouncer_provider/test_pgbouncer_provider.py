@@ -194,9 +194,10 @@ async def test_localhost_read_only_endpoint_in_standalone_cluster(ops_test: OpsT
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
-        f"read-only-endpoints not in pgb databag: {databag}"
-    )
+    assert (
+        databag.get("read-only-endpoints", None)
+        == "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0:6432"
+    ), f"read-only-endpoints not in pgb databag: {databag}"
 
 
 async def test_localhost_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTest):
@@ -222,9 +223,10 @@ async def test_localhost_read_only_endpoint_in_scaled_up_cluster(ops_test: OpsTe
     ]
     unit = ops_test.model.applications[CLIENT_APP_NAME].units[0]
     databag = await get_app_relation_databag(ops_test, unit.name, relations[0].id)
-    assert databag.get("read-only-endpoints", None) == "localhost:6432", (
-        f"read-only-endpoints not in pgb databag: {databag}"
-    )
+    assert (
+        databag.get("read-only-endpoints", None)
+        == "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0:6432"
+    ), f"read-only-endpoints not in pgb databag: {databag}"
 
 
 async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
