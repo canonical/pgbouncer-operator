@@ -59,6 +59,7 @@ from constants import (
     SECRET_INTERNAL_LABEL,
     SECRET_KEY_OVERRIDES,
     SNAP_PACKAGES,
+    SNAP_SHM_DIR,
     SNAP_TMP_DIR,
     TLS_CA_FILE,
     TLS_CERT_FILE,
@@ -799,8 +800,7 @@ class PgBouncerCharm(TypedCharmBase):
         # Expected tmp location
         app_temp_dir = f"/tmp/{self.app.name}"  # noqa: S108
 
-        # Transient file
-        auth_file = f"/dev/shm/{self.app.name}_{pgb.generate_password()}"  # noqa: S108
+        auth_file = f"/{SNAP_SHM_DIR}/{self.app.name}_{pgb.generate_password()}"
         userlist = self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
         if not userlist:
             userlist = ""
