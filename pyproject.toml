@@ -13,6 +13,9 @@ pydantic = "^1.10.22"
 psycopg2 = "^2.9.10"
 psycopg = {extras = ["c"], version = "^3.2.6"}  # Used by data_interfaces.py
 jinja2 = "^3.1.6"
+setuptools-scm = "==3.4.3" # focal builds
+setuptools = "==46.0.0" # focal builds
+importlib-metadata = "==6.11.0" # focal builds
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
