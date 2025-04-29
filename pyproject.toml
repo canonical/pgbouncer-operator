@@ -1,38 +1,31 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-[tool.poetry]
-package-mode = false
-requires-poetry = ">=2.0.0"
+[project]
+name = "foo"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "cosl>=0.0.50",
+    "cryptography>=42.0.5",
+    "jinja2>=3.1.6",
+    "jsonschema>=4.23.0",
+    "opentelemetry-exporter-otlp-proto-http==1.21.0",
+    "ops>=2.20.0",
+    "poetry-core>=1.9.1,<2",
+    "tenacity>=9.0.0",
+    "pydantic>=1.10.22",
+    "psycopg2>=2.9.1",
+    "psycopg[c]>=3.2.6",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<3.9 || >=3.10,<4"
-ops = "^2.20.0"
-tenacity = "^9.0.0"
-pydantic = "^1.10.22"
-psycopg2 = "^2.9.10"
-psycopg = {extras = ["c"], version = "^3.2.6"}  # Used by data_interfaces.py
-jinja2 = "^3.1.6"
-setuptools-scm = "==3.4.3" # focal builds
-setuptools = "==46.0.0" # focal builds
-importlib-metadata = "==6.11.0" # focal builds
-
-[tool.poetry.group.charm-libs.dependencies]
-# data_platform_libs/v0/data_interfaces.py
-ops = ">=2.0.0"
-# data_platform_libs/v0/upgrade.py
-poetry-core = "*"
-# data_platform_libs/v0/upgrade.py requires pydantic ^1.10
-# grafana_agent/v0/cos_agent.py requires pydantic
-pydantic = "^1.10"
-# grafana_agent/v0/cos_agent.py
-cosl = "*"
-# tls_certificates_interface/v2/tls_certificates.py
-cryptography = "*"
-jsonschema = "*"
-# tempo_coordinator_k8s/v0/charm_tracing.py
-opentelemetry-exporter-otlp-proto-http = "1.21.0"
-
+[tool.uv]
+no-binary = true
+build-constraint-dependencies = [
+    "setuptools-scm<=8.1.0"
+]
 
 [tool.poetry.group.format]
 optional = true
