@@ -7,20 +7,33 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [
-    "cosl==0.0.57",
-    "cryptography==44.0.2",
+[dependency-groups]
+charm = [
     "jinja2==3.1.6",
-    "jsonschema==4.23.0",
-    "opentelemetry-exporter-otlp-proto-http==1.21.0",
     "ops==2.20.0",
-    "poetry-core==1.9.1",
     "tenacity==9.0.0",
     "pydantic==1.10.22",
     "psycopg2==2.9.10",
     "psycopg[c]==3.2.6",
 ]
-[dependency-groups]
+
+libs = [
+    # data_platform_libs/v0/data_interfaces.py
+    "ops>=2.0.0",
+    # data_platform_libs/v0/upgrade.py
+    "poetry-core",
+    # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
+    # grafana_agent/v0/cos_agent.py requires pydantic
+    "pydantic<2",
+    # grafana_agent/v0/cos_agent.py
+    "cosl",
+    # tls_certificates_interface/v2/tls_certificates.py
+    "cryptography",
+    "jsonschema",
+    # tempo_coordinator_k8s/v0/charm_tracing.py
+    "opentelemetry-exporter-otlp-proto-http==1.21.0",
+]
+
 format = [
     "ruff==0.11.7"
 ]
@@ -40,12 +53,12 @@ integration = [
     "mailmanclient==3.3.5",
     "psycopg2-binary==2.9.10",
     "landscape-api-py3==0.9.0",
-    "allure-pytest ==2.14.0",
+    "allure-pytest==2.14.0",
     "allure-pytest-default-results==0.1.2"
 ]
 
 [tool.uv]
-# no-binary = true
+no-binary = true
 build-constraint-dependencies = [
     "setuptools-scm<=8.1.0"
 ]

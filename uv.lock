@@ -1435,21 +1435,16 @@ wheels = [
 name = "pgbouncer-operator"
 version = "0.1.0"
 source = { virtual = "." }
-dependencies = [
-    { name = "cosl" },
-    { name = "cryptography" },
+
+[package.dev-dependencies]
+charm = [
     { name = "jinja2" },
-    { name = "jsonschema" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "ops" },
-    { name = "poetry-core" },
     { name = "psycopg", extra = ["c"] },
     { name = "psycopg2" },
     { name = "pydantic" },
     { name = "tenacity" },
 ]
-
-[package.dev-dependencies]
 format = [
     { name = "ruff" },
 ]
@@ -1464,6 +1459,15 @@ integration = [
     { name = "pytest-operator" },
     { name = "tenacity" },
 ]
+libs = [
+    { name = "cosl" },
+    { name = "cryptography" },
+    { name = "jsonschema" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "ops" },
+    { name = "poetry-core" },
+    { name = "pydantic" },
+]
 lint = [
     { name = "codespell" },
 ]
@@ -1474,21 +1478,16 @@ unit = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "cosl", specifier = "==0.0.57" },
-    { name = "cryptography", specifier = "==44.0.2" },
+
+[package.metadata.requires-dev]
+charm = [
     { name = "jinja2", specifier = "==3.1.6" },
-    { name = "jsonschema", specifier = "==4.23.0" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.21.0" },
     { name = "ops", specifier = "==2.20.0" },
-    { name = "poetry-core", specifier = "==1.9.1" },
     { name = "psycopg", extras = ["c"], specifier = "==3.2.6" },
     { name = "psycopg2", specifier = "==2.9.10" },
     { name = "pydantic", specifier = "==1.10.22" },
     { name = "tenacity", specifier = "==9.0.0" },
 ]
-
-[package.metadata.requires-dev]
 format = [{ name = "ruff", specifier = "==0.11.7" }]
 integration = [
     { name = "allure-pytest", specifier = "==2.14.0" },
@@ -1500,6 +1499,15 @@ integration = [
     { name = "pytest" },
     { name = "pytest-operator", specifier = "==0.42.0" },
     { name = "tenacity" },
+]
+libs = [
+    { name = "cosl" },
+    { name = "cryptography" },
+    { name = "jsonschema" },
+    { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.21.0" },
+    { name = "ops", specifier = ">=2.0.0" },
+    { name = "poetry-core" },
+    { name = "pydantic", specifier = "<2" },
 ]
 lint = [{ name = "codespell", specifier = "==2.4.1" }]
 unit = [
