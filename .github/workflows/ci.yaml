@@ -36,10 +36,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install tox & poetry
+      - name: Install tox & uv
         run: |
           pipx install tox
-          pipx install poetry
           sudo snap install astral-uv --classic
       - name: Run linters
         run: tox run -e lint
