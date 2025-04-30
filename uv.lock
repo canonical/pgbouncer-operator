@@ -10,7 +10,7 @@ resolution-markers = [
 ]
 
 [manifest]
-build-constraints = [{ name = "setuptools-scm", specifier = "<=8.1.0" }]
+build-constraints = [{ name = "setuptools-scm", marker = "python_full_version < '3.10'", specifier = "<8.3.0" }]
 
 [[package]]
 name = "allure-pytest"

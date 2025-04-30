@@ -14,7 +14,7 @@ charm = [
     "tenacity==9.0.0",
     "pydantic==1.10.22",
     "psycopg2==2.9.10",
-    "psycopg[c]==3.2.6",
+    "psycopg[c]==3.2.6"
 ]
 
 libs = [
@@ -31,20 +31,23 @@ libs = [
     "cryptography",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.21.0",
+    "opentelemetry-exporter-otlp-proto-http==1.21.0"
 ]
 
 format = [
     "ruff==0.11.7"
 ]
+
 lint = [
     "codespell==2.4.1"
 ]
+
 unit = [
     "coverage[toml]==7.6.1",
     "pytest==8.3.5",
-    "parameterized==0.9.0",
+    "parameterized==0.9.0"
 ]
+
 integration = [
     "pytest",
     "pytest-operator==0.42.0",
@@ -60,7 +63,7 @@ integration = [
 [tool.uv]
 no-binary = true
 build-constraint-dependencies = [
-    "setuptools-scm<=8.1.0"
+    "setuptools_scm < 8.3.0; python_version < '3.10'"
 ]
 
 # Testing tools configuration
