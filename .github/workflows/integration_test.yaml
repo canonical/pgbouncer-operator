@@ -20,7 +20,7 @@ jobs:
       - name: Set up environment
         run: |
           sudo snap install charmcraft --classic
-          pipx install tox poetry
+          sudo snap install astral-uv --classic
       - name: Collect spread jobs
         id: collect-jobs
         shell: python
