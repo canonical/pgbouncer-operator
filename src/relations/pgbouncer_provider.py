@@ -143,13 +143,10 @@ class PgBouncerProvider(Object):
         # Make sure that certain groups are not in the list
         extra_user_roles = self.sanitize_extra_roles(event.extra_user_roles)
 
+        admin = PERMISSIONS_GROUP_ADMIN in extra_user_roles
         dbs = self.charm.generate_relation_databases()
         dbs[str(rel_id)] = {"name": database, "legacy": False}
-        if (
-            PERMISSIONS_GROUP_ADMIN in extra_user_roles
-            or "superuser" in extra_user_roles
-            or "createdb" in extra_user_roles
-        ):
+        if admin or "superuser" in extra_user_roles or "createdb" in extra_user_roles:
             dbs["*"] = {"name": "*", "auth_dbname": database}
 
         self.charm.set_relation_databases(dbs)
@@ -178,7 +175,7 @@ class PgBouncerProvider(Object):
             )
             logger.debug("creating database")
             self.charm.backend.postgres.create_database(
-                database, user, client_relations=self.charm.client_relations
+                database, user, client_relations=self.charm.client_relations, admin=admin
             )
             # set up auth function
             self.charm.backend.remove_auth_function(dbs=[database])

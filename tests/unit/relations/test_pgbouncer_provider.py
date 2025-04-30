@@ -125,9 +125,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             extra_user_roles=[role.lower() for role in event.extra_user_roles.split(",")],
         )
         _pg().create_database.assert_called_with(
-            database,
-            user,
-            client_relations=sentinel.client_rels,
+            database, user, client_relations=sentinel.client_rels, admin=False
         )
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
         _dbp_set_version.assert_called_with(rel_id, _pg().get_postgresql_version())
