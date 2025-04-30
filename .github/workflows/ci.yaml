@@ -25,9 +25,24 @@ on:
         value: ${{ jobs.build.outputs.artifact-prefix }}
 
 jobs:
-  lint:
-    name: Lint
-    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v31.0.1
+  # TODO install uv in reusable and re-enable
+  # lint:
+  #   name: Lint
+  #   uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v31.0.1
+tox-lint:
+    name: tox run -e lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install tox & poetry
+        run: |
+          pipx install tox
+          pipx install poetry
+          sudo snap install astral-uv --classic
+      - name: Run linters
+        run: tox run -e lint
 
   unit-test:
     name: Unit test charm
