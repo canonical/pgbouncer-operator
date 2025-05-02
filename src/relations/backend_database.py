@@ -54,7 +54,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseCreatedEvent,
     DatabaseRequires,
 )
-from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
@@ -74,7 +74,6 @@ from constants import (
     MONITORING_PASSWORD_KEY,
     PG,
     PGB,
-    PGB_CONF_DIR,
 )
 
 logger = logging.getLogger(__name__)
@@ -158,6 +157,16 @@ class BackendDatabaseRequires(Object):
 
         return databases
 
+    def generate_monitoring_hash(self, monitoring_password: str) -> str:
+        """Generate monitoring SCRAM hash against the current backend."""
+        conn = None
+        try:
+            with self.postgres._connect_to_database() as conn:
+                return get_scram_password(self.stats_user, monitoring_password, conn)
+        finally:
+            if conn:
+                conn.close()
+
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Handle backend-database-database-created event.
 
@@ -183,8 +192,8 @@ class BackendDatabaseRequires(Object):
                 logger.debug("_on_database_created deferred: waiting for leader to initialise")
                 event.defer()
                 return
-            self.charm.render_auth_file(auth_file)
-            self.charm.render_pgb_config(reload_pgbouncer=True)
+            self.charm.render_auth_file()
+            self.charm.render_pgb_config()
             self.charm.render_prometheus_service()
             self.charm.update_status()
             self.charm.client_relation.set_ready()
@@ -193,7 +202,7 @@ class BackendDatabaseRequires(Object):
         logger.info("initialising pgbouncer backend relation")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
 
-        if not self.charm.check_pgb_running():
+        if not self.charm.check_pgb_running() or not self.charm.peers.relation:
             logger.debug("_on_database_created deferred: PGB not running")
             event.defer()
             return
@@ -203,31 +212,43 @@ class BackendDatabaseRequires(Object):
             logger.error("deferring database-created hook - postgres database not ready")
             return
 
-        plaintext_password = pgb.generate_password()
-        hashed_password = pgb.get_hashed_password(self.auth_user, plaintext_password)
+        plaintext_password = generate_password()
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
         self.postgres.create_user(self.auth_user, hashed_password, admin=True)
         self.initialise_auth_function(self.collect_databases())
 
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
+
         # Add the monitoring user.
         if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
-            monitoring_password = pgb.generate_password()
+            monitoring_password = generate_password()
+        try:
+            hashed_monitoring_password = self.generate_monitoring_hash(monitoring_password)
+        except psycopg2.Error:
+            event.defer()
+            logger.error("deferring database-created hook - cannot hash password")
+            return
+        self.charm.set_secret(APP_SCOPE, MONITORING_PASSWORD_KEY, monitoring_password)
+
+        # Add the monitoring user.
+        if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
+            monitoring_password = generate_password()
             self.charm.set_secret(APP_SCOPE, MONITORING_PASSWORD_KEY, monitoring_password)
-        hashed_monitoring_password = pgb.get_hashed_password(self.stats_user, monitoring_password)
 
         auth_file = f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
         self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
-        self.charm.render_auth_file(auth_file)
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_auth_file()
+        self.charm.render_pgb_config()
         self.charm.render_prometheus_service()
         self.charm.client_relation.set_ready()
 
         self.charm.update_status()
 
     def _on_endpoints_changed(self, _):
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
     def _on_relation_changed(self, _):
@@ -235,7 +256,7 @@ class BackendDatabaseRequires(Object):
             logger.debug("_on_relation_changed early exit: PGB not running")
             return
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
     def _on_relation_departed(self, event: RelationDepartedEvent):
@@ -246,7 +267,7 @@ class BackendDatabaseRequires(Object):
         users we create.
         """
         if self.charm.peers.relation:
-            self.charm.render_pgb_config(reload_pgbouncer=True)
+            self.charm.render_pgb_config()
         self.charm.update_client_connection_info()
 
         if event.departing_unit == self.charm.unit:
@@ -296,12 +317,12 @@ class BackendDatabaseRequires(Object):
             logging.info("exiting relation-broken hook - nothing to do")
             return
 
-        self.charm.delete_file(f"{PGB_CONF_DIR}/{self.charm.app.name}/userlist.txt")
+        self.charm.delete_file(self.charm.auth_file)
         if self.charm.unit.is_leader():
             self.charm.remove_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
 
         self.charm.remove_exporter_service()
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.charm.unit.status = BlockedStatus(
             "waiting for backend database relation to initialise"
         )

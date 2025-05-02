@@ -22,6 +22,7 @@ from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
@@ -42,7 +43,6 @@ from config import CharmConfig
 from constants import (
     APP_SCOPE,
     AUTH_FILE_DATABAG_KEY,
-    AUTH_FILE_NAME,
     CFG_FILE_DATABAG_KEY,
     CLIENT_RELATION_NAME,
     EXTENSIONS_BLOCKING_MESSAGE,
@@ -59,6 +59,7 @@ from constants import (
     SECRET_INTERNAL_LABEL,
     SECRET_KEY_OVERRIDES,
     SNAP_PACKAGES,
+    SNAP_SHM_DIR,
     SNAP_TMP_DIR,
     TLS_CA_FILE,
     TLS_CERT_FILE,
@@ -163,6 +164,20 @@ class PgBouncerCharm(TypedCharmBase):
         else:
             return 1
 
+    @property
+    def auth_file(self) -> str:
+        """Auth file location."""
+        if nonce := self.peers.unit_databag.get("userlist_nonce"):
+            return f"{SNAP_SHM_DIR}/{self.app.name}_{nonce}"
+        return ""
+
+    @property
+    def conf_auth_file(self) -> str:
+        """Auth file location within the snap."""
+        if nonce := self.peers.unit_databag.get("userlist_nonce"):
+            return f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
+        return ""
+
     # =======================
     #  Charm Lifecycle Hooks
     # =======================
@@ -235,7 +250,6 @@ class PgBouncerCharm(TypedCharmBase):
             logger.warning("Unable to create alias")
 
         self.create_instance_directories()
-        self.render_pgb_config()
         self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -394,7 +408,7 @@ class PgBouncerCharm(TypedCharmBase):
 
     def update_config(self) -> bool:
         """Updates PgBouncer config file based on the existence of the TLS files."""
-        self.render_pgb_config(True)
+        self.render_pgb_config()
 
         return True
 
@@ -417,7 +431,8 @@ class PgBouncerCharm(TypedCharmBase):
             and self.backend.auth_user
             and self.backend.auth_user in auth_file
         ):
-            self.render_auth_file(auth_file)
+            self.render_auth_file()
+            self.render_pgb_config()
 
         if self.backend.postgres:
             self.render_prometheus_service()
@@ -581,7 +596,7 @@ class PgBouncerCharm(TypedCharmBase):
         # TODO hitting upgrade errors here due to secrets labels failing to set on non-leaders.
         # deferring until the leader manages to set the label
         try:
-            self.render_pgb_config(reload_pgbouncer=True, restart=port_changed)
+            self.render_pgb_config(restart=port_changed)
         except ModelError:
             logger.warning("Deferring on_config_changed: cannot set secret label")
             event.defer()
@@ -618,7 +633,7 @@ class PgBouncerCharm(TypedCharmBase):
 
         return True
 
-    def reload_pgbouncer(self, restart=False):
+    def _reload_pgbouncer(self, restart=False):
         """Restarts systemd pgbouncer service."""
         initial_status = self.unit.status
         self.unit.status = MaintenanceStatus("Reloading Pgbouncer")
@@ -768,7 +783,7 @@ class PgBouncerCharm(TypedCharmBase):
             }
         return pgb_dbs
 
-    def render_pgb_config(self, reload_pgbouncer=False, restart=False) -> None:
+    def render_pgb_config(self, restart=False) -> None:
         """Derives config files for the number of required services from given config.
 
         This method takes a primary config and generates one unique config for each intended
@@ -798,6 +813,11 @@ class PgBouncerCharm(TypedCharmBase):
         app_run_dir = f"{PGB_RUN_DIR}/{self.app.name}"
         # Expected tmp location
         app_temp_dir = f"/tmp/{self.app.name}"  # noqa: S108
+
+        userlist = self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
+        if not userlist:
+            userlist = ""
+        auth_type = "md5" if f'"{self.backend.stats_user}" "md5' in userlist else "scram-sha-256"
 
         if self.config.max_db_connections == 0:
             default_pool_size = 20
@@ -836,8 +856,9 @@ class PgBouncerCharm(TypedCharmBase):
                             min_pool_size=min_pool_size,
                             reserve_pool_size=reserve_pool_size,
                             stats_user=self.backend.stats_user,
+                            auth_type=auth_type,
                             auth_query=self.backend.auth_query,
-                            auth_file=f"{app_conf_dir}/{AUTH_FILE_NAME}",
+                            auth_file=self.conf_auth_file,
                             enable_tls=enable_tls,
                             key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
                             ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
@@ -849,8 +870,7 @@ class PgBouncerCharm(TypedCharmBase):
                     logger.warning(f"Service {service_id} not yet rendered")
         self.unit.status = initial_status
 
-        if reload_pgbouncer:
-            self.reload_pgbouncer(restart)
+        self._reload_pgbouncer(restart)
 
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""
@@ -877,27 +897,14 @@ class PgBouncerCharm(TypedCharmBase):
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart prometheus exporter")
 
-    def render_auth_file(self, auth_file: str, reload_pgbouncer: bool = False):
-        """Render user list (with encoded passwords) to pgbouncer.ini file.
-
-        Args:
-            auth_file: the auth file to be rendered
-            reload_pgbouncer: A boolean defining whether or not to reload the pgbouncer
-                application. When config files are updated, pgbouncer must be restarted for the
-                changes to take effect. However, these config updates can be done in batches,
-                minimising the amount of necessary restarts.
-        """
-        initial_status = self.unit.status
-        self.unit.status = MaintenanceStatus("updating PgBouncer users")
-
-        self.render_file(
-            f"{PGB_CONF_DIR}/{self.app.name}/{AUTH_FILE_NAME}", auth_file, perms=0o700
-        )
-        self.unit.status = initial_status
-        self.peers.unit_databag["auth_file_set"] = "true"
-
-        if reload_pgbouncer:
-            self.reload_pgbouncer()
+    def render_auth_file(self) -> None:
+        """Renders the given auth_file to the correct location."""
+        if not self.peers.unit_databag.get("userlist_nonce"):
+            self.peers.unit_databag["userlist_nonce"] = generate_password()
+        if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+            self.delete_file(self.auth_file)
+            self.render_file(self.auth_file, auth_file, perms=0o400)
+            self.peers.unit_databag["auth_file_set"] = "true"
 
     # =================
     #  Charm Utilities

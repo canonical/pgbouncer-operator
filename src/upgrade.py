@@ -8,6 +8,7 @@ import logging
 import os
 from typing import List
 
+import psycopg2
 from charms.data_platform_libs.v0.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
@@ -15,12 +16,20 @@ from charms.data_platform_libs.v0.upgrade import (
     UpgradeGrantedEvent,
 )
 from charms.operator_libs_linux.v1 import systemd
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from ops.model import MaintenanceStatus
 from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PGB, SNAP_PACKAGES
+from constants import (
+    APP_SCOPE,
+    AUTH_FILE_DATABAG_KEY,
+    MONITORING_PASSWORD_KEY,
+    PGB,
+    PGB_CONF_DIR,
+    SNAP_PACKAGES,
+)
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -72,6 +81,36 @@ class PgbouncerUpgrade(DataUpgrade):
         if self.charm.backend.postgres and not self.charm.backend.ready:
             raise ClusterNotReadyError(DEFAULT_MESSAGE, "Backend relation is still initialising.")
 
+    def _handle_md5_monitoring_auth(self) -> None:
+        if not self.charm.unit.is_leader() or not (
+            auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
+        ):
+            return
+
+        monitoring_prefix = f'"{self.charm.backend.stats_user}" "md5'
+        # Regenerate monitoring user if it is still md5
+        new_auth = []
+        for line in auth_file.split("\n"):
+            if line.startswith(monitoring_prefix):
+                stats_password = self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)
+                try:
+                    hashed_monitoring_password = self.charm.backend.generate_monitoring_hash(
+                        stats_password
+                    )
+                except psycopg2.Error:
+                    logger.error(
+                        "Cannot generate SCRAM monitoring password. Keeping existing MD5 hash"
+                    )
+                    return
+                new_auth.append(
+                    f'"{self.charm.backend.stats_user}" "{hashed_monitoring_password}"'
+                )
+            else:
+                new_auth.append(line)
+        new_auth_file = "\n".join(new_auth)
+        if new_auth_file != auth_file:
+            self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, new_auth_file)
+
     @override
     def _on_upgrade_granted(self, event: UpgradeGrantedEvent) -> None:
         # Refresh the charmed PostgreSQL snap and restart the database.
@@ -89,18 +128,19 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm.unit.status = MaintenanceStatus("restarting services")
         if self.charm.unit.is_leader():
             self.charm.generate_relation_databases()
+        self._handle_md5_monitoring_auth()
+        if not self.charm.peers.unit_databag.get("userlist_nonce"):
+            self.charm.peers.unit_databag["userlist_nonce"] = generate_password()
 
         self.charm.create_instance_directories()
-        self.charm.render_pgb_config()
-        if (
-            (auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY))
-            and self.charm.backend.auth_user
-            and self.charm.backend.auth_user in auth_file
-        ):
-            self.charm.render_auth_file(auth_file)
+        try:
+            self.charm.delete_file(f"{PGB_CONF_DIR}/{self.charm.app.name}/userlist.txt")
+        except Exception:
+            logger.debug("Unable to remove old userlist")
+        self.charm.render_auth_file()
 
         self.charm.render_utility_files()
-        self.charm.reload_pgbouncer()
+        self.charm.render_pgb_config()
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
 

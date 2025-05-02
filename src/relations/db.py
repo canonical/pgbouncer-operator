@@ -310,7 +310,7 @@ class DbProvides(Object):
             change_event.defer()
             return
 
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.update_databags(
             change_event.relation,
             {

@@ -190,7 +190,7 @@ class TestDb(unittest.TestCase):
                 "state": "master",
             },
         )
-        _render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
+        _render_pgb_config.assert_called_once_with()
 
     @patch("relations.db.DbProvides.get_databags", return_value=[{}])
     @patch("relations.db.DbProvides.get_external_app")

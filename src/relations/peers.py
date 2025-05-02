@@ -33,7 +33,7 @@ from ops.charm import CharmBase, HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
-from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, PEER_RELATION_NAME, UNIT_SCOPE, Scopes
+from constants import APP_SCOPE, PEER_RELATION_NAME, UNIT_SCOPE, Scopes
 
 ADDRESS_KEY = "private-address"
 LEADER_ADDRESS_KEY = "leader_ip"
@@ -139,8 +139,7 @@ class Peers(Object):
             return
 
         self.update_leader()
-        if auth_file := self.charm.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
-            self.charm.render_auth_file(auth_file)
+        self.charm.render_auth_file()
 
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()
@@ -148,7 +147,7 @@ class Peers(Object):
         pgb_dbs_hash = shake_128(self.app_databag.get("pgb_dbs_config", "{}").encode()).hexdigest(
             16
         )
-        self.charm.render_pgb_config(reload_pgbouncer=True)
+        self.charm.render_pgb_config()
         self.unit_databag["pgb_dbs"] = pgb_dbs_hash
 
     def _on_departed(self, _):

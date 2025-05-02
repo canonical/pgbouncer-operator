@@ -4,7 +4,7 @@ After=network.target {{ pgb_service }}@.target
 
 [Service]
 Type=simple
-ExecStart=/snap/bin/charmed-pgbouncer.prometheus-pgbouncer-exporter --web.listen-address=:{{ metrics_port }} --pgBouncer.connectionString="postgres://{{ stats_user }}:{{ stats_password }}@localhost:{{ listen_port }}/pgbouncer?sslmode=disable"
+ExecStart=/snap/bin/charmed-pgbouncer.prometheus-pgbouncer-exporter --web.listen-address=:{{ metrics_port }} --pgBouncer.connectionString="postgresql://{{ stats_user }}:{{ stats_password }}@localhost:{{ listen_port }}/pgbouncer?sslmode=disable"
 Restart=always
 RestartSec=5s
 

@@ -47,10 +47,8 @@ class TestPeers(unittest.TestCase):
         assert not _update_read_only_endpoints.called
 
     @patch("charm.PgBouncerCharm.render_pgb_config")
-    @patch("charm.PgBouncerCharm.render_auth_file")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
-    def test_on_peers_changed(self, reload_pgbouncer, render_auth_file, render_pgb_config):
+    def test_on_peers_changed(self, render_pgb_config):
         self.harness.add_relation(BACKEND_RELATION_NAME, "postgres")
         self.charm.peers._on_changed(MagicMock())
-        render_pgb_config.assert_called_once_with(reload_pgbouncer=True)
+        render_pgb_config.assert_called_once_with()
         render_pgb_config.reset_mock()

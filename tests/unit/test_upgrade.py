@@ -10,7 +10,7 @@ from charms.data_platform_libs.v0.upgrade import ClusterNotReadyError
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import SNAP_PACKAGES
+from constants import PEER_RELATION_NAME, SNAP_PACKAGES
 
 
 class TestUpgrade(unittest.TestCase):
@@ -21,6 +21,8 @@ class TestUpgrade(unittest.TestCase):
 
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
+
+        self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @patch("charm.Peers.units", new_callable=PropertyMock)
     def test_build_upgrade_stack(self, _peers: Mock):
@@ -40,16 +42,17 @@ class TestUpgrade(unittest.TestCase):
             "Run `juju refresh --revision <previous-revision> pgbouncer` to initiate the rollback"
         )
 
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.create_instance_directories")
+    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgBouncerCharm.update_status")
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
     @patch("charm.PgbouncerUpgrade._cluster_checks")
     @patch("charm.PgBouncerCharm.generate_relation_databases")
     @patch("charm.PgBouncerCharm.render_prometheus_service")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_utility_files")
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
@@ -60,7 +63,6 @@ class TestUpgrade(unittest.TestCase):
         _remove_exporter_service: Mock,
         _install_snap_packages: Mock,
         _render_utility_files: Mock,
-        _reload_pgbouncer: Mock,
         _render_prometheus_service: Mock,
         _generate_relation_databases: Mock,
         _cluster_checks: Mock,
@@ -68,8 +70,10 @@ class TestUpgrade(unittest.TestCase):
         _on_upgrade_changed: Mock,
         _update_status: Mock,
         _create_instance_directories: Mock,
+        _render_auth,
         _,
         __,
+        ___,
     ):
         event = Mock()
 
@@ -86,6 +90,7 @@ class TestUpgrade(unittest.TestCase):
         _set_unit_completed.assert_called_once_with()
         _update_status.assert_called_once_with()
         _create_instance_directories.asssert_called_once_with()
+        _render_auth.asssert_called_once_with()
         assert not _generate_relation_databases.called
 
         # Test extra call as leader
@@ -97,15 +102,16 @@ class TestUpgrade(unittest.TestCase):
         _on_upgrade_changed.assert_called_once_with(event)
         _generate_relation_databases.assert_called_once_with()
 
+    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.create_instance_directories")
+    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
     @patch("charm.PgbouncerUpgrade._cluster_checks")
     @patch("charm.PgBouncerCharm.render_prometheus_service")
-    @patch("charm.PgBouncerCharm.reload_pgbouncer")
     @patch("charm.PgBouncerCharm.render_utility_files")
     @patch("charm.PgBouncerCharm._install_snap_packages")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
@@ -116,7 +122,6 @@ class TestUpgrade(unittest.TestCase):
         _remove_exporter_service: Mock,
         _install_snap_packages: Mock,
         _render_utility_files: Mock,
-        _reload_pgbouncer: Mock,
         _render_prometheus_service: Mock,
         _cluster_checks: Mock,
         _set_unit_completed: Mock,
@@ -125,6 +130,8 @@ class TestUpgrade(unittest.TestCase):
         __,
         ___,
         ____,
+        _____,
+        ______,
     ):
         _cluster_checks.side_effect = ClusterNotReadyError("test", "test")
 

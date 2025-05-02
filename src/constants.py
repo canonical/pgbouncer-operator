@@ -9,12 +9,11 @@ PGB = "pgbouncer"
 PG = "postgres"
 PG_USER = "snap_daemon"
 INI_NAME = "pgbouncer.ini"
-AUTH_FILE_NAME = "userlist.txt"
 
 # Snap constants.
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
 PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
-SNAP_PACKAGES = [(PGBOUNCER_SNAP_NAME, {"revision": {"aarch64": "15", "x86_64": "16"}})]
+SNAP_PACKAGES = [(PGBOUNCER_SNAP_NAME, {"revision": {"aarch64": "17", "x86_64": "18"}})]
 
 SNAP_COMMON_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/common"
 SNAP_CURRENT_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/current"
@@ -25,6 +24,8 @@ PGB_LOG_DIR = f"{SNAP_COMMON_PATH}/var/log/pgbouncer"
 
 # Expected tmp location
 SNAP_TMP_DIR = f"/tmp/snap-private-tmp/snap.{PGBOUNCER_SNAP_NAME}/tmp"  # noqa: S108
+# Transient file
+SNAP_SHM_DIR = f"/dev/shm/snap.{PGBOUNCER_SNAP_NAME}"  # noqa: S108
 
 # PGB config
 DATABASES = "databases"
