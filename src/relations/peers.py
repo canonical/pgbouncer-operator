@@ -29,6 +29,7 @@ import logging
 from hashlib import shake_128
 from typing import List, Optional, Set
 
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from ops.charm import CharmBase, HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
@@ -125,6 +126,8 @@ class Peers(Object):
             return None
 
     def _on_joined(self, event: HookEvent):
+        if not self.unit_databag.get("userlist_nonce"):
+            self.unit_databag["userlist_nonce"] = generate_password()
         self._on_changed(event)
         if self.charm.unit.is_leader() and self.charm.configuration_check():
             self.charm.client_relation.update_read_only_endpoints()

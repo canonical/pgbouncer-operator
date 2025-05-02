@@ -22,7 +22,6 @@ from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
-from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
@@ -422,12 +421,11 @@ class PgBouncerCharm(TypedCharmBase):
             logger.debug("Defer on_start: Cluster is upgrading")
             event.defer()
             return
+
         if not self.peers.relation:
             logger.debug("Defer on_start: Not joined to peer")
             event.defer()
             return
-        if not self.peers.unit_databag.get("userlist_nonce"):
-            self.peers.unit_databag["userlist_nonce"] = generate_password()
 
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
@@ -876,8 +874,6 @@ class PgBouncerCharm(TypedCharmBase):
                     logger.warning(f"Service {service_id} not yet rendered")
         self.unit.status = initial_status
 
-        if self.peers.relation:
-            self.peers.unit_databag["auth_file_set"] = "true"
         self._reload_pgbouncer(restart)
 
     def render_prometheus_service(self):
