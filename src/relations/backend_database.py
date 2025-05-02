@@ -74,7 +74,6 @@ from constants import (
     MONITORING_PASSWORD_KEY,
     PG,
     PGB,
-    PGB_CONF_DIR,
 )
 
 logger = logging.getLogger(__name__)
@@ -203,7 +202,7 @@ class BackendDatabaseRequires(Object):
         logger.info("initialising pgbouncer backend relation")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
 
-        if not self.charm.check_pgb_running():
+        if not self.charm.check_pgb_running() or not self.charm.peers.relation:
             logger.debug("_on_database_created deferred: PGB not running")
             event.defer()
             return
@@ -318,7 +317,7 @@ class BackendDatabaseRequires(Object):
             logging.info("exiting relation-broken hook - nothing to do")
             return
 
-        self.charm.delete_file(f"{PGB_CONF_DIR}/{self.charm.app.name}/userlist.txt")
+        self.charm.delete_file(self.charm.auth_file)
         if self.charm.unit.is_leader():
             self.charm.remove_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
 

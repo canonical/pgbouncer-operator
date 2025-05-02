@@ -9,7 +9,7 @@ from ops.model import ModelError, WaitingStatus
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME, PGB_CONF_DIR
+from constants import BACKEND_RELATION_NAME, PEER_RELATION_NAME
 
 
 class TestBackendDatabaseRelation(unittest.TestCase):
@@ -185,13 +185,14 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_relation_departed(depart_event)
         _render.assert_called_once_with()
 
+    @patch("charm.PgBouncerCharm.auth_file", new_callable=PropertyMock, return_value="auth_file")
     @patch("charm.PgBouncerCharm.remove_exporter_service")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.delete_file")
-    def test_relation_broken(self, _delete_file, _render, _postgres, _remove_exporter):
+    def test_relation_broken(self, _delete_file, _render, _postgres, _remove_exporter, _auth_file):
         event = MagicMock()
         self.harness.set_leader()
         self.charm.peers.app_databag[
@@ -204,7 +205,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_relation_broken(event)
 
         _render.assert_called_once_with()
-        _delete_file.assert_called_with(f"{PGB_CONF_DIR}/pgbouncer/userlist.txt")
+        _delete_file.assert_called_with("auth_file")
         _remove_exporter.assert_called_once_with()
 
     @patch(

@@ -22,7 +22,14 @@ from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
-from constants import APP_SCOPE, AUTH_FILE_DATABAG_KEY, MONITORING_PASSWORD_KEY, PGB, SNAP_PACKAGES
+from constants import (
+    APP_SCOPE,
+    AUTH_FILE_DATABAG_KEY,
+    MONITORING_PASSWORD_KEY,
+    PGB,
+    PGB_CONF_DIR,
+    SNAP_PACKAGES,
+)
 
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
@@ -126,6 +133,10 @@ class PgbouncerUpgrade(DataUpgrade):
             self.charm.peers.unit_databag["userlist_nonce"] = generate_password()
 
         self.charm.create_instance_directories()
+        try:
+            self.charm.delete_file(f"{PGB_CONF_DIR}/{self.charm.app.name}/userlist.txt")
+        except Exception:
+            logger.debug("Unable to remove old userlist")
         self.charm.render_auth_file()
 
         self.charm.render_utility_files()

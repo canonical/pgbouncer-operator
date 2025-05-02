@@ -904,7 +904,7 @@ class PgBouncerCharm(TypedCharmBase):
     def render_auth_file(self) -> None:
         """Renders the given auth_file to the correct location."""
         if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
-            self.render_file(self.auth_file, auth_file, perms=0o400)
+            self.render_file(self.auth_file, auth_file, perms=0o700)
             self.peers.unit_databag["auth_file_set"] = "true"
 
     # =================
