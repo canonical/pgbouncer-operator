@@ -202,7 +202,11 @@ class BackendDatabaseRequires(Object):
         logger.info("initialising pgbouncer backend relation")
         self.charm.unit.status = MaintenanceStatus("Initialising backend-database relation")
 
-        if not self.charm.check_pgb_running() or not self.charm.peers.relation:
+        if (
+            not self.charm.check_pgb_running()
+            or not self.charm.peers.relation
+            or not self.charm.peers.unit_databag.get("userlist_nonce")
+        ):
             logger.debug("_on_database_created deferred: PGB not running")
             event.defer()
             return

@@ -422,7 +422,7 @@ class PgBouncerCharm(TypedCharmBase):
             event.defer()
             return
 
-        if not self.peers.relation:
+        if not self.peers.relation or not self.peers.unit_databag.get("userlist_nonce"):
             logger.debug("Defer on_start: Not joined to peer")
             event.defer()
             return

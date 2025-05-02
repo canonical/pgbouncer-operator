@@ -117,6 +117,10 @@ class TestCharm(unittest.TestCase):
         return_value=None,
     )
     def test_on_start(self, _has_relation, _start, _render_prom_service, _, __):
+        with self.harness.hooks_disabled():
+            self.harness.update_relation_data(
+                self.rel_id, self.charm.unit.name, {"userlist_nonce": "test"}
+            )
         # Testing charm blocks when systemd is in error
         self.charm.on.start.emit()
         # Charm should fail out after calling _start once
