@@ -1,74 +1,70 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-[tool.poetry]
-package-mode = false
-requires-poetry = ">=2.0.0"
+[project]
+name = "pgbouncer-operator"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+[dependency-groups]
+charm = [
+    "jinja2==3.1.6",
+    "ops==2.20.0",
+    "tenacity==9.0.0",
+    "pydantic==1.10.22",
+    "psycopg2==2.9.10",
+    "psycopg[c]==3.2.6"
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<3.9 || >=3.10,<4"
-ops = "^2.20.0"
-tenacity = "^9.0.0"
-pydantic = "^1.10.22"
-psycopg2 = "^2.9.10"
-psycopg = {extras = ["c"], version = "^3.2.6"}  # Used by data_interfaces.py
-jinja2 = "^3.1.6"
+libs = [
+    # data_platform_libs/v0/data_interfaces.py
+    "ops>=2.0.0",
+    # data_platform_libs/v0/upgrade.py
+    "poetry-core",
+    # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
+    # grafana_agent/v0/cos_agent.py requires pydantic
+    "pydantic<2",
+    # grafana_agent/v0/cos_agent.py
+    "cosl",
+    # tls_certificates_interface/v2/tls_certificates.py
+    "cryptography",
+    "jsonschema",
+    # tempo_coordinator_k8s/v0/charm_tracing.py
+    "opentelemetry-exporter-otlp-proto-http==1.21.0"
+]
 
-[tool.poetry.group.charm-libs.dependencies]
-# data_platform_libs/v0/data_interfaces.py
-ops = ">=2.0.0"
-# data_platform_libs/v0/upgrade.py
-poetry-core = "*"
-# data_platform_libs/v0/upgrade.py requires pydantic ^1.10
-# grafana_agent/v0/cos_agent.py requires pydantic
-pydantic = "^1.10"
-# grafana_agent/v0/cos_agent.py
-cosl = "*"
-# tls_certificates_interface/v2/tls_certificates.py
-cryptography = "*"
-jsonschema = "*"
-# tempo_coordinator_k8s/v0/charm_tracing.py
-opentelemetry-exporter-otlp-proto-http = "1.21.0"
+format = [
+    "ruff==0.11.7"
+]
 
+lint = [
+    "codespell==2.4.1"
+]
 
-[tool.poetry.group.format]
-optional = true
+unit = [
+    "coverage[toml]==7.6.1",
+    "pytest==8.3.5",
+    "parameterized==0.9.0"
+]
 
-[tool.poetry.group.format.dependencies]
-ruff = "^0.11.7"
+integration = [
+    "pytest",
+    "pytest-operator==0.42.0",
+    'juju==3.6.1.1; python_version > "3.10"',
+    "tenacity",
+    "mailmanclient==3.3.5",
+    "psycopg2-binary==2.9.10",
+    "landscape-api-py3==0.9.0",
+    "allure-pytest==2.14.0",
+    "allure-pytest-default-results==0.1.2"
+]
 
-[tool.poetry.group.lint]
-optional = true
-
-[tool.poetry.group.lint.dependencies]
-codespell = "^2.4.1"
-
-[tool.poetry.group.unit]
-optional = true
-
-[tool.poetry.group.unit.dependencies]
-coverage = {extras = ["toml"], version = "==7.6.1"}
-pytest = "^8.3.5"
-parameterized = "^0.9.0"
-
-[tool.poetry.group.integration]
-optional = true
-
-[tool.poetry.group.integration.dependencies]
-pytest = "^8.3.5"
-pytest-operator = "^0.42.0"
-# renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
-juju = "<=3.6.1.1"
-tenacity = "*"
-mailmanclient = "^3.3.5"
-psycopg2-binary = "^2.9.10"
-landscape-api-py3 = "^0.9.0"
-allure-pytest = "^2.14.0"
-allure-pytest-default-results = "^0.1.2"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+no-binary = true
+build-constraint-dependencies = [
+    "setuptools_scm < 8.3.0; python_version < '3.10'"
+]
 
 # Testing tools configuration
 [tool.coverage.run]
