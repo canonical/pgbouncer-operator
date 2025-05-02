@@ -173,7 +173,7 @@ class PgBouncerCharm(TypedCharmBase):
 
     @property
     def conf_auth_file(self) -> str:
-        """Auth file location."""
+        """Auth file location within the snap."""
         if nonce := self.peers.unit_databag.get("userlist_nonce"):
             return f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
         return ""
@@ -233,6 +233,9 @@ class PgBouncerCharm(TypedCharmBase):
 
         This initialises local config files necessary for pgbouncer to run.
         """
+        if not self.peers.unit_databag.get("userlist_nonce"):
+            self.peers.unit_databag["userlist_nonce"] = generate_password()
+
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         # Install the charmed PgBouncer snap.
@@ -423,7 +426,8 @@ class PgBouncerCharm(TypedCharmBase):
             logger.debug("Defer on_start: Cluster is upgrading")
             event.defer()
             return
-        self.peers.unit_databag["userlist_nonce"] = generate_password()
+        if not self.peers.unit_databag.get("userlist_nonce"):
+            self.peers.unit_databag["userlist_nonce"] = generate_password()
 
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
