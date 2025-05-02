@@ -22,6 +22,7 @@ from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
@@ -419,11 +420,6 @@ class PgBouncerCharm(TypedCharmBase):
         # Safeguard against starting while upgrading.
         if not self.upgrade.idle:
             logger.debug("Defer on_start: Cluster is upgrading")
-            event.defer()
-            return
-
-        if not self.peers.relation or not self.peers.unit_databag.get("userlist_nonce"):
-            logger.debug("Defer on_start: Not joined to peer")
             event.defer()
             return
 
@@ -903,8 +899,11 @@ class PgBouncerCharm(TypedCharmBase):
 
     def render_auth_file(self) -> None:
         """Renders the given auth_file to the correct location."""
+        if not self.peers.unit_databag.get("userlist_nonce"):
+            self.peers.unit_databag["userlist_nonce"] = generate_password()
         if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
-            self.render_file(self.auth_file, auth_file, perms=0o700)
+            self.delete_file(self.auth_file)
+            self.render_file(self.auth_file, auth_file, perms=0o400)
             self.peers.unit_databag["auth_file_set"] = "true"
 
     # =================
