@@ -65,14 +65,12 @@ class TestCharm(unittest.TestCase):
     @patch("os.chown")
     @patch("pwd.getpwnam", return_value=MagicMock(pw_uid=1100, pw_gid=120))
     @patch("charm.PgBouncerCharm.render_file")
-    @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("shutil.copy")
     @patch("charms.operator_libs_linux.v1.systemd.daemon_reload")
     def test_on_install(
         self,
         _reload,
         _copy,
-        _render_config,
         _render_file,
         _getpwnam,
         _chown,
@@ -94,7 +92,6 @@ class TestCharm(unittest.TestCase):
             _chown.assert_any_call(f"{PGB_CONF_DIR}/pgbouncer/instance_{service_id}", 1100, 120)
 
         # Check config files are rendered, including correct permissions
-        _render_config.assert_called_once_with()
         pg_snap.alias.assert_called_once_with("psql")
 
         self.assertIsInstance(self.harness.model.unit.status, WaitingStatus)

@@ -16,6 +16,7 @@ from charms.data_platform_libs.v0.upgrade import (
     UpgradeGrantedEvent,
 )
 from charms.operator_libs_linux.v1 import systemd
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from ops.model import MaintenanceStatus
 from pydantic import BaseModel
 from tenacity import Retrying, stop_after_attempt, wait_fixed
@@ -120,6 +121,9 @@ class PgbouncerUpgrade(DataUpgrade):
         self.charm.unit.status = MaintenanceStatus("restarting services")
         if self.charm.unit.is_leader():
             self.charm.generate_relation_databases()
+        self._handle_md5_monitoring_auth()
+        if not self.charm.peers.unit_databag.get("userlist_nonce"):
+            self.charm.peers.unit_databag["userlist_nonce"] = generate_password()
 
         self.charm.create_instance_directories()
         self.charm.render_auth_file()

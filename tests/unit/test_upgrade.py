@@ -10,7 +10,7 @@ from charms.data_platform_libs.v0.upgrade import ClusterNotReadyError
 from ops.testing import Harness
 
 from charm import PgBouncerCharm
-from constants import SNAP_PACKAGES
+from constants import PEER_RELATION_NAME, SNAP_PACKAGES
 
 
 class TestUpgrade(unittest.TestCase):
@@ -21,6 +21,8 @@ class TestUpgrade(unittest.TestCase):
 
         self.charm = self.harness.charm
         self.unit = self.harness.charm.unit
+
+        self.harness.add_relation(PEER_RELATION_NAME, self.charm.app.name)
 
     @patch("charm.Peers.units", new_callable=PropertyMock)
     def test_build_upgrade_stack(self, _peers: Mock):

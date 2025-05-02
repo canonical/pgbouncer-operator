@@ -233,9 +233,6 @@ class PgBouncerCharm(TypedCharmBase):
 
         This initialises local config files necessary for pgbouncer to run.
         """
-        if not self.peers.unit_databag.get("userlist_nonce"):
-            self.peers.unit_databag["userlist_nonce"] = generate_password()
-
         self.unit.status = MaintenanceStatus("Installing and configuring PgBouncer")
 
         # Install the charmed PgBouncer snap.
@@ -253,7 +250,6 @@ class PgBouncerCharm(TypedCharmBase):
             logger.warning("Unable to create alias")
 
         self.create_instance_directories()
-        self.render_pgb_config()
         self.render_utility_files()
 
         self.unit.status = WaitingStatus("Waiting to start PgBouncer")
@@ -424,6 +420,10 @@ class PgBouncerCharm(TypedCharmBase):
         # Safeguard against starting while upgrading.
         if not self.upgrade.idle:
             logger.debug("Defer on_start: Cluster is upgrading")
+            event.defer()
+            return
+        if not self.peers.relation:
+            logger.debug("Defer on_start: Not joined to peer")
             event.defer()
             return
         if not self.peers.unit_databag.get("userlist_nonce"):
