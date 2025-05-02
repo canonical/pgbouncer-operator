@@ -4,6 +4,7 @@
 import unittest
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
+from charms.pgbouncer_k8s.v0.pgb import get_md5_password
 from ops.model import ModelError, WaitingStatus
 from ops.testing import Harness
 
@@ -32,6 +33,10 @@ class TestBackendDatabaseRelation(unittest.TestCase):
 
     @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
     @patch("charm.PgBouncerCharm.get_secret", return_value=None)
+    @patch(
+        "relations.backend_database.BackendDatabaseRequires.generate_monitoring_hash",
+        return_value="scram-hash",
+    )
     @patch("charm.PgBouncerCharm.render_prometheus_service")
     @patch("relations.peers.Peers.app_databag", new_callable=PropertyMock)
     @patch(
@@ -50,11 +55,13 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch(
         "relations.backend_database.BackendDatabaseRequires.relation", new_callable=PropertyMock
     )
-    @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="pw")
+    @patch("relations.backend_database.generate_password", return_value="pw")
     @patch("relations.backend_database.BackendDatabaseRequires.initialise_auth_function")
     @patch("charm.PgBouncerCharm.render_pgb_config")
+    @patch("charm.PgBouncerCharm.render_auth_file")
     def test_on_database_created(
         self,
+        _render_auth_file,
         _render_cfg_file,
         _init_auth,
         _gen_pw,
@@ -64,6 +71,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         _stats_user,
         _app_databag,
         _render_prometheus_service,
+        _generate_hash,
         _,
         __,
     ):
@@ -76,13 +84,16 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         mock_event = MagicMock()
         mock_event.username = "mock_user"
         self.backend._on_database_created(mock_event)
+        hash_pw = get_md5_password(self.backend.auth_user, pw)
 
-        postgres.create_user.assert_called_with(self.backend.auth_user, pw, admin=True)
+        postgres.create_user.assert_called_with(self.backend.auth_user, hash_pw, admin=True)
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
         _render_prometheus_service.assert_called_with()
         _render_cfg_file.assert_called_once_with()
+        _render_auth_file.assert_called_once_with()
 
+    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch(
         "relations.backend_database.BackendDatabaseRequires.auth_user",
         new_callable=PropertyMock,
@@ -92,7 +103,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.render_pgb_config")
     @patch("charm.PgBouncerCharm.get_secret")
     def test_on_database_created_not_leader(
-        self, _get_secret, _render_pgb, _render_prometheus_service, _auth_user
+        self, _get_secret, _render_pgb, _render_prometheus_service, _auth_user, _render_auth
     ):
         self.harness.set_leader(False)
 

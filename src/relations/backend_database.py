@@ -54,7 +54,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseCreatedEvent,
     DatabaseRequires,
 )
-from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
@@ -158,6 +158,16 @@ class BackendDatabaseRequires(Object):
 
         return databases
 
+    def generate_monitoring_hash(self, monitoring_password: str) -> str:
+        """Generate monitoring SCRAM hash against the current backend."""
+        conn = None
+        try:
+            with self.postgres._connect_to_database() as conn:
+                return get_scram_password(self.stats_user, monitoring_password, conn)
+        finally:
+            if conn:
+                conn.close()
+
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Handle backend-database-database-created event.
 
@@ -183,6 +193,7 @@ class BackendDatabaseRequires(Object):
                 logger.debug("_on_database_created deferred: waiting for leader to initialise")
                 event.defer()
                 return
+            self.charm.render_auth_file()
             self.charm.render_pgb_config()
             self.charm.render_prometheus_service()
             self.charm.update_status()
@@ -202,20 +213,35 @@ class BackendDatabaseRequires(Object):
             logger.error("deferring database-created hook - postgres database not ready")
             return
 
-        plaintext_password = pgb.generate_password()
+        plaintext_password = generate_password()
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
-        self.postgres.create_user(self.auth_user, plaintext_password, admin=True)
+        self.postgres.create_user(self.auth_user, hashed_password, admin=True)
         self.initialise_auth_function(self.collect_databases())
+
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
 
         # Add the monitoring user.
         if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
-            monitoring_password = pgb.generate_password()
+            monitoring_password = generate_password()
+        try:
+            hashed_monitoring_password = self.generate_monitoring_hash(monitoring_password)
+        except psycopg2.Error:
+            event.defer()
+            logger.error("deferring database-created hook - cannot hash password")
+            return
+        self.charm.set_secret(APP_SCOPE, MONITORING_PASSWORD_KEY, monitoring_password)
+
+        # Add the monitoring user.
+        if not (monitoring_password := self.charm.get_secret(APP_SCOPE, MONITORING_PASSWORD_KEY)):
+            monitoring_password = generate_password()
             self.charm.set_secret(APP_SCOPE, MONITORING_PASSWORD_KEY, monitoring_password)
 
-        auth_file = f'"{self.auth_user}" "{plaintext_password}"\n"{self.stats_user}" "{monitoring_password}"'
+        auth_file = f'"{self.auth_user}" "{hashed_password}"\n"{self.stats_user}" "{hashed_monitoring_password}"'
         self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
 
+        self.charm.render_auth_file()
         self.charm.render_pgb_config()
         self.charm.render_prometheus_service()
         self.charm.client_relation.set_ready()

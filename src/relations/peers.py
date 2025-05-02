@@ -139,6 +139,7 @@ class Peers(Object):
             return
 
         self.update_leader()
+        self.charm.render_auth_file()
 
         if self.charm.backend.postgres:
             self.charm.render_prometheus_service()

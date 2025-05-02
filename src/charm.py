@@ -22,7 +22,7 @@ from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
-from charms.pgbouncer_k8s.v0 import pgb
+from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
@@ -163,6 +163,20 @@ class PgBouncerCharm(TypedCharmBase):
             return max(min(os.cpu_count(), 4), 2)
         else:
             return 1
+
+    @property
+    def auth_file(self) -> str:
+        """Auth file location."""
+        if nonce := self.peers.unit_databag.get("userlist_nonce"):
+            return f"{SNAP_SHM_DIR}/{self.app.name}_{nonce}"
+        return ""
+
+    @property
+    def conf_auth_file(self) -> str:
+        """Auth file location."""
+        if nonce := self.peers.unit_databag.get("userlist_nonce"):
+            return f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
+        return ""
 
     # =======================
     #  Charm Lifecycle Hooks
@@ -409,6 +423,7 @@ class PgBouncerCharm(TypedCharmBase):
             logger.debug("Defer on_start: Cluster is upgrading")
             event.defer()
             return
+        self.peers.unit_databag["userlist_nonce"] = generate_password()
 
         # Done first to instantiate the snap's private tmp
         self.unit.set_workload_version(self.version)
@@ -418,6 +433,7 @@ class PgBouncerCharm(TypedCharmBase):
             and self.backend.auth_user
             and self.backend.auth_user in auth_file
         ):
+            self.render_auth_file()
             self.render_pgb_config()
 
         if self.backend.postgres:
@@ -800,10 +816,6 @@ class PgBouncerCharm(TypedCharmBase):
         # Expected tmp location
         app_temp_dir = f"/tmp/{self.app.name}"  # noqa: S108
 
-        nonce = pgb.generate_password()
-        auth_file = f"{SNAP_SHM_DIR}/{self.app.name}_{nonce}"
-        # Transient file
-        conf_auth_file = f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
         userlist = self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY)
         if not userlist:
             userlist = ""
@@ -848,7 +860,7 @@ class PgBouncerCharm(TypedCharmBase):
                             stats_user=self.backend.stats_user,
                             auth_type=auth_type,
                             auth_query=self.backend.auth_query,
-                            auth_file=conf_auth_file,
+                            auth_file=self.conf_auth_file,
                             enable_tls=enable_tls,
                             key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
                             ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
@@ -860,11 +872,9 @@ class PgBouncerCharm(TypedCharmBase):
                     logger.warning(f"Service {service_id} not yet rendered")
         self.unit.status = initial_status
 
-        self.render_file(auth_file, userlist, perms=0o700)
         if self.peers.relation:
             self.peers.unit_databag["auth_file_set"] = "true"
         self._reload_pgbouncer(restart)
-        self.delete_file(auth_file)
 
     def render_prometheus_service(self):
         """Render a unit file for the prometheus exporter and restarts the service."""
@@ -890,6 +900,12 @@ class PgBouncerCharm(TypedCharmBase):
         except systemd.SystemdError as e:
             logger.error(e)
             self.unit.status = BlockedStatus("Failed to restart prometheus exporter")
+
+    def render_auth_file(self) -> None:
+        """Renders the given auth_file to the correct location."""
+        if auth_file := self.get_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY):
+            self.render_file(self.auth_file, auth_file, perms=0o400)
+            self.peers.unit_databag["auth_file_set"] = "true"
 
     # =================
     #  Charm Utilities

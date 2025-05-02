@@ -323,7 +323,11 @@ class TestCharm(unittest.TestCase):
         _getpwnam.assert_called_with("snap_daemon")
         _chown.assert_called_with(path, uid=1100, gid=120)
 
-    @patch("charms.pgbouncer_k8s.v0.pgb.generate_password", return_value="test")
+    @patch(
+        "charm.PgBouncerCharm.conf_auth_file",
+        new_callable=PropertyMock,
+        return_value="/dev/shm/pgbouncer_test",
+    )
     @patch(
         "relations.backend_database.DatabaseRequires.fetch_relation_field",
         return_value="BACKNEND_USER",
@@ -411,11 +415,9 @@ class TestCharm(unittest.TestCase):
             auth_file=auth_file,
             enable_tls=False,
         )
-        assert _render.call_count == 2
-        _render.assert_any_call(
+        _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
-        _render.assert_any_call("/dev/shm/snap.charmed-pgbouncer/pgbouncer_test", "", perms=448)
         _render.reset_mock()
         _reload.reset_mock()
 
@@ -460,11 +462,9 @@ class TestCharm(unittest.TestCase):
             auth_file=auth_file,
             enable_tls=False,
         )
-        assert _render.call_count == 2
-        _render.assert_any_call(
+        _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
-        _render.assert_any_call("/dev/shm/snap.charmed-pgbouncer/pgbouncer_test", "", perms=448)
 
     @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})
     @patch("charm.PgBouncerCharm.get_secret")

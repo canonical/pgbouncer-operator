@@ -44,6 +44,7 @@ class TestUpgrade(unittest.TestCase):
     @patch("charm.PgBouncerCharm.get_secret")
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.create_instance_directories")
+    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgBouncerCharm.update_status")
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
@@ -67,6 +68,7 @@ class TestUpgrade(unittest.TestCase):
         _on_upgrade_changed: Mock,
         _update_status: Mock,
         _create_instance_directories: Mock,
+        _render_auth,
         _,
         __,
         ___,
@@ -86,6 +88,7 @@ class TestUpgrade(unittest.TestCase):
         _set_unit_completed.assert_called_once_with()
         _update_status.assert_called_once_with()
         _create_instance_directories.asssert_called_once_with()
+        _render_auth.asssert_called_once_with()
         assert not _generate_relation_databases.called
 
         # Test extra call as leader
@@ -102,6 +105,7 @@ class TestUpgrade(unittest.TestCase):
     @patch("upgrade.wait_fixed", return_value=tenacity.wait_fixed(0))
     @patch("charm.BackendDatabaseRequires.postgres", return_value=True, new_callable=PropertyMock)
     @patch("charm.PgBouncerCharm.create_instance_directories")
+    @patch("charm.PgBouncerCharm.render_auth_file")
     @patch("charm.PgbouncerUpgrade.on_upgrade_changed")
     @patch("charm.PgbouncerUpgrade.set_unit_completed")
     @patch("charm.PgbouncerUpgrade._cluster_checks")
@@ -125,6 +129,7 @@ class TestUpgrade(unittest.TestCase):
         ___,
         ____,
         _____,
+        ______,
     ):
         _cluster_checks.side_effect = ClusterNotReadyError("test", "test")
 
