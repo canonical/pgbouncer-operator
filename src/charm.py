@@ -18,13 +18,12 @@ from typing import Dict, List, Literal, Optional, Union, get_args
 
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
-from charms.data_platform_libs.v0.data_models import TypedCharmBase
+from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
-from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 from jinja2 import Template
 from ops import (
@@ -72,6 +71,7 @@ from relations.db import DbProvides
 from relations.hacluster import HaCluster
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
+from relations.tls import TLS
 from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ INSTANCE_DIR = "instance_"
         Peers,
         PgBouncerProvider,
         PgbouncerUpgrade,
-        PostgreSQLTLS,
+        TLS,
     ),
 )
 class PgBouncerCharm(TypedCharmBase):
@@ -126,7 +126,7 @@ class PgBouncerCharm(TypedCharmBase):
         self.client_relation = PgBouncerProvider(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
-        self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
+        self.tls = TLS(self, PEER_RELATION_NAME)
         self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
