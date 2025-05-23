@@ -28,7 +28,9 @@ libs = [
     # grafana_agent/v0/cos_agent.py
     "cosl",
     # tls_certificates_interface/v2/tls_certificates.py
-    "cryptography",
+    "cryptography; python_version > '3.8'",
+    # Focal cannot build 45
+    "cryptography < 45; python_version < '3.10'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
     "opentelemetry-exporter-otlp-proto-http==1.21.0"
@@ -63,7 +65,9 @@ integration = [
 [tool.uv]
 no-binary = true
 build-constraint-dependencies = [
-    "setuptools_scm < 8.3.0; python_version < '3.10'"
+    "setuptools_scm < 8.3.0; python_version < '3.10'",
+    "maturin < 1.8.4; python_version <= '3.8'",
+    "setuptools-rust < 1.11; python_version <= '3.8'"
 ]
 
 # Testing tools configuration
