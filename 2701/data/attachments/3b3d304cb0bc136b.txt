@@ -1,0 +1,1 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:82 starting continuous writes to the database

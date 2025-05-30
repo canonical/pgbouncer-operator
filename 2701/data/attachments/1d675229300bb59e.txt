@@ -1,0 +1,2 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:70 Get leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:74 Run pre-upgrade-check action
