@@ -19,6 +19,7 @@ website:
   - https://www.pgbouncer.org/
 maintainers:
   - Canonical Data Platform <data-platform@lists.launchpad.net>
+subordinate: true
 
 series:
   - jammy
@@ -30,43 +31,42 @@ peers:
   upgrade:
     interface: upgrade
 
-subordinate: true
-
 provides:
   database:
     interface: postgresql_client
     limit: 1
-    optional: true
+    optional: false
     scope: container
-
   # Legacy relations - these will be deprecated in a future release
   db:
     interface: pgsql
     limit: 1
-    optional: true
+    optional: false
     scope: container
   db-admin:
     interface: pgsql
     limit: 1
-    optional: true
+    optional: false
     scope: container
   cos-agent:
     interface: cos_agent
     limit: 1
+    optional: true
 
 requires:
   backend-database:
     interface: postgresql_client
-    optional: false
     limit: 1
+    optional: false
   certificates:
     interface: tls-certificates
-    optional: true
     limit: 1
+    optional: true
   juju-info:
     interface: juju-info
     scope: container
     limit: 1
+    optional: true
   tracing:
     interface: tracing
     limit: 1
