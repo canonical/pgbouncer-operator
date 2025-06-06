@@ -45,8 +45,8 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseRequestedEvent,
 )
 from charms.pgbouncer_k8s.v0 import pgb
-from charms.postgresql_k8s.v0.postgresql import (
-    PERMISSIONS_GROUP_ADMIN,
+from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
+from charms.postgresql_k8s.v1.postgresql import (
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,
     PostgreSQLDeleteUserError,
@@ -149,6 +149,10 @@ class PgBouncerProvider(Object):
             PERMISSIONS_GROUP_ADMIN in extra_user_roles
             or "superuser" in extra_user_roles
             or "createdb" in extra_user_roles
+            or "charmed_dba" in extra_user_roles
+            or "charmed_dml" in extra_user_roles
+            or "charmed_read" in extra_user_roles
+            or "charmed_stats" in extra_user_roles
         ):
             dbs["*"] = {"name": "*", "auth_dbname": database}
 
