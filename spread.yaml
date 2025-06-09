@@ -87,6 +87,7 @@ backends:
       UBUNTU_PRO_TOKEN: '$(HOST: echo $UBUNTU_PRO_TOKEN)'
       LANDSCAPE_ACCOUNT_NAME: '$(HOST: echo $LANDSCAPE_ACCOUNT_NAME)'
       LANDSCAPE_REGISTRATION_KEY: '$(HOST: echo $LANDSCAPE_REGISTRATION_KEY)'
+      POSTGRESQL_CHARM_CHANNEL: '$(HOST: echo $POSTGRESQL_CHARM_CHANNEL)'
     systems:
       - ubuntu-24.04:
           username: runner
