@@ -1,5 +1,7 @@
 summary: test_backend_database.py
 environment:
+  POSTGRESQL_CHARM_CHANNEL/14: 14/edge
+  POSTGRESQL_CHARM_CHANNEL/16: 16/edge
   TEST_MODULE: relations/test_backend_database.py
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
