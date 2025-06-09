@@ -273,7 +273,7 @@ async def deploy_postgres_bundle(
         ),
         ops_test.model.deploy(
             PG,
-            channel=,
+            channel=postgresql_charm_channel,
             num_units=db_units,
             config={"profile": "testing", **pg_config},
             base="ubuntu@24.04" if postgresql_charm_channel.split("/")[0] == "16" else pg_base,
