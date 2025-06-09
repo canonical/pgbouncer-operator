@@ -262,6 +262,7 @@ async def deploy_postgres_bundle(
     pg_config = pg_config if pg_config else {}
     pgb_config = pgb_config if pgb_config else {}
 
+    postgresql_charm_channel = os.environ["POSTGRESQL_CHARM_CHANNEL"]
     await asyncio.gather(
         ops_test.model.deploy(
             pgb_charm,
@@ -272,10 +273,10 @@ async def deploy_postgres_bundle(
         ),
         ops_test.model.deploy(
             PG,
-            channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
+            channel=,
             num_units=db_units,
             config={"profile": "testing", **pg_config},
-            base=pg_base,
+            base="ubuntu@24.04" if postgresql_charm_channel.split("/")[0] == "16" else pg_base,
         ),
     )
     async with ops_test.fast_forward():
