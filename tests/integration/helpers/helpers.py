@@ -5,6 +5,7 @@
 import asyncio
 import json
 import logging
+import os
 from configparser import ConfigParser
 from multiprocessing import ProcessError
 from pathlib import Path
@@ -271,7 +272,7 @@ async def deploy_postgres_bundle(
         ),
         ops_test.model.deploy(
             PG,
-            channel="14/edge",
+            channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
             num_units=db_units,
             config={"profile": "testing", **pg_config},
             base=pg_base,

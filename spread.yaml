@@ -106,6 +106,8 @@ environment:
   PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
   CONCIERGE_JUJU_CHANNEL/juju29: 2.9/stable
+  POSTGRESQL_CHARM_CHANNEL: 14/edge
+  POSTGRESQL_CHARM_CHANNEL/16: 16/edge
 prepare: |
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
