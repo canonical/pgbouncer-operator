@@ -16,11 +16,9 @@ from ...helpers.helpers import (
     get_unit_cores,
 )
 from ...juju_ import juju_major_version
-from .helpers import check_exposed_connection, fetch_action_get_credentials
+from .helpers import check_exposed_connection, fetch_action_get_credentials, DATA_INTEGRATOR_APP_NAME
 
 logger = logging.getLogger(__name__)
-
-DATA_INTEGRATOR_APP_NAME = "data-integrator"
 
 if juju_major_version < 3:
     tls_certificates_app_name = "tls-certificates-operator"

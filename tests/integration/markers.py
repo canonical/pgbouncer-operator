@@ -1,6 +1,6 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-
+import os
 
 import pytest
 
@@ -15,4 +15,8 @@ amd64_only = pytest.mark.skipif(
 )
 arm64_only = pytest.mark.skipif(
     architecture.architecture != "arm64", reason="Requires arm64 architecture"
+)
+pg16_only = pytest.mark.skipif(
+    os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] != "16",
+    reason="Requires PostgreSQL 16",
 )
