@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import os
 import time
 
 import pytest
@@ -65,7 +66,7 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
                 PG,
                 application_name=PG,
                 num_units=2,
-                channel="14/edge",
+                channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
                 config={"profile": "testing"},
             ),
         )
@@ -267,7 +268,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(ops_test
                 PG,
                 application_name=PG_2,
                 num_units=2,
-                channel="14/edge",
+                channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
                 config={"profile": "testing"},
             ),
         )

@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import os
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -48,7 +49,10 @@ async def test_scaled_relations(ops_test: OpsTest):
     # Build, deploy, and relate charms.
     async with ops_test.fast_forward():
         await ops_test.model.deploy(
-            PG, channel="14/edge", trust=True, num_units=3, config={"profile": "testing"}
+            PG,
+            channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
+            num_units=3,
+            config={"profile": "testing"},
         )
 
         await asyncio.gather(
