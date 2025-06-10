@@ -346,6 +346,7 @@ class BackendDatabaseRequires(Object):
 
             for dbname in dbs:
                 with self.postgres._connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                    cursor.execute("RESET ROLE;")
                     cursor.execute(install_script.replace("auth_user", self.auth_user))
                 conn.close()
             logger.info("auth function initialised")
@@ -367,6 +368,7 @@ class BackendDatabaseRequires(Object):
             uninstall_script = f.read()
             for dbname in dbs:
                 with self.postgres._connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                    cursor.execute("RESET ROLE;")
                     cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
                 conn.close()
             logger.info("auth function removed")
