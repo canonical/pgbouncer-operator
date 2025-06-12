@@ -48,8 +48,8 @@ from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
     PERMISSIONS_GROUP_ADMIN,
 )
-from charms.postgresql_k8s.v1.postgresql import (
-    PostgreSQL as PostgreSQLv1,
+from charms.postgresql_k8s.v0.postgresql import (
+    PostgreSQL as PostgreSQLv0,
 )
 from charms.postgresql_k8s.v1.postgresql import (
     PostgreSQLCreateDatabaseError,
@@ -182,19 +182,19 @@ class PgBouncerProvider(Object):
         logger.debug("generating relation user")
         password = pgb.generate_password()
         try:
-            if isinstance(self.charm.backend.postgres, PostgreSQLv1):
-                logger.debug("creating database")
-                self.charm.backend.postgres.create_database(database)
-                self.charm.backend.postgres.create_user(
-                    user, password, extra_user_roles=extra_user_roles, in_role=f"{database}_admin"
-                )
-            else:
+            if isinstance(self.charm.backend.postgres, PostgreSQLv0):
                 self.charm.backend.postgres.create_user(
                     user, password, extra_user_roles=extra_user_roles
                 )
                 logger.debug("creating database")
                 self.charm.backend.postgres.create_database(
                     database, user, client_relations=self.charm.client_relations
+                )
+            else:
+                logger.debug("creating database")
+                self.charm.backend.postgres.create_database(database)
+                self.charm.backend.postgres.create_user(
+                    user, password, extra_user_roles=extra_user_roles, in_role=f"{database}_admin"
                 )
             # set up auth function
             self.charm.backend.remove_auth_function(dbs=[database])
