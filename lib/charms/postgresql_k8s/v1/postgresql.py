@@ -240,6 +240,7 @@ class PostgreSQL:
                 )
             )
             with self._connect_to_database(database=database) as conn, conn.cursor() as curs:
+                self.set_up_predefined_catalog_roles_function(database=database)
                 curs.execute(SQL("SELECT set_up_predefined_catalog_roles();"))
         except psycopg2.Error as e:
             logger.error(f"Failed to create database: {e}")
@@ -300,7 +301,7 @@ class PostgreSQL:
                     user_definition = "CREATE ROLE {} "
                 user_definition += f"WITH LOGIN{' SUPERUSER' if admin else ''} ENCRYPTED PASSWORD '{password}'"
                 if in_role:
-                    user_definition += f" IN ROLE {in_role}"
+                    user_definition += f" IN ROLE \"{in_role}\""
                 if can_create_database:
                     user_definition += " CREATEDB"
                 if privileges:
@@ -800,7 +801,7 @@ $$ LANGUAGE plpgsql;"""
             logger.error(f"Failed to create login hook function: {e}")
             raise e
 
-    def set_up_predefined_catalog_roles_function(self) -> None:
+    def set_up_predefined_catalog_roles_function(self, database: str = None) -> None:
         """Create predefined catalog roles function."""
         function_creation_statement = """CREATE OR REPLACE FUNCTION set_up_predefined_catalog_roles() RETURNS VOID AS $$
 DECLARE
@@ -871,7 +872,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql security definer;"""
         try:
-            for database in ["postgres", "template1"]:
+            if database is not None:
+                databases = [database]
+            else:
+                databases = ["postgres", "template1"]
+            for database in databases:
                 with self._connect_to_database(
                     database=database
                 ) as connection, connection.cursor() as cursor:
