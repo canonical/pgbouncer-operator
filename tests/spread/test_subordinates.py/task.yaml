@@ -7,3 +7,5 @@ artifacts:
   - allure-results
 backends:
   - -lxd-vm  # Requires CI secrets
+variants:
+  - -juju36_pg16
