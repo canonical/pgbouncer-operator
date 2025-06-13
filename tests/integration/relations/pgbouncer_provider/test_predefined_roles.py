@@ -10,6 +10,7 @@ import psycopg2
 import psycopg2.sql
 import pytest
 from pytest_operator.plugin import OpsTest
+from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from ... import markers
 from ...helpers.helpers import (
@@ -111,26 +112,29 @@ async def test_charmed_read_role(ops_test: OpsTest):
         port=6432,
     )
 
-    with psycopg2.connect(connection_string) as connection:
-        connection.autocommit = True
+    # Check that the charmed_read role can read from the database
+    connection.close()
+    for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(3)):
+        with attempt:
+            connection = psycopg2.connect(connection_string)
+            connection.autocommit = True
+    with connection.cursor() as cursor:
+        logger.info("Checking that the charmed_read role can read from the database")
+        cursor.execute("RESET ROLE;")
+        cursor.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_name NOT LIKE 'pg_%' AND table_name NOT LIKE 'sql_%' AND table_type <> 'VIEW';"
+        )
+        tables = [row[0] for row in cursor.fetchall()]
+        assert tables == ["test_table"], "Unexpected tables in the database"
 
-        with connection.cursor() as cursor:
-            logger.info("Checking that the charmed_read role can read from the database")
-            cursor.execute("RESET ROLE;")
-            cursor.execute(
-                "SELECT table_name FROM information_schema.tables WHERE table_name NOT LIKE 'pg_%' AND table_name NOT LIKE 'sql_%' AND table_type <> 'VIEW';"
-            )
-            tables = [row[0] for row in cursor.fetchall()]
-            assert tables == ["test_table"], "Unexpected tables in the database"
-
-            cursor.execute("SELECT data FROM test_table;")
-            data = sorted([row[0] for row in cursor.fetchall()])
-            assert data == sorted(["test_data", "test_data_2"]), (
-                "Unexpected data in charmed_read_database with charmed_read role"
-            )
-            logger.info("Checking that the charmed_read role cannot create a new table")
-            with pytest.raises(psycopg2.errors.InsufficientPrivilege):
-                cursor.execute("CREATE TABLE test_table_2 (id INTEGER);")
+        cursor.execute("SELECT data FROM test_table;")
+        data = sorted([row[0] for row in cursor.fetchall()])
+        assert data == sorted(["test_data", "test_data_2"]), (
+            "Unexpected data in charmed_read_database with charmed_read role"
+        )
+        logger.info("Checking that the charmed_read role cannot create a new table")
+        with pytest.raises(psycopg2.errors.InsufficientPrivilege):
+            cursor.execute("CREATE TABLE test_table_2 (id INTEGER);")
     connection.close()
 
     with psycopg2.connect(connection_string) as connection, connection.cursor() as cursor:
@@ -213,13 +217,19 @@ async def test_charmed_dml_role(ops_test: OpsTest):
                 )
             )
 
-    with db_connect(
-        primary_address,
-        data_integrator_2_password,
-        username=data_integrator_2_user,
-        database="charmed_dml_database",
-    ) as connection, connection.cursor() as cursor:
+    connection.close()
+    for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(3)):
+        with attempt:
+            connection = db_connect(
+                primary_address,
+                data_integrator_2_password,
+                username=data_integrator_2_user,
+                database="charmed_dml_database",
+            )
+    with connection.cursor() as cursor:
+        connection.autocommit = True
         cursor.execute("INSERT INTO test_table (data) VALUES ('test_data_3');")
+    connection.close()
 
     with db_connect(
         primary_address, operator_password, username="operator", database="charmed_dml_database"
