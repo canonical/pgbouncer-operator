@@ -4,6 +4,7 @@
 
 import asyncio
 import logging
+import os
 
 import psycopg2
 import psycopg2.sql
@@ -14,7 +15,6 @@ from ... import markers
 from ...helpers.helpers import (
     PG,
     PGB,
-    deploy_postgres_bundle,
     get_juju_secret,
 )
 from ...helpers.postgresql_helpers import (
@@ -37,13 +37,26 @@ TIMEOUT = 15 * 60
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 @markers.pg16_only
-async def test_deploy(ops_test: OpsTest, charm: str):
+async def test_deploy(ops_test: OpsTest, charm_noble):
     """Deploy the postgresql charm."""
-    await deploy_postgres_bundle(ops_test, charm, pgb_base="ubuntu@24.04", db_units=2)
     async with ops_test.fast_forward("10s"):
         await asyncio.gather(
             ops_test.model.deploy(
+                charm_noble, application_name=PGB, num_units=0, base="ubuntu@24.04"
+            ),
+            ops_test.model.deploy(
+                charm_noble, application_name=f"{PGB}2", num_units=0, base="ubuntu@24.04"
+            ),
+            ops_test.model.deploy(
+                PG,
+                application_name=PG,
+                num_units=2,
+                channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
+                config={"profile": "testing"},
+            ),
+            ops_test.model.deploy(
                 DATA_INTEGRATOR_APP_NAME,
+                channel="edge",
                 base="ubuntu@24.04",
             ),
             ops_test.model.deploy(
@@ -53,6 +66,8 @@ async def test_deploy(ops_test: OpsTest, charm: str):
                 base="ubuntu@24.04",
             ),
         )
+        await ops_test.model.add_relation(PG, PGB)
+        await ops_test.model.add_relation(PG, f"{PGB}2")
 
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=TIMEOUT)
         assert ops_test.model.applications[PG].units[0].workload_status == "active"
@@ -77,7 +92,7 @@ async def test_charmed_read_role(ops_test: OpsTest):
 
     primary = await get_primary(ops_test, f"{PG}/0")
     primary_address = get_unit_address(ops_test, primary)
-    operator_password = await get_password(ops_test, "operator")
+    operator_password = await get_password(ops_test, primary, "operator", use_secrets=True)
 
     with db_connect(
         primary_address, operator_password, username="operator", database="charmed_read_database"
@@ -93,6 +108,7 @@ async def test_charmed_read_role(ops_test: OpsTest):
         DATA_INTEGRATOR_APP_NAME,
         "postgresql",
         database="charmed_read_database",
+        port=6432,
     )
 
     with psycopg2.connect(connection_string) as connection:
@@ -126,20 +142,23 @@ async def test_charmed_dml_role(ops_test: OpsTest):
         "database-name": "charmed_dml_database",
     })
     await ops_test.model.add_relation(DATA_INTEGRATOR_APP_NAME, PGB)
-    await ops_test.model.wait_for_idle(apps=[DATA_INTEGRATOR_APP_NAME, PG], status="active")
+    await ops_test.model.wait_for_idle(apps=[DATA_INTEGRATOR_APP_NAME, PGB], status="active")
 
     await ops_test.model.applications[f"{DATA_INTEGRATOR_APP_NAME}2"].set_config({
         "database-name": "throwaway",
         "extra-user-roles": "charmed_dml",
     })
-    await ops_test.model.add_relation(f"{DATA_INTEGRATOR_APP_NAME}2", PGB)
-    await ops_test.model.wait_for_idle(apps=[f"{DATA_INTEGRATOR_APP_NAME}2"], status="active")
+    await ops_test.model.add_relation(f"{DATA_INTEGRATOR_APP_NAME}2", f"{PGB}2")
+    await ops_test.model.wait_for_idle(
+        apps=[f"{DATA_INTEGRATOR_APP_NAME}2", f"{PGB}2"], status="active"
+    )
 
     connection_string = await build_connection_string(
         ops_test,
         DATA_INTEGRATOR_APP_NAME,
         "postgresql",
         database="charmed_dml_database",
+        port=6432,
     )
 
     with psycopg2.connect(connection_string) as connection:
@@ -158,7 +177,7 @@ async def test_charmed_dml_role(ops_test: OpsTest):
 
     primary = await get_primary(ops_test, f"{PG}/0")
     primary_address = get_unit_address(ops_test, primary)
-    operator_password = await get_password(ops_test, primary, "operator")
+    operator_password = await get_password(ops_test, primary, "operator", use_secrets=True)
 
     secret_uri = await get_application_relation_data(
         ops_test,
@@ -204,7 +223,7 @@ async def test_charmed_dml_role(ops_test: OpsTest):
         f"{PGB}:database", f"{DATA_INTEGRATOR_APP_NAME}:postgresql"
     )
     await ops_test.model.applications[PG].remove_relation(
-        f"{PGB}:database", f"{DATA_INTEGRATOR_APP_NAME}2:postgresql"
+        f"{PGB}2:database", f"{DATA_INTEGRATOR_APP_NAME}2:postgresql"
     )
     await ops_test.model.wait_for_idle(
         apps=[DATA_INTEGRATOR_APP_NAME, f"{DATA_INTEGRATOR_APP_NAME}2"], status="blocked"

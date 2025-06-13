@@ -90,7 +90,8 @@ async def build_connection_string(
     *,
     relation_id: Optional[str] = None,
     read_only_endpoint: bool = False,
-    database: str | None = None,
+    database: Optional[str] = None,
+    port: int = 5432,
 ) -> str:
     """Build a PostgreSQL connection string.
 
@@ -102,6 +103,7 @@ async def build_connection_string(
         read_only_endpoint: whether to choose the read-only endpoint
             instead of the read/write endpoint
         database: optional database to be used in the connection string
+        port: optional port to connect to.
 
     Returns:
         a PostgreSQL connection string
@@ -137,7 +139,7 @@ async def build_connection_string(
     host = endpoints.split(",")[0].split(":")[0]
 
     # Build the complete connection string to connect to the database.
-    return f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+    return f"dbname='{database}' user='{username}' host='{host}' port={port} password='{password}' connect_timeout=10"
 
 
 async def check_new_relation(ops_test: OpsTest, unit_name, relation_name, dbname):
