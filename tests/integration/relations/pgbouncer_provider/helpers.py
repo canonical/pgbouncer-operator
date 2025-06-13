@@ -15,6 +15,25 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from ...helpers.helpers import get_juju_secret
 
+DATA_INTEGRATOR_APP_NAME = "data-integrator"
+
+
+def check_connected_user(
+    cursor, session_user: str, current_user: str, primary: bool = True
+) -> None:
+    cursor.execute("SELECT session_user,current_user;")
+    result = cursor.fetchone()
+    if result is not None:
+        instance = "primary" if primary else "replica"
+        assert result[0] == session_user, (
+            f"The session user should be the {session_user} user in the {instance}"
+        )
+        assert result[1] == current_user, (
+            f"The current user should be the {current_user} user in the {instance}"
+        )
+    else:
+        assert False, "No result returned from the query"
+
 
 async def get_application_relation_data(
     ops_test: OpsTest,
@@ -88,6 +107,8 @@ async def build_connection_string(
     *,
     relation_id: Optional[str] = None,
     read_only_endpoint: bool = False,
+    database: Optional[str] = None,
+    port: int = 5432,
 ) -> str:
     """Build a PostgreSQL connection string.
 
@@ -98,12 +119,15 @@ async def build_connection_string(
         relation_id: id of the relation to get connection data from
         read_only_endpoint: whether to choose the read-only endpoint
             instead of the read/write endpoint
+        database: optional database to be used in the connection string
+        port: optional port to connect to.
 
     Returns:
         a PostgreSQL connection string
     """
     # Get the connection data exposed to the application through the relation.
-    database = f"{application_name.replace('-', '_')}_{relation_name.replace('-', '_')}"
+    if database is None:
+        database = f"{application_name.replace('-', '_')}_{relation_name.replace('-', '_')}"
 
     if secret_uri := await get_application_relation_data(
         ops_test,
@@ -132,7 +156,7 @@ async def build_connection_string(
     host = endpoints.split(",")[0].split(":")[0]
 
     # Build the complete connection string to connect to the database.
-    return f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+    return f"dbname='{database}' user='{username}' host='{host}' port={port} password='{password}' connect_timeout=10"
 
 
 async def check_new_relation(ops_test: OpsTest, unit_name, relation_name, dbname):
@@ -198,3 +222,42 @@ def check_exposed_connection(credentials, tls):
     cursor.execute(smoke_query)
 
     assert smoke_val == cursor.fetchone()[0]
+
+
+def db_connect(
+    host: str, password: str, username: str = "operator", database: str = "postgres"
+) -> psycopg2.extensions.connection:
+    """Returns psycopg2 connection object linked to postgres db in the given host.
+
+    Args:
+        host: the IP of the postgres host
+        password: user password
+        username: username to connect with
+        database: database to connect to
+
+    Returns:
+        psycopg2 connection object linked to postgres db, under "operator" user.
+    """
+    return psycopg2.connect(
+        f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+    )
+
+
+async def get_primary(ops_test: OpsTest, unit_name: str, model=None) -> str:
+    """Get the primary unit.
+
+    Args:
+        ops_test: ops_test instance.
+        unit_name: the name of the unit.
+        model: Model to use.
+
+    Returns:
+        the current primary unit.
+    """
+    if not model:
+        model = ops_test.model
+    action = await model.units.get(unit_name).run_action("get-primary")
+    action = await action.wait()
+    if "primary" not in action.results or action.results["primary"] not in model.units:
+        raise Exception("Primary unit not found")
+    return action.results["primary"]

@@ -47,7 +47,7 @@ Example:
 """
 
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -55,7 +55,8 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseRequires,
 )
 from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
-from charms.postgresql_k8s.v0.postgresql import PostgreSQL
+from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
+from charms.postgresql_k8s.v1.postgresql import PostgreSQL as PostgreSQLv1
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
@@ -345,6 +346,7 @@ class BackendDatabaseRequires(Object):
 
             for dbname in dbs:
                 with self.postgres._connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                    cursor.execute("RESET ROLE;")
                     cursor.execute(install_script.replace("auth_user", self.auth_user))
                 conn.close()
             logger.info("auth function initialised")
@@ -366,6 +368,7 @@ class BackendDatabaseRequires(Object):
             uninstall_script = f.read()
             for dbname in dbs:
                 with self.postgres._connect_to_database(dbname) as conn, conn.cursor() as cursor:
+                    cursor.execute("RESET ROLE;")
                     cursor.execute(uninstall_script.replace("auth_user", self.auth_user))
                 conn.close()
             logger.info("auth function removed")
@@ -380,7 +383,7 @@ class BackendDatabaseRequires(Object):
             return backend_relation
 
     @property
-    def postgres(self) -> PostgreSQL:
+    def postgres(self) -> Union[PostgreSQLv0, PostgreSQLv1]:
         """Returns PostgreSQL representation of backend database, as defined in relation.
 
         Returns None if backend relation is not fully initialised.
@@ -393,12 +396,14 @@ class BackendDatabaseRequires(Object):
         endpoint = databag.get("endpoints")
         user = self.database.fetch_relation_field(self.relation.id, "username")
         password = self.database.fetch_relation_field(self.relation.id, "password")
+        version = self.database.fetch_relation_field(self.relation.id, "version")
         database = self.database.database
 
         if None in [endpoint, user, password]:
             return None
 
-        return PostgreSQL(
+        postgresql = PostgreSQLv0 if version.split(".")[0] == "14" else PostgreSQLv1
+        return postgresql(
             primary_host=endpoint.split(":")[0],
             current_host=endpoint.split(":")[0],
             user=user,

@@ -1,9 +1,10 @@
-summary: test_db_admin.py
+summary: relations/pgbouncer_provider/test_predefined_roles.py
 environment:
-  TEST_MODULE: relations/test_db_admin.py
+  TEST_MODULE: relations/pgbouncer_provider/test_predefined_roles.py
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
 artifacts:
   - allure-results
 variants:
-  - -juju36_pg16
+  - -juju29
+  - -juju36

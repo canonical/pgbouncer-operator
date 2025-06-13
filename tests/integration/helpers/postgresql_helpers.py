@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 import asyncio
 import itertools
+import json
 import os
 import subprocess
 import tempfile
@@ -15,6 +16,10 @@ from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from .helpers import PG, PGB
+
+
+class SecretNotFoundError(Exception):
+    """Raised when a secret is not found."""
 
 
 async def build_connection_string(
@@ -350,21 +355,30 @@ async def deploy_and_relate_bundle_with_pgbouncer(
     return relation.id
 
 
-async def get_password(ops_test: OpsTest, unit_name: str, username: str = "operator") -> str:
+async def get_password(
+    ops_test: OpsTest, unit_name: str, username: str = "operator", use_secrets: bool = False
+) -> str:
     """Retrieve a user password using the action.
 
     Args:
         ops_test: ops_test instance.
         unit_name: the name of the unit.
         username: the user to get the password.
+        use_secrets: whether to use secrets to retrieve the password.
 
     Returns:
         the user password.
     """
-    unit = ops_test.model.units.get(unit_name)
-    action = await unit.run_action("get-password", **{"username": username})
-    result = await action.wait()
-    return result.results["password"]
+    if use_secrets:
+        secret = await get_secret_by_label(
+            ops_test, label=f"database-peers.{unit_name.split('/')[0]}.app"
+        )
+        return secret.get(f"{username}-password")
+    else:
+        unit = ops_test.model.units.get(unit_name)
+        action = await unit.run_action("get-password", **{"username": username})
+        result = await action.wait()
+        return result.results["password"]
 
 
 async def get_landscape_api_credentials(ops_test: OpsTest) -> List[str]:
@@ -386,3 +400,21 @@ async def get_landscape_api_credentials(ops_test: OpsTest) -> List[str]:
     )
 
     return output
+
+
+async def get_secret_by_label(ops_test: OpsTest, label: str) -> dict[str, str]:
+    secrets_raw = await ops_test.juju("list-secrets")
+    secret_ids = [
+        secret_line.split()[0] for secret_line in secrets_raw[1].split("\n")[1:] if secret_line
+    ]
+
+    for secret_id in secret_ids:
+        secret_data_raw = await ops_test.juju(
+            "show-secret", "--format", "json", "--reveal", secret_id
+        )
+        secret_data = json.loads(secret_data_raw[1])
+
+        if label == secret_data[secret_id].get("label"):
+            return secret_data[secret_id]["content"]["Data"]
+
+    raise SecretNotFoundError(f"Secret with label {label} not found")

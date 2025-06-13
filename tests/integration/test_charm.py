@@ -4,6 +4,7 @@
 
 import asyncio
 import logging
+import os
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -44,7 +45,7 @@ async def test_build_and_deploy(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 PG,
                 application_name=PG,
-                channel="14/edge",
+                channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
                 config={"profile": "testing"},
             ),
         )

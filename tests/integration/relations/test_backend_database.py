@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import os
 
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
@@ -102,7 +103,12 @@ async def test_tls_encrypted_connection_to_postgres(ops_test: OpsTest, charm_foc
         await ops_test.model.wait_for_idle(apps=[TLS], status="active", timeout=1000)
 
         # Relate it to the PostgreSQL to enable TLS.
-        await ops_test.model.relate(f"{PG}:certificates", TLS)
+        certificates_relation = (
+            "client-certificates"
+            if os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] == "16"
+            else "certificates"
+        )
+        await ops_test.model.relate(f"{PG}:{certificates_relation}", TLS)
         await ops_test.model.wait_for_idle(apps=[PG, TLS], status="active", timeout=1000)
 
         # Enable additional logs on the PostgreSQL instance to check TLS
