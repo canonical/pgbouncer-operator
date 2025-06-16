@@ -154,6 +154,7 @@ class PgBouncerProvider(Object):
             PERMISSIONS_GROUP_ADMIN in extra_user_roles
             or "superuser" in extra_user_roles
             or "createdb" in extra_user_roles
+            or "charmed_databases_owner" in extra_user_roles
             or "charmed_dba" in extra_user_roles
             or "charmed_dml" in extra_user_roles
             or "charmed_read" in extra_user_roles

@@ -225,6 +225,7 @@ class PostgreSQL:
             plugins: extensions to enable in the new database.
         """
         plugins = plugins if plugins else []
+        connection = None
         try:
             connection = self._connect_to_database()
             cursor = connection.cursor()
@@ -234,17 +235,25 @@ class PostgreSQL:
             if cursor.fetchone() is None:
                 cursor.execute(SQL("SET ROLE charmed_databases_owner;"))
                 cursor.execute(SQL("CREATE DATABASE {};").format(Identifier(database)))
-            cursor.execute(
-                SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM PUBLIC;").format(
-                    Identifier(database)
-                )
-            )
-            with self._connect_to_database(database=database) as conn, conn.cursor() as curs:
+                cursor.execute(SQL("RESET ROLE;"))
                 self.set_up_predefined_catalog_roles_function(database=database)
+                cursor.execute(
+                    SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM PUBLIC;").format(
+                        Identifier(database)
+                    )
+                )
+            cursor.close()
+            connection.close()
+
+            connection = None
+            with self._connect_to_database(database=database) as conn, conn.cursor() as curs:
                 curs.execute(SQL("SELECT set_up_predefined_catalog_roles();"))
         except psycopg2.Error as e:
             logger.error(f"Failed to create database: {e}")
             raise PostgreSQLCreateDatabaseError() from e
+        finally:
+            if connection is not None:
+                connection.close()
 
         # Enable preset extensions
         self.enable_disable_extensions(dict.fromkeys(plugins, True), database)
@@ -890,8 +899,14 @@ $$ LANGUAGE plpgsql security definer;"""
                         )
                     )
         except psycopg2.Error as e:
-            logger.error(f"Failed to set up predefined catalog roles function: {e}")
-            raise PostgreSQLCreatePredefinedRolesError() from e
+            if isinstance(e, psycopg2.errors.InsufficientPrivilege):
+                logger.error(
+                    "Insufficient privileges to create predefined catalog roles function. "
+                    "Ensure the user has the necessary permissions."
+                )
+            else:
+                logger.error(f"Failed to set up predefined catalog roles function: {e}")
+                raise PostgreSQLCreatePredefinedRolesError() from e
 
     def update_user_password(
         self, username: str, password: str, database_host: Optional[str] = None
