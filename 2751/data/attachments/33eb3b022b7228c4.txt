@@ -1,0 +1,15 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:82 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:86 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:91 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:94 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:100 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] waiting: other units upgrading first...
+  pgbouncer/2 [executing] waiting: other units upgrading first...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:107 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:112 checking whether no writes were lost
