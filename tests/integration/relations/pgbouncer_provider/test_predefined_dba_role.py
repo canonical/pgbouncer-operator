@@ -10,6 +10,7 @@ import psycopg2
 import psycopg2.sql
 import pytest
 from pytest_operator.plugin import OpsTest
+from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from ... import markers
 from ...helpers.helpers import (
@@ -82,7 +83,9 @@ async def test_charmed_dba_role(ops_test: OpsTest):
             read_only_endpoint=(not read_write_endpoint),
             port=6432,
         )
-        connection = psycopg2.connect(connection_string)
+        for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(3), reraise=True):
+            with attempt:
+                connection = psycopg2.connect(connection_string)
         connection.autocommit = True
         try:
             with connection.cursor() as cursor:
