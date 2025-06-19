@@ -47,6 +47,11 @@ from charms.data_platform_libs.v0.data_interfaces import (
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
     PERMISSIONS_GROUP_ADMIN,
+)
+from charms.postgresql_k8s.v0.postgresql import (
+    PostgreSQL as PostgreSQLv0,
+)
+from charms.postgresql_k8s.v1.postgresql import (
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,
     PostgreSQLDeleteUserError,
@@ -149,6 +154,11 @@ class PgBouncerProvider(Object):
             PERMISSIONS_GROUP_ADMIN in extra_user_roles
             or "superuser" in extra_user_roles
             or "createdb" in extra_user_roles
+            or "charmed_databases_owner" in extra_user_roles
+            or "charmed_dba" in extra_user_roles
+            or "charmed_dml" in extra_user_roles
+            or "charmed_read" in extra_user_roles
+            or "charmed_stats" in extra_user_roles
         ):
             dbs["*"] = {"name": "*", "auth_dbname": database}
 
@@ -173,13 +183,20 @@ class PgBouncerProvider(Object):
         logger.debug("generating relation user")
         password = pgb.generate_password()
         try:
-            self.charm.backend.postgres.create_user(
-                user, password, extra_user_roles=extra_user_roles
-            )
-            logger.debug("creating database")
-            self.charm.backend.postgres.create_database(
-                database, user, client_relations=self.charm.client_relations
-            )
+            if isinstance(self.charm.backend.postgres, PostgreSQLv0):
+                self.charm.backend.postgres.create_user(
+                    user, password, extra_user_roles=extra_user_roles
+                )
+                logger.debug("creating database")
+                self.charm.backend.postgres.create_database(
+                    database, user, client_relations=self.charm.client_relations
+                )
+            else:
+                logger.debug("creating database")
+                self.charm.backend.postgres.create_database(database)
+                self.charm.backend.postgres.create_user(
+                    user, password, extra_user_roles=extra_user_roles, in_role=f"{database}_admin"
+                )
             # set up auth function
             self.charm.backend.remove_auth_function(dbs=[database])
             self.charm.backend.initialise_auth_function(dbs=[database])

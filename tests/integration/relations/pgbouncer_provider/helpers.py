@@ -8,12 +8,96 @@ from typing import Dict, Optional
 from uuid import uuid4
 
 import psycopg2
+import pytest
 import yaml
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
-from tenacity import Retrying, stop_after_attempt, wait_fixed
+from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_fixed
 
 from ...helpers.helpers import get_juju_secret
+
+DATA_INTEGRATOR_APP_NAME = "data-integrator"
+
+
+logger = logging.getLogger(__name__)
+
+
+def check_connected_user(
+    cursor, session_user: str, current_user: str, primary: bool = True
+) -> None:
+    cursor.execute("SELECT session_user,current_user;")
+    result = cursor.fetchone()
+    if result is not None:
+        instance = "primary" if primary else "replica"
+        assert result[0] == session_user, (
+            f"The session user should be the {session_user} user in the {instance}"
+        )
+        assert result[1] == current_user, (
+            f"The current user should be the {current_user} user in the {instance}"
+        )
+    else:
+        assert False, "No result returned from the query"
+
+
+async def check_roles_and_their_permissions(
+    ops_test: OpsTest, relation_endpoint: str, database_name: str
+) -> None:
+    action = await ops_test.model.units[f"{DATA_INTEGRATOR_APP_NAME}/0"].run_action(
+        action_name="get-credentials"
+    )
+    result = await action.wait()
+    data_integrator_credentials = result.results
+    username = data_integrator_credentials[relation_endpoint]["username"]
+    uris = data_integrator_credentials[relation_endpoint]["uris"]
+    connection = None
+    try:
+        for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(3)):
+            with attempt:
+                connection = psycopg2.connect(uris)
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            logger.info(
+                "Checking that the relation user is automatically escalated to the database owner user"
+            )
+            check_connected_user(cursor, username, f"{database_name}_owner")
+            logger.info("Creating a test table and inserting data")
+            cursor.execute("CREATE TABLE test_table (id INTEGER);")
+            logger.info("Inserting data into the test table")
+            cursor.execute("INSERT INTO test_table(id) VALUES(1);")
+            logger.info("Reading data from the test table")
+            cursor.execute("SELECT * FROM test_table;")
+            result = cursor.fetchall()
+            assert len(result) == 1, "The database owner user should be able to read the data"
+
+            logger.info("Checking that the database owner user can't create a database")
+            with pytest.raises(psycopg2.errors.InsufficientPrivilege):
+                cursor.execute(f"CREATE DATABASE {database_name}_2;")
+
+            logger.info("Checking that the relation user can't create a table")
+            cursor.execute("RESET ROLE;")
+            check_connected_user(cursor, username, username)
+            with pytest.raises(psycopg2.errors.InsufficientPrivilege):
+                cursor.execute("CREATE TABLE test_table_2 (id INTEGER);")
+    finally:
+        if connection is not None:
+            connection.close()
+
+    connection_string = f"host={data_integrator_credentials[relation_endpoint]['read-only-endpoints'].split(':')[0]} port=6432 dbname={data_integrator_credentials[relation_endpoint]['database']}_readonly user={username} password={data_integrator_credentials[relation_endpoint]['password']}"
+    connection = None
+    try:
+        for attempt in Retrying(stop=stop_after_delay(60), wait=wait_fixed(3)):
+            with attempt:
+                connection = psycopg2.connect(connection_string)
+        with connection.cursor() as cursor:
+            logger.info("Checking that the relation user can read data from the database")
+            check_connected_user(cursor, username, username, primary=False)
+            logger.info("Reading data from the test table")
+            cursor.execute("SELECT * FROM test_table;")
+            result = cursor.fetchall()
+            assert len(result) == 1, "The relation user should be able to read the data"
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 async def get_application_relation_data(
@@ -56,6 +140,14 @@ async def get_application_relation_data(
     return relation_data[0]["application-data"].get(key)
 
 
+def relations(ops_test: OpsTest, provider_app: str, requirer_app: str) -> list:
+    return [
+        relation
+        for relation in ops_test.model.applications[provider_app].relations
+        if not relation.is_peer and relation.requires.application_name == requirer_app
+    ]
+
+
 async def run_sql_on_application_charm(
     ops_test,
     unit_name: str,
@@ -88,6 +180,8 @@ async def build_connection_string(
     *,
     relation_id: Optional[str] = None,
     read_only_endpoint: bool = False,
+    database: Optional[str] = None,
+    port: int = 5432,
 ) -> str:
     """Build a PostgreSQL connection string.
 
@@ -98,12 +192,15 @@ async def build_connection_string(
         relation_id: id of the relation to get connection data from
         read_only_endpoint: whether to choose the read-only endpoint
             instead of the read/write endpoint
+        database: optional database to be used in the connection string
+        port: optional port to connect to.
 
     Returns:
         a PostgreSQL connection string
     """
     # Get the connection data exposed to the application through the relation.
-    database = f"{application_name.replace('-', '_')}_{relation_name.replace('-', '_')}"
+    if database is None:
+        database = f"{application_name.replace('-', '_')}_{relation_name.replace('-', '_')}"
 
     if secret_uri := await get_application_relation_data(
         ops_test,
@@ -132,7 +229,7 @@ async def build_connection_string(
     host = endpoints.split(",")[0].split(":")[0]
 
     # Build the complete connection string to connect to the database.
-    return f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+    return f"dbname='{database}' user='{username}' host='{host}' port={port} password='{password}' connect_timeout=10"
 
 
 async def check_new_relation(ops_test: OpsTest, unit_name, relation_name, dbname):
@@ -198,3 +295,42 @@ def check_exposed_connection(credentials, tls):
     cursor.execute(smoke_query)
 
     assert smoke_val == cursor.fetchone()[0]
+
+
+def db_connect(
+    host: str, password: str, username: str = "operator", database: str = "postgres"
+) -> psycopg2.extensions.connection:
+    """Returns psycopg2 connection object linked to postgres db in the given host.
+
+    Args:
+        host: the IP of the postgres host
+        password: user password
+        username: username to connect with
+        database: database to connect to
+
+    Returns:
+        psycopg2 connection object linked to postgres db, under "operator" user.
+    """
+    return psycopg2.connect(
+        f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+    )
+
+
+async def get_primary(ops_test: OpsTest, unit_name: str, model=None) -> str:
+    """Get the primary unit.
+
+    Args:
+        ops_test: ops_test instance.
+        unit_name: the name of the unit.
+        model: Model to use.
+
+    Returns:
+        the current primary unit.
+    """
+    if not model:
+        model = ops_test.model
+    action = await model.units.get(unit_name).run_action("get-primary")
+    action = await action.wait()
+    if "primary" not in action.results or action.results["primary"] not in model.units:
+        raise Exception("Primary unit not found")
+    return action.results["primary"]

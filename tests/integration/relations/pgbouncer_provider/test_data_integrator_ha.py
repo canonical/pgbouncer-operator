@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
+import os
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -15,11 +16,14 @@ from ...helpers.helpers import (
     PGB,
 )
 from ...juju_ import juju_major_version
-from .helpers import check_exposed_connection, fetch_action_get_credentials
+from .helpers import (
+    DATA_INTEGRATOR_APP_NAME,
+    check_exposed_connection,
+    fetch_action_get_credentials,
+)
 
 logger = logging.getLogger(__name__)
 
-DATA_INTEGRATOR_APP_NAME = "data-integrator"
 HACLUSTER_NAME = "hacluster"
 
 if juju_major_version < 3:
@@ -49,7 +53,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
                 PG,
                 application_name=PG,
                 num_units=2,
-                channel="14/edge",
+                channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
                 config={"profile": "testing"},
             ),
             ops_test.model.deploy(
