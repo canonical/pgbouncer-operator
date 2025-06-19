@@ -790,10 +790,10 @@ class TestCharm(unittest.TestCase):
             )
 
 
-@patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+@patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
 class TestCharmSecrets(unittest.TestCase):
     # Needed to have it applied on the charm __init__ function, where _translate_field_to_secret_key() is called
-    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    @patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
     def setUp(self, _):
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
@@ -888,7 +888,7 @@ class TestCharmSecrets(unittest.TestCase):
             )
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    @patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
     def test_migration_from_databag(self, scope, is_leader, _, __):
         """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
         # App has to be leader, unit can be either
@@ -909,7 +909,7 @@ class TestCharmSecrets(unittest.TestCase):
         )
 
     @parameterized.expand([("app", True), ("unit", True), ("unit", False)])
-    @patch("charm.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
+    @patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
     def test_migration_from_single_secret(self, scope, is_leader, _, __):
         """Check if we're moving on to use secrets when live upgrade from databag to Secrets usage."""
         # App has to be leader, unit can be either
