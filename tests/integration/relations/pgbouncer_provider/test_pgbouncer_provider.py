@@ -151,6 +151,10 @@ async def test_database_version(ops_test: OpsTest):
 
 async def test_database_admin_permissions(ops_test: OpsTest):
     """Test admin permissions."""
+    if os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] != "14":
+        pytest.skip(
+            "Skipping check for database and user creation permissions on PostgreSQL above 14, as they are not supported."
+        )
     create_database_query = "CREATE DATABASE another_database;"
     run_create_database_query = await run_sql_on_application_charm(
         ops_test,
@@ -161,10 +165,6 @@ async def test_database_admin_permissions(ops_test: OpsTest):
     )
     assert "no results to fetch" in json.loads(run_create_database_query["results"])
 
-    if os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] != "14":
-        pytest.skip(
-            "Skipping check for user creation on PostgreSQL above 14, as it is not supported."
-        )
     create_user_query = "CREATE USER another_user WITH ENCRYPTED PASSWORD 'test-password';"
     run_create_user_query = await run_sql_on_application_charm(
         ops_test,
