@@ -124,7 +124,7 @@ class TestPgbouncerProvider(unittest.TestCase):
             _password(),
             extra_user_roles=[role.lower() for role in event.extra_user_roles.split(",")]
             + ["relation_access"],
-            in_role="test-db_admin",
+            database="test-db",
         )
         _pg().create_database.assert_called_with(database)
         _dbp_set_credentials.assert_called_with(rel_id, user, _password())
