@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 [dependency-groups]
 charm = [
     "jinja2==3.1.6",
-    "ops==2.22.0",
+    "ops==2.23.0",
     "tenacity==9.1.2; python_version > '3.8'",
     # Focal cannot use 9.1
     "tenacity==9.0.0; python_version < '3.9'",
@@ -35,11 +35,11 @@ libs = [
     "cryptography < 45; python_version < '3.9'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.21.0"
+    "opentelemetry-exporter-otlp-proto-http>=1.21.0"
 ]
 
 format = [
-    "ruff==0.11.13"
+    "ruff==0.12.2"
 ]
 
 lint = [
@@ -47,14 +47,14 @@ lint = [
 ]
 
 unit = [
-    "coverage[toml]==7.9.1; python_version > '3.8'",
+    "coverage[toml]==7.9.2; python_version > '3.8'",
     "pytest==8.4.1; python_version > '3.9'",
     "parameterized==0.9.0"
 ]
 
 integration = [
     "pytest==8.4.1; python_version > '3.9'",
-    "pytest-operator==0.42.0",
+    "pytest-operator==0.43.1",
     'juju==3.6.1.2; python_version > "3.10"',
     "tenacity==9.1.2; python_version > '3.8'",
     "mailmanclient==3.3.5",
@@ -87,11 +87,6 @@ minversion = "6.0"
 log_cli_level = "INFO"
 asyncio_mode = "auto"
 markers = ["juju2", "juju3", "juju_secrets"]
-
-# Formatting tools configuration
-[tool.black]
-line-length = 99
-target-version = ["py38"]
 
 # Linting tools configuration
 [tool.ruff]
