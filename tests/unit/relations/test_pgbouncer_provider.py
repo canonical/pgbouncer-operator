@@ -122,7 +122,8 @@ class TestPgbouncerProvider(unittest.TestCase):
         _pg().create_user.assert_called_with(
             user,
             _password(),
-            extra_user_roles=[role.lower() for role in event.extra_user_roles.split(",")],
+            extra_user_roles=[role.lower() for role in event.extra_user_roles.split(",")]
+            + ["relation_access"],
             in_role="test-db_admin",
         )
         _pg().create_database.assert_called_with(database)

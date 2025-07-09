@@ -177,6 +177,11 @@ class PgBouncerCharm(TypedCharmBase):
             return f"/dev/shm/{self.app.name}_{nonce}"  # noqa: S108
         return ""
 
+    @property
+    def is_blocked(self) -> bool:
+        """Returns whether the unit is in a blocked state."""
+        return isinstance(self.unit.status, BlockedStatus)
+
     # =======================
     #  Charm Lifecycle Hooks
     # =======================
