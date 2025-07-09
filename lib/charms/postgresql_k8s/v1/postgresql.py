@@ -275,6 +275,7 @@ class PostgreSQL:
                     )
                 )
             with self._connect_to_database(database=database) as conn, conn.cursor() as curs:
+                curs.execute(SQL("SET ROLE {};").format(Identifier(ROLE_DATABASES_OWNER)))
                 curs.execute(SQL("SELECT set_up_predefined_catalog_roles();"))
         except psycopg2.Error as e:
             logger.error(f"Failed to create database: {e}")
