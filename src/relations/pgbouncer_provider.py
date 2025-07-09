@@ -481,6 +481,8 @@ class PgBouncerProvider(Object):
                 continue
             for data in relation.data.values():
                 database = data.get("database")
-                if len(database) > 49 or database in ["postgres", "template0", "template1"]:
+                if database is not None and (
+                    len(database) > 49 or database in ["postgres", "template0", "template1"]
+                ):
                     return True
         return False
