@@ -35,7 +35,7 @@ libs = [
     "cryptography < 45; python_version < '3.9'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http>=1.21.0"
+    "opentelemetry-exporter-otlp-proto-http==1.21.0"
 ]
 
 format = [
