@@ -179,6 +179,8 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
     ]
     for data_integrator_app_name in data_integrator_apps:
         credentials = get_credentials(juju, f"{data_integrator_app_name}/0")
+        host = credentials["postgresql"]["endpoints"].split(":")[0]
+        port = credentials["postgresql"]["endpoints"].split(":")[1]
         user = credentials["postgresql"]["username"]
         password = credentials["postgresql"]["password"]
         database = credentials["postgresql"]["database"]
@@ -187,7 +189,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         if data_integrator_app_name.endswith(ROLE_BACKUP.replace("_", "-")):
             connection = None
             try:
-                with db_connect(host, operator_password) as connection:
+                with db_connect(host, operator_password, port=port) as connection:
                     connection.autocommit = True
                     with connection.cursor() as cursor:
                         logger.info(
@@ -222,7 +224,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         elif data_integrator_app_name.endswith(ROLE_DBA.replace("_", "-")):
             connection = None
             try:
-                with db_connect(host, operator_password) as connection:
+                with db_connect(host, operator_password, port=port) as connection:
                     connection.autocommit = True
                     with connection.cursor() as cursor:
                         logger.info(
@@ -269,17 +271,13 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                 connect_permission = attributes["permissions"]["connect"]
                 run_backup_commands_permission = attributes["permissions"]["run-backup-commands"]
                 set_user_permission = attributes["permissions"]["set-user"]
-                if (
-                    connect_permission == RoleAttributeValue.ALL_DATABASES
-                    or (
-                        connect_permission == RoleAttributeValue.REQUESTED_DATABASE
-                        and database_to_test == database
-                    )
-                    or database_to_test == OTHER_DATABASE_NAME
+                if connect_permission == RoleAttributeValue.ALL_DATABASES or (
+                    connect_permission == RoleAttributeValue.REQUESTED_DATABASE
+                    and database_to_test == database
                 ):
                     logger.info(f"{message_prefix} can connect to {database_to_test} database")
                     connection = db_connect(
-                        host, password, username=user, database=database_to_test
+                        host, password, username=user, database=database_to_test, port=port
                     )
                     connection.autocommit = True
                     with connection.cursor() as cursor:
@@ -288,7 +286,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                 else:
                     logger.info(f"{message_prefix} can't connect to {database_to_test} database")
                     with pytest.raises(psycopg2.OperationalError):
-                        db_connect(host, password, username=user, database=database_to_test)
+                        db_connect(
+                            host, password, username=user, database=database_to_test, port=port
+                        )
 
                 if connection is not None:
                     auto_escalate_to_database_owner = attributes["auto-escalate-to-database-owner"]
@@ -416,7 +416,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                             cursor.execute(create_view_in_public_schema_statement)
                     else:
                         operator_connection = db_connect(
-                            host, operator_password, database=database_to_test
+                            host, operator_password, database=database_to_test, port=port
                         )
                         operator_connection.autocommit = True
                         operator_cursor = operator_connection.cursor()
@@ -764,7 +764,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                                 cursor.execute(create_database_statement)
 
                             operator_connection = db_connect(
-                                host, operator_password, database=database_to_test
+                                host, operator_password, database=database_to_test, port=port
                             )
                             operator_connection.autocommit = True
                             operator_cursor = operator_connection.cursor()
