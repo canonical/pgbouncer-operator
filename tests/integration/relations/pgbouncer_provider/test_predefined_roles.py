@@ -107,12 +107,12 @@ def test_deploy(juju: jubilant.Juju, charm_noble, predefined_roles_combinations)
 def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C901
     """Check that the data integrator user can perform the expected operations in each database."""
     primary = get_primary(juju, f"{PG}/0")
-    host = get_unit_address(juju, primary)
+    database_host = get_unit_address(juju, primary)
     operator_password = get_password()
     connection = None
     cursor = None
     try:
-        connection = db_connect(host, operator_password)
+        connection = db_connect(database_host, operator_password)
         connection.autocommit = True
         cursor = connection.cursor()
         cursor.execute(f'DROP DATABASE IF EXISTS "{OTHER_DATABASE_NAME}";')
@@ -127,7 +127,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                 databases.append(database)
                 sub_connection = None
                 try:
-                    sub_connection = db_connect(host, operator_password, database=database)
+                    sub_connection = db_connect(
+                        database_host, operator_password, database=database
+                    )
                     sub_connection.autocommit = True
                     with sub_connection.cursor() as sub_cursor:
                         sub_cursor.execute("SELECT schema_name FROM information_schema.schemata;")
@@ -165,7 +167,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
     # Create a schema in the other database to update the pg_hba rules immediately.
     connection = None
     try:
-        with db_connect(host, operator_password, database=OTHER_DATABASE_NAME) as connection:
+        with db_connect(
+            database_host, operator_password, database=OTHER_DATABASE_NAME
+        ) as connection:
             connection.autocommit = True
             with connection.cursor() as cursor:
                 logger.info(f"Creating schema in database {OTHER_DATABASE_NAME}")
@@ -416,7 +420,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                             cursor.execute(create_view_in_public_schema_statement)
                     else:
                         operator_connection = db_connect(
-                            host, operator_password, database=database_to_test, port=port
+                            database_host, operator_password, database=database_to_test
                         )
                         operator_connection.autocommit = True
                         operator_cursor = operator_connection.cursor()
@@ -764,7 +768,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                                 cursor.execute(create_database_statement)
 
                             operator_connection = db_connect(
-                                host, operator_password, database=database_to_test, port=port
+                                database_host, operator_password, database=database_to_test
                             )
                             operator_connection.autocommit = True
                             operator_cursor = operator_connection.cursor()
