@@ -133,7 +133,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                         sub_cursor.execute("SELECT schema_name FROM information_schema.schemata;")
                         for schema in sub_cursor.fetchall():
                             schema_name = schema[0]
-                            if schema_name.startswith("relation-") and schema_name.endswith(
+                            if schema_name.startswith("relation_id_") and schema_name.endswith(
                                 "_schema"
                             ):
                                 logger.info(f"Dropping schema {schema_name} created by the test")
