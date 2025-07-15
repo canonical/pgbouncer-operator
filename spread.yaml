@@ -90,7 +90,7 @@ backends:
       LANDSCAPE_ACCOUNT_NAME: '$(HOST: echo $LANDSCAPE_ACCOUNT_NAME)'
       LANDSCAPE_REGISTRATION_KEY: '$(HOST: echo $LANDSCAPE_REGISTRATION_KEY)'
       POSTGRESQL_CHARM_CHANNEL: 14/edge
-      POSTGRESQL_CHARM_CHANNEL/juju36_pg16: 16/edge
+      POSTGRESQL_CHARM_CHANNEL/juju36_pg16: 16/edge/test-neppel
     systems:
       - ubuntu-24.04:
           username: runner

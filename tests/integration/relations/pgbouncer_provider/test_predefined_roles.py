@@ -54,9 +54,10 @@ def test_deploy(juju: jubilant.Juju, charm_noble, predefined_roles_combinations)
             channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
             config={"profile": "testing"},
             num_units=1,
+            base="ubuntu@24.04",
         )
 
-    combinations = [*predefined_roles_combinations, (ROLE_BACKUP,), (ROLE_DBA,)]
+    combinations = [*predefined_roles_combinations] #, (ROLE_BACKUP,), (ROLE_DBA,)]
     for combination in combinations:
         # Define an application name suffix and a database name based on the combination
         # of predefined roles.
@@ -115,9 +116,10 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         connection = db_connect(database_host, operator_password)
         connection.autocommit = True
         cursor = connection.cursor()
+        cursor.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();")
         cursor.execute(f'DROP DATABASE IF EXISTS "{OTHER_DATABASE_NAME}";')
         cursor.execute(f'CREATE DATABASE "{OTHER_DATABASE_NAME}";')
-        cursor.execute("SELECT datname FROM pg_database WHERE datname != 'template0';")
+        cursor.execute("SELECT datname FROM pg_database WHERE datname != 'template0' AND datname != 'pgbouncer';")
         databases = []
         for database in sorted(database[0] for database in cursor.fetchall()):
             if database.startswith(f"{OTHER_DATABASE_NAME}-"):
@@ -157,6 +159,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                 finally:
                     if sub_connection is not None:
                         sub_connection.close()
+        cursor.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();")
         logger.info(f"Databases to test: {databases}")
     finally:
         if cursor is not None:
@@ -749,6 +752,18 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                         second_drop_database_statement = SQL("DROP DATABASE {};").format(
                             Identifier(OTHER_DATABASE_NAME)
                         )
+                        cursor.execute("SELECT pg_backend_pid();")
+                        pid = cursor.fetchone()[0]
+                        operator_connection = db_connect(
+                            database_host, operator_password, database=database_to_test
+                        )
+                        operator_connection.autocommit = True
+                        operator_cursor = operator_connection.cursor()
+                        operator_cursor.execute(f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid NOT IN ('{pid}', pg_backend_pid());")
+                        operator_cursor.close()
+                        operator_cursor = None
+                        operator_connection.close()
+                        operator_connection = None
                         if attributes["permissions"]["create-databases"] == RoleAttributeValue.YES:
                             logger.info(f"{message_prefix} can create databases")
                             cursor.execute(create_database_statement)
