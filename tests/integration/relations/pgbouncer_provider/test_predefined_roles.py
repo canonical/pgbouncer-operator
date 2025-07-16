@@ -299,7 +299,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                     and database_to_test == database
                 ):
                     logger.info(f"{message_prefix} can connect to {database_to_test} database")
-                    for attempt in Retrying(stop=stop_after_attempt(6), wait=wait_fixed(10), reraise=True):
+                    for attempt in Retrying(
+                        stop=stop_after_attempt(6), wait=wait_fixed(10), reraise=True
+                    ):
                         with attempt:
                             connection = db_connect(
                                 host, password, username=user, database=database_to_test, port=port
