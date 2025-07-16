@@ -10,6 +10,7 @@ from psycopg2.sql import (
     SQL,
     Identifier,
 )
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from ...helpers.helpers import (
     PG,
@@ -298,9 +299,11 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                     and database_to_test == database
                 ):
                     logger.info(f"{message_prefix} can connect to {database_to_test} database")
-                    connection = db_connect(
-                        host, password, username=user, database=database_to_test, port=port
-                    )
+                    for attempt in Retrying(stop=stop_after_attempt(6), wait=wait_fixed(10), reraise=True):
+                        with attempt:
+                            connection = db_connect(
+                                host, password, username=user, database=database_to_test, port=port
+                            )
                     connection.autocommit = True
                     with connection.cursor() as cursor:
                         cursor.execute("SELECT current_database();")
