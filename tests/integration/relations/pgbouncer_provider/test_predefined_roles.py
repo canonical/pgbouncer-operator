@@ -2,7 +2,6 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
-import os
 
 import jubilant
 import psycopg2
@@ -51,7 +50,7 @@ def test_deploy(juju: jubilant.Juju, charm_noble, predefined_roles_combinations)
         logger.info("Deploying database charm")
         juju.deploy(
             PG,
-            channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
+            channel="16/edge/test-neppel",  # os.environ["POSTGRESQL_CHARM_CHANNEL"],
             config={"profile": "testing"},
             num_units=1,
             base="ubuntu@24.04",
