@@ -57,7 +57,7 @@ def test_deploy(juju: jubilant.Juju, charm_noble, predefined_roles_combinations)
             base="ubuntu@24.04",
         )
 
-    combinations = [*predefined_roles_combinations] #, (ROLE_BACKUP,), (ROLE_DBA,)]
+    combinations = [*predefined_roles_combinations, (ROLE_BACKUP,), (ROLE_DBA,)]
     for combination in combinations:
         # Define an application name suffix and a database name based on the combination
         # of predefined roles.
@@ -77,7 +77,7 @@ def test_deploy(juju: jubilant.Juju, charm_noble, predefined_roles_combinations)
         # Deploy the data integrator charm for each combination of predefined roles.
         data_integrator_app_name = f"{DATA_INTEGRATOR_APP_NAME}{suffix}"
         extra_user_roles = (
-            "" if combination[0] in [ROLE_BACKUP, ROLE_DBA] else ",".join(combination)
+            "charmed_stats" if combination[0] in [ROLE_BACKUP, ROLE_DBA] else ",".join(combination)
         )
         if data_integrator_app_name not in juju.status().apps:
             logger.info(
@@ -116,10 +116,14 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         connection = db_connect(database_host, operator_password)
         connection.autocommit = True
         cursor = connection.cursor()
-        cursor.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();")
+        cursor.execute(
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();"
+        )
         cursor.execute(f'DROP DATABASE IF EXISTS "{OTHER_DATABASE_NAME}";')
         cursor.execute(f'CREATE DATABASE "{OTHER_DATABASE_NAME}";')
-        cursor.execute("SELECT datname FROM pg_database WHERE datname != 'template0' AND datname != 'pgbouncer';")
+        cursor.execute(
+            "SELECT datname FROM pg_database WHERE datname != 'template0' AND datname != 'pgbouncer';"
+        )
         databases = []
         for database in sorted(database[0] for database in cursor.fetchall()):
             if database.startswith(f"{OTHER_DATABASE_NAME}-"):
@@ -159,7 +163,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                 finally:
                     if sub_connection is not None:
                         sub_connection.close()
-        cursor.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();")
+        cursor.execute(
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid != pg_backend_pid();"
+        )
         logger.info(f"Databases to test: {databases}")
     finally:
         if cursor is not None:
@@ -196,11 +202,16 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         if data_integrator_app_name.endswith(ROLE_BACKUP.replace("_", "-")):
             connection = None
             try:
-                with db_connect(host, operator_password, port=port) as connection:
+                with db_connect(database_host, operator_password) as connection:
                     connection.autocommit = True
                     with connection.cursor() as cursor:
                         logger.info(
-                            f"Granting {ROLE_BACKUP} role to {user} user to correctly check that role permissions"
+                            f"Granting {ROLE_BACKUP} role to {user} user to correctly check that role permissions (and revoking the charmed_stats role from that user)"
+                        )
+                        cursor.execute(
+                            SQL("REVOKE {} FROM {};").format(
+                                Identifier("charmed_stats"), Identifier(user)
+                            )
                         )
                         cursor.execute(
                             SQL("GRANT {} TO {};").format(
@@ -231,11 +242,16 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         elif data_integrator_app_name.endswith(ROLE_DBA.replace("_", "-")):
             connection = None
             try:
-                with db_connect(host, operator_password, port=port) as connection:
+                with db_connect(database_host, operator_password) as connection:
                     connection.autocommit = True
                     with connection.cursor() as cursor:
                         logger.info(
-                            f"Granting {ROLE_DBA} role to {user} user to correctly check that role permissions"
+                            f"Granting {ROLE_DBA} role to {user} user to correctly check that role permissions permissions (and revoking the charmed_stats role from that user)"
+                        )
+                        cursor.execute(
+                            SQL("REVOKE {} FROM {};").format(
+                                Identifier("charmed_stats"), Identifier(user)
+                            )
                         )
                         cursor.execute(
                             SQL("GRANT {} TO {};").format(Identifier(ROLE_DBA), Identifier(user))
@@ -759,7 +775,9 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
                         )
                         operator_connection.autocommit = True
                         operator_cursor = operator_connection.cursor()
-                        operator_cursor.execute(f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid NOT IN ('{pid}', pg_backend_pid());")
+                        operator_cursor.execute(
+                            f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid NOT IN ('{pid}', pg_backend_pid());"
+                        )
                         operator_cursor.close()
                         operator_cursor = None
                         operator_connection.close()
