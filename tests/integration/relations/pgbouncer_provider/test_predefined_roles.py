@@ -109,7 +109,7 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
     """Check that the data integrator user can perform the expected operations in each database."""
     primary = get_primary(juju, f"{PG}/0")
     database_host = get_unit_address(juju, primary)
-    operator_password = get_password()
+    operator_password = get_password(juju)
     connection = None
     cursor = None
     try:
@@ -173,19 +173,19 @@ def test_operations(juju: jubilant.Juju, predefined_roles) -> None:  # noqa: C90
         if connection is not None:
             connection.close()
 
-    # Create a schema in the other database to update the pg_hba rules immediately.
-    connection = None
-    try:
-        with db_connect(
-            database_host, operator_password, database=OTHER_DATABASE_NAME
-        ) as connection:
-            connection.autocommit = True
-            with connection.cursor() as cursor:
-                logger.info(f"Creating schema in database {OTHER_DATABASE_NAME}")
-                cursor.execute(f'CREATE SCHEMA "{OTHER_DATABASE_NAME}";')
-    finally:
-        if connection is not None:
-            connection.close()
+    # # Create a schema in the other database to update the pg_hba rules immediately.
+    # connection = None
+    # try:
+    #     with db_connect(
+    #         database_host, operator_password, database=OTHER_DATABASE_NAME
+    #     ) as connection:
+    #         connection.autocommit = True
+    #         with connection.cursor() as cursor:
+    #             logger.info(f"Creating schema in database {OTHER_DATABASE_NAME}")
+    #             cursor.execute(f'CREATE SCHEMA "{OTHER_DATABASE_NAME}";')
+    # finally:
+    #     if connection is not None:
+    #         connection.close()
 
     data_integrator_apps = [
         app for app in juju.status().apps if app.startswith(DATA_INTEGRATOR_APP_NAME)

@@ -53,15 +53,12 @@ from charms.postgresql_k8s.v0.postgresql import (
 )
 from charms.postgresql_k8s.v1.postgresql import (
     ACCESS_GROUP_RELATION,
-    INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
-    INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,
     PostgreSQLDeleteUserError,
     PostgreSQLGetPostgreSQLVersionError,
 )
 from ops import (
-    ActiveStatus,
     Application,
     BlockedStatus,
     CharmBase,
@@ -159,6 +156,8 @@ class PgBouncerProvider(Object):
             PERMISSIONS_GROUP_ADMIN in extra_user_roles
             or "superuser" in extra_user_roles
             or "createdb" in extra_user_roles
+            or "charmed_admin" in extra_user_roles
+            or "charmed_backup" in extra_user_roles
             or "charmed_databases_owner" in extra_user_roles
             or "charmed_dba" in extra_user_roles
             or "charmed_dml" in extra_user_roles
@@ -205,8 +204,6 @@ class PgBouncerProvider(Object):
             # set up auth function
             self.charm.backend.remove_auth_function(dbs=[database])
             self.charm.backend.initialise_auth_function(dbs=[database])
-
-            self._update_unit_status(event.relation)
         except (
             PostgreSQLCreateDatabaseError,
             PostgreSQLCreateUserError,
@@ -275,8 +272,6 @@ class PgBouncerProvider(Object):
                 f"Failed to delete user during {self.relation_name} relation broken event"
             )
             raise
-
-        self._update_unit_status(event.relation)
 
     def update_connection_info(self, relation):
         """Updates client-facing relation information."""
@@ -427,62 +422,3 @@ class PgBouncerProvider(Object):
         for entry in relation.data:
             if isinstance(entry, Application) and entry != self.charm.app:
                 return entry
-
-    def _update_unit_status(self, relation: Relation) -> None:
-        """# Clean up Blocked status if it's due to invalid role or database name."""
-        if (
-            (
-                self.charm.is_blocked
-                and (
-                    self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
-                    or self.charm.unit.status.message == INVALID_DATABASE_NAME_BLOCKING_MESSAGE
-                )
-            )
-            and not self.check_for_invalid_extra_user_roles(relation.id)
-            and not self.check_for_invalid_database_name(relation.id)
-        ):
-            self.charm.set_unit_status(ActiveStatus())
-        if (
-            self.charm.is_blocked
-            and "Failed to initialize relation" in self.charm.unit.status.message
-        ):
-            self.charm.set_unit_status(ActiveStatus())
-
-    def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:
-        """Checks if there are relations with invalid extra user roles.
-
-        Args:
-            relation_id: current relation to be skipped.
-        """
-        valid_privileges, valid_roles = self.charm.postgresql.list_valid_privileges_and_roles()
-        for relation in self.charm.model.relations.get(self.relation_name, []):
-            if relation.id == relation_id:
-                continue
-            for data in relation.data.values():
-                extra_user_roles = data.get("extra-user-roles")
-                extra_user_roles = self._sanitize_extra_roles(extra_user_roles)
-                for extra_user_role in extra_user_roles:
-                    if (
-                        extra_user_role not in valid_privileges
-                        and extra_user_role not in valid_roles
-                        and extra_user_role != "createdb"
-                    ):
-                        return True
-        return False
-
-    def check_for_invalid_database_name(self, relation_id: int) -> bool:
-        """Checks if there are relations with invalid database names.
-
-        Args:
-            relation_id: current relation to be skipped.
-        """
-        for relation in self.charm.model.relations.get(self.relation_name, []):
-            if relation.id == relation_id:
-                continue
-            for data in relation.data.values():
-                database = data.get("database")
-                if database is not None and (
-                    len(database) > 49 or database in ["postgres", "template0", "template1"]
-                ):
-                    return True
-        return False

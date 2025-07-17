@@ -39,19 +39,21 @@ def get_credentials(
 
 
 def get_password(
+    juju: jubilant.Juju,
     username: str = "operator",
     database_app_name: str = PG,
 ) -> str:
     """Retrieve a user password from the secret.
 
     Args:
+        juju: the jubilant.Juju instance.
         username: the user to get the password.
         database_app_name: the app for getting the secret
 
     Returns:
         the user password.
     """
-    secret = get_secret_by_label(label=f"{PEER}.{database_app_name}.app")
+    secret = get_secret_by_label(juju, label=f"{PEER}.{database_app_name}.app")
     password = secret.get(f"{username}-password")
 
     return password
@@ -75,19 +77,20 @@ def get_primary(juju: jubilant.Juju, unit_name: str) -> str:
     return action.results["primary"]
 
 
-def get_secret_by_label(label: str) -> dict[str, str]:
+def get_secret_by_label(juju: jubilant.Juju, label: str) -> dict[str, str]:
     # Subprocess calls are used because some Juju commands are still missing in jubilant:
     # https://github.com/canonical/jubilant/issues/117.
-    secrets_raw = subprocess.run(["juju", "list-secrets"], capture_output=True).stdout.decode(
-        "utf-8"
-    )
+    secrets_raw = subprocess.run(
+        ["juju", "list-secrets", "-m", juju.model], capture_output=True
+    ).stdout.decode("utf-8")
     secret_ids = [
         secret_line.split()[0] for secret_line in secrets_raw.split("\n")[1:] if secret_line
     ]
 
     for secret_id in secret_ids:
         secret_data_raw = subprocess.run(
-            ["juju", "show-secret", "--format", "json", "--reveal", secret_id], capture_output=True
+            ["juju", "show-secret", "-m", juju.model, "--format", "json", "--reveal", secret_id],
+            capture_output=True,
         ).stdout
         secret_data = json.loads(secret_data_raw)
 
