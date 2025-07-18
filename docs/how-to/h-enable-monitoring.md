@@ -51,9 +51,11 @@ juju relate pgbouncer-cos-agent pgbouncer:cos-agent
 juju relate pgbouncer-cos-agent data-integrator:juju-info
 ```
 
+>**Note**: use different grafana-agent deployments (juju applications) for pgbouncer and postgresql charms (due to the subordinate nature of grafana-agent operator).
+
 After this is complete, Grafana will show the new dashboards: `PgBouncer Exporter` and allows access for PgBouncer logs on Loki.
 
-The example of `juju status` for Charmed PostgreSQL K8s + PgBouncer K8s model:
+The example of `juju status` for Charmed PostgreSQL + PgBouncer model:
 ```shell
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
 tutorial  lxd         localhost/localhost  3.1.8    unsupported  01:24:48+02:00
