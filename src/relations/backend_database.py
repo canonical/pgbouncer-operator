@@ -217,7 +217,11 @@ class BackendDatabaseRequires(Object):
         hashed_password = get_md5_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
-        self.postgres.create_user(self.auth_user, hashed_password, admin=True)
+        self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
+            self.postgres, PostgreSQLv0
+        ) else self.postgres.create_user(
+            self.auth_user, hashed_password, admin=True, database=self.database.database
+        )
         self.initialise_auth_function(self.collect_databases())
 
         hashed_password = get_md5_password(self.auth_user, plaintext_password)
@@ -290,6 +294,9 @@ class BackendDatabaseRequires(Object):
         if planned_units < len(self.charm.peers.relation.units) and planned_units != 0:
             # check that we're scaling down, but remove the relation if we're removing pgbouncer
             # entirely.
+            return
+
+        if self.database.database in ["postgres", "template0", "template1"]:
             return
 
         try:

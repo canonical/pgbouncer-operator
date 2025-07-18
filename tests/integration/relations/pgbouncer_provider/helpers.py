@@ -298,7 +298,11 @@ def check_exposed_connection(credentials, tls):
 
 
 def db_connect(
-    host: str, password: str, username: str = "operator", database: str = "postgres"
+    host: str,
+    password: str,
+    username: str = "operator",
+    database: str = "postgres",
+    port: int = 5432,
 ) -> psycopg2.extensions.connection:
     """Returns psycopg2 connection object linked to postgres db in the given host.
 
@@ -307,12 +311,13 @@ def db_connect(
         password: user password
         username: username to connect with
         database: database to connect to
+        port: port to connect to
 
     Returns:
         psycopg2 connection object linked to postgres db, under "operator" user.
     """
     return psycopg2.connect(
-        f"dbname='{database}' user='{username}' host='{host}' password='{password}' connect_timeout=10"
+        f"dbname='{database}' user='{username}' host='{host}' port={port} password='{password}' connect_timeout=10"
     )
 
 

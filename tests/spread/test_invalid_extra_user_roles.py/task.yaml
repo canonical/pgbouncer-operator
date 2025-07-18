@@ -1,6 +1,6 @@
-summary: relations/pgbouncer_provider/test_predefined_dba_role.py
+summary: relations/pgbouncer_provider/test_invalid_extra_user_roles.py
 environment:
-  TEST_MODULE: relations/pgbouncer_provider/test_predefined_dba_role.py
+  TEST_MODULE: relations/pgbouncer_provider/test_invalid_extra_user_roles.py
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
 artifacts:

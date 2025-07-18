@@ -55,6 +55,11 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
                 CLIENT_APP_NAME,
                 application_name=CLIENT_APP_NAME,
                 channel="edge",
+                config=(
+                    {"extra_user_roles": "CREATEDB,CREATEROLE"}
+                    if os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] == "14"
+                    else None
+                ),
             ),
             ops_test.model.deploy(
                 charm,
