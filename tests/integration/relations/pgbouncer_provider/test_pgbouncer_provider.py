@@ -251,7 +251,7 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
         application_name=ANOTHER_APPLICATION_APP_NAME,
         channel="edge",
     )
-    await ops_test.model.wait_for_idle(status="active")
+    await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active")
 
     # Try relate the new application with the database.
     try:
@@ -294,7 +294,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(ops_test
     second_cluster_relation = await ops_test.model.add_relation(
         f"{CLIENT_APP_NAME}:{MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME}", PGB_2
     )
-    await ops_test.model.wait_for_idle(status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", timeout=1000)
 
     # Retrieve the connection string to both database clusters using the relation ids and assert
     # they are different.
@@ -317,7 +317,7 @@ async def test_an_application_can_connect_to_multiple_database_clusters(ops_test
     await ops_test.model.applications[PGB_2].remove_relation(
         f"{PGB_2}:database", f"{CLIENT_APP_NAME}:{MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME}"
     )
-    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="active", timeout=1400)
+    await ops_test.model.wait_for_idle(apps=[CLIENT_APP_NAME], status="blocked", timeout=1400)
 
 
 async def test_an_application_can_request_multiple_databases(ops_test: OpsTest):

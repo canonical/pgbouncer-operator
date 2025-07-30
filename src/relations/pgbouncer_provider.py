@@ -223,6 +223,8 @@ class PgBouncerProvider(Object):
         self.charm.render_pgb_config()
         self.set_ready()
 
+        self.charm.backend.sync_hba(user)
+
         # Share the credentials and updated connection info with the client application.
         self.database_provides.set_credentials(rel_id, user, password)
         # Set the database name
