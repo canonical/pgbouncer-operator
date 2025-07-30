@@ -294,7 +294,9 @@ async def test_an_application_can_connect_to_multiple_database_clusters(ops_test
     second_cluster_relation = await ops_test.model.add_relation(
         f"{CLIENT_APP_NAME}:{MULTIPLE_DATABASE_CLUSTERS_RELATION_NAME}", PGB_2
     )
-    await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(
+        apps=[*APP_NAMES, PGB, PGB_2], status="active", timeout=1000
+    )
 
     # Retrieve the connection string to both database clusters using the relation ids and assert
     # they are different.
