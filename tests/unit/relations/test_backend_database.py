@@ -86,7 +86,9 @@ class TestBackendDatabaseRelation(unittest.TestCase):
         self.backend._on_database_created(mock_event)
         hash_pw = get_md5_password(self.backend.auth_user, pw)
 
-        postgres.create_user.assert_called_with(self.backend.auth_user, hash_pw, admin=True)
+        postgres.create_user.assert_called_with(
+            self.backend.auth_user, hash_pw, admin=True, database="pgbouncer"
+        )
         _init_auth.assert_has_calls([call([self.backend.database.database, "postgres"])])
 
         _render_prometheus_service.assert_called_with()

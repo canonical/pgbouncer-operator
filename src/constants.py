@@ -10,6 +10,14 @@ PG = "postgres"
 PG_USER = "snap_daemon"
 INI_NAME = "pgbouncer.ini"
 
+# TODO: move those constants to the charm library.
+BACKUP_USER = "backup"
+REPLICATION_USER = "replication"
+REWIND_USER = "rewind"
+USER = "operator"
+MONITORING_USER = "monitoring"
+SYSTEM_USERS = [REPLICATION_USER, REWIND_USER, USER, MONITORING_USER]
+
 # Snap constants.
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
 PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
