@@ -260,7 +260,7 @@ class DbProvides(Object):
             if isinstance(self.charm.backend.postgres, PostgreSQLv1):
                 self.charm.backend.postgres.create_database(database)
                 self.charm.backend.postgres.create_user(
-                    user, password, admin=self.admin, in_role=f"{database}_admin"
+                    user, password, admin=self.admin, database=database
                 )
             else:
                 self.charm.backend.postgres.create_user(user, password, admin=self.admin)
@@ -281,6 +281,8 @@ class DbProvides(Object):
         # set up auth function
         self.charm.backend.remove_auth_function(dbs=[database])
         self.charm.backend.initialise_auth_function([database])
+
+        self.charm.backend.sync_hba(user)
 
     def _on_relation_changed(self, change_event: RelationChangedEvent):
         """Handle db-relation-changed event.

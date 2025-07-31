@@ -52,6 +52,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQL as PostgreSQLv0,
 )
 from charms.postgresql_k8s.v1.postgresql import (
+    ACCESS_GROUP_RELATION,
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,
     PostgreSQLDeleteUserError,
@@ -147,6 +148,7 @@ class PgBouncerProvider(Object):
 
         # Make sure that certain groups are not in the list
         extra_user_roles = self.sanitize_extra_roles(event.extra_user_roles)
+        extra_user_roles.append(ACCESS_GROUP_RELATION)
 
         dbs = self.charm.generate_relation_databases()
         dbs[str(rel_id)] = {"name": database, "legacy": False}
@@ -154,6 +156,8 @@ class PgBouncerProvider(Object):
             PERMISSIONS_GROUP_ADMIN in extra_user_roles
             or "superuser" in extra_user_roles
             or "createdb" in extra_user_roles
+            or "charmed_admin" in extra_user_roles
+            or "charmed_backup" in extra_user_roles
             or "charmed_databases_owner" in extra_user_roles
             or "charmed_dba" in extra_user_roles
             or "charmed_dml" in extra_user_roles
@@ -195,7 +199,7 @@ class PgBouncerProvider(Object):
                 logger.debug("creating database")
                 self.charm.backend.postgres.create_database(database)
                 self.charm.backend.postgres.create_user(
-                    user, password, extra_user_roles=extra_user_roles, in_role=f"{database}_admin"
+                    user, password, extra_user_roles=extra_user_roles, database=database
                 )
             # set up auth function
             self.charm.backend.remove_auth_function(dbs=[database])
@@ -205,14 +209,21 @@ class PgBouncerProvider(Object):
             PostgreSQLCreateUserError,
             PostgreSQLGetPostgreSQLVersionError,
         ) as e:
-            logger.exception(e)
             self.charm.unit.status = BlockedStatus(
-                f"Failed to initialize {self.relation_name} relation"
+                e.message
+                if (
+                    issubclass(type(e), PostgreSQLCreateDatabaseError)
+                    or issubclass(type(e), PostgreSQLCreateUserError)
+                )
+                and e.message is not None
+                else f"Failed to initialize relation {self.relation_name}"
             )
             return
 
         self.charm.render_pgb_config()
         self.set_ready()
+
+        self.charm.backend.sync_hba(user)
 
         # Share the credentials and updated connection info with the client application.
         self.database_provides.set_credentials(rel_id, user, password)

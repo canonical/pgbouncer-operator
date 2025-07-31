@@ -67,6 +67,7 @@ from ops.model import (
     Relation,
     WaitingStatus,
 )
+from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import (
     APP_SCOPE,
@@ -217,7 +218,11 @@ class BackendDatabaseRequires(Object):
         hashed_password = get_md5_password(self.auth_user, plaintext_password)
         # create authentication user on postgres database, so we can authenticate other users
         # later on
-        self.postgres.create_user(self.auth_user, hashed_password, admin=True)
+        self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
+            self.postgres, PostgreSQLv0
+        ) else self.postgres.create_user(
+            self.auth_user, hashed_password, admin=True, database=self.database.database
+        )
         self.initialise_auth_function(self.collect_databases())
 
         hashed_password = get_md5_password(self.auth_user, plaintext_password)
@@ -290,6 +295,9 @@ class BackendDatabaseRequires(Object):
         if planned_units < len(self.charm.peers.relation.units) and planned_units != 0:
             # check that we're scaling down, but remove the relation if we're removing pgbouncer
             # entirely.
+            return
+
+        if self.database.database in ["postgres", "template0", "template1"]:
             return
 
         try:
@@ -412,6 +420,16 @@ class BackendDatabaseRequires(Object):
         )
 
     @property
+    def backend_version(self) -> str:
+        """Backend Postgresql version."""
+        if not self.relation:
+            return ""
+
+        if version := self.database.fetch_relation_field(self.relation.id, "version"):
+            return version
+        return ""
+
+    @property
     def auth_user(self) -> Optional[str]:
         """Username for auth_user."""
         if not self.relation:
@@ -508,3 +526,17 @@ class BackendDatabaseRequires(Object):
             self.charm.unit.status = WaitingStatus(wait_str)
             return False
         return True
+
+    def sync_hba(self, user: str) -> None:
+        """Wait for user to appear in pg_hba table."""
+        # Check for version supporting hardening
+        if self.backend_version and self.backend_version < "14.16":
+            return
+
+        try:
+            for attempt in Retrying(stop=stop_after_delay(90), wait=wait_fixed(15)):
+                with attempt:
+                    if not self.postgres.is_user_in_hba(user):
+                        raise Exception("pg_hba not ready")
+        except RetryError:
+            logger.warning("database requested: Unable to check pg_hba rule update")

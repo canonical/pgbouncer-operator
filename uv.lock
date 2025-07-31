@@ -994,6 +994,18 @@ wheels = [
 ]
 
 [[package]]
+name = "jubilant"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e3/2a/6f01a32b2821cfbdb4c4a1506a845ead11fbb3099568c40be0f40791254f/jubilant-1.2.0.tar.gz", hash = "sha256:966c2aef620ecaac84655fed2d179cfe4407ada08cf028c57a88116cec9fcc16", size = 24490, upload-time = "2025-06-12T01:22:38.953Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/f8/9facac17df370d13eb701ff5bb5c132716f2034181aa51bfac103154c08d/jubilant-1.2.0-py3-none-any.whl", hash = "sha256:a43833e7c4d88ea6709a179d9ea5856a233beca9788479f533acdb1c1ab2a707", size = 23700, upload-time = "2025-06-12T01:22:37.409Z" },
+]
+
+[[package]]
 name = "juju"
 version = "3.5.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1440,6 +1452,7 @@ format = [
 integration = [
     { name = "allure-pytest" },
     { name = "allure-pytest-default-results" },
+    { name = "jubilant" },
     { name = "juju", version = "3.6.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "landscape-api-py3" },
     { name = "mailmanclient" },
@@ -1485,6 +1498,7 @@ format = [{ name = "ruff", specifier = "==0.12.2" }]
 integration = [
     { name = "allure-pytest", specifier = "==2.14.3" },
     { name = "allure-pytest-default-results", specifier = "==0.1.3" },
+    { name = "jubilant", specifier = "==1.2.0" },
     { name = "juju", marker = "python_full_version >= '3.11'", specifier = "==3.6.1.2" },
     { name = "landscape-api-py3", specifier = "==0.9.0" },
     { name = "mailmanclient", specifier = "==3.3.5" },
