@@ -56,6 +56,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, charm_focal) -> None:
             config=mailman_config,
             series="focal",
         )
+        await ops_test.model.wait_for_idle(apps=[MAILMAN3, PG], status="active")
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)
 
