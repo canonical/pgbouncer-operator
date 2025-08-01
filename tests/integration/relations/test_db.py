@@ -55,6 +55,7 @@ async def test_mailman3_core_db(ops_test: OpsTest, charm_focal) -> None:
             config=mailman_config,
             series="focal",
         )
+        await ops_test.model.wait_for_idle(apps=[MAILMAN3, PG], status="active")
         pgb_user, pgb_pass = await get_backend_user_pass(ops_test, backend_relation)
         await check_databases_creation(ops_test, ["mailman3"], pgb_user, pgb_pass)
 
@@ -126,9 +127,10 @@ async def test_extensions(ops_test: OpsTest, charm):
         # Pgbouncer enters a blocked status without a postgres backend database relation
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
         await ops_test.model.wait_for_idle(apps=[pgb_jammy], status="blocked", timeout=600)
-        assert (
-            ops_test.model.units[f"{pgb_jammy}/0"].workload_status_message
-            == EXTENSIONS_BLOCKING_MESSAGE
+        await ops_test.model.block_until(
+            lambda: ops_test.model.applications[pgb_jammy].units[0].workload_status_message
+            == EXTENSIONS_BLOCKING_MESSAGE,
+            timeout=300,
         )
 
         logger.info("Relating with enabled extensions")
