@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 import logging
 from asyncio import gather
+from time import sleep
 
 import pytest
 from mailmanclient import Client
@@ -124,10 +125,10 @@ async def test_extensions(ops_test: OpsTest, charm):
         await ops_test.model.add_relation(PG, pgb_jammy)
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:db", f"{pgb_jammy}:db")
         # Pgbouncer enters a blocked status without a postgres backend database relation
-        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600, idle_period=30)
-        await ops_test.model.wait_for_idle(
-            apps=[pgb_jammy], status="blocked", timeout=600, idle_period=30
-        )
+        await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
+        # Tactical sleep to wait for hba check to release
+        sleep(60)
+        await ops_test.model.wait_for_idle(apps=[pgb_jammy], status="blocked", timeout=600)
         assert (
             ops_test.model.units[f"{pgb_jammy}/0"].workload_status_message
             == EXTENSIONS_BLOCKING_MESSAGE
