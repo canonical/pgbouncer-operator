@@ -1,0 +1,155 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  ubuntu-advantage/2 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/4 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/6 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/7 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/8 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/9 [idle] active: Attached (esm-apps,esm-infra)
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/3 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.8    unsupported  01:56:47Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge   73  no       
+pgbouncer            1.21.0   active       3  pgbouncer                           0  no       
+postgresql           14.18    active       3  postgresql           14/edge      871  no       
+postgresql-test-app           active       3  postgresql-test-app  latest/edge  398  no       received database credentials of the first database
+ubuntu-advantage              active       6  ubuntu-advantage     latest/edge  148  no       Attached (esm-apps,esm-infra)
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0   active    idle   0        10.54.238.43              received database credentials of the first database
+  pgbouncer/2           active    idle            10.54.238.43              
+  ubuntu-advantage/6    active    idle            10.54.238.43              Attached (esm-apps,esm-infra)
+postgresql-test-app/2*  active    idle   2        10.54.238.222             received database credentials of the first database
+  pgbouncer/0*          active    idle            10.54.238.222             
+  ubuntu-advantage/2    active    idle            10.54.238.222             Attached (esm-apps,esm-infra)
+postgresql-test-app/3   active    idle   6        10.54.238.5               received database credentials of the first database
+  pgbouncer/3           active    idle            10.54.238.5               
+  ubuntu-advantage/9*   active    idle            10.54.238.5               Attached (esm-apps,esm-infra)
+postgresql/0*           active    idle   3        10.54.238.18    5432/tcp  Primary
+  ubuntu-advantage/8    active    idle            10.54.238.18              Attached (esm-apps,esm-infra)
+postgresql/1            active    idle   4        10.54.238.170   5432/tcp  
+  ubuntu-advantage/4    active    idle            10.54.238.170             Attached (esm-apps,esm-infra)
+postgresql/2            active    idle   5        10.54.238.33    5432/tcp  
+  ubuntu-advantage/7    active    idle            10.54.238.33              Attached (esm-apps,esm-infra)
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.54.238.43   juju-7f165c-0  ubuntu@22.04      Running
+2        started  10.54.238.222  juju-7f165c-2  ubuntu@22.04      Running
+3        started  10.54.238.18   juju-7f165c-3  ubuntu@22.04      Running
+4        started  10.54.238.170  juju-7f165c-4  ubuntu@22.04      Running
+5        started  10.54.238.33   juju-7f165c-5  ubuntu@22.04      Running
+6        started  10.54.238.5    juju-7f165c-6  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-3: 01:39:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:39:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:39:11 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 01:40:12 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 494, in request
+    self.endheaders()
+  File "/usr/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 325, in connect
+    self.sock = self._new_conn()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7f31b254a830>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='10.54.238.18', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f31b254a830>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 571, in are_replicas_up
+    response = requests.get(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.54.238.18', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f31b254a830>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-postgresql-0: 01:40:41 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-postgresql-0: 01:40:53 ERROR unit.postgresql/0.juju-log database-peers:5: Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-2: 01:41:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:41:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 01:41:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:41:56 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-5: 01:42:19 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:42:19 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:42:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:42:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:42:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 01:42:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:43:00 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-0: 01:43:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:43:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:43:28 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:43:34 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-4: 01:43:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:43:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:43:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-0: 01:50:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-2: 01:50:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-4: 01:50:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-6: 01:50:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-7: 01:50:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-8: 01:50:08 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-6: 01:53:12 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:53:12 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-3: 01:53:12 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-9: 01:53:15 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-3: 01:53:17 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
