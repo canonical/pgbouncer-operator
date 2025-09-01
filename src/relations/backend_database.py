@@ -180,7 +180,7 @@ class BackendDatabaseRequires(Object):
         except psycopg2.Error:
             return
 
-        self.charm.set_secret(APP_SCOPE, ADMIN_PASSWORD_KEY, password)
+        self.charm.set_secret(APP_SCOPE, password_key, password)
         return hashed_password
 
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
