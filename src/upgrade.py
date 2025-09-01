@@ -95,7 +95,9 @@ class PgbouncerUpgrade(DataUpgrade):
             logger.error("Failed to generate admin console user")
             return
         self.charm.set_secret(
-            APP_SCOPE, AUTH_FILE_DATABAG_KEY, f'{auth_file}\n"{self.backend}" "{hashed_password}"'
+            APP_SCOPE,
+            AUTH_FILE_DATABAG_KEY,
+            f'{auth_file}\n"{self.charm.backend.admin_user}" "{hashed_password}"',
         )
 
     def _handle_md5_monitoring_auth(self) -> None:
