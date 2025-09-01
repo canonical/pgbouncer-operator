@@ -34,7 +34,7 @@ class TestBackendDatabaseRelation(unittest.TestCase):
     @patch("charm.PgBouncerCharm.check_pgb_running", return_value=True)
     @patch("charm.PgBouncerCharm.get_secret", return_value=None)
     @patch(
-        "relations.backend_database.BackendDatabaseRequires.generate_monitoring_hash",
+        "relations.backend_database.BackendDatabaseRequires.generate_system_user",
         return_value="scram-hash",
     )
     @patch("charm.PgBouncerCharm.render_prometheus_service")
