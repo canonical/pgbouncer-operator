@@ -158,6 +158,8 @@ class PgBouncerCharm(TypedCharmBase):
             relation_name="upgrade",
             substrate="vm",
         )
+        if self.backend.relation:
+            logger.error(f"!!!!!!!!!!!!!!!!!{self.backend.database.fetch_relation_data()}")
 
     @property
     def instances_count(self):
