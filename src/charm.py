@@ -874,6 +874,7 @@ class PgBouncerCharm(TypedCharmBase):
                             default_pool_size=default_pool_size,
                             min_pool_size=min_pool_size,
                             reserve_pool_size=reserve_pool_size,
+                            admin_user=self.backend.admin_user,
                             stats_user=self.backend.stats_user,
                             auth_type=auth_type,
                             auth_query=self.backend.auth_query,

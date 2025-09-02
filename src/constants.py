@@ -56,6 +56,7 @@ AUTH_FILE_DATABAG_KEY = "auth_file"
 EXTENSIONS_BLOCKING_MESSAGE = "bad relation request - remote app requested extensions, which are unsupported. Please remove this relation."
 
 # Labels are not confidential
+ADMIN_PASSWORD_KEY = "admin_password"  # noqa: S105
 MONITORING_PASSWORD_KEY = "monitoring_password"  # noqa: S105
 SECRET_LABEL = "secret"  # noqa: S105
 SECRET_INTERNAL_LABEL = "internal-secret"  # noqa: S105
