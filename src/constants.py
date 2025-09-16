@@ -21,7 +21,7 @@ SYSTEM_USERS = [REPLICATION_USER, REWIND_USER, USER, MONITORING_USER]
 # Snap constants.
 PGBOUNCER_SNAP_NAME = "charmed-pgbouncer"
 PGBOUNCER_EXECUTABLE = f"{PGBOUNCER_SNAP_NAME}.pgbouncer"
-SNAP_PACKAGES = [(PGBOUNCER_SNAP_NAME, {"revision": {"aarch64": "17", "x86_64": "18"}})]
+SNAP_PACKAGES = [(PGBOUNCER_SNAP_NAME, {"revision": {"aarch64": "20", "x86_64": "19"}})]
 
 SNAP_COMMON_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/common"
 SNAP_CURRENT_PATH = f"/var/snap/{PGBOUNCER_SNAP_NAME}/current"
