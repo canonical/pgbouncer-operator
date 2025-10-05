@@ -1,0 +1,100 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.9    unsupported  02:01:52Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+another-application           blocked      1  postgresql-test-app  latest/edge  410  no       No database integration available
+another-pgbouncer    1.21.0   active       2  pgbouncer                           1  no       
+another-postgresql   14.19    active       2  postgresql           14/edge      924  no       
+pgbouncer            1.21.0   active       2  pgbouncer                           0  no       
+postgresql           14.19    active       2  postgresql           14/edge      924  no       
+postgresql-test-app           active       2  postgresql-test-app  latest/edge  410  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+another-application/0*  blocked   idle   4        10.0.129.239              No database integration available
+another-postgresql/0*   active    idle   5        10.0.129.127    5432/tcp  Primary
+another-postgresql/1    active    idle   6        10.0.129.76     5432/tcp  
+postgresql-test-app/1*  active    idle   3        10.0.129.15               received database credentials of the first database
+  another-pgbouncer/2*  active    idle            10.0.129.15               
+  pgbouncer/5*          active    idle            10.0.129.15               
+postgresql-test-app/2   active    idle   7        10.0.129.120              received database credentials of the first database
+  another-pgbouncer/7   active    idle            10.0.129.120              
+  pgbouncer/11          active    idle            10.0.129.120              
+postgresql/0            active    idle   1        10.0.129.4      5432/tcp  
+postgresql/1*           active    idle   2        10.0.129.235    5432/tcp  Primary
+
+Machine  State    Address       Inst id        Base          AZ             Message
+1        started  10.0.129.4    juju-d1c9d3-1  ubuntu@22.04  runnervmwhb2z  Running
+2        started  10.0.129.235  juju-d1c9d3-2  ubuntu@22.04  runnervmwhb2z  Running
+3        started  10.0.129.15   juju-d1c9d3-3  ubuntu@22.04  runnervmwhb2z  Running
+4        started  10.0.129.239  juju-d1c9d3-4  ubuntu@22.04  runnervmwhb2z  Running
+5        started  10.0.129.127  juju-d1c9d3-5  ubuntu@22.04  runnervmwhb2z  Running
+6        started  10.0.129.76   juju-d1c9d3-6  ubuntu@22.04  runnervmwhb2z  Running
+7        started  10.0.129.120  juju-d1c9d3-7  ubuntu@22.04  runnervmwhb2z  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:38:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:38:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:38:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:39:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:39:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:39:56 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:40:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:40:00 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:42:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 01:45:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:45:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 01:45:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:45:24 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-3: 01:47:28 ERROR juju.api.watcher error trying to stop watcher: websocket: close sent
+machine-4: 01:48:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:48:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-application-0: 01:48:07 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 01:48:38 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:48:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-postgresql-0: 01:48:39 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-6: 01:48:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:48:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-postgresql-1: 01:48:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-1: 01:49:49 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-test-app-0: 01:49:52 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-0: 01:49:56 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-1: 01:49:56 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-another-application-0: 01:51:24 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-another-postgresql-1: 01:51:26 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-0: 01:51:29 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-3: 01:51:29 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-pgbouncer-3: 01:51:32 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:51:32 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-0: 01:51:34 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-another-pgbouncer-1: 01:51:34 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-another-postgresql-0: 01:51:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-another-pgbouncer-1: 01:53:06 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-pgbouncer-3: 01:53:06 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-another-pgbouncer-0: 01:53:08 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-another-postgresql-1: 01:53:30 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-pgbouncer-2: 01:53:45 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-3: 01:54:14 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-0: 01:54:14 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-2: 01:54:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-1: 01:54:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-4: 01:54:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-5: 01:54:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-6: 01:54:43 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-pgbouncer-5: 01:54:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-4: 01:54:47 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-2: 01:54:48 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-another-pgbouncer-3: 01:54:49 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-postgresql-1: 01:57:24 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-0: 01:57:35 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-7: 01:59:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 01:59:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 01:59:50 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-11: 01:59:53 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-another-pgbouncer-7: 01:59:54 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-another-pgbouncer-2: 02:01:23 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
