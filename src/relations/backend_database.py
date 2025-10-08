@@ -237,7 +237,14 @@ class BackendDatabaseRequires(Object):
         ) else self.postgres.create_user(
             self.auth_user, hashed_password, admin=True, database=self.database.database
         )
-        self.initialise_auth_function(self.collect_databases())
+        try:
+            self.initialise_auth_function(self.collect_databases())
+        except Exception as e:
+            event.defer()
+            logger.error(
+                f"deferring database-created hook - Unable to initialise auth function: {e}"
+            )
+            return
 
         hashed_password = get_md5_password(self.auth_user, plaintext_password)
 
