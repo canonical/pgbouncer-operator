@@ -37,6 +37,7 @@ from ops import (
     MaintenanceStatus,
     ModelError,
     Relation,
+    SecretRemoveEvent,
     StartEvent,
     WaitingStatus,
     main,
@@ -123,6 +124,7 @@ class PgBouncerCharm(TypedCharmBase):
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(self.on.secret_remove, self._on_secret_remove)
 
         self.peers = Peers(self)
         self.backend = BackendDatabaseRequires(self)
@@ -287,6 +289,17 @@ class PgBouncerCharm(TypedCharmBase):
         shutil.rmtree(f"{SNAP_TMP_DIR}/{self.app.name}")
 
         systemd.daemon_reload()
+
+    def _on_secret_remove(self, event: SecretRemoveEvent) -> None:
+        # A secret removal (entire removal, not just a revision removal) causes
+        # https://github.com/juju/juju/issues/20794. This check is to avoid the
+        # errors that would happen if we tried to remove the revision in that case
+        # (in the revision removal, the label is present).
+        if event.secret.label is None:
+            logger.debug("Secret with no label cannot be removed")
+            return
+        logger.debug(f"Removing secret with label {event.secret.label} revision {event.revision}")
+        event.remove_revision()
 
     @property
     def version(self) -> str:
