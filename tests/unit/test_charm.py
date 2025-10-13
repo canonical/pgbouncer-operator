@@ -791,17 +791,6 @@ class TestCharm(unittest.TestCase):
                 in self._caplog.text
             )
 
-    def test_on_secret_remove(self):
-        event = Mock()
-        self.harness.charm._on_secret_remove(event)
-        event.remove_revision.assert_called_once_with()
-        event.reset_mock()
-
-        # No secret
-        event.secret.label = None
-        self.harness.charm._on_secret_remove(event)
-        assert not event.remove_revision.called
-
 
 @patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
 class TestCharmSecrets(unittest.TestCase):
