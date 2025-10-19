@@ -1,0 +1,30 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.9    unsupported  02:14:01Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer                     unknown      0  pgbouncer            1/stable     639  no       
+postgresql                    waiting    0/3  postgresql           14/edge      938  no       waiting for machine
+postgresql-test-app           waiting    0/3  postgresql-test-app  latest/edge  414  no       waiting for machine
+
+Unit                   Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0  waiting   allocating  0        10.200.99.107          waiting for machine
+postgresql-test-app/1  waiting   allocating  1        10.200.99.53           waiting for machine
+postgresql-test-app/2  waiting   allocating  2        10.200.99.108          waiting for machine
+postgresql/0           waiting   allocating  3        10.200.99.23           waiting for machine
+postgresql/1           waiting   allocating  4        10.200.99.119          waiting for machine
+postgresql/2           waiting   allocating  5        10.200.99.202          waiting for machine
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        pending  10.200.99.107  juju-96320f-0  ubuntu@22.04  runnervmzdgdc  Running
+1        down     10.200.99.53   juju-96320f-1  ubuntu@22.04  runnervmzdgdc  Running
+2        down     10.200.99.108  juju-96320f-2  ubuntu@22.04  runnervmzdgdc  Running
+3        down     10.200.99.23   juju-96320f-3  ubuntu@22.04  runnervmzdgdc  Running
+4        down     10.200.99.119  juju-96320f-4  ubuntu@22.04  runnervmzdgdc  Running
+5        down     10.200.99.202  juju-96320f-5  ubuntu@22.04  runnervmzdgdc  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
