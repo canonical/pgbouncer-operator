@@ -1,0 +1,141 @@
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-1
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] active: 
+  postgresql/2 [executing] active: Primary
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/self-signed-certificates-264
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [executing] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] active: 
+  postgresql/2 [executing] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [executing] maintenance: Executing restart operation
+  postgresql/2 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/focal/mailman3-core-18
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing mailman3,postfix,postfix-policyd-spf-python,spamassassin,spamc
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing python3-mailman-hyperkitty
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing python3-mailman-hyperkitty
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [executing] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] active: Primary
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] active: Primary
+  pgbouncer/1 [idle] waiting: waiting for backend-database relation to connect
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+[32mINFO    [0m root:helpers.py:97 (0, '{"pgbouncer/1":{"workload-version":"1.21.0","machine":"5","opened-ports":null,"public-address":"10.111.122.22","charm":"local:jammy/pgbouncer-1","leader":true,"life":"alive","relation-info":[{"relation-id":10,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"provided-secrets\\": \\"[\\\\\\"mtls-cert\\\\\\"]\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\", \\\\\\"read-only-uris\\\\\\", \\\\\\"entity-name\\\\\\", \\\\\\"entity-password\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.111.122.201:5432","read-only-endpoints":"10.111.122.106:5432,10.111.122.234:5432","secret-tls":"secret://a987d16e-35b8-420b-8bfb-aec4a7db64ef/d3somr8teaec46btgiag","secret-user":"secret://a987d16e-35b8-420b-8bfb-aec4a7db64ef/d3somr8teaec46btgia0","version":"14.19"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.111.122.234/32","ingress-address":"10.111.122.234","private-address":"10.111.122.234"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.111.122.106/32","ingress-address":"10.111.122.106","private-address":"10.111.122.106"}},"postgresql/2":{"in-scope":true,"data":{"egress-subnets":"10.111.122.201/32","ingress-address":"10.111.122.201","private-address":"10.111.122.201"}}}},{"relation-id":12,"endpoint":"db","related-endpoint":"db","application-data":{},"local-unit":{"in-scope":false,"data":null},"related-units":{"mailman3-core/0":{"in-scope":true,"data":{"database":"mailman3","egress-subnets":"10.111.122.22/32","ingress-address":"10.111.122.22","private-address":"10.111.122.22"}}}},{"relation-id":8,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.111.122.22"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.111.122.22/32","ingress-address":"10.111.122.22","pgb_dbs":"468067f3e2f88531db254c9c96b0e335","private-address":"10.111.122.22","userlist_nonce":"dxOj0XFKsssQti6ukrOt6dq3"}}},{"relation-id":9,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.111.122.22/32","ingress-address":"10.111.122.22","private-address":"10.111.122.22","state":"idle"}}}]}}\n', '')
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.11   unsupported  01:57:39Z
+
+App                       Version  Status  Scale  Charm                     Channel        Rev  Exposed  Message
+mailman3-core                      active      1  mailman3-core             latest/stable   18  no       Ready (source version/commit e1d5a03)
+pgbouncer                 1.21.0   active      1  pgbouncer                                  1  no       
+postgresql                14.19    active      3  postgresql                14/edge        942  no       
+self-signed-certificates           active      1  self-signed-certificates  latest/stable  264  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*             active    idle   5        10.111.122.22   25/tcp    Ready (source version/commit e1d5a03)
+  pgbouncer/1*               active    idle            10.111.122.22             
+postgresql/0                 active    idle   0        10.111.122.234  5432/tcp  
+postgresql/1                 active    idle   1        10.111.122.106  5432/tcp  
+postgresql/2*                active    idle   2        10.111.122.201  5432/tcp  Primary
+self-signed-certificates/0*  active    idle   4        10.111.122.23             
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.111.122.234  juju-db64ef-0  ubuntu@22.04  runnervmwhb2z  Running
+1        started  10.111.122.106  juju-db64ef-1  ubuntu@22.04  runnervmwhb2z  Running
+2        started  10.111.122.201  juju-db64ef-2  ubuntu@22.04  runnervmwhb2z  Running
+4        started  10.111.122.23   juju-db64ef-4  ubuntu@22.04  runnervmwhb2z  Running
+5        started  10.111.122.22   juju-db64ef-5  ubuntu@20.04  runnervmwhb2z  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 01:38:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:38:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:39:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:39:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:43:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:43:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 01:45:29 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "a987d16e-35b8-420b-8bfb-aec4a7db64ef:r#5#postgresql": settings a987d16e-35b8-420b-8bfb-aec4a7db64ef:r#5#postgresql not found (not found)
+machine-4: 01:47:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:47:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:48:00 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-2: 01:48:00 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-1: 01:48:06 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-2: 01:50:10 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-0: 01:50:16 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+machine-5: 01:52:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:52:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:56:42 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-1: 01:56:55 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
