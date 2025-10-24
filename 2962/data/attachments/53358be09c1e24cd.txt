@@ -1,0 +1,21 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  data-integrator/2 [idle] active: 
+  pgbouncer/1 [executing] active: VIP: 10.14.101.230
+  pgbouncer/2 [executing] active: 
+  pgbouncer/3 [executing] active: 
+  self-signed-certificates/0 [executing] active: 
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] active: Unit is ready and clustered
+  hacluster/2 [idle] active: Unit is ready and clustered
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] active: 
+  pgbouncer/1 [idle] active: VIP: 10.14.101.230
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active: 
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] active: Unit is ready and clustered
+  hacluster/2 [idle] active: Unit is ready and clustered

@@ -1,0 +1,81 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [executing] active: VIP: 10.14.101.230
+  pgbouncer/2 [executing] active: 
+  pgbouncer/3 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [executing] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/3 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/3 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/3 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [executing] active: 
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [executing] maintenance: Reloading Pgbouncer
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/1 [executing] active: 
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active: 
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_data_integrator_ha:test_data_integrator_ha.py:154 Data integrator host is 10.14.101.235
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.11   unsupported  01:55:55Z
+
+App                       Version  Status  Scale  Charm                     Channel        Rev  Exposed  Message
+data-integrator                    active      3  data-integrator           latest/edge    269  no       
+hacluster                 2.1.2    active      3  hacluster                 2.4/stable     131  no       Unit is ready and clustered
+pgbouncer                 1.21.0   active      3  pgbouncer                                  0  no       
+postgresql                14.19    active      2  postgresql                14/edge        942  no       
+self-signed-certificates           active      1  self-signed-certificates  latest/stable  264  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0            active    idle   0        10.14.101.229             
+  hacluster/2                active    idle            10.14.101.229             Unit is ready and clustered
+  pgbouncer/3                active    idle            10.14.101.229   6432/tcp  
+data-integrator/1*           active    idle   1        10.14.101.235             
+  hacluster/0*               active    idle            10.14.101.235             Unit is ready and clustered
+  pgbouncer/1*               active    idle            10.14.101.235   6432/tcp  
+data-integrator/2            active    idle   2        10.14.101.116             
+  hacluster/1                active    idle            10.14.101.116             Unit is ready and clustered
+  pgbouncer/2                active    idle            10.14.101.116   6432/tcp  
+postgresql/0                 active    idle   4        10.14.101.56    5432/tcp  
+postgresql/1*                active    idle   5        10.14.101.13    5432/tcp  Primary
+self-signed-certificates/0*  active    idle   3        10.14.101.68              
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.14.101.229  juju-21a3ce-0  ubuntu@22.04  runnervmwhb2z  Running
+1        started  10.14.101.235  juju-21a3ce-1  ubuntu@22.04  runnervmwhb2z  Running
+2        started  10.14.101.116  juju-21a3ce-2  ubuntu@22.04  runnervmwhb2z  Running
+3        started  10.14.101.68   juju-21a3ce-3  ubuntu@22.04  runnervmwhb2z  Running
+4        started  10.14.101.56   juju-21a3ce-4  ubuntu@22.04  runnervmwhb2z  Running
+5        started  10.14.101.13   juju-21a3ce-5  ubuntu@22.04  runnervmwhb2z  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-1: 01:38:19 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:38:19 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:40:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:40:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:41:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:41:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:43 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:43 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:42:33 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
