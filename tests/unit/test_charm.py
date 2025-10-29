@@ -16,6 +16,7 @@ from jinja2 import Template
 from ops.model import (
     ActiveStatus,
     BlockedStatus,
+    JujuVersion,
     RelationDataTypeError,
     WaitingStatus,
 )
@@ -792,15 +793,28 @@ class TestCharm(unittest.TestCase):
             )
 
     def test_on_secret_remove(self):
-        event = Mock()
-        self.harness.charm._on_secret_remove(event)
-        event.remove_revision.assert_called_once_with()
-        event.reset_mock()
+        with (
+            patch("ops.model.Model.juju_version", new_callable=PropertyMock) as _juju_version,
+        ):
+            event = Mock()
 
-        # No secret
-        event.secret.label = None
-        self.harness.charm._on_secret_remove(event)
-        assert not event.remove_revision.called
+            # New juju
+            _juju_version.return_value = JujuVersion("3.6.11")
+            self.harness.charm._on_secret_remove(event)
+            event.remove_revision.assert_called_once_with()
+            event.reset_mock()
+
+            # Old juju
+            _juju_version.return_value = JujuVersion("3.6.9")
+            self.harness.charm._on_secret_remove(event)
+            assert not event.remove_revision.called
+            event.reset_mock()
+
+            # No secret
+            event.secret.label = None
+            self.harness.charm._on_secret_remove(event)
+            assert not event.remove_revision.called
+            event = Mock()
 
 
 @patch("ops.JujuVersion.has_secrets", new_callable=PropertyMock, return_value=True)
