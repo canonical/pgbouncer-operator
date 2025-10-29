@@ -793,9 +793,7 @@ class TestCharm(unittest.TestCase):
             )
 
     def test_on_secret_remove(self):
-        with (
-            patch("ops.model.Model.juju_version", new_callable=PropertyMock) as _juju_version,
-        ):
+        with patch("ops.model.Model.juju_version", new_callable=PropertyMock) as _juju_version:
             event = Mock()
 
             # New juju
