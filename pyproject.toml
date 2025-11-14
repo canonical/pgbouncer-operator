@@ -19,7 +19,7 @@ charm = [
     # Focal cannot use 2.9.11
     "psycopg2==2.9.10; python_version < '3.9'",
     "psycopg[c]==3.2.12",
-    "postgresql-charms-single-kernel==16.1.0"
+    "postgresql-charms-single-kernel==16.1.3"
 ]
 
 libs = [
@@ -67,6 +67,9 @@ integration = [
     "allure-pytest-default-results==0.1.3",
     "jubilant==1.5.0"
 ]
+
+[tool.uv.sources]
+postgresql-charms-single-kernel = {url = "https://github.com/canonical/postgresql-single-kernel-library/archive/958fb613e1594f33d47f8b2e4f8e6178a4a06405.zip"}
 
 [tool.uv]
 no-binary = true
