@@ -57,7 +57,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
-from charms.postgresql_k8s.v1.postgresql import PostgreSQL as PostgreSQLv1
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
@@ -68,6 +67,8 @@ from ops.model import (
     Relation,
     WaitingStatus,
 )
+from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.utils.postgresql import PostgreSQL as PostgreSQLv1
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import (
@@ -437,8 +438,16 @@ class BackendDatabaseRequires(Object):
         if None in [endpoint, user, password]:
             return None
 
-        postgresql = PostgreSQLv0 if version.split(".")[0] == "14" else PostgreSQLv1
-        return postgresql(
+        if version.split(".")[0] == "14":
+            return PostgreSQLv0(
+                primary_host=endpoint.split(":")[0],
+                current_host=endpoint.split(":")[0],
+                user=user,
+                password=password,
+                database=database,
+            )
+        return PostgreSQLv1(
+            substrate=Substrates.VM,
             primary_host=endpoint.split(":")[0],
             current_host=endpoint.split(":")[0],
             user=user,

@@ -25,10 +25,6 @@ from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
-from charms.postgresql_k8s.v1.postgresql import (
-    INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
-    INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
-)
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 from jinja2 import Template
 from ops import (
@@ -42,6 +38,10 @@ from ops import (
     StartEvent,
     WaitingStatus,
     main,
+)
+from single_kernel_postgresql.utils.postgresql import (
+    INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
+    INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
 )
 
 from config import CharmConfig
