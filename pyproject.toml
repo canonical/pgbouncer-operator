@@ -18,7 +18,8 @@ charm = [
     "psycopg2==2.9.11; python_version > '3.8'",
     # Focal cannot use 2.9.11
     "psycopg2==2.9.10; python_version < '3.9'",
-    "psycopg[c]==3.2.12"
+    "psycopg[c]==3.2.12",
+    "postgresql-charms-single-kernel==16.1.0"
 ]
 
 libs = [

@@ -57,7 +57,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
-from charms.postgresql_k8s.v1.postgresql import PostgreSQL as PostgreSQLv1
 from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
@@ -68,6 +67,7 @@ from ops.model import (
     Relation,
     WaitingStatus,
 )
+from single_kernel_postgresql.utils.postgresql import PostgreSQL as PostgreSQLv1
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import (

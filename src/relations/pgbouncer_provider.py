@@ -51,13 +51,6 @@ from charms.postgresql_k8s.v0.postgresql import (
 from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQL as PostgreSQLv0,
 )
-from charms.postgresql_k8s.v1.postgresql import (
-    ACCESS_GROUP_RELATION,
-    PostgreSQLCreateDatabaseError,
-    PostgreSQLCreateUserError,
-    PostgreSQLDeleteUserError,
-    PostgreSQLGetPostgreSQLVersionError,
-)
 from ops import (
     Application,
     BlockedStatus,
@@ -67,6 +60,13 @@ from ops import (
     Relation,
     RelationBrokenEvent,
     RelationDepartedEvent,
+)
+from single_kernel_postgresql.utils.postgresql import (
+    ACCESS_GROUP_RELATION,
+    PostgreSQLCreateDatabaseError,
+    PostgreSQLCreateUserError,
+    PostgreSQLDeleteUserError,
+    PostgreSQLGetPostgreSQLVersionError,
 )
 
 from constants import CLIENT_RELATION_NAME, PGB_RUN_DIR
