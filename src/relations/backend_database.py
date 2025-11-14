@@ -67,6 +67,7 @@ from ops.model import (
     Relation,
     WaitingStatus,
 )
+from single_kernel_postgresql.config.literals import Substrates
 from single_kernel_postgresql.utils.postgresql import PostgreSQL as PostgreSQLv1
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
@@ -437,8 +438,16 @@ class BackendDatabaseRequires(Object):
         if None in [endpoint, user, password]:
             return None
 
-        postgresql = PostgreSQLv0 if version.split(".")[0] == "14" else PostgreSQLv1
-        return postgresql(
+        if version.split(".")[0] == "14":
+            return PostgreSQLv0(
+                primary_host=endpoint.split(":")[0],
+                current_host=endpoint.split(":")[0],
+                user=user,
+                password=password,
+                database=database,
+            )
+        return PostgreSQLv1(
+            substrate=Substrates.VM,
             primary_host=endpoint.split(":")[0],
             current_host=endpoint.split(":")[0],
             user=user,
