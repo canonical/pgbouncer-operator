@@ -68,9 +68,6 @@ integration = [
     "jubilant==1.5.0"
 ]
 
-[tool.uv.sources]
-postgresql-charms-single-kernel = {url = "https://github.com/canonical/postgresql-single-kernel-library/archive/958fb613e1594f33d47f8b2e4f8e6178a4a06405.zip"}
-
 [tool.uv]
 no-binary = true
 build-constraint-dependencies = [
