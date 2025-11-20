@@ -20,7 +20,8 @@ jobs:
       - name: Set up environment
         run: |
           sudo snap install charmcraft --classic
-          sudo snap install spread
+          sudo snap install go --classic
+          go install github.com/snapcore/spread/cmd/spread@latest
           pipx install tox
           sudo snap install astral-uv --classic
       - name: Collect spread jobs
@@ -28,12 +29,16 @@ jobs:
         shell: python
         run: |
           import json
+          import pathlib
           import os
           import subprocess
 
           spread_jobs = (
               subprocess.run(
-                  ["spread", "-list", "github-ci"], capture_output=True, check=True, text=True
+                  [pathlib.Path.home() / "go/bin/spread", "-list", "github-ci"],
+                  capture_output=True,
+                  check=True,
+                  text=True,
               )
               .stdout.strip()
               .split("\n")
