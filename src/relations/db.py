@@ -94,7 +94,6 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLCreateUserError,
     PostgreSQLDeleteUserError,
 )
-from charms.postgresql_k8s.v1.postgresql import PostgreSQL as PostgreSQLv1
 from ops.charm import (
     CharmBase,
     RelationBrokenEvent,
@@ -110,6 +109,7 @@ from ops.model import (
     Relation,
     Unit,
 )
+from single_kernel_postgresql.utils.postgresql import PostgreSQL as PostgreSQLv1
 
 from constants import EXTENSIONS_BLOCKING_MESSAGE
 
