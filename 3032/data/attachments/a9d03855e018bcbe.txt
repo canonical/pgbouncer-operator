@@ -1,0 +1,76 @@
+[32mINFO    [0m integration.relations.test_db:test_db.py:111 Deploying test app
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-test-app-420
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-1
+[32mINFO    [0m integration.relations.test_db:test_db.py:123 Relating without enabling extensions
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/0 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/0 [executing] blocked: bad relation request - remote app requested extensions, which are unsupported. Please remove this relation.
+[32mINFO    [0m integration.relations.test_db:test_db.py:136 Relating with enabled extensions
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  02:00:11Z
+
+App                  Version  Status   Scale  Charm                Channel        Rev  Exposed  Message
+mailman3-core                 active       1  mailman3-core        latest/stable   18  no       Ready (source version/commit e1d5a03)
+pgbouncer                     unknown      0  pgbouncer                             0  no       
+pgbouncer-jammy      1.21.0   active       1  pgbouncer                             1  no       
+postgresql           14.19    active       2  postgresql           14/edge        966  no       
+postgresql-test-app           blocked      1  postgresql-test-app  latest/edge    420  no       No database integration available
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*        active    idle   2        10.216.213.45   25/tcp    Ready (source version/commit e1d5a03)
+postgresql-test-app/0*  blocked   idle   3        10.216.213.110            No database integration available
+  pgbouncer-jammy/1*    active    idle            10.216.213.110            
+postgresql/0*           active    idle   0        10.216.213.183  5432/tcp  Primary
+postgresql/1            active    idle   1        10.216.213.127  5432/tcp  
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.216.213.183  juju-5c95f8-0  ubuntu@22.04  runnervmoqczp  Running
+1        started  10.216.213.127  juju-5c95f8-1  ubuntu@22.04  runnervmoqczp  Running
+2        started  10.216.213.45   juju-5c95f8-2  ubuntu@20.04  runnervmoqczp  Running
+3        started  10.216.213.110  juju-5c95f8-3  ubuntu@22.04  runnervmoqczp  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:44:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:44:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:45:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:45:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:48:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:48:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:57:03 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:57:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-jammy-0: 01:57:59 ERROR unit.pgbouncer-jammy/0.juju-log ERROR - `extensions` (pg_trgm:public, unaccent:public) cannot be requested through relations - Please enable extensions through `juju config` and add the relation again.
+unit-mailman3-core-0: 01:58:11 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-0: 01:58:11 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-1: 01:58:12 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
