@@ -1,0 +1,95 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: VIP: 10.149.49.243
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] blocked: ha integration used without vip configuration
+  pgbouncer/1 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [executing] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/1 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/1 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_data_integrator_ha:test_data_integrator_ha.py:154 Data integrator host is 10.149.49.52
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  01:57:29Z
+
+App                       Version  Status  Scale  Charm                     Channel      Rev  Exposed  Message
+data-integrator                    active      3  data-integrator           latest/edge  305  no       
+hacluster                 2.1.2    active      3  hacluster                 2.4/stable   131  no       Unit is ready and clustered
+pgbouncer                 1.21.0   active      3  pgbouncer                                0  no       
+postgresql                14.20    active      2  postgresql                14/edge      981  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable     317  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0            active    idle   0        10.149.49.242             
+  hacluster/1                active    idle            10.149.49.242             Unit is ready and clustered
+  pgbouncer/2                active    idle            10.149.49.242   6432/tcp  
+data-integrator/1            active    idle   1        10.149.49.133             
+  hacluster/2                active    idle            10.149.49.133             Unit is ready and clustered
+  pgbouncer/1                active    idle            10.149.49.133   6432/tcp  
+data-integrator/2*           active    idle   2        10.149.49.52              
+  hacluster/0*               active    idle            10.149.49.52              Unit is ready and clustered
+  pgbouncer/0*               active    idle            10.149.49.52    6432/tcp  
+postgresql/0                 active    idle   4        10.149.49.20    5432/tcp  
+postgresql/1*                active    idle   5        10.149.49.241   5432/tcp  Primary
+self-signed-certificates/0*  active    idle   3        10.149.49.19              
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.149.49.242  juju-57bd75-0  ubuntu@22.04  runnervmh13bl  Running
+1        started  10.149.49.133  juju-57bd75-1  ubuntu@22.04  runnervmh13bl  Running
+2        started  10.149.49.52   juju-57bd75-2  ubuntu@22.04  runnervmh13bl  Running
+3        started  10.149.49.19   juju-57bd75-3  ubuntu@24.04  runnervmh13bl  Running
+4        started  10.149.49.20   juju-57bd75-4  ubuntu@22.04  runnervmh13bl  Running
+5        started  10.149.49.241  juju-57bd75-5  ubuntu@22.04  runnervmh13bl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-3: 01:40:51 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:40:51 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:41:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:41:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:42:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:42:40 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:43:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:43:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:43:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:43:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:43:43 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:43:43 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 01:45:48 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:50:12 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:53:44 ERROR unit.self-signed-certificates/0.juju-log certificates:11: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:53:47 ERROR unit.self-signed-certificates/0.juju-log certificates:11: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:53:50 ERROR unit.self-signed-certificates/0.juju-log certificates:11: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:53:52 ERROR unit.self-signed-certificates/0.juju-log certificates:11: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:54:50 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:01 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:10 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:21 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:30 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:40 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:55:51 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:00 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:11 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:21 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:32 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:41 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:56:52 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:57:00 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:57:07 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:57:17 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

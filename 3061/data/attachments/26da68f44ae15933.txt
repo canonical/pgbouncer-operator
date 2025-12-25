@@ -1,0 +1,139 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-test-app-424
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-981
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-0
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [idle] blocked: No database integration available
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [idle] blocked: No database integration available
+  pgbouncer (not enough units yet - 0/1)
+  postgresql/0 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [idle] blocked: No database integration available
+  pgbouncer/0 [executing] active: 
+  postgresql/0 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  postgresql/0 [executing] active: Primary
+[32mINFO    [0m integration.test_config:test_config.py:67 listen_port
+[32mINFO    [0m integration.test_config:test_config.py:67 metrics_port
+[32mINFO    [0m integration.test_config:test_config.py:67 vip
+[32mINFO    [0m integration.test_config:test_config.py:67 local_connection_type
+[32mINFO    [0m integration.test_config:test_config.py:67 pool_mode
+[32mINFO    [0m integration.test_config:test_config.py:67 max_db_connections
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  01:43:12Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   active      1  pgbouncer                           0  no       
+postgresql           14.20    active      1  postgresql           14/edge      981  no       
+postgresql-test-app           active      1  postgresql-test-app  latest/edge  424  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.165.151.188            received database credentials of the first database
+  pgbouncer/0*          active    idle            10.165.151.188            
+postgresql/0*           active    idle   1        10.165.151.112  5432/tcp  Primary
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.165.151.188  juju-9a7aa7-0  ubuntu@22.04  runnervmh13bl  Running
+1        started  10.165.151.112  juju-9a7aa7-1  ubuntu@22.04  runnervmh13bl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:39:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:39:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 01:42:59 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+listen_port
+  ensure this value is greater than 0 (type=value_error.number.not_gt; limit_value=0)
+unit-pgbouncer-0: 01:43:01 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+metrics_port
+  ensure this value is greater than 0 (type=value_error.number.not_gt; limit_value=0)
+unit-pgbouncer-0: 01:43:03 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+vip
+  value is not a valid IPv4 or IPv6 address (type=value_error.ipvanyaddress)
+unit-pgbouncer-0: 01:43:06 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+local_connection_type
+  unexpected value; permitted: 'tcp', 'uds' (type=value_error.const; given=abcXYZ123; permitted=('tcp', 'uds'))
+unit-pgbouncer-0: 01:43:08 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+pool_mode
+  unexpected value; permitted: 'session', 'transaction', 'statement' (type=value_error.const; given=abcXYZ123; permitted=('session', 'transaction', 'statement'))
+unit-pgbouncer-0: 01:43:10 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 547, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/pydantic/main.py", line 347, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+max_db_connections
+  ensure this value is greater than or equal to 0 (type=value_error.number.not_ge; limit_value=0)
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
