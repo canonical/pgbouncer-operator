@@ -1,0 +1,52 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  01:52:24Z
+
+App                       Version  Status  Scale  Charm                     Channel      Rev  Exposed  Message
+data-integrator                    active      2  data-integrator           latest/edge  307  no       
+pgbouncer                 1.21.0   active      2  pgbouncer                                0  no       
+postgresql                14.20    active      2  postgresql                14/edge      981  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable     317  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*           active    idle   0        10.96.146.70              
+  pgbouncer/0*               active    idle            10.96.146.70    6432/tcp  
+data-integrator/1            active    idle   1        10.96.146.247             
+  pgbouncer/1                active    idle            10.96.146.247   6432/tcp  
+postgresql/0*                active    idle   3        10.96.146.212   5432/tcp  Primary
+postgresql/1                 active    idle   4        10.96.146.195   5432/tcp  
+self-signed-certificates/0*  active    idle   2        10.96.146.155             
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.96.146.70   juju-e4b556-0  ubuntu@24.04  runnervmh13bl  Running
+1        started  10.96.146.247  juju-e4b556-1  ubuntu@24.04  runnervmh13bl  Running
+2        started  10.96.146.155  juju-e4b556-2  ubuntu@24.04  runnervmh13bl  Running
+3        started  10.96.146.212  juju-e4b556-3  ubuntu@22.04  runnervmh13bl  Running
+4        started  10.96.146.195  juju-e4b556-4  ubuntu@22.04  runnervmh13bl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:46:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:46:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:47:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:47:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:47:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:47:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:47:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:47:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:48:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:48:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 01:50:57 ERROR unit.self-signed-certificates/0.juju-log certificates:8: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:51:00 ERROR unit.self-signed-certificates/0.juju-log certificates:8: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:51:01 ERROR unit.self-signed-certificates/0.juju-log certificates:8: At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:51:26 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "5c329fde-f373-4d76-8107-788d04e4b556:r#8#pgbouncer": settings 5c329fde-f373-4d76-8107-788d04e4b556:r#8#pgbouncer not found (not found)
+unit-pgbouncer-1: 01:51:28 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "5c329fde-f373-4d76-8107-788d04e4b556:r#8#self-signed-certificates": settings 5c329fde-f373-4d76-8107-788d04e4b556:r#8#self-signed-certificates not found (not found)
+unit-self-signed-certificates-0: 01:51:58 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:52:07 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+unit-self-signed-certificates-0: 01:52:17 ERROR unit.self-signed-certificates/0.juju-log At least 1 matching relation ID not found with the relation name 'send-ca-cert'
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
