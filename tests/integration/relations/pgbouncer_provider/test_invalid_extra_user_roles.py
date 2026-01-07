@@ -144,7 +144,8 @@ def test_extra_user_roles(  # noqa: C901
                 for attempt in Retrying(stop=stop_after_delay(120), wait=wait_fixed(5)):
                     with attempt:
                         assert (
-                            juju.status()
+                            juju
+                            .status()
                             .get_units(PGB)
                             .get(next(iter(juju.status().get_units(PGB))))
                             .workload_status.message
