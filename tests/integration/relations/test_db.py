@@ -128,8 +128,10 @@ async def test_extensions(ops_test: OpsTest, charm):
         await ops_test.model.wait_for_idle(apps=[PG], status="active", timeout=600)
         await ops_test.model.wait_for_idle(apps=[pgb_jammy], status="blocked", timeout=600)
         await ops_test.model.block_until(
-            lambda: ops_test.model.applications[pgb_jammy].units[0].workload_status_message
-            == EXTENSIONS_BLOCKING_MESSAGE,
+            lambda: (
+                ops_test.model.applications[pgb_jammy].units[0].workload_status_message
+                == EXTENSIONS_BLOCKING_MESSAGE
+            ),
             timeout=300,
         )
 
