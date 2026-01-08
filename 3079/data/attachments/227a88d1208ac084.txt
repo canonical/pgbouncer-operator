@@ -1,0 +1,55 @@
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:87 Refresh the charm
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:90 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:99 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] waiting: other units upgrading first...
+  pgbouncer/1 [executing] waiting: other units upgrading first...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] maintenance: updating PgBouncer config
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  01:46:24Z
+
+App              Version  Status  Scale  Charm            Channel      Rev  Exposed  Message
+data-integrator           active      2  data-integrator  latest/edge  305  no       
+pgbouncer        1.21.0   active      2  pgbouncer                       0  no       
+postgresql       14.20    active      3  postgresql       14/edge      981  no       
+
+Unit                Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0   active    idle   0        10.64.158.206             
+  pgbouncer/1       active    idle            10.64.158.206   6432/tcp  
+data-integrator/1*  active    idle   1        10.64.158.12              
+  pgbouncer/0*      active    idle            10.64.158.12    6432/tcp  
+postgresql/0        active    idle   2        10.64.158.69    5432/tcp  
+postgresql/1        active    idle   3        10.64.158.90    5432/tcp  
+postgresql/2*       active    idle   4        10.64.158.241   5432/tcp  Primary
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.64.158.206  juju-9e2e3b-0  ubuntu@22.04  runnervmh13bl  Running
+1        started  10.64.158.12   juju-9e2e3b-1  ubuntu@22.04  runnervmh13bl  Running
+2        started  10.64.158.69   juju-9e2e3b-2  ubuntu@22.04  runnervmh13bl  Running
+3        started  10.64.158.90   juju-9e2e3b-3  ubuntu@22.04  runnervmh13bl  Running
+4        started  10.64.158.241  juju-9e2e3b-4  ubuntu@22.04  runnervmh13bl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-1: 01:38:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:38:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:40:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:40:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:40:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:40:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:41:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:41:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:41:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:41:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
