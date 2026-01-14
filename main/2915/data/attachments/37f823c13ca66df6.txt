@@ -1,0 +1,18 @@
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: VIP: 10.129.241.100
+  pgbouncer/1 [idle] active: 
+  pgbouncer/3 [idle] active: 
+  data-integrator/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  data-integrator/2 [idle] active: 
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] active: Unit is ready and clustered
+  hacluster/2 [idle] active: Unit is ready and clustered
+  self-signed-certificates/0 [executing] active: 
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: VIP: 10.129.241.100
+  pgbouncer/1 [executing] active: 
+  pgbouncer/3 [executing] active:

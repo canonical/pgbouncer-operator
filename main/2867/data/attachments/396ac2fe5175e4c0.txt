@@ -1,0 +1,54 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.8    unsupported  02:15:47Z
+
+App                  Version  Status       Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   blocked          3  pgbouncer                           0  no       waiting for backend database relation to initialise
+postgresql                    maintenance      3  postgresql           14/edge      871  no       installing PostgreSQL
+postgresql-test-app           blocked          3  postgresql-test-app  latest/edge  398  no       No database integration available
+
+Unit                    Workload     Agent      Machine  Public address  Ports  Message
+postgresql-test-app/0*  blocked      idle       0        10.187.187.214         No database integration available
+  pgbouncer/0*          blocked      idle                10.187.187.214         waiting for backend database relation to initialise
+postgresql-test-app/1   blocked      idle       1        10.187.187.11          No database integration available
+  pgbouncer/1           blocked      idle                10.187.187.11          waiting for backend database relation to initialise
+postgresql-test-app/2   blocked      idle       2        10.187.187.212         No database integration available
+  pgbouncer/2           blocked      idle                10.187.187.212         waiting for backend database relation to initialise
+postgresql/0*           maintenance  executing  3        10.187.187.16          (install) installing PostgreSQL
+postgresql/1            waiting      idle       4        10.187.187.216         awaiting passwords generation
+postgresql/2            waiting      executing  5        10.187.187.241         awaiting passwords generation
+
+Machine  State    Address         Inst id        Base          AZ  Message
+0        started  10.187.187.214  juju-ae3176-0  ubuntu@22.04      Running
+1        started  10.187.187.11   juju-ae3176-1  ubuntu@22.04      Running
+2        started  10.187.187.212  juju-ae3176-2  ubuntu@22.04      Running
+3        started  10.187.187.16   juju-ae3176-3  ubuntu@22.04      Running
+4        started  10.187.187.216  juju-ae3176-4  ubuntu@22.04      Running
+5        started  10.187.187.241  juju-ae3176-5  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:57:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:57:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:57:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:57:55 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-1: 01:59:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:59:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 01:59:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:59:11 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-2: 01:59:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:59:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 01:59:26 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 01:59:33 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-3: 02:01:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:01:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:01:28 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:02:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:02:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 02:02:02 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 02:02:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:02:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:02:15 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

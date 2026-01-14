@@ -1,0 +1,64 @@
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  data-integrator/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.1.8    unsupported  02:39:15Z
+
+App                       Version  Status  Scale  Charm                     Channel        Rev  Exposed  Message
+data-integrator                    active      2  data-integrator           edge            27  no       
+pgbouncer                 1.21.0   active      2  pgbouncer                                  0  no       
+postgresql                14.11    active      2  postgresql                14/edge        413  no       
+self-signed-certificates           active      1  self-signed-certificates  latest/stable   72  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*           active    idle   1        10.124.57.121             
+  pgbouncer/0*               active    idle            10.124.57.121   6432/tcp  
+data-integrator/1            active    idle   2        10.124.57.30              
+  pgbouncer/1                active    idle            10.124.57.30              
+postgresql/0                 active    idle   3        10.124.57.55    5432/tcp  
+postgresql/1*                active    idle   4        10.124.57.100   5432/tcp  Primary
+self-signed-certificates/0*  active    idle   0        10.124.57.144             
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.124.57.144  juju-9cab84-0  ubuntu@22.04      Running
+1        started  10.124.57.121  juju-9cab84-1  ubuntu@22.04      Running
+2        started  10.124.57.30   juju-9cab84-2  ubuntu@22.04      Running
+3        started  10.124.57.55   juju-9cab84-3  ubuntu@22.04      Running
+4        started  10.124.57.100  juju-9cab84-4  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+machine-0: 02:25:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:25:59 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-0: 02:25:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 02:25:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:26:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:26:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:26:09 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-data-integrator-0: 02:26:09 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 02:26:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:26:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:26:09 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-1: 02:26:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:26:13 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:27:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:27:05 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-3: 02:27:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:27:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 02:28:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:28:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:28:06 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-data-integrator-1: 02:28:06 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:28:09 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-self-signed-certificates-0: 02:38:51 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "539c1c02-1c32-44ff-830d-38ba279cab84:r#8#pgbouncer": settings 539c1c02-1c32-44ff-830d-38ba279cab84:r#8#pgbouncer not found (not found)
+unit-pgbouncer-1: 02:38:54 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "539c1c02-1c32-44ff-830d-38ba279cab84:r#8#self-signed-certificates": settings 539c1c02-1c32-44ff-830d-38ba279cab84:r#8#self-signed-certificates not found (not found)
+unit-pgbouncer-0: 02:38:54 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "539c1c02-1c32-44ff-830d-38ba279cab84:r#8#self-signed-certificates": settings 539c1c02-1c32-44ff-830d-38ba279cab84:r#8#self-signed-certificates not found (not found)
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...

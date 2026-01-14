@@ -1,0 +1,88 @@
+[32mINFO    [0m root:helpers.py:96 (0, '{"pgbouncer/5":{"workload-version":"1.21.0","machine":"3","opened-ports":null,"public-address":"10.12.37.154","charm":"local:jammy/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":6,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.12.37.68:5432","read-only-endpoints":"10.12.37.19:5432","secret-user":"secret://8cdd26d3-bc29-4afa-8ea6-186bb72f5bda/cpigod8eh8328b7rvang","version":"14.11"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.12.37.19/32","ingress-address":"10.12.37.19","private-address":"10.12.37.19"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.12.37.68/32","ingress-address":"10.12.37.68","private-address":"10.12.37.68"}}}},{"relation-id":17,"endpoint":"database","related-endpoint":"first-database","application-data":{"database":"postgresql_test_app_first_database","extra-user-roles":"CREATEDB,CREATEROLE","requested-secrets":"[\\"username\\", \\"password\\", \\"tls\\", \\"tls-ca\\", \\"uris\\"]"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql-test-app/1":{"in-scope":true,"data":{"data":"{\\"database\\": \\"postgresql_test_app_first_database\\", \\"endpoints\\": \\"localhost:6432\\", \\"secret-user\\": \\"secret://8cdd26d3-bc29-4afa-8ea6-186bb72f5bda/cpih0ogeh8328b7rvarg\\", \\"version\\": \\"14.11\\"}","egress-subnets":"10.12.37.154/32","ingress-address":"10.12.37.154","private-address":"10.12.37.154"}},"postgresql-test-app/2":{"in-scope":true,"data":{"data":"{\\"database\\": \\"postgresql_test_app_first_database\\", \\"endpoints\\": \\"localhost:6432\\", \\"secret-user\\": \\"secret://8cdd26d3-bc29-4afa-8ea6-186bb72f5bda/cpih0ogeh8328b7rvarg\\", \\"version\\": \\"14.11\\"}","egress-subnets":"10.12.37.31/32","ingress-address":"10.12.37.31","private-address":"10.12.37.31"}}}},{"relation-id":4,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"leader_ip":"10.12.37.154","pgb_dbs_config":"{\\"17\\": {\\"name\\": \\"postgresql_test_app_first_database\\", \\"legacy\\": false}, \\"*\\": {\\"name\\": \\"*\\", \\"auth_dbname\\": \\"postgresql_test_app_first_database\\"}}","readonly_dbs":"[\\"another_database\\", \\"postgresql_test_app_multiple_database_clusters\\"]"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.12.37.154/32","ingress-address":"10.12.37.154","private-address":"10.12.37.154"}},"related-units":{"pgbouncer/11":{"in-scope":true,"data":{"egress-subnets":"10.12.37.31/32","ingress-address":"10.12.37.31","private-address":"10.12.37.31"}}}},{"relation-id":5,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.12.37.154/32","ingress-address":"10.12.37.154","private-address":"10.12.37.154","state":"idle"}},"related-units":{"pgbouncer/11":{"in-scope":true,"data":{"egress-subnets":"10.12.37.31/32","ingress-address":"10.12.37.31","private-address":"10.12.37.31","state":"idle"}}}}]}}\n', '')
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  postgresql-test-app/2 [executing] active: received database credentials of the first database
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] active: Primary
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.1.8    unsupported  02:22:13Z
+
+App                  Version  Status   Scale  Charm                Channel  Rev  Exposed  Message
+another-application           active       1  postgresql-test-app  edge     144  no       
+another-pgbouncer    1.21.0   active       2  pgbouncer                       1  no       
+another-postgresql   14.11    active       2  postgresql           14/edge  413  no       
+pgbouncer                     unknown      0  pgbouncer                       0  no       
+postgresql           14.11    active       2  postgresql           14/edge  413  no       
+postgresql-test-app           active       2  postgresql-test-app  edge     144  no       received database credentials of the second database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+another-application/0*  active    idle   4        10.12.37.251              
+another-postgresql/0    active    idle   5        10.12.37.108    5432/tcp  
+another-postgresql/1*   active    idle   6        10.12.37.26     5432/tcp  Primary
+postgresql-test-app/1*  active    idle   3        10.12.37.154              received database credentials of the second database
+  another-pgbouncer/2*  active    idle            10.12.37.154              
+postgresql-test-app/2   active    idle   7        10.12.37.31               received database credentials of the first database
+  another-pgbouncer/7   active    idle            10.12.37.31               
+postgresql/0            active    idle   1        10.12.37.19     5432/tcp  
+postgresql/1*           active    idle   2        10.12.37.68     5432/tcp  Primary
+
+Machine  State    Address       Inst id        Base          AZ  Message
+1        started  10.12.37.19   juju-2f5bda-1  ubuntu@22.04      Running
+2        started  10.12.37.68   juju-2f5bda-2  ubuntu@22.04      Running
+3        started  10.12.37.154  juju-2f5bda-3  ubuntu@22.04      Running
+4        started  10.12.37.251  juju-2f5bda-4  ubuntu@22.04      Running
+5        started  10.12.37.108  juju-2f5bda-5  ubuntu@22.04      Running
+6        started  10.12.37.26   juju-2f5bda-6  ubuntu@22.04      Running
+7        started  10.12.37.31   juju-2f5bda-7  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+machine-0: 01:45:07 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-0: 01:45:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:45:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 01:45:07 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:45:18 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-2: 01:45:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:45:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:45:18 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:45:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:45:50 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-1: 01:45:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:45:50 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:57:46 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-3: 02:00:20 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-3: 02:00:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:00:20 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 02:00:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 02:00:23 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-4: 02:02:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:02:59 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-4: 02:02:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-application-0: 02:02:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-test-app-0: 02:03:45 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "8cdd26d3-bc29-4afa-8ea6-186bb72f5bda:r#7#pgbouncer": settings 8cdd26d3-bc29-4afa-8ea6-186bb72f5bda:r#7#pgbouncer not found (not found)
+machine-6: 02:05:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:05:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:05:10 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-another-postgresql-1: 02:05:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-5: 02:05:11 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+machine-5: 02:05:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:05:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-postgresql-0: 02:05:11 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 02:12:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-4: 02:12:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-0: 02:12:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-1: 02:12:59 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-5: 02:15:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-6: 02:15:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-2: 02:15:06 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-4: 02:15:06 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-7: 02:19:38 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:19:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:19:38 ERROR juju.worker.dependency "broker-tracker" manifold worker returned unexpected error: no container types determined
+unit-postgresql-test-app-2: 02:19:38 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-11: 02:19:41 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-another-pgbouncer-7: 02:19:42 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...

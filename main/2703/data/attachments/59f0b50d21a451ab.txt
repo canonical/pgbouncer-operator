@@ -1,0 +1,4 @@
+[32mINFO    [0m root:helpers.py:76 running query: 
+ CREATE DATABASE another_database;
+[32mINFO    [0m root:helpers.py:77 {'dbname': 'postgresql_test_app_database', 'query': 'CREATE DATABASE another_database;', 'relation-name': 'database', 'readonly': False}
+[32mINFO    [0m root:helpers.py:80 query results: {'return-code': 1, 'stderr': 'Uncaught OperationalError in charm code: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  server login has been failing, try again later (server_login_retry)\n\nUse `juju debug-log` to see the full traceback.\n'}

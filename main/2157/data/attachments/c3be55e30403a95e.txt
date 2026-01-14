@@ -1,0 +1,171 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:focal/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/tls-certificates-operator-22
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  tls-certificates-operator/0 [allocating] waiting: waiting for machine
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  tls-certificates-operator/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] waiting: Awaiting restart operation
+  postgresql/2 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:10:23Z
+
+App                        Version  Status   Scale  Charm                      Channel        Rev  Exposed  Message
+pgbouncer                           unknown      0  pgbouncer                                   0  no       
+postgresql                 14.13    active       3  postgresql                 14/edge        513  no       
+tls-certificates-operator           active       1  tls-certificates-operator  latest/stable   22  no       
+
+Unit                          Workload  Agent      Machine  Public address  Ports     Message
+postgresql/0*                 error     idle       0        10.81.131.249   5432/tcp  hook failed: "secret-changed"
+postgresql/1                  waiting   executing  1        10.81.131.124   5432/tcp  Awaiting restart operation
+postgresql/2                  active    executing  2        10.81.131.231   5432/tcp  
+tls-certificates-operator/0*  active    idle       4        10.81.131.149             
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.81.131.249  juju-fc8770-0  ubuntu@22.04      Running
+1        started  10.81.131.124  juju-fc8770-1  ubuntu@22.04      Running
+2        started  10.81.131.231  juju-fc8770-2  ubuntu@22.04      Running
+4        started  10.81.131.149  juju-fc8770-4  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-0: 01:56:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:56:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:56:18 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:56:20 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:56:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:56:20 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:56:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:56:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:56:21 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 02:05:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:05:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 02:05:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 02:05:25 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-4: 02:09:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:09:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-tls-certificates-operator-0: 02:09:10 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-1: 02:09:37 ERROR unit.postgresql/1.juju-log certificates:12: This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-1: 02:09:37 ERROR unit.postgresql/1.juju-log certificates:12: This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-2: 02:09:39 ERROR unit.postgresql/2.juju-log certificates:12: This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-2: 02:09:39 ERROR unit.postgresql/2.juju-log certificates:12: This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-0: 02:09:39 ERROR unit.postgresql/0.juju-log certificates:12: TLS files failed to push. Error in config update
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1612, in push_tls_files_to_workload
+    return self.update_config()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1739, in update_config
+    self._handle_postgresql_restart_need(enable_tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1790, in _handle_postgresql_restart_need
+    self.postgresql_client_relation.update_tls_flag("True" if self.is_tls_enabled else "False")
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/relations/postgresql_provider.py", line 238, in update_tls_flag
+    self.database_provides.set_tls(relation.id, tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1683, in set_tls
+    self.update_relation_data(relation_id, {"tls": tls})
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 496, in wrapper
+    return f(self, *args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1407, in update_relation_data
+    return self._update_relation_data(relation, data)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1632, in _update_relation_data
+    raise PrematureDataAccessError(
+charms.data_platform_libs.v0.data_interfaces.PrematureDataAccessError: Premature access to relation data, update is forbidden before the connection is initialized.
+unit-postgresql-1: 02:10:06 ERROR unit.postgresql/1.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-1: 02:10:06 ERROR unit.postgresql/1.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-2: 02:10:08 ERROR unit.postgresql/2.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-2: 02:10:08 ERROR unit.postgresql/2.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-postgresql-0: 02:10:08 ERROR unit.postgresql/0.juju-log TLS files failed to push. Error in config update
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1612, in push_tls_files_to_workload
+    return self.update_config()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1739, in update_config
+    self._handle_postgresql_restart_need(enable_tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1790, in _handle_postgresql_restart_need
+    self.postgresql_client_relation.update_tls_flag("True" if self.is_tls_enabled else "False")
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/relations/postgresql_provider.py", line 238, in update_tls_flag
+    self.database_provides.set_tls(relation.id, tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1683, in set_tls
+    self.update_relation_data(relation_id, {"tls": tls})
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 496, in wrapper
+    return f(self, *args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1407, in update_relation_data
+    return self._update_relation_data(relation, data)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1632, in _update_relation_data
+    raise PrematureDataAccessError(
+charms.data_platform_libs.v0.data_interfaces.PrematureDataAccessError: Premature access to relation data, update is forbidden before the connection is initialized.
+unit-postgresql-0: 02:10:22 ERROR unit.postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1952, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/__init__.py", line 343, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 538, in _on_peer_relation_changed
+    self.update_config()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1739, in update_config
+    self._handle_postgresql_restart_need(enable_tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/./src/charm.py", line 1790, in _handle_postgresql_restart_need
+    self.postgresql_client_relation.update_tls_flag("True" if self.is_tls_enabled else "False")
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/relations/postgresql_provider.py", line 238, in update_tls_flag
+    self.database_provides.set_tls(relation.id, tls)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1683, in set_tls
+    self.update_relation_data(relation_id, {"tls": tls})
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 496, in wrapper
+    return f(self, *args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1407, in update_relation_data
+    return self._update_relation_data(relation, data)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1632, in _update_relation_data
+    raise PrematureDataAccessError(
+charms.data_platform_libs.v0.data_interfaces.PrematureDataAccessError: Premature access to relation data, update is forbidden before the connection is initialized.
+unit-postgresql-0: 02:10:22 ERROR juju.worker.uniter.operation hook "secret-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...

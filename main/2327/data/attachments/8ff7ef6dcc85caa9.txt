@@ -1,0 +1,38 @@
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/5 [allocating] waiting: agent initialising
+  pgbouncer/4 [allocating] waiting: agent initialising
+  another-pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [executing] active: 
+  postgresql-test-app/1 [executing] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/5 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/4 [executing] waiting: Waiting to start PgBouncer
+  another-pgbouncer/2 [executing] waiting: Waiting to start PgBouncer
+  another-pgbouncer/3 [executing] waiting: Waiting to start PgBouncer
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [executing] active: 
+  postgresql-test-app/1 [executing] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/5 [executing] active: 
+  pgbouncer/4 [executing] active: 
+  another-pgbouncer/2 [executing] active: 
+  another-pgbouncer/3 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  pgbouncer/5 [executing] active: 
+  pgbouncer/4 [executing] active: 
+  another-pgbouncer/2 [executing] active: 
+  another-pgbouncer/3 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  another-pgbouncer/2 [idle] active: 
+  another-pgbouncer/3 [idle] active:

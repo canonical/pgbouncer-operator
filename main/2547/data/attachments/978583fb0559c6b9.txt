@@ -1,0 +1,22 @@
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-590
+[32mINFO    [0m pytest_operator.plugin:plugin.py:937 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.4    unsupported  01:41:12Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+postgresql-test-app           waiting    0/3  postgresql-test-app  latest/edge  375  no       waiting for machine
+
+Unit                   Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0  waiting   allocating  0                               waiting for machine
+postgresql-test-app/1  waiting   allocating  1                               waiting for machine
+postgresql-test-app/2  waiting   allocating                                  waiting for machine
+
+Machine  State    Address  Inst id  Base          AZ  Message
+0        pending           pending  ubuntu@22.04      
+1        pending           pending  ubuntu@22.04      
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:943 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1025 Forgetting model main...

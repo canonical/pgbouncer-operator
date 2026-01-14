@@ -1,8 +1,0 @@
-[32mINFO    [0m pytest_operator.plugin:plugin.py:795 Connecting to existing model concierge-lxd:testing on unspecified cloud
-[33mWARNING [0m juju.client.connection:connection.py:927 unexpected facade SSHServer received from the controller
-[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/noble/data-integrator-121
-[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/pgbouncer-639
-[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-590
-[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:51 Wait for applications to become active
-[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
-[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.

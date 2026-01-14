@@ -1,3 +1,0 @@
-[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
-  postgresql/0 [executing] active: 
-  postgresql/1 [executing] active: Primary

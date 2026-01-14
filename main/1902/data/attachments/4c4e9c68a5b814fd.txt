@@ -1,0 +1,3 @@
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:89 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:93 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:98 Refresh the charm

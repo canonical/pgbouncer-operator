@@ -1,0 +1,184 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:766 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-test-app-291
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-528
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [executing] active: Primary
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql/0 [idle] active: Primary
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql/0 [idle] active: Primary
+  pgbouncer/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: Primary
+  pgbouncer/0 [idle] active: 
+[32mINFO    [0m integration.test_config:test_config.py:66 listen_port
+[32mINFO    [0m integration.test_config:test_config.py:66 metrics_port
+[32mINFO    [0m integration.test_config:test_config.py:66 vip
+[32mINFO    [0m integration.test_config:test_config.py:66 pool_mode
+[32mINFO    [0m integration.test_config:test_config.py:66 max_db_connections
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  02:43:01Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   active      1  pgbouncer                           0  no       
+postgresql           14.13    active      1  postgresql           14/edge      528  no       
+postgresql-test-app           active      1  postgresql-test-app  latest/edge  291  no       received database credentials of the first database
+
+Unit                    Workload  Agent      Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle       0        10.7.213.231              received database credentials of the first database
+  pgbouncer/0*          active    executing           10.7.213.231              (config-changed) 
+postgresql/0*           active    idle       1        10.7.213.187    5432/tcp  Primary
+
+Machine  State    Address       Inst id        Base          AZ  Message
+0        started  10.7.213.231  juju-b068fa-0  ubuntu@22.04      Running
+1        started  10.7.213.187  juju-b068fa-1  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-0: 02:39:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:39:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-0: 02:39:22 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 02:39:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:39:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:39:29 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:40:20 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connection.py", line 199, in _new_conn
+    sock = connection.create_connection(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connectionpool.py", line 789, in urlopen
+    response = self._make_request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connectionpool.py", line 495, in _make_request
+    conn.request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connection.py", line 441, in request
+    self.endheaders()
+  File "/usr/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connection.py", line 279, in connect
+    self.sock = self._new_conn()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connection.py", line 214, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x76ac83076170>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/connectionpool.py", line 843, in urlopen
+    retries = retries.increment(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='10.7.213.187', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76ac83076170>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 531, in are_replicas_up
+    response = requests.get(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.7.213.187', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76ac83076170>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-pgbouncer-0: 02:41:35 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-pgbouncer-0: 02:42:49 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 506, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/pydantic/main.py", line 341, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+listen_port
+  ensure this value is greater than 0 (type=value_error.number.not_gt; limit_value=0)
+unit-pgbouncer-0: 02:42:51 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 506, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/pydantic/main.py", line 341, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+metrics_port
+  ensure this value is greater than 0 (type=value_error.number.not_gt; limit_value=0)
+unit-pgbouncer-0: 02:42:54 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 506, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/pydantic/main.py", line 341, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+vip
+  value is not a valid IPv4 or IPv6 address (type=value_error.ipvanyaddress)
+unit-pgbouncer-0: 02:42:56 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 506, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/pydantic/main.py", line 341, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+pool_mode
+  unexpected value; permitted: 'session', 'transaction', 'statement' (type=value_error.const; given=abcXYZ123; permitted=('session', 'transaction', 'statement'))
+unit-pgbouncer-0: 02:42:59 ERROR unit.pgbouncer/0.juju-log Invalid configuration
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/./src/charm.py", line 506, in configuration_check
+    _ = self.config
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/data_platform_libs/v0/data_models.py", line 200, in config
+    return self.config_type(**translated_keys)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/pydantic/main.py", line 341, in __init__
+    raise validation_error
+pydantic.error_wrappers.ValidationError: 1 validation error for CharmConfig
+max_db_connections
+  ensure this value is greater than or equal to 0 (type=value_error.number.not_ge; limit_value=0)
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...

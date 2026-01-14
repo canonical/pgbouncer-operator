@@ -1,0 +1,70 @@
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:81 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:85 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:91 Refresh the charm
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:94 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:101 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] waiting: other units upgrading first...
+  pgbouncer/1 [executing] active: 
+  pgbouncer/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] blocked: PgBouncer service pgbouncer-pgbouncer-prometheus not running
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] blocked: PgBouncer service pgbouncer-pgbouncer-prometheus not running
+  pgbouncer/2 [idle] blocked: PgBouncer service pgbouncer-pgbouncer-prometheus not running
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:108 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:113 checking whether no writes were lost
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.12   unsupported  01:51:44Z
+
+App                  Version  Status  Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer            1.21.0   active      3  pgbouncer                           0  no       
+postgresql           14.20    active      3  postgresql           14/edge      981  no       
+postgresql-test-app           active      3  postgresql-test-app  latest/edge  424  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.64.81.84               received database credentials of the first database
+  pgbouncer/0*          active    idle            10.64.81.84               
+postgresql-test-app/1   active    idle   1        10.64.81.106              received database credentials of the first database
+  pgbouncer/1           active    idle            10.64.81.106              
+postgresql-test-app/2   active    idle   2        10.64.81.166              received database credentials of the first database
+  pgbouncer/2           active    idle            10.64.81.166              
+postgresql/0*           active    idle   3        10.64.81.192    5432/tcp  Primary
+postgresql/1            active    idle   4        10.64.81.236    5432/tcp  
+postgresql/2            active    idle   5        10.64.81.48     5432/tcp  
+
+Machine  State    Address       Inst id        Base          AZ             Message
+0        started  10.64.81.84   juju-ef9b7c-0  ubuntu@22.04  runnervmh13bl  Running
+1        started  10.64.81.106  juju-ef9b7c-1  ubuntu@22.04  runnervmh13bl  Running
+2        started  10.64.81.166  juju-ef9b7c-2  ubuntu@22.04  runnervmh13bl  Running
+3        started  10.64.81.192  juju-ef9b7c-3  ubuntu@22.04  runnervmh13bl  Running
+4        started  10.64.81.236  juju-ef9b7c-4  ubuntu@22.04  runnervmh13bl  Running
+5        started  10.64.81.48   juju-ef9b7c-5  ubuntu@22.04  runnervmh13bl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:42:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:42:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:43:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:43:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:44:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:44:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:44:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:44:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:45:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:45:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:45:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:45:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:46:29 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

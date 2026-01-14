@@ -1,0 +1,308 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-test-app-134
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/ubuntu-advantage-79
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-413
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/landscape-client-69
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:jammy/pgbouncer-0
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [allocating] waiting: agent initialising
+  postgresql-test-app/1 [allocating] waiting: waiting for machine
+  postgresql-test-app/2 [allocating] waiting: waiting for machine
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+  postgresql/2 [allocating] waiting: waiting for machine
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [executing] active: 
+  postgresql-test-app/1 [executing] maintenance: installing charm software
+  postgresql-test-app/2 [executing] active: 
+  postgresql/0 [executing] waiting: agent initialising
+  postgresql/1 [allocating] waiting: agent initialising
+  postgresql/2 [executing] waiting: agent initialising
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/1 [allocating] waiting: agent initialising
+  pgbouncer/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [executing] active: 
+  postgresql-test-app/1 [executing] active: 
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  postgresql/2 [executing] maintenance: installing PostgreSQL
+  pgbouncer/0 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/1 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/2 [executing] maintenance: Installing and configuring PgBouncer
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [executing] active: 
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/1 [executing] maintenance: Installing and configuring PgBouncer
+  pgbouncer/2 [executing] maintenance: Installing and configuring PgBouncer
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [idle] active: 
+  postgresql-test-app/1 [idle] active: 
+  postgresql-test-app/2 [idle] active: 
+  postgresql/0 [executing] waiting: awaiting passwords generation
+  postgresql/1 [executing] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [executing] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [executing] maintenance: Reloading Pgbouncer
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: awaiting passwords generation
+  postgresql/1 [executing] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [executing] maintenance: updating PgBouncer config
+  pgbouncer/2 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting passwords generation
+  postgresql/1 [idle] waiting: awaiting passwords generation
+  postgresql/2 [executing] waiting: waiting to start PostgreSQL
+  pgbouncer/0 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] waiting: awaiting for cluster to start
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+  postgresql/2 [executing] active: 
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+  pgbouncer/2 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql/0 [executing] waiting: awaiting for cluster to start
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  postgresql/2 [executing] active: Primary
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: awaiting for cluster to start
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  postgresql/2 [executing] maintenance: reconfiguring cluster
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: awaiting for cluster to start
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  postgresql/2 [executing] maintenance: reconfiguring cluster
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: awaiting for member to start
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+  postgresql/2 [executing] maintenance: reconfiguring cluster
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] waiting: awaiting for cluster to start
+  postgresql/2 [executing] maintenance: reconfiguring cluster
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] waiting: awaiting for member to start
+  postgresql/2 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] active: Primary
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/2 [idle] active: Primary
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/1 [allocating] waiting: installing agent
+  landscape-client/2 [allocating] waiting: installing agent
+  landscape-client/3 [allocating] waiting: waiting for machine
+  ubuntu-advantage/0 [allocating] waiting: waiting for machine
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: Primary
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/1 [executing] maintenance: Installing landscape client..
+  landscape-client/2 [executing] maintenance: Installing landscape client..
+  landscape-client/3 [executing] maintenance: Installing landscape client..
+  landscape-client/4 [executing] maintenance: Installing landscape client..
+  landscape-client/5 [executing] maintenance: Installing landscape client..
+  landscape-client/6 [executing] maintenance: Installing landscape client..
+  ubuntu-advantage/0 [allocating] waiting: agent initialising
+  ubuntu-advantage/1 [allocating] waiting: agent initialising
+  ubuntu-advantage/2 [allocating] waiting: agent initialising
+  ubuntu-advantage/3 [allocating] waiting: agent initialising
+  ubuntu-advantage/5 [allocating] waiting: agent initialising
+  ubuntu-advantage/6 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/1 [executing] maintenance: Adding client PPA..
+  landscape-client/2 [executing] maintenance: Adding client PPA..
+  landscape-client/3 [executing] maintenance: Adding client PPA..
+  landscape-client/4 [executing] maintenance: Adding client PPA..
+  landscape-client/5 [executing] maintenance: Adding client PPA..
+  landscape-client/6 [executing] maintenance: Adding client PPA..
+  ubuntu-advantage/0 [executing] maintenance: installing charm software
+  ubuntu-advantage/1 [executing] maintenance: installing charm software
+  ubuntu-advantage/2 [executing] maintenance: installing charm software
+  ubuntu-advantage/3 [executing] maintenance: installing charm software
+  ubuntu-advantage/5 [executing] maintenance: installing charm software
+  ubuntu-advantage/6 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/1 [executing] active: Client registered!
+  landscape-client/2 [executing] active: Client registered!
+  landscape-client/3 [executing] active: Client registered!
+  landscape-client/4 [executing] active: Client registered!
+  landscape-client/5 [executing] active: Client registered!
+  landscape-client/6 [executing] active: Client registered!
+  ubuntu-advantage/0 [executing] maintenance: Configuring
+  ubuntu-advantage/1 [executing] maintenance: Configuring
+  ubuntu-advantage/2 [executing] maintenance: Configuring
+  ubuntu-advantage/3 [executing] maintenance: Configuring
+  ubuntu-advantage/5 [executing] maintenance: Configuring
+  ubuntu-advantage/6 [executing] maintenance: Configuring
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/1 [executing] active: Client registered!
+  landscape-client/2 [executing] active: Client registered!
+  landscape-client/3 [executing] active: Client registered!
+  landscape-client/4 [executing] active: Client registered!
+  landscape-client/5 [executing] active: Client registered!
+  landscape-client/6 [executing] active: Client registered!
+  ubuntu-advantage/0 [executing] maintenance: Configuring
+  ubuntu-advantage/1 [executing] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/2 [executing] maintenance: Configuring
+  ubuntu-advantage/3 [executing] maintenance: Configuring
+  ubuntu-advantage/5 [executing] maintenance: Configuring
+  ubuntu-advantage/6 [executing] maintenance: Configuring
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  landscape-client/3 [idle] active: Client registered!
+  landscape-client/4 [idle] active: Client registered!
+  landscape-client/5 [idle] active: Client registered!
+  landscape-client/6 [idle] active: Client registered!
+  ubuntu-advantage/2 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/3 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/5 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/6 [idle] active: Attached (esm-apps,esm-infra)

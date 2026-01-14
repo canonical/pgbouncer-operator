@@ -1,0 +1,4 @@
+[32mINFO    [0m root:helpers.py:76 running query: 
+ DROP TABLE IF EXISTS test;CREATE TABLE test(data TEXT);INSERT INTO test(data) VALUES('some data');SELECT data FROM test;
+[32mINFO    [0m root:helpers.py:77 {'dbname': 'postgresql_test_app_database', 'query': "DROP TABLE IF EXISTS test;CREATE TABLE test(data TEXT);INSERT INTO test(data) VALUES('some data');SELECT data FROM test;", 'relation-name': 'database', 'readonly': False}
+[32mINFO    [0m root:helpers.py:80 query results: {'return-code': 1, 'stderr': 'Uncaught OperationalError in charm code: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  no pg_hba.conf entry for host "10.195.229.8", user "relation_id_7", database "postgresql_test_app_database", no encryption\n\nUse `juju debug-log` to see the full traceback.\n'}

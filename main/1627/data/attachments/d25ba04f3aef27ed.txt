@@ -1,0 +1,104 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model localhost-localhost:test on unspecified cloud
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/postgresql-405
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:focal/pgbouncer-0
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [allocating] waiting: agent initialising
+  postgresql/1 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [idle] waiting: awaiting passwords generation
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [idle] waiting: awaiting passwords generation
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [idle] waiting: awaiting passwords generation
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [idle] waiting: awaiting passwords generation
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [idle] waiting: awaiting passwords generation
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] maintenance: reconfiguring cluster
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] maintenance: reconfiguring cluster
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for cluster to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [executing] active: 
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/focal/postgresql-charmers-postgresql-client-7
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [idle] blocked: Needs db relation
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [idle] blocked: Needs db relation
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [idle] waiting: Waiting for db connection
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [executing] waiting: Waiting to start PgBouncer
+[32mINFO    [0m juju.model:model.py:2958 Waiting for model:
+  psql/0 [idle] active: Connected
+  pgbouncer/0 [idle] active: 
+[32mINFO    [0m root:helpers.py:96 (0, '{"psql/0":{"workload-version":"12","machine":"2","opened-ports":null,"public-address":"10.149.135.11","charm":"ch:amd64/focal/postgresql-charmers-postgresql-client-7","leader":true,"life":"alive","relation-info":[{"relation-id":6,"endpoint":"db","related-endpoint":"db-admin","application-data":{"allowed-subnets":"10.149.135.11/32","allowed-units":"psql/0","database":"cli","host":"localhost","master":"host=localhost dbname=cli port=6432 user=pgbouncer_user_6_test password=ypF0F0RP4N92fqy2x8H5K8pC fallback_application_name=psql","password":"ypF0F0RP4N92fqy2x8H5K8pC","port":"6432","state":"master","user":"pgbouncer_user_6_test","version":"14.11"},"local-unit":{"in-scope":false,"data":null},"related-units":{"pgbouncer/0":{"in-scope":true,"data":{"allowed-subnets":"10.149.135.11/32","allowed-units":"psql/0","database":"cli","egress-subnets":"10.149.135.11/32","host":"localhost","ingress-address":"10.149.135.11","master":"host=localhost dbname=cli port=6432 user=pgbouncer_user_6_test password=ypF0F0RP4N92fqy2x8H5K8pC fallback_application_name=psql","password":"ypF0F0RP4N92fqy2x8H5K8pC","port":"6432","private-address":"10.149.135.11","state":"master","user":"pgbouncer_user_6_test","version":"14.11"}}}}]}}\n', '')

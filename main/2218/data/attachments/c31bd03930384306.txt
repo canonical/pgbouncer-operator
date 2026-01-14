@@ -1,0 +1,323 @@
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql-test-app/3 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:903 Model status:
+
+Model  Controller           Cloud/Region         Version  SLA          Timestamp
+test   localhost-localhost  localhost/localhost  3.4.6    unsupported  03:14:13Z
+
+App                  Version  Status       Scale  Charm                Channel      Rev  Exposed  Message
+landscape-client              blocked          6  landscape-client     latest/edge   70  no       Failed to add PPA!
+pgbouncer            1.21.0   maintenance      3  pgbouncer                           0  no       Reloading Pgbouncer
+postgresql           14.13    active           3  postgresql           14/edge      530  no       
+postgresql-test-app           active           3  postgresql-test-app  latest/edge  295  no       received database credentials of the first database
+ubuntu-advantage              error            6  ubuntu-advantage     latest/edge  137  no       hook failed: "config-changed"
+
+Unit                    Workload     Agent      Machine  Public address  Ports     Message
+postgresql-test-app/1*  active       idle       1        10.140.253.74             received database credentials of the first database
+  landscape-client/0    active       idle                10.140.253.74             Client registered!
+  pgbouncer/0*          active       idle                10.140.253.74             
+  ubuntu-advantage/1    active       idle                10.140.253.74             Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active       idle       2        10.140.253.38             received database credentials of the first database
+  landscape-client/3    active       idle                10.140.253.38             Client registered!
+  pgbouncer/1           active       idle                10.140.253.38             
+  ubuntu-advantage/2*   active       idle                10.140.253.38             Attached (esm-apps,esm-infra)
+postgresql-test-app/3   active       idle       6        10.140.253.126            received database credentials of the first database
+  landscape-client/8    blocked      idle                10.140.253.126            Failed to add PPA!
+  pgbouncer/3           maintenance  executing           10.140.253.126            Reloading Pgbouncer
+  ubuntu-advantage/6    error        idle                10.140.253.126            hook failed: "config-changed"
+postgresql/0            active       idle       3        10.140.253.125  5432/tcp  
+  landscape-client/5*   active       idle                10.140.253.125            Client registered!
+  ubuntu-advantage/3    active       idle                10.140.253.125            Attached (esm-apps,esm-infra)
+postgresql/1*           active       idle       4        10.140.253.94   5432/tcp  Primary
+  landscape-client/7    active       idle                10.140.253.94             Client registered!
+  ubuntu-advantage/5    active       idle                10.140.253.94             Attached (esm-apps,esm-infra)
+postgresql/2            active       idle       5        10.140.253.144  5432/tcp  
+  landscape-client/4    active       idle                10.140.253.144            Client registered!
+  ubuntu-advantage/4    active       idle                10.140.253.144            Attached (esm-apps,esm-infra)
+
+Machine  State    Address         Inst id        Base          AZ  Message
+1        started  10.140.253.74   juju-9eb2b3-1  ubuntu@22.04      Running
+2        started  10.140.253.38   juju-9eb2b3-2  ubuntu@22.04      Running
+3        started  10.140.253.125  juju-9eb2b3-3  ubuntu@22.04      Running
+4        started  10.140.253.94   juju-9eb2b3-4  ubuntu@22.04      Running
+5        started  10.140.253.144  juju-9eb2b3-5  ubuntu@22.04      Running
+6        started  10.140.253.126  juju-9eb2b3-6  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:909 Juju error logs:
+
+machine-1: 03:02:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:02:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 03:02:37 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-4: 03:02:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:02:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 03:02:41 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-0: 03:02:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:02:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:02:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:02:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-2: 03:02:42 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-3: 03:02:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:02:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:02:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:02:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-0: 03:02:45 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 126
+unit-postgresql-test-app-0: 03:02:45 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 03:02:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-2: 03:02:46 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 03:02:51 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-2: 03:02:55 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-1: 03:04:03 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connection.py", line 199, in _new_conn
+    sock = connection.create_connection(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connectionpool.py", line 789, in urlopen
+    response = self._make_request(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connectionpool.py", line 495, in _make_request
+    conn.request(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connection.py", line 441, in request
+    self.endheaders()
+  File "/usr/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connection.py", line 279, in connect
+    self.sock = self._new_conn()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connection.py", line 214, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x78c7151b8dc0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/connectionpool.py", line 843, in urlopen
+    retries = retries.increment(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='10.140.253.94', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x78c7151b8dc0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 531, in are_replicas_up
+    response = requests.get(
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/venv/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.140.253.94', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x78c7151b8dc0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-landscape-client-2: 03:08:31 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-0: 03:08:31 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-3: 03:08:31 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-0: 03:08:31 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-4: 03:08:34 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-1: 03:08:34 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-3: 03:08:34 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-7: 03:08:35 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-4: 03:08:35 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-2: 03:08:35 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-5: 03:08:35 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-5: 03:08:36 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-6: 03:11:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 03:11:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-3: 03:11:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-ubuntu-advantage-6: 03:12:04 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-3: 03:12:05 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-landscape-client-8: 03:12:05 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+unit-landscape-client-8: 03:12:25 CRITICAL unit.landscape-client/8.juju-log   File "/var/lib/juju/agents/unit-landscape-client-8/charm/./src/charm.py", line 274, in <module>
+    main(LandscapeClientCharm)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/main.py", line 45, in main
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/./src/charm.py", line 207, in _on_install
+    self.add_ppa()
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/./src/charm.py", line 158, in add_ppa
+    if not process_helper(["add-apt-repository", "-y", landscape_ppa]):
+  File "/var/lib/juju/agents/unit-landscape-client-8/charm/./src/charm.py", line 117, in process_helper
+    log_error("".join(traceback.format_stack()))
+
+unit-landscape-client-8: 03:12:25 CRITICAL unit.landscape-client/8.juju-log Repository: 'deb https://ppa.launchpadcontent.net/landscape/self-hosted-beta/ubuntu/ jammy main'
+Description:
+Dependencies for Landscape Server Self-Hosted Beta.
+More info: https://launchpad.net/~landscape/+archive/ubuntu/self-hosted-beta
+Adding repository.
+Adding deb entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Adding disabled deb-src entry to /etc/apt/sources.list.d/landscape-ubuntu-self-hosted-beta-jammy.list
+Traceback (most recent call last):
+  File "/usr/bin/add-apt-repository", line 364, in <module>
+    sys.exit(0 if addaptrepo.main() else 1)
+  File "/usr/bin/add-apt-repository", line 357, in main
+    shortcut.add()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 222, in add
+    self.add_key()
+  File "/usr/lib/python3/dist-packages/softwareproperties/shortcuthandler.py", line 398, in add_key
+    if not all((self.trustedparts_file, self.trustedparts_content)):
+  File "/usr/lib/python3/dist-packages/softwareproperties/ppa.py", line 141, in trustedparts_content
+    key = self.lpppa.getSigningKeyData()
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/resource.py", line 592, in __call__
+    response, content = self.root._browser._request(
+  File "/usr/lib/python3/dist-packages/lazr/restfulclient/_browser.py", line 429, in _request
+    raise error
+lazr.restfulclient.errors.ServerError: HTTP Error 500: Internal Server Error
+Response headers:
+---
+connection: close
+content-length: 30
+content-type: text/plain;charset=utf-8
+date: Fri, 06 Dec 2024 03:12:24 GMT
+server: gunicorn
+status: 500
+x-lazr-oopsid: OOPS-1982a245fb810a1dfa7c5a1dce2329cb
+x-powered-by: Zope (www.zope.org), Python (www.python.org)
+x-request-id: ea0d585f-acbb-43e5-82cd-5820d60b732b
+x-vcs-revision: 39bd251485adde1a3ef538479f6c030babb8e251
+---
+Response body:
+---
+b'GPGKeyTemporarilyNotFoundError'
+---
+
+
+unit-ubuntu-advantage-6: 03:13:23 ERROR unit.ubuntu-advantage/6.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 438, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 150, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 355, in emit
+    framework._emit(event)  # noqa
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 856, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 931, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 282, in config_changed
+    self._handle_package_state()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 315, in _handle_package_state
+    apt.add_package("ubuntu-advantage-tools", update_cache=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 743, in add_package
+    update()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 837, in update
+    check_call(["apt-get", "update"], stderr=PIPE, stdout=PIPE)
+  File "/usr/lib/python3.10/subprocess.py", line 369, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['apt-get', 'update']' returned non-zero exit status 100.
+unit-ubuntu-advantage-6: 03:13:23 ERROR juju.worker.uniter.operation hook "config-changed" (via hook dispatching script: dispatch) failed: exit status 1
+unit-landscape-client-8: 03:13:24 CRITICAL unit.landscape-client/8.juju-log Landscape client package not installed.
+unit-ubuntu-advantage-6: 03:13:32 ERROR unit.ubuntu-advantage/6.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 438, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 150, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 355, in emit
+    framework._emit(event)  # noqa
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 856, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 931, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 282, in config_changed
+    self._handle_package_state()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 315, in _handle_package_state
+    apt.add_package("ubuntu-advantage-tools", update_cache=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 743, in add_package
+    update()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 837, in update
+    check_call(["apt-get", "update"], stderr=PIPE, stdout=PIPE)
+  File "/usr/lib/python3.10/subprocess.py", line 369, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['apt-get', 'update']' returned non-zero exit status 100.
+unit-ubuntu-advantage-6: 03:13:33 ERROR juju.worker.uniter.operation hook "config-changed" (via hook dispatching script: dispatch) failed: exit status 1
+machine-0: 03:13:36 ERROR juju.api.watcher error trying to stop watcher: websocket: close sent
+unit-ubuntu-advantage-6: 03:13:46 ERROR unit.ubuntu-advantage/6.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 438, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 150, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 355, in emit
+    framework._emit(event)  # noqa
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 856, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 931, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 282, in config_changed
+    self._handle_package_state()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 315, in _handle_package_state
+    apt.add_package("ubuntu-advantage-tools", update_cache=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 743, in add_package
+    update()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 837, in update
+    check_call(["apt-get", "update"], stderr=PIPE, stdout=PIPE)
+  File "/usr/lib/python3.10/subprocess.py", line 369, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['apt-get', 'update']' returned non-zero exit status 100.
+unit-ubuntu-advantage-6: 03:13:46 ERROR juju.worker.uniter.operation hook "config-changed" (via hook dispatching script: dispatch) failed: exit status 1
+unit-ubuntu-advantage-6: 03:14:08 ERROR unit.ubuntu-advantage/6.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 427, in <module>
+    main(UbuntuAdvantageCharm)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 438, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/main.py", line 150, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 355, in emit
+    framework._emit(event)  # noqa
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 856, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/venv/ops/framework.py", line 931, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 282, in config_changed
+    self._handle_package_state()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/./src/charm.py", line 315, in _handle_package_state
+    apt.add_package("ubuntu-advantage-tools", update_cache=True)
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 743, in add_package
+    update()
+  File "/var/lib/juju/agents/unit-ubuntu-advantage-6/charm/lib/charms/operator_libs_linux/v0/apt.py", line 837, in update
+    check_call(["apt-get", "update"], stderr=PIPE, stdout=PIPE)
+  File "/usr/lib/python3.10/subprocess.py", line 369, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['apt-get', 'update']' returned non-zero exit status 100.
+unit-ubuntu-advantage-6: 03:14:09 ERROR juju.worker.uniter.operation hook "config-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:991 Forgetting model main...

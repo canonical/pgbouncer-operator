@@ -1,0 +1,155 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.8    unsupported  02:16:41Z
+
+App                       Version  Status   Scale  Charm                     Channel        Rev  Exposed  Message
+data-integrator                    blocked      2  data-integrator           latest/edge    218  no       Please relate the data-integrator with the desired product
+pgbouncer                          blocked      2  pgbouncer                                  0  no       PgBouncer service pgbouncer-pgbouncer@0 not running
+postgresql                14.18    active       2  postgresql                14/edge        871  no       
+self-signed-certificates           active       1  self-signed-certificates  latest/stable  264  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*           blocked   idle   0        10.118.73.79              Please relate the data-integrator with the desired product
+  pgbouncer/0*               blocked   idle            10.118.73.79    6432/tcp  PgBouncer service pgbouncer-pgbouncer@0 not running
+data-integrator/1            blocked   idle   1        10.118.73.51              Please relate the data-integrator with the desired product
+  pgbouncer/1                blocked   idle            10.118.73.51    6432/tcp  backend database relation not ready
+postgresql/0*                active    idle   3        10.118.73.209   5432/tcp  Primary
+postgresql/1                 active    idle   4        10.118.73.17    5432/tcp  
+self-signed-certificates/0*  active    idle   2        10.118.73.20              
+
+Machine  State    Address        Inst id        Base          AZ  Message
+0        started  10.118.73.79   juju-b16fa1-0  ubuntu@24.04      Running
+1        started  10.118.73.51   juju-b16fa1-1  ubuntu@24.04      Running
+2        started  10.118.73.20   juju-b16fa1-2  ubuntu@22.04      Running
+3        started  10.118.73.209  juju-b16fa1-3  ubuntu@22.04      Running
+4        started  10.118.73.17   juju-b16fa1-4  ubuntu@22.04      Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:57:48 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:57:48 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-data-integrator-0: 01:57:49 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-0: 01:57:52 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-1: 01:57:58 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:57:58 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-data-integrator-1: 01:57:58 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-pgbouncer-1: 01:58:03 ERROR juju.worker.meterstatus error running "meter-status-changed": exit status 1
+machine-3: 01:59:26 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:59:26 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:59:26 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+machine-2: 01:59:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:59:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-self-signed-certificates-0: 01:59:54 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:00:15 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 494, in request
+    self.endheaders()
+  File "/usr/lib/python3.10/http/client.py", line 1278, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.10/http/client.py", line 1038, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.10/http/client.py", line 976, in send
+    self.connect()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 325, in connect
+    self.sock = self._new_conn()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7f7482c7e8c0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='10.118.73.209', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f7482c7e8c0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 571, in are_replicas_up
+    response = requests.get(
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/venv/lib/python3.10/site-packages/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='10.118.73.209', port=8008): Max retries exceeded with url: /cluster (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f7482c7e8c0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+machine-4: 02:00:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:00:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:00:23 ERROR juju.worker.meterstatus error running "meter-status-changed": charm missing from disk
+unit-postgresql-0: 02:00:27 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:05:46 ERROR unit.pgbouncer/0.juju-log An exception occurred when installing charmed-pgbouncer. Reason: Snap: 'charmed-pgbouncer' -- command ['snap', 'install', 'charmed-pgbouncer', '--revision="18"'] failed!
+Stdout:
+2025-08-17T01:58:02Z INFO Waiting for automatic snapd restart...
+2025-08-17T01:58:03Z INFO Waiting for automatic snapd restart...
+
+Stderr:
+error: cannot perform the following tasks:
+- Download snap "charmed-pgbouncer" (18) from channel "stable" (Get "https://canonical-bos01.cdn.snapcraftcontent.com/download-origin/canonical-lgw01/B3qDbl3KUIX0vBzxvZ14f9EG1ANqkIyw_18.snap?interactive=1&token=1755410400_c122414a80ca99f576abfb27f93f132753fee82e": net/http: timeout awaiting response headers)
+
+Latest logs:
+Aug 17 01:57:58 juju-b16fa1-0 groupadd[2049]: new group: name=snap_daemon, GID=584788
+Aug 17 01:57:58 juju-b16fa1-0 useradd[2055]: new user: name=snap_daemon, UID=584788, GID=584788, home=/nonexistent, shell=/usr/bin/false, from=none
+Aug 17 01:58:02 juju-b16fa1-0 snapd[1044]: daemon.go:548: gracefully waiting for running hooks
+Aug 17 01:58:02 juju-b16fa1-0 snapd[1044]: daemon.go:550: done waiting for running hooks
+Aug 17 01:58:05 juju-b16fa1-0 snapd[1044]: overlord.go:528: Released state lock file
+Aug 17 01:58:05 juju-b16fa1-0 systemd[1]: snapd.service: Deactivated successfully.
+Aug 17 01:58:05 juju-b16fa1-0 systemd[1]: snapd.service: Scheduled restart job, restart counter is at 1.
+Aug 17 01:58:05 juju-b16fa1-0 systemd[1]: Starting snapd.service - Snap Daemon...
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: overlord.go:284: Acquiring state lock file
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: overlord.go:289: Acquired state lock file
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: patch.go:64: Patching system state level 6 to sublevel 1...
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: patch.go:64: Patching system state level 6 to sublevel 2...
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: patch.go:64: Patching system state level 6 to sublevel 3...
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: daemon.go:273: started snapd/2.70 (series 16; classic) ubuntu/24.04 (amd64) linux/6.11.0-1018-azure.
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: daemon.go:367: adjusting startup timeout by 35s (pessimistic estimate of 30s plus 5s per snap)
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: backends.go:68: AppArmor status: apparmor is enabled and all features are available (using snapd provided apparmor_parser)
+Aug 17 01:58:08 juju-b16fa1-0 snapd[2182]: backend.go:141: delegating reload of snap-confine profiles to system snap security profiles setup
+Aug 17 01:58:09 juju-b16fa1-0 snapd[2182]: backend.go:285: reloading profiles of snap-confine provided by the system snap
+Aug 17 01:58:09 juju-b16fa1-0 systemd[1]: Started snapd.service - Snap Daemon.
+Aug 17 02:05:45 juju-b16fa1-0 snapd[2182]: taskrunner.go:299: Change 4 task (Download snap "charmed-pgbouncer" (18) from channel "stable") failed: Get "https://canonical-bos01.cdn.snapcraftcontent.com/download-origin/canonical-lgw01/B3qDbl3KUIX0vBzxvZ14f9EG1ANqkIyw_18.snap?interactive=1&token=1755410400_c122414a80ca99f576abfb27f93f132753fee82e": net/http: timeout awaiting response headers
+
+unit-pgbouncer-0: 02:05:59 ERROR unit.pgbouncer/0.juju-log Unable to get Pgbouncer version
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 296, in version
+    output = subprocess.check_output([PGBOUNCER_EXECUTABLE, "--version"])  # noqa: S603
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'charmed-pgbouncer.pgbouncer'
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
