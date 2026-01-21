@@ -42,6 +42,7 @@ jobs:
           sudo snap install astral-uv --classic
       - name: Run linters
         run: tox run -e lint
+    permissions: {}
 
   unit-test:
     name: Unit test charm
@@ -60,12 +61,14 @@ jobs:
         uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    permissions: {}
 
   build:
     name: Build charm
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v41.0.0
     with:
       cache: false
+    permissions: {}
 
   integration-test:
     name: Integration test charm
