@@ -42,7 +42,7 @@ async def test_deploy_stable(ops_test: OpsTest, charm) -> None:
             PGB,
             channel="1/stable",
             num_units=0,
-            base="ubuntu@22.04",
+            series="jammy",
         ),
         ops_test.model.deploy(
             CLIENT_APP_NAME,
