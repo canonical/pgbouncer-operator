@@ -17,11 +17,11 @@ charm = [
     "pydantic==1.10.26",
     "psycopg2==2.9.11; python_version > '3.8'",
     # Focal cannot use 2.9.11
-    "psycopg2==2.9.10; python_version < '3.9'",
+    "psycopg2==2.9.11; python_version < '3.9'",
     "psycopg[c]==3.3.2; python_version > '3.9'",
     # Focal cannot use 3.3.2
-    "psycopg[c]==3.2.12; python_version < '3.10'",
-    "postgresql-charms-single-kernel==16.1.5"
+    "psycopg[c]==3.3.2; python_version < '3.10'",
+    "postgresql-charms-single-kernel==16.1.6"
 ]
 
 libs = [
@@ -40,11 +40,11 @@ libs = [
     "cryptography <45; python_version < '3.9'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.21.0"
+    "opentelemetry-exporter-otlp-proto-http==1.39.1"
 ]
 
 format = [
-    "ruff==0.14.10"
+    "ruff==0.14.13"
 ]
 
 lint = [
