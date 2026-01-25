@@ -1,0 +1,46 @@
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [idle] blocked: No database integration available
+  postgresql-test-app/1 [idle] blocked: No database integration available
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  pgbouncer/4 [allocating] waiting: agent initialising
+  pgbouncer/5 [allocating] waiting: agent initialising
+  another-pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [executing] blocked: No database integration available
+  postgresql-test-app/1 [executing] blocked: No database integration available
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  pgbouncer/4 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/5 [executing] waiting: Waiting to start PgBouncer
+  another-pgbouncer/2 [executing] waiting: Waiting to start PgBouncer
+  another-pgbouncer/3 [executing] waiting: Waiting to start PgBouncer
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [executing] blocked: No database integration available
+  postgresql-test-app/1 [idle] blocked: No database integration available
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  pgbouncer/4 [executing] active: 
+  pgbouncer/5 [executing] active: 
+  another-pgbouncer/2 [executing] active: 
+  another-pgbouncer/3 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [executing] blocked: No database integration available
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  pgbouncer/4 [executing] active: 
+  pgbouncer/5 [executing] active: 
+  another-pgbouncer/2 [executing] active: 
+  another-pgbouncer/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app/0 [executing] active: received database credentials of the second database
+  postgresql-test-app/1 [idle] active: received database credentials of the second database
+  pgbouncer/4 [executing] active: 
+  another-pgbouncer/2 [executing] active: 
+  another-pgbouncer/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/4 [idle] active: 
+  pgbouncer/5 [idle] active: 
+  another-pgbouncer/2 [idle] active: 
+  another-pgbouncer/3 [idle] active:
