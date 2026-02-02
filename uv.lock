@@ -1674,7 +1674,7 @@ unit = [
 charm = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "ops", specifier = "==2.23.1" },
-    { name = "postgresql-charms-single-kernel", specifier = "==16.1.6" },
+    { name = "postgresql-charms-single-kernel", url = "https://github.com/canonical/postgresql-single-kernel-library/archive/5765a4d4b7161d4d69412e6fcf852235c0dcaefe.zip" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version < '3.10'", specifier = "==3.2.12" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version >= '3.10'", specifier = "==3.3.2" },
     { name = "psycopg2", marker = "python_full_version < '3.9'", specifier = "==2.9.10" },
@@ -1791,11 +1791,22 @@ wheels = [
 
 [[package]]
 name = "postgresql-charms-single-kernel"
-version = "16.1.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2d/0a/7e03531bc7931635f236e01d76cdcfb3cd6e4f43bd945ee80670fd15d9cc/postgresql_charms_single_kernel-16.1.6.tar.gz", hash = "sha256:abcfa8e81eb03f462a44a0b2f0a86cef2a3d3df15c5d05a874d228d602854a4b", size = 21631, upload-time = "2026-01-08T11:59:06.405Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/e4/ec00df2c554b21a8bc4cd440bd7b634100616888f6ad393f0932d36db44c/postgresql_charms_single_kernel-16.1.6-py3-none-any.whl", hash = "sha256:dd1f3403970aa9a9b42f4af334bd04bf173f22667b95e49c9bdd71be5a1c7207", size = 23843, upload-time = "2026-01-08T11:59:05.249Z" },
+version = "16.1.7"
+source = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/5765a4d4b7161d4d69412e6fcf852235c0dcaefe.zip" }
+dependencies = [
+    { name = "ops" },
+    { name = "psycopg2", version = "2.9.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "psycopg2", version = "2.9.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+sdist = { hash = "sha256:b9a5da57a78d648810d91eebb6197f60e48965cedb6c14e9c827178fefeec444" }
+
+[package.metadata]
+requires-dist = [
+    { name = "ops", specifier = ">=2.0.0" },
+    { name = "psycopg2", specifier = ">=2.9.10" },
+    { name = "tenacity", specifier = ">=9.0.0" },
 ]
 
 [[package]]
