@@ -79,7 +79,7 @@ build-constraint-dependencies = [
 ]
 
 [tool.uv.sources]
-postgresql-charms-single-kernel = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/5765a4d4b7161d4d69412e6fcf852235c0dcaefe.zip" }
+postgresql-charms-single-kernel = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/b816035a7f240493749f19c861cce159007c6b13.zip" }
 
 # Testing tools configuration
 [tool.coverage.run]

@@ -1674,7 +1674,7 @@ unit = [
 charm = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "ops", specifier = "==2.23.1" },
-    { name = "postgresql-charms-single-kernel", url = "https://github.com/canonical/postgresql-single-kernel-library/archive/5765a4d4b7161d4d69412e6fcf852235c0dcaefe.zip" },
+    { name = "postgresql-charms-single-kernel", url = "https://github.com/canonical/postgresql-single-kernel-library/archive/b816035a7f240493749f19c861cce159007c6b13.zip" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version < '3.10'", specifier = "==3.2.12" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version >= '3.10'", specifier = "==3.3.2" },
     { name = "psycopg2", marker = "python_full_version < '3.9'", specifier = "==2.9.10" },
@@ -1792,7 +1792,7 @@ wheels = [
 [[package]]
 name = "postgresql-charms-single-kernel"
 version = "16.1.7"
-source = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/5765a4d4b7161d4d69412e6fcf852235c0dcaefe.zip" }
+source = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/b816035a7f240493749f19c861cce159007c6b13.zip" }
 dependencies = [
     { name = "ops" },
     { name = "psycopg2", version = "2.9.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
@@ -1800,7 +1800,7 @@ dependencies = [
     { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
-sdist = { hash = "sha256:b9a5da57a78d648810d91eebb6197f60e48965cedb6c14e9c827178fefeec444" }
+sdist = { hash = "sha256:7b426f7cb843e866aef77ab37e0b5edb6f6758b644366eb7ad5b92b4f70504ac" }
 
 [package.metadata]
 requires-dist = [
