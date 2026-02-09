@@ -1,0 +1,151 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/data-integrator-341
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/hacluster-131
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-317
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-1017
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] waiting: agent initialising
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary (degraded)
+  postgresql/1 [executing] waiting: waiting to start PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] maintenance: reconfiguring cluster
+  postgresql/1 [idle] waiting: waiting to start PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/1 [idle] waiting: awaiting for member to start
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_data_integrator_ha:test_data_integrator_ha.py:101 Setting VIP to 10.76.79.128
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [allocating] waiting: waiting for machine
+  pgbouncer/2 [allocating] waiting: waiting for machine
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] active: Unit is ready and clustered
+  hacluster/2 [idle] active: Unit is ready and clustered
+  self-signed-certificates/0 [idle] active: 
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [executing] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/2 [executing] waiting: Waiting to start PgBouncer
+  pgbouncer/1 [executing] waiting: Waiting to start PgBouncer
+  hacluster/0 [executing] active: Unit is ready and clustered
+  hacluster/1 [executing] active: Unit is ready and clustered
+  hacluster/2 [executing] active: Unit is ready and clustered
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] waiting: waiting for backend-database relation to connect
+  pgbouncer/2 [executing] maintenance: updating PgBouncer config
+  pgbouncer/1 [executing] maintenance: updating PgBouncer config
+  hacluster/0 [idle] active: Unit is ready and clustered
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] maintenance: updating PgBouncer config
+  pgbouncer/2 [executing] maintenance: updating PgBouncer config
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+  hacluster/0 [executing] active: Unit is ready and clustered
+  hacluster/1 [idle] waiting: Resource: res_pgbouncer_ed7e0c8916d5f6_vip not yet configured
+  hacluster/2 [idle] waiting: Resource: res_pgbouncer_ed7e0c8916d5f6_vip not yet configured
+  postgresql/0 [executing] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [idle] active: VIP: 10.76.79.128
+  pgbouncer/2 [executing] maintenance: updating PgBouncer config
+  pgbouncer/1 [executing] maintenance: Reloading Pgbouncer
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] waiting: Resource: res_pgbouncer_ed7e0c8916d5f6_vip not yet configured
+  hacluster/2 [idle] waiting: Resource: res_pgbouncer_ed7e0c8916d5f6_vip not yet configured
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/1 [idle] blocked: Please relate the data-integrator with the desired product
+  data-integrator/2 [idle] blocked: Please relate the data-integrator with the desired product
+  pgbouncer/0 [executing] active: VIP: 10.76.79.128
+  pgbouncer/2 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  hacluster/0 [idle] active: Unit is ready and clustered
+  hacluster/1 [idle] active: Unit is ready and clustered
+  hacluster/2 [idle] active: Unit is ready and clustered
+  postgresql/0 [executing] active: Primary
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  data-integrator/0 [idle] active: 
+  data-integrator/1 [idle] active: 
+  data-integrator/2 [idle] active: 
+  pgbouncer/0 [idle] active: VIP: 10.76.79.128
+  pgbouncer/2 [idle] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_data_integrator_ha:test_data_integrator_ha.py:112 Data integrator host is 10.76.79.128
