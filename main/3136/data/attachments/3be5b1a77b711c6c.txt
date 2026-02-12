@@ -1,0 +1,35 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.14   unsupported  01:37:04Z
+
+App                  Version  Status       Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown          0  landscape-client     latest/edge    73  no       
+pgbouncer                     error            1  pgbouncer                            0  no       hook failed: "install"
+postgresql                    waiting        0/3  postgresql           14/edge      1029  no       waiting for machine
+postgresql-test-app           maintenance    1/3  postgresql-test-app  latest/edge   436  no       installing charm software
+ubuntu-advantage              unknown          0  ubuntu-advantage     latest/edge   148  no       
+
+Unit                    Workload     Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0*  maintenance  executing   0        10.165.2.56            (config-changed) installing charm software
+  pgbouncer/0*          error        idle                 10.165.2.56            hook failed: "install"
+postgresql-test-app/1   waiting      allocating  1                               waiting for machine
+postgresql-test-app/2   waiting      allocating  2                               waiting for machine
+postgresql/0            waiting      allocating  3                               waiting for machine
+postgresql/1            waiting      allocating  4                               waiting for machine
+postgresql/2            waiting      allocating  5                               waiting for machine
+
+Machine  State    Address      Inst id        Base          AZ             Message
+0        started  10.165.2.56  juju-9a2fb6-0  ubuntu@22.04  runnervmwffz4  Running
+1        down                  pending        ubuntu@22.04                 Creating container
+2        down                  pending        ubuntu@22.04                 Creating container
+3        down                  pending        ubuntu@22.04                 Creating container
+4        down                  pending        ubuntu@22.04                 Creating container
+5        down                  pending        ubuntu@22.04                 Creating container
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:36:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
