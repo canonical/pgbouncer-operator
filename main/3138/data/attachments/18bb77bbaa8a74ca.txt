@@ -1,0 +1,73 @@
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:81 starting continuous writes to the database
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:85 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:91 Refresh the charm
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:94 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:103 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] waiting: other units upgrading first...
+  pgbouncer/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:110 checking whether writes are increasing
+[32mINFO    [0m integration.test_upgrade_from_stable:test_upgrade_from_stable.py:115 checking whether no writes were lost
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.14   unsupported  01:46:49Z
+
+App                  Version  Status  Scale  Charm                Channel       Rev  Exposed  Message
+pgbouncer            1.21.0   active      3  pgbouncer                            0  no       
+postgresql           14.20    active      3  postgresql           14/edge      1029  no       
+postgresql-test-app           active      3  postgresql-test-app  latest/edge   436  no       received database credentials of the first database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.33.125.138             received database credentials of the first database
+  pgbouncer/0*          active    idle            10.33.125.138             
+postgresql-test-app/1   active    idle   1        10.33.125.154             received database credentials of the first database
+  pgbouncer/2           active    idle            10.33.125.154             
+postgresql-test-app/2   active    idle   2        10.33.125.54              received database credentials of the first database
+  pgbouncer/1           active    idle            10.33.125.54              
+postgresql/0*           active    idle   3        10.33.125.205   5432/tcp  Primary
+postgresql/1            active    idle   4        10.33.125.36    5432/tcp  
+postgresql/2            active    idle   5        10.33.125.225   5432/tcp  
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.33.125.138  juju-d9da29-0  ubuntu@22.04  runnervmjduv7  Running
+1        started  10.33.125.154  juju-d9da29-1  ubuntu@22.04  runnervmjduv7  Running
+2        started  10.33.125.54   juju-d9da29-2  ubuntu@22.04  runnervmjduv7  Running
+3        started  10.33.125.205  juju-d9da29-3  ubuntu@22.04  runnervmjduv7  Running
+4        started  10.33.125.36   juju-d9da29-4  ubuntu@22.04  runnervmjduv7  Running
+5        started  10.33.125.225  juju-d9da29-5  ubuntu@22.04  runnervmjduv7  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:36:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:39:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:39:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:40:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:40:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:41:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:41:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:41:17 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 1153, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fddf9ed2350 state=finished raised Exception>]
+machine-1: 01:41:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:41:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:41:41 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 01:42:15 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.33.125.205", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.33.125.138", user "relation-6", database "postgres", no encryption
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
