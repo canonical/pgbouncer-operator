@@ -1,0 +1,245 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-1029
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] maintenance: installing PostgreSQL
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary (degraded)
+  postgresql/1 [executing] maintenance: installing PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary (degraded)
+  postgresql/1 [executing] waiting: awaiting for member to start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [allocating] waiting: waiting for machine
+  landscape-server/1 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] maintenance: Installing apt packages
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] maintenance: Installing apt packages
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] maintenance: Installing apt packages
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] maintenance: Installing apt packages
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] waiting: Waiting on relations: db, amqp, haproxy
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [executing] waiting: Waiting on relations: db, amqp
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  pgbouncer/0 [executing] waiting: Waiting to start PgBouncer
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Installing apt packages
+  landscape-server/1 [idle] waiting: Waiting on relations: db, amqp
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  pgbouncer/0 [idle] waiting: waiting for backend-database relation to connect
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] waiting: Waiting on relations: db, amqp, haproxy
+  landscape-server/1 [executing] waiting: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] waiting: Waiting on relations: db
+  landscape-server/1 [idle] waiting: Waiting on relations: db
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Setting up databases
+  landscape-server/1 [executing] maintenance: Setting up databases
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Setting up databases
+  landscape-server/1 [executing] maintenance: Setting up databases
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Setting up databases
+  landscape-server/1 [executing] maintenance: Setting up databases
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Setting up databases
+  landscape-server/1 [executing] maintenance: Setting up databases
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Starting services
+  landscape-server/1 [executing] maintenance: Setting up databases
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [idle] active: Unit is ready
+  landscape-server/1 [executing] maintenance: Starting services
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [idle] active: Unit is ready
+  landscape-server/1 [executing] maintenance: Starting services
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/1 [idle] active: Unit is ready
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m root:helpers.py:97 (0, '{"pgbouncer/0":{"workload-version":"1.21.0","machine":"4","opened-ports":null,"public-address":"10.199.164.130","charm":"local:jammy/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":5,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"provided-secrets\\": \\"[\\\\\\"mtls-cert\\\\\\"]\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\", \\\\\\"read-only-uris\\\\\\", \\\\\\"entity-name\\\\\\", \\\\\\"entity-password\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.199.164.70:5432","read-only-endpoints":"10.199.164.91:5432","secret-tls":"secret://48a8c9b2-9c1b-4837-8b7a-c21f71652e58/d697drj0iaqsioa5j3gg","secret-user":"secret://48a8c9b2-9c1b-4837-8b7a-c21f71652e58/d697drb0iaqsioa5j3g0","version":"14.20"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.199.164.70/32","ingress-address":"10.199.164.70","private-address":"10.199.164.70"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.199.164.91/32","ingress-address":"10.199.164.91","private-address":"10.199.164.91"}}}},{"relation-id":11,"endpoint":"db-admin","related-endpoint":"db","application-data":{},"local-unit":{"in-scope":false,"data":null},"related-units":{"landscape-server/0":{"in-scope":true,"data":{"egress-subnets":"10.199.164.26/32","ingress-address":"10.199.164.26","private-address":"10.199.164.26"}},"landscape-server/1":{"in-scope":true,"data":{"egress-subnets":"10.199.164.130/32","ingress-address":"10.199.164.130","private-address":"10.199.164.130"}}}},{"relation-id":0,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.199.164.130","pgb_dbs_config":"{\\"11\\": {\\"name\\": \\"landscape-server\\", \\"legacy\\": true}, \\"*\\": {\\"name\\": \\"*\\", \\"auth_dbname\\": \\"landscape-server\\"}}","pgbouncer_user_11_testing":"{\\"user\\": \\"pgbouncer_user_11_testing\\", \\"password\\": \\"uqzU1G2QlEHLjlqFoPej4U8c\\", \\"database\\": \\"landscape-server\\"}","readonly_dbs":"[]"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.199.164.130/32","ingress-address":"10.199.164.130","pgb_dbs":"7f1f4f98c564f94542b2b5c8199195bf","private-address":"10.199.164.130","userlist_nonce":"WoI1zAJE6RgFGsRhrPQtIQFI"}},"related-units":{"pgbouncer/1":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.199.164.26/32","ingress-address":"10.199.164.26","pgb_dbs":"7f1f4f98c564f94542b2b5c8199195bf","private-address":"10.199.164.26","userlist_nonce":"6Vz6EKSnRbswY1NXRXCuEm4N"}}}},{"relation-id":1,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.199.164.130/32","ingress-address":"10.199.164.130","private-address":"10.199.164.130","state":"idle"}},"related-units":{"pgbouncer/1":{"in-scope":true,"data":{"egress-subnets":"10.199.164.26/32","ingress-address":"10.199.164.26","private-address":"10.199.164.26","state":"idle"}}}}]}}\n', '')
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [idle] active: Unit is ready
+  landscape-server/1 [idle] active: Unit is ready
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [executing] maintenance: Starting services
+  landscape-server/1 [executing] maintenance: Starting services
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  landscape-server/0 [idle] active: Unit is ready
+  landscape-server/1 [idle] active: Unit is ready
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.14   unsupported  01:52:49Z
+
+App               Version  Status  Scale  Charm             Channel         Rev  Exposed  Message
+haproxy                    active      1  haproxy           latest/stable    75  yes      Unit is ready
+landscape-server           active      2  landscape-server  latest/stable   124  no       Unit is ready
+pgbouncer         1.21.0   active      2  pgbouncer                           0  no       
+postgresql        14.20    active      2  postgresql        14/edge        1029  no       
+rabbitmq-server   3.9.27   active      1  rabbitmq-server   3.9/stable      188  no       Unit is ready
+
+Unit                 Workload  Agent  Machine  Public address  Ports           Message
+haproxy/0*           active    idle   2        10.199.164.107  80,443/tcp      Unit is ready
+landscape-server/0   active    idle   3        10.199.164.26                   Unit is ready
+  pgbouncer/1        active    idle            10.199.164.26                   
+landscape-server/1*  active    idle   4        10.199.164.130                  Unit is ready
+  pgbouncer/0*       active    idle            10.199.164.130                  
+postgresql/0*        active    idle   0        10.199.164.70   5432/tcp        Primary
+postgresql/1         active    idle   1        10.199.164.91   5432/tcp        
+rabbitmq-server/0*   active    idle   5        10.199.164.250  5672,15672/tcp  Unit is ready
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.199.164.70   juju-652e58-0  ubuntu@22.04  runnervmjduv7  Running
+1        started  10.199.164.91   juju-652e58-1  ubuntu@22.04  runnervmjduv7  Running
+2        started  10.199.164.107  juju-652e58-2  ubuntu@22.04  runnervmjduv7  Running
+3        started  10.199.164.26   juju-652e58-3  ubuntu@22.04  runnervmjduv7  Running
+4        started  10.199.164.130  juju-652e58-4  ubuntu@22.04  runnervmjduv7  Running
+5        started  10.199.164.250  juju-652e58-5  ubuntu@22.04  runnervmjduv7  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:36:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:37:22 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 1153, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f60f736aef0 state=finished raised Exception>]
+machine-1: 01:37:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:37:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:42:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:42:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:42:53 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:42:53 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:43:12 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:43:12 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
