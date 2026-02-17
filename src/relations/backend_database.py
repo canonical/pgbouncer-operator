@@ -184,6 +184,55 @@ class BackendDatabaseRequires(Object):
         self.charm.set_secret(APP_SCOPE, password_key, password)
         return hashed_password
 
+    def _create_users(self, event: DatabaseCreatedEvent) -> bool:
+        plaintext_password = generate_password()
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
+        # create authentication user on postgres database, so we can authenticate other users
+        # later on
+        users = self.postgres.list_users()
+        if self.auth_user not in users:
+            self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
+                self.postgres, PostgreSQLv0
+            ) else self.postgres.create_user(
+                self.auth_user, hashed_password, admin=True, database=self.database.database
+            )
+        try:
+            self.initialise_auth_function(self.collect_databases())
+        except Exception as e:
+            event.defer()
+            logger.error(
+                f"deferring database-created hook - Unable to initialise auth function: {e}"
+            )
+            return False
+        hashed_password = get_md5_password(self.auth_user, plaintext_password)
+
+        # Add the monitoring user.
+        if not (
+            hashed_monitoring_password := self.generate_system_user(
+                self.stats_user, MONITORING_PASSWORD_KEY
+            )
+        ):
+            event.defer()
+            logger.error("deferring database-created hook - cannot monitoring hash password")
+            return False
+
+        # Add the admin console user.
+        if not (
+            hashed_admin_password := self.generate_system_user(self.admin_user, ADMIN_PASSWORD_KEY)
+        ):
+            event.defer()
+            logger.error("deferring database-created hook - cannot admin hash password")
+            return False
+
+        auth_file = (
+            f'"{self.auth_user}" "{hashed_password}"\n'
+            f'"{self.stats_user}" "{hashed_monitoring_password}"\n'
+            f'"{self.admin_user}" "{hashed_admin_password}"'
+        )
+        self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
+
+        return True
+
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Handle backend-database-database-created event.
 
@@ -229,50 +278,8 @@ class BackendDatabaseRequires(Object):
             logger.error("deferring database-created hook - postgres database not ready")
             return
 
-        plaintext_password = generate_password()
-        hashed_password = get_md5_password(self.auth_user, plaintext_password)
-        # create authentication user on postgres database, so we can authenticate other users
-        # later on
-        self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
-            self.postgres, PostgreSQLv0
-        ) else self.postgres.create_user(
-            self.auth_user, hashed_password, admin=True, database=self.database.database
-        )
-        try:
-            self.initialise_auth_function(self.collect_databases())
-        except Exception as e:
-            event.defer()
-            logger.error(
-                f"deferring database-created hook - Unable to initialise auth function: {e}"
-            )
+        if not self._create_users(event):
             return
-
-        hashed_password = get_md5_password(self.auth_user, plaintext_password)
-
-        # Add the monitoring user.
-        if not (
-            hashed_monitoring_password := self.generate_system_user(
-                self.stats_user, MONITORING_PASSWORD_KEY
-            )
-        ):
-            event.defer()
-            logger.error("deferring database-created hook - cannot monitoring hash password")
-            return
-
-        # Add the admin console user.
-        if not (
-            hashed_admin_password := self.generate_system_user(self.admin_user, ADMIN_PASSWORD_KEY)
-        ):
-            event.defer()
-            logger.error("deferring database-created hook - cannot admin hash password")
-            return
-
-        auth_file = (
-            f'"{self.auth_user}" "{hashed_password}"\n'
-            f'"{self.stats_user}" "{hashed_monitoring_password}"\n'
-            f'"{self.admin_user}" "{hashed_admin_password}"'
-        )
-        self.charm.set_secret(APP_SCOPE, AUTH_FILE_DATABAG_KEY, auth_file)
 
         self.charm.render_auth_file()
         self.charm.render_pgb_config()
