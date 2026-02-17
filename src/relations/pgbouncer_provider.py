@@ -43,14 +43,11 @@ from urllib.parse import quote
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseProvides,
     DatabaseRequestedEvent,
+    PrematureDataAccessError,
 )
 from charms.pgbouncer_k8s.v0 import pgb
-from charms.postgresql_k8s.v0.postgresql import (
-    PERMISSIONS_GROUP_ADMIN,
-)
-from charms.postgresql_k8s.v0.postgresql import (
-    PostgreSQL as PostgreSQLv0,
-)
+from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
+from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
 from ops import (
     Application,
     BlockedStatus,
@@ -128,7 +125,12 @@ class PgBouncerProvider(Object):
             - If backend relation is not fully initialised
         """
         rel_id = event.relation.id
-        self.database_provides.set_subordinated(rel_id)
+        try:
+            self.database_provides.set_subordinated(rel_id)
+        except PrematureDataAccessError:
+            logger.debug("Client relation not initialised yet")
+            event.defer()
+            return
 
         if not self.charm.backend.check_backend():
             event.defer()
