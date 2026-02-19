@@ -1,0 +1,93 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  ubuntu-advantage/0 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/1 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/4 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/5 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/7 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/8 [idle] active: Attached (esm-apps,esm-infra)
+  postgresql-test-app/1 [idle] active: received database credentials of the first database
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql-test-app/3 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: 
+  postgresql/1 [idle] active: Primary
+  postgresql/2 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.14   unsupported  01:51:46Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge    73  no       
+pgbouncer            1.21.0   active       3  pgbouncer                            0  no       
+postgresql           14.20    active       3  postgresql           14/edge      1029  no       
+postgresql-test-app           active       3  postgresql-test-app  latest/edge   442  no       received database credentials of the first database
+ubuntu-advantage              active       6  ubuntu-advantage     latest/edge   148  no       Attached (esm-apps,esm-infra)
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/1*  active    idle   1        10.79.12.78               received database credentials of the first database
+  pgbouncer/2           active    idle            10.79.12.78               
+  ubuntu-advantage/0*   active    idle            10.79.12.78               Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active    idle   2        10.79.12.77               received database credentials of the first database
+  pgbouncer/1           active    idle            10.79.12.77               
+  ubuntu-advantage/1    active    idle            10.79.12.77               Attached (esm-apps,esm-infra)
+postgresql-test-app/3   active    idle   6        10.79.12.58               received database credentials of the first database
+  pgbouncer/3*          active    idle            10.79.12.58               
+  ubuntu-advantage/8    active    idle            10.79.12.58               Attached (esm-apps,esm-infra)
+postgresql/0            active    idle   3        10.79.12.9      5432/tcp  
+  ubuntu-advantage/4    active    idle            10.79.12.9                Attached (esm-apps,esm-infra)
+postgresql/1*           active    idle   4        10.79.12.222    5432/tcp  Primary
+  ubuntu-advantage/5    active    idle            10.79.12.222              Attached (esm-apps,esm-infra)
+postgresql/2            active    idle   5        10.79.12.223    5432/tcp  
+  ubuntu-advantage/7    active    idle            10.79.12.223              Attached (esm-apps,esm-infra)
+
+Machine  State    Address       Inst id        Base          AZ             Message
+1        started  10.79.12.78   juju-9c4632-1  ubuntu@22.04  runnervmjduv7  Running
+2        started  10.79.12.77   juju-9c4632-2  ubuntu@22.04  runnervmjduv7  Running
+3        started  10.79.12.9    juju-9c4632-3  ubuntu@22.04  runnervmjduv7  Running
+4        started  10.79.12.222  juju-9c4632-4  ubuntu@22.04  runnervmjduv7  Running
+5        started  10.79.12.223  juju-9c4632-5  ubuntu@22.04  runnervmjduv7  Running
+6        started  10.79.12.58   juju-9c4632-6  ubuntu@22.04  runnervmjduv7  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:36:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:39:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:39:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:39:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:39:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:40:03 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:40:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:40:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:40:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:40:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:41:12 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 1153, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f2e7b63f3a0 state=finished raised Exception>]
+unit-postgresql-1: 01:41:38 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 01:42:10 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.79.12.222", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.79.12.172", user "relation-6", database "postgres", no encryption
+
+unit-postgresql-0: 01:43:21 ERROR unit.postgresql/0.juju-log database-peers:3: Failed to list PostgreSQL database users: connection to server on socket "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp//.s.PGSQL.5432" failed: No such file or directory
+	Is the server running locally and accepting connections on that socket?
+
+machine-6: 01:48:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:48:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 01:51:29 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+unit-postgresql-test-app-1: 01:51:30 ERROR juju.worker.dependency "log-sender" manifold worker returned unexpected error: sending log message: websocket: close 1005 (no status): websocket: close sent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
