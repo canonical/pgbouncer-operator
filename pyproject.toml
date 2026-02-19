@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 [dependency-groups]
 charm = [
     "jinja2==3.1.6",
-    "ops==2.23.1",
+    "ops==3.5.2",
     "tenacity==9.1.2; python_version > '3.8'",
     # Focal cannot use 9.1
     "tenacity==9.0.0; python_version < '3.9'",
@@ -26,7 +26,7 @@ charm = [
 
 libs = [
     # data_platform_libs/v0/data_interfaces.py
-    "ops>=2.23.1",
+    "ops>=3.5.2",
     # data_platform_libs/v0/upgrade.py
     "poetry-core",
     # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
@@ -37,7 +37,7 @@ libs = [
     # tls_certificates_interface/v2/tls_certificates.py
     "cryptography; python_version > '3.8'",
     # Focal cannot build 45
-    "cryptography <45; python_version < '3.9'",
+    "cryptography <47; python_version < '3.9'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
     "opentelemetry-exporter-otlp-proto-http==1.21.0"
