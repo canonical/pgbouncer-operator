@@ -1,0 +1,63 @@
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:88 Refresh the charm
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:91 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:100 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] waiting: other units upgrading first...
+  pgbouncer/1 [executing] waiting: other units upgrading first...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.14   unsupported  01:46:16Z
+
+App              Version  Status  Scale  Charm            Channel       Rev  Exposed  Message
+data-integrator           active      2  data-integrator  latest/edge   366  no       
+pgbouncer        1.21.0   active      2  pgbouncer                        0  no       
+postgresql       14.20    active      3  postgresql       14/edge      1037  no       
+
+Unit                Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0   active    idle   0        10.125.146.115            
+  pgbouncer/1       active    idle            10.125.146.115  6432/tcp  
+data-integrator/1*  active    idle   1        10.125.146.13             
+  pgbouncer/0*      active    idle            10.125.146.13   6432/tcp  
+postgresql/0*       active    idle   2        10.125.146.154  5432/tcp  Primary
+postgresql/1        active    idle   3        10.125.146.135  5432/tcp  
+postgresql/2        active    idle   4        10.125.146.143  5432/tcp  
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.125.146.115  juju-fdc19e-0  ubuntu@22.04  runnervmwffz4  Running
+1        started  10.125.146.13   juju-fdc19e-1  ubuntu@22.04  runnervmwffz4  Running
+2        started  10.125.146.154  juju-fdc19e-2  ubuntu@22.04  runnervmwffz4  Running
+3        started  10.125.146.135  juju-fdc19e-3  ubuntu@22.04  runnervmwffz4  Running
+4        started  10.125.146.143  juju-fdc19e-4  ubuntu@22.04  runnervmwffz4  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-1: 01:38:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:38:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:40:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:40:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:40:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:12 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:12 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:41:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:41:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:42:02 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fb0945d7250 state=finished raised Exception>]
+unit-pgbouncer-0: 01:42:51 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.125.146.154", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.125.146.13", user "relation-6", database "postgres", no encryption
+
+unit-postgresql-1: 01:43:42 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: connection to server on socket "/tmp/snap-private-tmp/snap.charmed-postgresql/tmp//.s.PGSQL.5432" failed: No such file or directory
+	Is the server running locally and accepting connections on that socket?
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
