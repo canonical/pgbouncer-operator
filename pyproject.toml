@@ -23,7 +23,7 @@ charm = [
     "psycopg[c]==3.3.3; python_version > '3.9'",
     # Focal cannot use 3.3.2
     "psycopg[c]<3.3; python_version < '3.10'",
-    "postgresql-charms-single-kernel==16.1.8"
+    "postgresql-charms-single-kernel==16.1.9"
 ]
 
 libs = [
@@ -86,6 +86,9 @@ unit = {requires-python = ">=3.12"}
 integration = {requires-python = ">=3.12"}
 lint = {requires-python = ">=3.12"}
 format = {requires-python = ">=3.12"}
+
+[tool.uv.sources]
+postgresql-charms-single-kernel = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/459112bcfea32edf2f06a18ae46a80605821c4be.zip" }
 
 # Testing tools configuration
 [tool.coverage.run]

@@ -1600,7 +1600,7 @@ charm = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "ops", marker = "python_full_version < '3.9'", specifier = "<3" },
     { name = "ops", marker = "python_full_version >= '3.10'", specifier = "==3.6.0" },
-    { name = "postgresql-charms-single-kernel", specifier = "==16.1.8" },
+    { name = "postgresql-charms-single-kernel", url = "https://github.com/canonical/postgresql-single-kernel-library/archive/459112bcfea32edf2f06a18ae46a80605821c4be.zip" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version < '3.10'", specifier = "<3.3" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version >= '3.10'", specifier = "==3.3.3" },
     { name = "psycopg2", marker = "python_full_version < '3.9'", specifier = "<2.9.11" },
@@ -1696,8 +1696,8 @@ wheels = [
 
 [[package]]
 name = "postgresql-charms-single-kernel"
-version = "16.1.8"
-source = { registry = "https://pypi.org/simple" }
+version = "16.1.9"
+source = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/459112bcfea32edf2f06a18ae46a80605821c4be.zip" }
 dependencies = [
     { name = "ops", version = "2.23.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "ops", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -1706,9 +1706,13 @@ dependencies = [
     { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/68/a2/7743656b30ea643d6c0f3ec5def7bd8c97fdbebaddfb32c44248b6a4b19b/postgresql_charms_single_kernel-16.1.8.tar.gz", hash = "sha256:4e5c5bc8e3d78426f85567bce6bf60edb2ed3073c2ad9d5235a30dddf299be1f", size = 22504, upload-time = "2026-02-25T19:09:12.535Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/37/68fbf415ce78c979ab1cb4125e7f44fb3b1f57d1f46b50bd243877c64263/postgresql_charms_single_kernel-16.1.8-py3-none-any.whl", hash = "sha256:1fe974fa8434df67a65293f1443cd481651e7983f3cb051ff2a2b99b8eac0d79", size = 25582, upload-time = "2026-02-25T19:09:11.445Z" },
+sdist = { hash = "sha256:8dafe039c182aff2639e7ee824343d59c5ed8f78b9a32cfb81cd6c3ae266ef8d" }
+
+[package.metadata]
+requires-dist = [
+    { name = "ops", specifier = ">=2.0.0" },
+    { name = "psycopg2", specifier = ">=2.9.10" },
+    { name = "tenacity", specifier = ">=9.0.0" },
 ]
 
 [[package]]
