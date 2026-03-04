@@ -46,12 +46,8 @@ from charms.data_platform_libs.v0.data_interfaces import (
     PrematureDataAccessError,
 )
 from charms.pgbouncer_k8s.v0 import pgb
-from charms.postgresql_k8s.v0.postgresql import (
-    PERMISSIONS_GROUP_ADMIN,
-)
-from charms.postgresql_k8s.v0.postgresql import (
-    PostgreSQL as PostgreSQLv0,
-)
+from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
+from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
 from ops import (
     Application,
     BlockedStatus,
