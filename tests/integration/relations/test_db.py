@@ -22,10 +22,7 @@ from ..helpers.helpers import (
     get_legacy_relation_username,
     run_command_on_unit,
 )
-from ..helpers.postgresql_helpers import (
-    check_database_users_existence,
-    check_databases_creation,
-)
+from ..helpers.postgresql_helpers import check_database_users_existence, check_databases_creation
 
 logger = logging.getLogger(__name__)
 

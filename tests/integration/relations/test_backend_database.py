@@ -22,10 +22,7 @@ from ..helpers.helpers import (
     run_command_on_unit,
     wait_for_relation_removed_between,
 )
-from ..helpers.postgresql_helpers import (
-    check_database_users_existence,
-    get_postgres_primary,
-)
+from ..helpers.postgresql_helpers import check_database_users_existence, get_postgres_primary
 from ..juju_ import juju_major_version
 
 logger = logging.getLogger(__name__)
