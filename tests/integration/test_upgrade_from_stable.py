@@ -10,17 +10,8 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from .helpers.ha_helpers import (
-    are_writes_increasing,
-    check_writes,
-    start_continuous_writes,
-)
-from .helpers.helpers import (
-    CLIENT_APP_NAME,
-    FIRST_DATABASE_RELATION_NAME,
-    PG,
-    PGB,
-)
+from .helpers.ha_helpers import are_writes_increasing, check_writes, start_continuous_writes
+from .helpers.helpers import CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, PG, PGB
 from .helpers.postgresql_helpers import get_leader_unit
 
 logger = logging.getLogger(__name__)

@@ -39,11 +39,7 @@ async def test_deploy(ops_test: OpsTest, charm):
             num_units=3,
             channel=os.environ["POSTGRESQL_CHARM_CHANNEL"],
         ),
-        ops_test.model.deploy(
-            CLIENT_APP_NAME,
-            num_units=3,
-            channel="latest/edge",
-        ),
+        ops_test.model.deploy(CLIENT_APP_NAME, num_units=3, channel="latest/edge", series="jammy"),
         ops_test.model.deploy(
             UBUNTU_PRO_APP_NAME,
             config={"token": os.environ["UBUNTU_PRO_TOKEN"]},

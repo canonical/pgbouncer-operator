@@ -29,7 +29,8 @@ async def test_config_parameters(ops_test: OpsTest, charm) -> None:
             ops_test.model.deploy(
                 CLIENT_APP_NAME,
                 application_name=CLIENT_APP_NAME,
-                channel="edge",
+                channel="latest/edge",
+                series="jammy",
             ),
             ops_test.model.deploy(
                 charm,

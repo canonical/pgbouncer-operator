@@ -34,7 +34,10 @@ async def test_build_and_deploy(ops_test: OpsTest, charm):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+                CLIENT_APP_NAME,
+                application_name=CLIENT_APP_NAME,
+                channel="latest/edge",
+                series="jammy",
             ),
             ops_test.model.deploy(
                 charm,

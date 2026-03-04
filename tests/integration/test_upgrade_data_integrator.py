@@ -10,10 +10,7 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from .helpers.helpers import (
-    PG,
-    PGB,
-)
+from .helpers.helpers import PG, PGB
 from .helpers.postgresql_helpers import get_leader_unit
 from .relations.pgbouncer_provider.helpers import (
     check_exposed_connection,
