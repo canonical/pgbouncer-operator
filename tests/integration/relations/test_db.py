@@ -22,10 +22,7 @@ from ..helpers.helpers import (
     get_legacy_relation_username,
     run_command_on_unit,
 )
-from ..helpers.postgresql_helpers import (
-    check_database_users_existence,
-    check_databases_creation,
-)
+from ..helpers.postgresql_helpers import check_database_users_existence, check_databases_creation
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +109,10 @@ async def test_extensions(ops_test: OpsTest, charm):
         pgb_jammy = f"{PGB}-jammy"
         await gather(
             ops_test.model.deploy(
-                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+                CLIENT_APP_NAME,
+                application_name=CLIENT_APP_NAME,
+                channel="latest/edge",
+                series="jammy",
             ),
             ops_test.model.deploy(
                 charm,

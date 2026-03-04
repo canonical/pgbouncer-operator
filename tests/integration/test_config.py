@@ -10,12 +10,7 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from .helpers.helpers import (
-    CLIENT_APP_NAME,
-    FIRST_DATABASE_RELATION_NAME,
-    PG,
-    PGB,
-)
+from .helpers.helpers import CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, PG, PGB
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +24,8 @@ async def test_config_parameters(ops_test: OpsTest, charm) -> None:
             ops_test.model.deploy(
                 CLIENT_APP_NAME,
                 application_name=CLIENT_APP_NAME,
-                channel="edge",
+                channel="latest/edge",
+                series="jammy",
             ),
             ops_test.model.deploy(
                 charm,

@@ -20,16 +20,9 @@ from .helpers.ha_helpers import (
     check_writes,
     start_continuous_writes,
 )
-from .helpers.helpers import (
-    CLIENT_APP_NAME,
-    FIRST_DATABASE_RELATION_NAME,
-    PG,
-    PGB,
-)
+from .helpers.helpers import CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, PG, PGB
 from .helpers.postgresql_helpers import get_leader_unit
-from .relations.pgbouncer_provider.helpers import (
-    get_application_relation_data,
-)
+from .relations.pgbouncer_provider.helpers import get_application_relation_data
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +40,7 @@ async def test_deploy_latest(ops_test: OpsTest, charm) -> None:
             config={"profile": "testing"},
         ),
         ops_test.model.deploy(PGB, channel="1/edge", num_units=0, series="jammy"),
-        ops_test.model.deploy(
-            CLIENT_APP_NAME,
-            num_units=3,
-            channel="latest/edge",
-        ),
+        ops_test.model.deploy(CLIENT_APP_NAME, num_units=3, channel="latest/edge", series="jammy"),
     )
     logger.info("Wait for applications to become active")
 
