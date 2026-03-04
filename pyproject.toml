@@ -87,9 +87,6 @@ integration = {requires-python = ">=3.12"}
 lint = {requires-python = ">=3.12"}
 format = {requires-python = ">=3.12"}
 
-[tool.uv.sources]
-postgresql-charms-single-kernel = { url = "https://github.com/canonical/postgresql-single-kernel-library/archive/459112bcfea32edf2f06a18ae46a80605821c4be.zip" }
-
 # Testing tools configuration
 [tool.coverage.run]
 branch = true
