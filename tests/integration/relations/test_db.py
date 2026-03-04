@@ -109,7 +109,10 @@ async def test_extensions(ops_test: OpsTest, charm):
         pgb_jammy = f"{PGB}-jammy"
         await gather(
             ops_test.model.deploy(
-                CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+                CLIENT_APP_NAME,
+                application_name=CLIENT_APP_NAME,
+                channel="latest/edge",
+                series="jammy",
             ),
             ops_test.model.deploy(
                 charm,
