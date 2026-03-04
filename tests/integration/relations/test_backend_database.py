@@ -22,10 +22,7 @@ from ..helpers.helpers import (
     run_command_on_unit,
     wait_for_relation_removed_between,
 )
-from ..helpers.postgresql_helpers import (
-    check_database_users_existence,
-    get_postgres_primary,
-)
+from ..helpers.postgresql_helpers import check_database_users_existence, get_postgres_primary
 from ..juju_ import juju_major_version
 
 logger = logging.getLogger(__name__)
@@ -47,7 +44,10 @@ async def test_relate_pgbouncer_to_postgres(ops_test: OpsTest, charm):
     relation = await deploy_postgres_bundle(ops_test, charm, pgb_base="ubuntu@22.04")
     async with ops_test.fast_forward():
         await ops_test.model.deploy(
-            CLIENT_APP_NAME, application_name=CLIENT_APP_NAME, channel="edge"
+            CLIENT_APP_NAME,
+            application_name=CLIENT_APP_NAME,
+            channel="latest/edge",
+            series="jammy",
         )
         # Relate the charms and wait for them exchanging some connection data.
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)

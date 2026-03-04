@@ -20,16 +20,9 @@ from .helpers.ha_helpers import (
     check_writes,
     start_continuous_writes,
 )
-from .helpers.helpers import (
-    CLIENT_APP_NAME,
-    FIRST_DATABASE_RELATION_NAME,
-    PG,
-    PGB,
-)
+from .helpers.helpers import CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, PG, PGB
 from .helpers.postgresql_helpers import get_leader_unit
-from .relations.pgbouncer_provider.helpers import (
-    get_application_relation_data,
-)
+from .relations.pgbouncer_provider.helpers import get_application_relation_data
 
 logger = logging.getLogger(__name__)
 

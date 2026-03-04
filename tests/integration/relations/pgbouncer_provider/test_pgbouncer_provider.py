@@ -54,7 +54,8 @@ async def test_database_relation_with_charm_libraries(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 CLIENT_APP_NAME,
                 application_name=CLIENT_APP_NAME,
-                channel="edge",
+                channel="latest/edge",
+                series="jammy",
                 config=(
                     {"extra_user_roles": "CREATEDB,CREATEROLE"}
                     if os.environ["POSTGRESQL_CHARM_CHANNEL"].split("/")[0] == "14"
@@ -249,7 +250,8 @@ async def test_two_applications_cant_relate_to_the_same_pgb(ops_test: OpsTest):
     await ops_test.model.deploy(
         CLIENT_APP_NAME,
         application_name=ANOTHER_APPLICATION_APP_NAME,
-        channel="edge",
+        channel="latest/edge",
+        series="jammy",
     )
     await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active")
 

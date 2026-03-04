@@ -10,12 +10,7 @@ from pytest_operator.plugin import OpsTest
 
 from constants import BACKEND_RELATION_NAME
 
-from .helpers.helpers import (
-    CLIENT_APP_NAME,
-    FIRST_DATABASE_RELATION_NAME,
-    PG,
-    PGB,
-)
+from .helpers.helpers import CLIENT_APP_NAME, FIRST_DATABASE_RELATION_NAME, PG, PGB
 
 logger = logging.getLogger(__name__)
 
