@@ -19,13 +19,12 @@ from typing import Dict, List, Literal, Optional, Union, get_args
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
-from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider, ProtocolNotFoundError
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
-from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 from jinja2 import Template
 from ops import (
     ActiveStatus,
@@ -39,6 +38,7 @@ from ops import (
     WaitingStatus,
     main,
 )
+from ops_tracing import Tracing, set_destination
 from single_kernel_postgresql.utils.postgresql import (
     INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
     INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
@@ -70,6 +70,7 @@ from constants import (
     TLS_CERT_FILE,
     TLS_KEY_FILE,
     TRACING_PROTOCOL,
+    TRACING_RELATION_NAME,
     UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -86,18 +87,30 @@ Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
 INSTANCE_DIR = "instance_"
 
 
-@trace_charm(
-    tracing_endpoint="tracing_endpoint",
-    extra_types=(
-        BackendDatabaseRequires,
-        COSAgentProvider,
-        DbProvides,
-        Peers,
-        PgBouncerProvider,
-        PgbouncerUpgrade,
-        PostgreSQLTLS,
-    ),
-)
+def charm_tracing_config(endpoint_requirer: COSAgentProvider) -> None:
+    """Utility function to set tracing destination."""
+    if not endpoint_requirer.is_ready():
+        return
+
+    try:
+        if not (endpoint := endpoint_requirer.get_tracing_endpoint(TRACING_PROTOCOL)):
+            return
+    except ProtocolNotFoundError:
+        logger.warning(
+            "Endpoint for tracing wasn't provided as tracing backend isn't ready yet. If grafana-agent isn't connected to a tracing backend, integrate it. Otherwise this issue should resolve itself in a few events."
+        )
+        return
+
+    endpoint = f"{endpoint}/v1/traces"
+
+    if endpoint.startswith("https://"):
+        # if endpoint is https BUT we don't have a server_cert yet:
+        # disable charm tracing until we do to prevent tls errors
+        logger.warning("Cannot send traces to an https endpoint without a certificate.")
+        return
+    set_destination(endpoint, None)
+
+
 class PgBouncerCharm(TypedCharmBase):
     """A class implementing charmed PgBouncer."""
 
@@ -150,10 +163,11 @@ class PgBouncerCharm(TypedCharmBase):
                 refresh_events=[self.on.config_changed],
                 tracing_protocols=[TRACING_PROTOCOL],
             )
-            self._tracing_endpoint_config, _ = charm_tracing_config(self._grafana_agent, None)
+            self.tracing = Tracing(self, tracing_relation_name=TRACING_RELATION_NAME)
+            charm_tracing_config(self._grafana_agent)
         except ValueError:
             logger.warning("Unable to set COS agent, invalid config")
-            self._tracing_endpoint_config = None
+            self.tracing = None
 
         self.upgrade = PgbouncerUpgrade(
             self,
