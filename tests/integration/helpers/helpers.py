@@ -383,11 +383,7 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
         await ops_test.model.applications[application_name].destroy_units(*units)
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
-            apps=[application_name],
-            status="active",
-            timeout=1000,
-            wait_for_exact_units=count,
-            idle_period=30,
+            apps=[application_name], status="active", timeout=1000, wait_for_exact_units=count
         )
 
 

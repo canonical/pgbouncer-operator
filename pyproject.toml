@@ -12,14 +12,14 @@ charm = [
     "jinja2==3.1.6",
     "ops[tracing]==3.6.0; python_version > '3.9'",
     # Focal cannot use 3
-    "ops[tracing]<3; python_version < '3.9'",
+    "ops[tracing]<3; python_version < '3.10'",
     "tenacity==9.1.2; python_version > '3.9'",
     # Focal cannot use 9.1
-    "tenacity<9.1; python_version < '3.9'",
+    "tenacity<9.1; python_version < '3.10'",
     "pydantic==1.10.26",
     "psycopg2==2.9.11; python_version > '3.9'",
     # Focal cannot use 2.9.11
-    "psycopg2<2.9.11; python_version < '3.9'",
+    "psycopg2<2.9.11; python_version < '3.10'",
     "psycopg[c]==3.3.3; python_version > '3.9'",
     # Focal cannot use 3.3.2
     "psycopg[c]<3.3; python_version < '3.10'",
@@ -44,11 +44,11 @@ libs = [
 ]
 
 format = [
-    "ruff==0.15.4"
+    "ruff==0.15.5"
 ]
 
 lint = [
-    "codespell==2.4.1"
+    "codespell==2.4.2"
 ]
 
 unit = [
