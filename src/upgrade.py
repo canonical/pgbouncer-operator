@@ -5,7 +5,6 @@
 
 import json
 import logging
-import os
 from typing import List
 
 import psycopg2
@@ -135,7 +134,8 @@ class PgbouncerUpgrade(DataUpgrade):
         # Refresh the charmed PostgreSQL snap and restart the database.
         self.charm.unit.status = MaintenanceStatus("stopping services")
         # If pgb is upgraded from a version that only uses cpu count excess services should be stopped
-        for service in [f"{PGB}-{self.charm.app.name}@{i}" for i in range(os.cpu_count())]:
+        for i in self.charm.service_ids:
+            service = f"{PGB}-{self.charm.app.name}@{i}"
             if systemd.service_running(service):
                 systemd.service_stop(service)
         if self.charm.backend.postgres:
