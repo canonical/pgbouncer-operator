@@ -15,6 +15,8 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [PostgreSQL 16 on 24.04](https://charmhub.io/postgresql?channel=16/stable) | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|[909], [910], [911], [912], [913], [914]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
+|[897], [898], [899], [900], [901], [902]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[873], [874], [875], [876], [877], [878]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[639], [640], [641], [642]| `1.21.0` | `3.6.1+` | | ![check] | ![check] | ![check]
 |[394], [395], [396], [397]| `1.21.0` | `3.4.5+` | | ![check] | ![check] | ![check]
@@ -33,6 +35,29 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 > 
 > See: [`juju info`](https://juju.is/docs/juju/juju-info).
 
+### Release 909-914
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
+|:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
+| [909] | | ![check] | | ![check] | |
+| [910] | | ![check] | ![check] |  | |
+| [911] | ![check] | | ![check] |  |
+| [912] | ![check] | | | | ![check] |
+| [913] |  | ![check] |  | | ![check] |
+| [914] |  ![check] | | | ![check] |
+
+[details=Release 897-902]
+### Release 897-902
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
+|:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
+| [897] | | ![check] | | ![check] | |
+| [898] | | ![check] | ![check] |  | 
+| [899] | ![check] | | ![check] |  |
+| [900] | ![check] | | | | ![check] |
+| [901] |  | ![check] |  | | ![check] |
+| [902] |  ![check] | |  | ![check] |
+[/details]
+
+[details=Release 873-878]
 ### Release 873-878
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -42,6 +67,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [875] | ![check] | | ![check] |  | 
 | [874] |  | ![check] |  | | ![check] |
 | [873] |  | ![check] |  | ![check] |
+[/details]
 
 [details=Release 639-642]
 ### Release 639-642
@@ -127,6 +153,18 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
  Our release notes are an ongoing work in progress. If there is any additional information about releases that you would like to see or suggestions for other improvements, don't hesitate to contact us on [Matrix ](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [leave a comment](https://discourse.charmhub.io/t/pgbouncer-reference-release-notes/12285).
 
 <!--LINKS-->
+[909]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[910]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[911]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[912]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[913]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[914]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
+[897]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
+[898]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
+[899]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
+[900]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
+[901]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
+[902]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev897
 [878]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev873
 [877]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev873
 [876]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev873
@@ -141,7 +179,6 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 [395]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
 [396]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
 [397]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
-[394, 395, 396, 397]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev394
 [278]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
 [279]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
 [280]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev278
