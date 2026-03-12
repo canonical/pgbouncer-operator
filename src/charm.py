@@ -4,6 +4,63 @@
 
 """Charmed PgBouncer connection pooler, to run on machine charms."""
 
+
+def _remove_stale_otel_sdk_packages():
+    """Hack to remove stale opentelemetry sdk packages from the charm's python venv.
+
+    See https://github.com/canonical/grafana-agent-operator/issues/146 and
+    https://bugs.launchpad.net/juju/+bug/2058335 for more context. This patch can be removed after
+    this juju issue is resolved and sufficient time has passed to expect most users of this library
+    have migrated to the patched version of juju.  When this patch is removed, un-ignore rule E402 for this file in the pyproject.toml (see setting
+    [tool.ruff.lint.per-file-ignores] in pyproject.toml).
+
+    This only has an effect if executed on an upgrade-charm event.
+    """
+    # all imports are local to keep this function standalone, side-effect-free, and easy to revert later
+    import os
+
+    if os.getenv("JUJU_DISPATCH_PATH") != "hooks/upgrade-charm":
+        return
+
+    import logging
+    import shutil
+    from collections import defaultdict
+
+    from importlib_metadata import distributions
+
+    otel_logger = logging.getLogger("charm_tracing_otel_patcher")
+    otel_logger.debug("Applying _remove_stale_otel_sdk_packages patch on charm upgrade")
+    # group by name all distributions starting with "opentelemetry_"
+    otel_distributions = defaultdict(list)
+    for distribution in distributions():
+        name = distribution._normalized_name
+        if name.startswith("opentelemetry_"):
+            otel_distributions[name].append(distribution)
+
+    otel_logger.debug(f"Found {len(otel_distributions)} opentelemetry distributions")
+
+    # If we have multiple distributions with the same name, remove any that have 0 associated files
+    for name, distributions_ in otel_distributions.items():
+        if len(distributions_) <= 1:
+            continue
+
+        otel_logger.debug(f"Package {name} has multiple ({len(distributions_)}) distributions.")
+        for distribution in distributions_:
+            if not distribution.files:  # Not None or empty list
+                path = distribution._path
+                otel_logger.info(f"Removing empty distribution of {name} at {path}.")
+                shutil.rmtree(path)
+
+    otel_logger.debug("Successfully applied _remove_stale_otel_sdk_packages patch. ")
+
+
+# apply hacky patch to remove stale opentelemetry sdk packages on upgrade-charm.
+# it could be trouble if someone ever decides to implement their own tracer parallel to
+# ours and before the charm has inited. We assume they won't.
+# !!IMPORTANT!! keep all otlp imports UNDER this call.
+_remove_stale_otel_sdk_packages()
+
+# ruff: disable[E402]
 import contextlib
 import json
 import logging
@@ -19,13 +76,12 @@ from typing import Dict, List, Literal, Optional, Union, get_args
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
-from charms.grafana_agent.v0.cos_agent import COSAgentProvider, charm_tracing_config
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider, ProtocolNotFoundError
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
 from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
-from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 from jinja2 import Template
 from ops import (
     ActiveStatus,
@@ -39,6 +95,7 @@ from ops import (
     WaitingStatus,
     main,
 )
+from ops_tracing import Tracing, set_destination
 from single_kernel_postgresql.utils.postgresql import (
     INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
     INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
@@ -70,6 +127,7 @@ from constants import (
     TLS_CERT_FILE,
     TLS_KEY_FILE,
     TRACING_PROTOCOL,
+    TRACING_RELATION_NAME,
     UNIT_SCOPE,
 )
 from relations.backend_database import BackendDatabaseRequires
@@ -79,6 +137,8 @@ from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
+# ruff: enable[E402]
+
 logger = logging.getLogger(__name__)
 
 Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
@@ -86,18 +146,30 @@ Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
 INSTANCE_DIR = "instance_"
 
 
-@trace_charm(
-    tracing_endpoint="tracing_endpoint",
-    extra_types=(
-        BackendDatabaseRequires,
-        COSAgentProvider,
-        DbProvides,
-        Peers,
-        PgBouncerProvider,
-        PgbouncerUpgrade,
-        PostgreSQLTLS,
-    ),
-)
+def charm_tracing_config(endpoint_requirer: COSAgentProvider) -> None:
+    """Utility function to set tracing destination."""
+    if not endpoint_requirer.is_ready():
+        return
+
+    try:
+        if not (endpoint := endpoint_requirer.get_tracing_endpoint(TRACING_PROTOCOL)):
+            return
+    except ProtocolNotFoundError:
+        logger.warning(
+            "Endpoint for tracing wasn't provided as tracing backend isn't ready yet. If grafana-agent isn't connected to a tracing backend, integrate it. Otherwise this issue should resolve itself in a few events."
+        )
+        return
+
+    endpoint = f"{endpoint}/v1/traces"
+
+    if endpoint.startswith("https://"):
+        # if endpoint is https BUT we don't have a server_cert yet:
+        # disable charm tracing until we do to prevent tls errors
+        logger.warning("Cannot send traces to an https endpoint without a certificate.")
+        return
+    set_destination(endpoint, None)
+
+
 class PgBouncerCharm(TypedCharmBase):
     """A class implementing charmed PgBouncer."""
 
@@ -150,10 +222,11 @@ class PgBouncerCharm(TypedCharmBase):
                 refresh_events=[self.on.config_changed],
                 tracing_protocols=[TRACING_PROTOCOL],
             )
-            self._tracing_endpoint_config, _ = charm_tracing_config(self._grafana_agent, None)
+            self.tracing = Tracing(self, tracing_relation_name=TRACING_RELATION_NAME)
+            charm_tracing_config(self._grafana_agent)
         except ValueError:
             logger.warning("Unable to set COS agent, invalid config")
-            self._tracing_endpoint_config = None
+            self.tracing = None
 
         self.upgrade = PgbouncerUpgrade(
             self,
