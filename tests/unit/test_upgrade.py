@@ -1,6 +1,5 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-import os
 import unittest
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -79,7 +78,7 @@ class TestUpgrade(unittest.TestCase):
 
         self.charm.upgrade._on_upgrade_granted(event)
 
-        assert _systemd.service_stop.call_count == os.cpu_count()
+        assert _systemd.service_stop.call_count == 1
         for svc in self.charm.pgb_services:
             _systemd.service_stop.assert_any_call(svc)
         _remove_exporter_service.assert_called_once_with()

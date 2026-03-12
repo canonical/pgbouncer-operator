@@ -430,10 +430,10 @@ class DbProvides(Object):
             broken_event.defer()
             return
 
-        dbs = self.charm.get_relation_databases()
-        database = dbs.pop(str(broken_event.relation.id), {}).get("name")
-        self.charm.set_relation_databases(dbs)
         if self.charm.unit.is_leader():
+            dbs = self.charm.get_relation_databases()
+            database = dbs.pop(str(broken_event.relation.id), {}).get("name")
+            self.charm.set_relation_databases(dbs)
             # check database can be deleted from pgb config, and if so, delete it. Database is kept on
             # postgres application because we don't want to delete all user data with one command.
             delete_db = database not in [db.get("name") for db in dbs.values()]
