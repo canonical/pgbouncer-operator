@@ -19,7 +19,7 @@ charm = [
     "pydantic==1.10.26",
     "psycopg2==2.9.11; python_version > '3.9'",
     # Focal cannot use 2.9.11
-    "psycopg2<2.9.11; python_version < '3.10'",
+    "psycopg2<2.9.12; python_version < '3.10'",
     "psycopg[c]==3.3.3; python_version > '3.9'",
     # Focal cannot use 3.3.2
     "psycopg[c]<3.3; python_version < '3.10'",
@@ -28,7 +28,7 @@ charm = [
 
 libs = [
     # data_platform_libs/v0/data_interfaces.py
-    "ops>=2.0.0",
+    "ops>=2.23.2",
     # data_platform_libs/v0/upgrade.py
     "poetry-core",
     # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
@@ -42,11 +42,11 @@ libs = [
     "cryptography <45; python_version < '3.9'",
     "jsonschema",
     # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.21.0"
+    "opentelemetry-exporter-otlp-proto-http==1.40.0"
 ]
 
 format = [
-    "ruff==0.15.5"
+    "ruff==0.15.6"
 ]
 
 lint = [
