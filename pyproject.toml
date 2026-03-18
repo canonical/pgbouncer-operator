@@ -41,6 +41,7 @@ libs = [
     # Focal cannot build 45
     "cryptography <45; python_version < '3.9'",
     "jsonschema",
+    "idna",
 ]
 
 format = [
