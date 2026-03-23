@@ -1,0 +1,156 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.19   unsupported  01:42:29Z
+
+App                       Version  Status   Scale  Charm                     Channel       Rev  Exposed  Message
+data-integrator                    blocked      2  data-integrator           latest/edge   380  no       Please relate the data-integrator with the desired product
+pgbouncer                 1.21.0   error        2  pgbouncer                                 0  no       hook failed: "backend-database-relation-changed"
+postgresql                14.22    active       2  postgresql                14/edge      1078  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable      586  no       
+
+Unit                         Workload  Agent      Machine  Public address  Ports     Message
+data-integrator/0            blocked   executing  1        10.84.27.251              Please relate the data-integrator with the desired product
+  pgbouncer/1                error     idle                10.84.27.251    6432/tcp  hook failed: "backend-database-relation-changed"
+data-integrator/1*           blocked   executing  2        10.84.27.239              Please relate the data-integrator with the desired product
+  pgbouncer/0*               active    executing           10.84.27.239    6432/tcp  
+postgresql/0*                active    executing  3        10.84.27.158    5432/tcp  Primary
+postgresql/1                 waiting   executing  4        10.84.27.92     5432/tcp  awaiting for member to start
+self-signed-certificates/0*  active    idle       0        10.84.27.80               
+
+Machine  State    Address       Inst id        Base          AZ             Message
+0        started  10.84.27.80   juju-df406d-0  ubuntu@24.04  runnervm46oaq  Running
+1        started  10.84.27.251  juju-df406d-1  ubuntu@24.04  runnervm46oaq  Running
+2        started  10.84.27.239  juju-df406d-2  ubuntu@24.04  runnervm46oaq  Running
+3        started  10.84.27.158  juju-df406d-3  ubuntu@22.04  runnervm46oaq  Running
+4        started  10.84.27.92   juju-df406d-4  ubuntu@22.04  runnervm46oaq  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:38:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:38:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:38:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:38:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:39:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:39:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:39:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:39:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:40:14 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:40:14 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:40:35 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fb8b8ace530 state=finished raised Exception>]
+unit-postgresql-0: 01:40:52 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 01:41:18 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.84.27.158", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.84.27.239", user "relation-6", database "postgres", no encryption
+
+unit-pgbouncer-1: 01:42:27 ERROR unit.pgbouncer/1.juju-log backend-database:6: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/model.py", line 3578, in _wrap_hookcmd
+    yield
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/model.py", line 3929, in secret_get
+    return hookcmds.secret_get(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/hookcmds/_secret.py", line 153, in secret_get
+    stdout = run('secret-get', '--format=json', *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/hookcmds/_utils.py", line 53, in run
+    raise Error(returncode=e.returncode, cmd=e.cmd, stdout=e.stdout, stderr=e.stderr) from None
+ops.hookcmds._utils.Error: command ('secret-get', '--format=json', '--label', 'pgb-peers.pgbouncer.app') exited with status 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/charm.py", line 1044, in <module>
+    main(PgBouncerCharm)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/relations/backend_database.py", line 293, in _on_relation_changed
+    self.charm.render_pgb_config()
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/charm.py", line 872, in render_pgb_config
+    databases = self._get_relation_config()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/charm.py", line 777, in _get_relation_config
+    if not self.backend.relation or not (databases := self.get_relation_databases()):
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/charm.py", line 699, in get_relation_databases
+    cfg := self.get_secret(APP_SCOPE, CFG_FILE_DATABAG_KEY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 946, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/src/charm.py", line 366, in get_secret
+    return self.peer_relation_data(scope).get_secret(peers.id, secret_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 649, in wrapper
+    return f(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 2542, in get_secret
+    and field not in self.current_secret_fields
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 2498, in current_secret_fields
+    if content := self._get_group_secret_contents(relation, group):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 2839, in _get_group_secret_contents
+    result = super()._get_group_secret_contents(relation, group, secret_fields)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 1499, in _get_group_secret_contents
+    if (secret := self._get_relation_secret(relation.id, group)) and (
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 636, in wrapper
+    return f(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 2826, in _get_relation_secret
+    return self.secrets.get(
+           ^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 981, in get
+    if secret.meta:
+       ^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/lib/charms/data_platform_libs/v0/data_interfaces.py", line 804, in meta
+    self._secret_meta = self._model.get_secret(label=self.label)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/model.py", line 309, in get_secret
+    content = self._backend.secret_get(id=id, label=label)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/model.py", line 3928, in secret_get
+    with self._wrap_hookcmd('secret-get', id=id, label=label, refresh=refresh, peek=peek):
+  File "/usr/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/var/lib/juju/agents/unit-pgbouncer-1/charm/venv/lib/python3.12/site-packages/ops/model.py", line 3588, in _wrap_hookcmd
+    raise ModelError(e.stderr) from e
+ops.model.ModelError: ERROR permission denied
+
+unit-pgbouncer-1: 01:42:27 ERROR juju.worker.uniter.operation hook "backend-database-relation-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
