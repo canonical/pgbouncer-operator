@@ -1,0 +1,28 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.20   unsupported  01:41:50Z
+
+App              Version  Status   Scale  Charm            Channel       Rev  Exposed  Message
+data-integrator           waiting    0/2  data-integrator  latest/edge   378  no       waiting for machine
+pgbouncer                 unknown      0  pgbouncer        1/stable      914  no       
+postgresql                waiting    0/3  postgresql       14/edge      1078  no       waiting for machine
+
+Unit               Workload  Agent       Machine  Public address  Ports  Message
+data-integrator/0  waiting   allocating  0        10.183.44.55           waiting for machine
+data-integrator/1  waiting   allocating  1                               waiting for machine
+postgresql/0       waiting   allocating  2                               waiting for machine
+postgresql/1       waiting   allocating  3                               waiting for machine
+postgresql/2       waiting   allocating  4                               waiting for machine
+
+Machine  State    Address       Inst id        Base          AZ             Message
+0        pending  10.183.44.55  juju-af5ef3-0  ubuntu@22.04  runnervmrg6be  Running
+1        pending                pending        ubuntu@22.04                 Failed remote LXD image download. Retrying. Attempt number 3
+2        pending                pending        ubuntu@22.04                 Failed remote LXD image download. Retrying. Attempt number 3
+3        pending                pending        ubuntu@22.04                 Failed remote LXD image download. Retrying. Attempt number 3
+4        pending                pending        ubuntu@22.04                 Failed remote LXD image download. Retrying. Attempt number 3
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
