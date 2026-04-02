@@ -1,0 +1,28 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.20   unsupported  01:41:14Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer                     waiting      1  pgbouncer                           0  no       Waiting to start PgBouncer
+postgresql-test-app           blocked    1/3  postgresql-test-app  latest/edge  469  no       No database integration available
+
+Unit                    Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0*  blocked   idle        0        10.182.193.254         No database integration available
+  pgbouncer/0*          waiting   executing            10.182.193.254         Waiting to start PgBouncer
+postgresql-test-app/1   waiting   allocating  1        10.182.193.171         waiting for machine
+postgresql-test-app/2   waiting   allocating  2        10.182.193.80          waiting for machine
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.182.193.254  juju-1f095c-0  ubuntu@22.04  runnervmrg6be  Running
+1        down     10.182.193.171  juju-1f095c-1  ubuntu@22.04  runnervmrg6be  Running
+2        down     10.182.193.80   juju-1f095c-2  ubuntu@22.04  runnervmrg6be  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:40:38 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:40:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[33mWARNING [0m juju.client.connection:connection.py:579 RPC: Connection closed, reconnecting
+[1m[31mERROR   [0m juju.client.connection:connection.py:587 RPC: Automatic reconnect failed
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

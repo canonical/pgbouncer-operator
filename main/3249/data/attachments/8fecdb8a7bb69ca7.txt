@@ -1,0 +1,37 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.20   unsupported  01:41:56Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge    73  no       
+pgbouncer            1.21.0   waiting    0/1  pgbouncer                            0  no       waiting for backend-database relation to connect
+postgresql                    waiting    0/3  postgresql           14/edge      1078  no       waiting for machine
+postgresql-test-app           blocked    0/3  postgresql-test-app  latest/edge   469  no       No database integration available
+ubuntu-advantage              unknown      0  ubuntu-advantage     latest/edge   148  no       
+
+Unit                    Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0*  unknown   lost        0        10.80.31.182           agent lost, see 'juju show-status-log postgresql-test-app/0'
+  pgbouncer/0*          unknown   lost                 10.80.31.182           agent lost, see 'juju show-status-log pgbouncer/0'
+postgresql-test-app/1   waiting   allocating  1        10.80.31.84            waiting for machine
+postgresql-test-app/2   waiting   allocating  2        10.80.31.50            waiting for machine
+postgresql/0            waiting   allocating  3        10.80.31.183           waiting for machine
+postgresql/1            waiting   allocating  4        10.80.31.74            waiting for machine
+postgresql/2            waiting   allocating  5        10.80.31.15            waiting for machine
+
+Machine  State  Address       Inst id        Base          AZ             Message
+0        down   10.80.31.182  juju-5c2112-0  ubuntu@22.04  runnervmrg6be  Running
+1        down   10.80.31.84   juju-5c2112-1  ubuntu@22.04  runnervmrg6be  Running
+2        down   10.80.31.50   juju-5c2112-2  ubuntu@22.04  runnervmrg6be  Running
+3        down   10.80.31.183  juju-5c2112-3  ubuntu@22.04  runnervmrg6be  Running
+4        down   10.80.31.74   juju-5c2112-4  ubuntu@22.04  runnervmrg6be  Running
+5        down   10.80.31.15   juju-5c2112-5  ubuntu@22.04  runnervmrg6be  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:39:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:39:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[33mWARNING [0m juju.client.connection:connection.py:579 RPC: Connection closed, reconnecting
+[1m[31mERROR   [0m juju.client.connection:connection.py:587 RPC: Automatic reconnect failed
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
