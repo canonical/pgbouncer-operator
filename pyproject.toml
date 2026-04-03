@@ -10,9 +10,9 @@ requires-python = ">=3.8"
 [dependency-groups]
 charm = [
     "jinja2==3.1.6",
-    "ops==3.7.0; python_version > '3.9'",
+    "ops[tracing]==3.7.0; python_version > '3.9'",
     # Focal cannot use 3
-    "ops<3; python_version < '3.10'",
+    "ops[tracing]<3; python_version < '3.10'",
     "tenacity==9.1.2; python_version > '3.9'",
     # Focal cannot use 9.1
     "tenacity<9.1; python_version < '3.10'",
@@ -41,8 +41,7 @@ libs = [
     # Focal cannot build 45
     "cryptography <45; python_version < '3.9'",
     "jsonschema",
-    # tempo_coordinator_k8s/v0/charm_tracing.py
-    "opentelemetry-exporter-otlp-proto-http==1.21.0"
+    "idna",
 ]
 
 format = [
