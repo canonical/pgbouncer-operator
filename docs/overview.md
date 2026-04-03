@@ -46,6 +46,7 @@ This PgBouncer charm is an official distribution of PgBouncer. It’s an open-so
 | 2 | h-manage-app | [Manage integrations](/t/12311) |
 | 2 | h-enable-encryption | [Enable TLS](/t/12310) |
 | 2 | h-external-access | [External network access](/t/15741) |
+| 2 | h-admin-console | [Admin console access](/t/20095) |
 | 2 | h-monitoring | [Monitoring (COS)]() |
 | 3 | h-enable-monitoring | [Enable monitoring](/t/12308) |
 | 3 | h-enable-tracing | [Enable tracing](/t/14788) |

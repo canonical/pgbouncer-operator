@@ -12,6 +12,7 @@ The following guides cover key processes and common tasks for managing and using
 * [Manage integrations]
 * [Enable TLS]
 * [External network access]
+* [Admin console access]
 
 ## Monitoring (COS)
 
@@ -31,6 +32,7 @@ The following guides cover key processes and common tasks for managing and using
 [Enable TLS]: /t/12310
 [Manage integrations]: /t/12311
 [External network access]: /t/15741
+[Admin console access]: /t/20095
 
 [Enable monitoring]: /t/12308
 [Enable tracing]: /t/14788
