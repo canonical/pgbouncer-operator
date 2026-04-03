@@ -84,6 +84,7 @@ jobs:
   integration-test:
     name: Integration test charm
     needs:
+      - lint-workflows
       - lint
       - unit-test
       - build
