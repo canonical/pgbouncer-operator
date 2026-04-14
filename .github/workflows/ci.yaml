@@ -34,7 +34,7 @@ on:
 jobs:
   lint-workflows:
     name: Lint .github/workflows/
-    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v48.0.3
+    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v48.1.1
     permissions:
       contents: read
 
@@ -74,7 +74,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v48.0.3
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v48.1.1
     with:
       cache: false
     permissions:
