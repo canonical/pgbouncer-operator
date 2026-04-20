@@ -1,0 +1,94 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.21   unsupported  01:44:34Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge    73  no       
+pgbouncer            1.21.0   error        3  pgbouncer                            0  no       hook failed: "backend-database-relation-changed"
+postgresql           14.22    active       3  postgresql           14/edge      1098  no       
+postgresql-test-app           blocked      3  postgresql-test-app  latest/edge   480  no       No database integration available
+ubuntu-advantage              unknown      0  ubuntu-advantage     latest/edge   148  no       
+
+Unit                    Workload     Agent      Machine  Public address  Ports     Message
+postgresql-test-app/0   blocked      idle       0        10.237.235.132            No database integration available
+  pgbouncer/1           blocked      executing           10.237.235.132            waiting for backend database relation to initialise
+postgresql-test-app/1   blocked      idle       1        10.237.235.187            No database integration available
+  pgbouncer/2           maintenance  executing           10.237.235.187            updating PgBouncer config
+postgresql-test-app/2*  blocked      idle       2        10.237.235.118            No database integration available
+  pgbouncer/0*          error        idle                10.237.235.118            hook failed: "backend-database-relation-changed"
+postgresql/0*           maintenance  executing  3        10.237.235.119  5432/tcp  reconfiguring cluster
+postgresql/1            waiting      executing  4        10.237.235.94   5432/tcp  awaiting for member to start
+postgresql/2            waiting      executing  5        10.237.235.13   5432/tcp  awaiting for cluster to start
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.237.235.132  juju-55bae8-0  ubuntu@22.04  runnervmrc6n4  Running
+1        started  10.237.235.187  juju-55bae8-1  ubuntu@22.04  runnervmrc6n4  Running
+2        started  10.237.235.118  juju-55bae8-2  ubuntu@22.04  runnervmrc6n4  Running
+3        started  10.237.235.119  juju-55bae8-3  ubuntu@22.04  runnervmrc6n4  Running
+4        started  10.237.235.94   juju-55bae8-4  ubuntu@22.04  runnervmrc6n4  Running
+5        started  10.237.235.13   juju-55bae8-5  ubuntu@22.04  runnervmrc6n4  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 01:39:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:39:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:41:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:41:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:41:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:41:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:41:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:42:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:42:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:42:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:43:09 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f9af7d13a60 state=finished raised Exception>]
+unit-postgresql-0: 01:43:28 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 01:43:56 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.237.235.119", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.237.235.118", user "relation-6", database "postgres", no encryption
+
+unit-pgbouncer-0: 01:44:32 ERROR unit.pgbouncer/0.juju-log backend-database:6: Failed to create user: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 01:44:32 ERROR unit.pgbouncer/0.juju-log backend-database:6: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 316, in create_user
+    with self._connect_to_database() as connection, connection.cursor() as cursor:
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 184, in _connect_to_database
+    connection = psycopg2.connect(
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 1069, in <module>
+    main(PgBouncerCharm)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 423, in _emit
+    self.framework.reemit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 920, in reemit
+    self._reemit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/relations/backend_database.py", line 236, in _on_database_created
+    self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 341, in create_user
+    raise PostgreSQLCreateUserError() from e
+charms.postgresql_k8s.v0.postgresql.PostgreSQLCreateUserError: None
+unit-pgbouncer-0: 01:44:33 ERROR juju.worker.uniter.operation hook "backend-database-relation-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
