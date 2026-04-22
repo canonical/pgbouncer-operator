@@ -36,8 +36,9 @@ jobs:
 
       - name: Install additional dependencies for TICS
         run: |
-          uv --config-file=tox_uv.toml pip install flake8 pylint
           uv --config-file=tox_uv.toml sync --active --all-groups
+          # Install after otherwise sync will remove
+          uv --config-file=tox_uv.toml pip install flake8 pylint
 
       - name: TICS GitHub Action
         uses: tiobe/tics-github-action@v3
