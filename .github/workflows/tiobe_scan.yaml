@@ -4,6 +4,7 @@
 name: Weekly TICS scan
 
 on:
+  pull_request:
   schedule:
     - cron: "0 2 * * 6" # Every Saturday 2:00 AM UTC
   workflow_dispatch:
@@ -36,7 +37,8 @@ jobs:
 
       - name: Install additional dependencies for TICS
         run: |
-          pip install flake8 pylint pytest
+          uv --config-file=tox_uv.toml pip install flake8 pylint
+          uv --config-file=tox_uv.toml sync --active --all-groups
           poetry install --all-groups
 
       - name: TICS GitHub Action
