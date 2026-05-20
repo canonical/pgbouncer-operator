@@ -68,7 +68,6 @@ from ops.model import (
     WaitingStatus,
 )
 from single_kernel_postgresql.compat.postgresql import PostgreSQLBase as PostgreSQLv1
-from single_kernel_postgresql.config.literals import Substrates
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from constants import (
@@ -447,7 +446,6 @@ class BackendDatabaseRequires(Object):
                 database=database,
             )
         return PostgreSQLv1(
-            substrate=Substrates.VM,
             primary_host=endpoint.split(":")[0],
             current_host=endpoint.split(":")[0],
             user=user,
