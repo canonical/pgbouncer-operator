@@ -1,6 +1,6 @@
 # Get a PgBouncer up and running
 
-This is part of the [PgBouncer Tutorial](/t/12288). Please refer to this page for more information and the overview of the content. The following document will deploy "PgBouncer" together with PostgreSQL server (coming from the separate charm "[Charmed PostgreSQL](https://charmhub.io/postgresql)"). 
+This is part of the [PgBouncer Tutorial](/t/12288). Please refer to this page for more information and the overview of the content. The following document will deploy “PgBouncer” together with PostgreSQL server (coming from the separate charm “[Charmed PostgreSQL](https://charmhub.io/postgresql)”).
 
 ## Deploy Charmed PostgreSQL + PgBouncer
 
@@ -10,11 +10,13 @@ To deploy Charmed PostgreSQL + PgBouncer, all you need to do is run the followin
 juju deploy pgbouncer --channel 1/stable
 juju deploy postgresql # --config profile=testing
 ```
+
 > :tipping_hand_man: **Tip**: the option `--config profile=testing` will decrease [RAM requirements](https://charmhub.io/postgresql/docs/r-profiles).
- 
-Juju will now fetch charms from [Charmhub](https://charmhub.io/) and begin deploying it to the LXD VMs. This process can take several minutes depending on how provisioned (RAM, CPU, etc) your machine is. 
+
+Juju will now fetch charms from [Charmhub](https://charmhub.io/) and begin deploying it to the LXD VMs. This process can take several minutes depending on how provisioned (RAM, CPU, etc) your machine is.
 
 You can track the progress by running:
+
 ```shell
 juju status --watch 1s
 ```
@@ -22,6 +24,7 @@ juju status --watch 1s
 We recommend keeping a separate shell open running this command. That way, you will always have an easily accessible live update of the statuses for all applications deployed in the current juju model.
 
 Wait until the application is ready - when it is ready, `juju status` will show:
+
 ```shell
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
 tutorial  lxd         localhost/localhost  3.1.6    unsupported  21:23:37+02:00
@@ -36,20 +39,26 @@ postgresql/0*  active    idle   0        10.3.217.79     5432/tcp  Primary
 Machine  State    Address      Inst id        Base          AZ  Message
 0        started  10.3.217.79  juju-ca0eed-0  ubuntu@22.04      Running
 ```
-> :tipping_hand_man: **Tip**: To exit the screen with `juju status --watch 1s`, enter `Ctrl+c`.
-If you want to further inspect juju logs, can watch for logs with `juju debug-log`.
-More info on logging at [juju logs](https://juju.is/docs/olm/juju-logs).
 
-At this stage PgBouncer will stay in blocked state due to missing relation/integration with PostgreSQL DB, let's integrate them:
+> :tipping_hand_man: **Tip**: To exit the screen with `juju status --watch 1s`, enter `Ctrl+c`.
+> If you want to further inspect juju logs, can watch for logs with `juju debug-log`.
+> More info on logging at [juju logs](https://juju.is/docs/olm/juju-logs).
+
+At this stage PgBouncer will stay in blocked state due to missing relation/integration with PostgreSQL DB, let’s integrate them:
+
 ```shell
 juju integrate postgresql pgbouncer
 ```
-It will change nothing, as pgbouncer is a subordinated charm and it waits for a client to consume DB service, let's deploy [data-integrator](https://charmhub.io/data-integrator) and request access to database `test123`:
+
+It will change nothing, as pgbouncer is a subordinated charm and it waits for a client to consume DB service, let’s deploy [data-integrator](https://charmhub.io/data-integrator) and request access to database `test123`:
+
 ```shell
 juju deploy data-integrator --config database-name=test123
 juju integrate data-integrator pgbouncer
 ```
+
 In couple of seconds, the status will be happy for entire model and pgbouncer will be running inside data-integrator:
+
 ```shell
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
 tutorial  lxd         localhost/localhost  3.1.6    unsupported  21:28:14+02:00
@@ -72,10 +81,13 @@ Machine  State    Address       Inst id        Base          AZ  Message
 ## Access database
 
 The first action most users take after installing PostgreSQL is accessing it. The easiest way to do this is via the [PostgreSQL Command-Line Client](https://www.postgresql.org/docs/14/app-psql.html) `psql`. Connecting to the database requires that you know the values for `host`, `username` and `password`. To retrieve the necessary fields please run data-integrator action `get-credentials`:
+
 ```shell
 juju run data-integrator/leader get-credentials
 ```
+
 Running the command should output:
+
 ```yaml
 postgresql:
   database: test123
@@ -86,10 +98,11 @@ postgresql:
 ```
 
 To access the PostgreSQL database via PgBouncer go inside data-integrator charm and use the port 6432 on localhost:
+
 ```shell
 juju ssh data-integrator/0 bash
 
-charmed-postgresql.psql -h 127.0.0.1 -p 6432 -U relation_id_7 -W -d test123 
+charmed-pgbouncer.psql -h 127.0.0.1 -p 6432 -U relation_id_7 -W -d test123 
 Password: 3tjXolB7VNKob2VnvMPXa6Y3
 psql (14.9 (Ubuntu 14.9-0ubuntu0.22.04.1))
 Type "help" for help.
@@ -98,6 +111,7 @@ test123=>
 ```
 
 Inside MySQL list DBs available on the host `show databases`:
+
 ```shell
 Password for user relation_id_7:  VYm6tg2KkFOBj8mP3IW9O821
 psql (14.9 (Ubuntu 14.9-0ubuntu0.22.04.1))
@@ -113,9 +127,11 @@ test123=> \l
            |            |          |         |         | admin=CTc/"relation-5"
 ...
 ```
-> :tipping_hand_man: **Tip**: if at any point you'd like to leave the PostgreSQL client, enter `Ctrl+d` or type `exit`.
+
+> :tipping_hand_man: **Tip**: if at any point you’d like to leave the PostgreSQL client, enter `Ctrl+d` or type `exit`.
 
 You can now interact with PostgreSQL directly using any [SQL Queries](https://www.postgresql.org/docs/14/sql-syntax.html). For example entering `SELECT VERSION(), CURRENT_DATE;` should output something like:
+
 ```shell
 test123=> SELECT VERSION(), CURRENT_DATE;
                                                                version                                                                | current_date 
@@ -129,29 +145,37 @@ Feel free to test out any other PostgreSQL queries. When you’re ready to leave
 ### Remove the user
 
 To remove the user, remove the relation. Removing the relation automatically removes the user that was created when the relation was created. Enter the following to remove the relation:
+
 ```shell
 juju remove-relation pgbouncer data-integrator
 ```
 
 Now try again to connect to the same PgBouncer you just used above:
+
 ```shell
 charmed-postgresql.psql -h 127.0.0.1 -p 6432 -U relation_id_7 -W -d test123 
 ```
 
 This will output an error message:
+
 ```shell
 psql: error: connection to server at "127.0.0.1", port 6432 failed: FATAL:  password authentication failed
 ```
+
 As this user no longer exists. This is expected as `juju remove-relation pgbouncer data-integrator` also removes the user.
 Note: data stay remain on the server at this stage!
 
 Relate the the two applications again if you wanted to recreate the user:
+
 ```shell
 juju relate data-integrator pgbouncer
 ```
+
 Re-relating generates a new user and password:
+
 ```shell
 juju run data-integrator/leader get-credentials
 ```
+
 You can connect to the database with this new credentials.
 From here you will see all of your data is still present in the database.
