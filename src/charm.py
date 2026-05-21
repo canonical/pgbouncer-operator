@@ -13,6 +13,7 @@ import platform
 import pwd
 import shutil
 import subprocess
+import sys
 from configparser import ConfigParser
 from typing import Dict, List, Literal, Optional, Union, get_args
 
@@ -33,7 +34,9 @@ from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
 from charms.pgbouncer_k8s.v0.pgb import generate_password
 from charms.postgresql_k8s.v0.postgresql import PERMISSIONS_GROUP_ADMIN
-from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
+
+if sys.version_info > (3, 9):
+    from charms.postgresql_k8s.v0.postgresql_tls import PostgreSQLTLS
 from jinja2 import Template
 from ops import (
     ActiveStatus,
@@ -156,7 +159,10 @@ class PgBouncerCharm(TypedCharmBase):
         self.client_relation = PgBouncerProvider(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
-        self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
+        if sys.version_info > (3, 9):
+            self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
+        else:
+            pass
         self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
