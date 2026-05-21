@@ -85,9 +85,6 @@ build-constraint-dependencies = [
     "setuptools-rust < 1.11; python_version <= '3.8'"
 ]
 
-[tool.uv.sources]
-postgresql-charms-single-kernel = {url = "https://github.com/canonical/postgresql-single-kernel-library/archive/cfcdd2baafb118e7bafc1c52041a3c2d0f2bbfa3.zip"}
-
 # Testing tools configuration
 [tool.coverage.run]
 branch = true
