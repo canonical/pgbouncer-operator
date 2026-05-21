@@ -58,7 +58,7 @@ from ops import (
     RelationBrokenEvent,
     RelationDepartedEvent,
 )
-from single_kernel_postgresql.utils.postgresql import (
+from single_kernel_postgresql.compat.postgresql import (
     ACCESS_GROUP_RELATION,
     PostgreSQLCreateDatabaseError,
     PostgreSQLCreateUserError,

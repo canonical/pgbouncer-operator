@@ -48,7 +48,7 @@ from ops import (
     main,
 )
 from ops_tracing import Tracing, set_destination
-from single_kernel_postgresql.utils.postgresql import (
+from single_kernel_postgresql.compat.postgresql import (
     INVALID_DATABASE_NAME_BLOCKING_MESSAGE,
     INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
 )
