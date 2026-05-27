@@ -17,15 +17,15 @@ import sys
 from configparser import ConfigParser
 from typing import Dict, List, Literal, Optional, Union, get_args
 
-from utils import _remove_stale_otel_sdk_packages
+if sys.version_info < (3, 9):
+    from utils import _remove_stale_otel_sdk_packages
 
-# apply hacky patch to remove stale opentelemetry sdk packages on upgrade-charm.
-# it could be trouble if someone ever decides to implement their own tracer parallel to
-# ours and before the charm has inited. We assume they won't.
-# !!IMPORTANT!! keep all otlp imports UNDER this call.
-_remove_stale_otel_sdk_packages()
+    # apply hacky patch to remove stale opentelemetry sdk packages on upgrade-charm.
+    # it could be trouble if someone ever decides to implement their own tracer parallel to
+    # ours and before the charm has inited. We assume they won't.
+    # !!IMPORTANT!! keep all otlp imports UNDER this call.
+    _remove_stale_otel_sdk_packages()
 
-# ruff: disable[E402]
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
@@ -91,8 +91,6 @@ from relations.hacluster import HaCluster
 from relations.peers import Peers
 from relations.pgbouncer_provider import PgBouncerProvider
 from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
-
-# ruff: enable[E402]
 
 logger = logging.getLogger(__name__)
 

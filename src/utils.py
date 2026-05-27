@@ -6,9 +6,13 @@
 import logging
 import os
 import shutil
+import sys
 from collections import defaultdict
 
-from importlib_metadata import distributions
+if sys.version_info < (3, 9):
+    from importlib_metadata import distributions
+else:
+    distributions = None
 
 
 def _remove_stale_otel_sdk_packages():
