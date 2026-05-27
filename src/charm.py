@@ -902,7 +902,9 @@ class PgBouncerCharm(TypedCharmBase):
             template = Template(file.read())
             databases = self._get_relation_config()
             readonly_dbs = self._get_readonly_dbs(databases)
-            enable_tls = all(self.tls.get_tls_files()) and self._is_exposed
+            enable_tls = (
+                sys.version_info > (3, 9) and self._is_exposed and all(self.tls.get_tls_files())
+            )
             addr = "*" if self._is_exposed else "127.0.0.1"
             # Modify & render config files for each service instance
             for service_id in self.service_ids:
