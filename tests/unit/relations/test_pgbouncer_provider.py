@@ -138,13 +138,14 @@ class TestPgbouncerProvider(unittest.TestCase):
         })
         _render_pgb_config.assert_called_once_with()
 
+    @patch("relations.pgbouncer_provider.PgBouncerProvider.update_connection_info")
     @patch("relations.backend_database.BackendDatabaseRequires.check_backend", return_value=True)
     @patch(
         "relations.backend_database.BackendDatabaseRequires.postgres", new_callable=PropertyMock
     )
     @patch("charm.PgBouncerCharm.set_relation_databases")
     @patch("charm.PgBouncerCharm.generate_relation_databases")
-    def test_on_relation_broken(self, _gen_rel_dbs, _set_rel_dbs, _pg, _check_backend):
+    def test_on_relation_broken(self, _gen_rel_dbs, _set_rel_dbs, _pg, _check_backend, _):
         _pg.return_value.get_postgresql_version.return_value = "10"
         _gen_rel_dbs.return_value = {"1": {"name": "test_db", "legacy": False}}
         self.harness.set_leader()
