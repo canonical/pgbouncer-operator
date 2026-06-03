@@ -1,0 +1,93 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.23   unsupported  02:16:31Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge    73  no       
+pgbouncer            1.21.0   error        3  pgbouncer                            0  no       hook failed: "secret-changed"
+postgresql           14.23    active       3  postgresql           14/edge      1145  no       
+postgresql-test-app           blocked      3  postgresql-test-app  latest/edge   533  no       No database integration available
+ubuntu-advantage              unknown      0  ubuntu-advantage     latest/edge   148  no       
+
+Unit                    Workload     Agent      Machine  Public address  Ports     Message
+postgresql-test-app/0*  blocked      idle       0        10.234.194.147            No database integration available
+  pgbouncer/0*          error        idle                10.234.194.147            hook failed: "secret-changed"
+postgresql-test-app/1   blocked      idle       1        10.234.194.36             No database integration available
+  pgbouncer/2           maintenance  executing           10.234.194.36             Reloading Pgbouncer
+postgresql-test-app/2   blocked      idle       2        10.234.194.252            No database integration available
+  pgbouncer/1           maintenance  executing           10.234.194.252            Reloading Pgbouncer
+postgresql/0            waiting      idle       3        10.234.194.134  5432/tcp  awaiting for member to start
+postgresql/1            waiting      idle       4        10.234.194.60   5432/tcp  awaiting for cluster to start
+postgresql/2*           maintenance  executing  5        10.234.194.11   5432/tcp  reconfiguring cluster
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.234.194.147  juju-25937f-0  ubuntu@22.04  runnervmiav63  Running
+1        started  10.234.194.36   juju-25937f-1  ubuntu@22.04  runnervmiav63  Running
+2        started  10.234.194.252  juju-25937f-2  ubuntu@22.04  runnervmiav63  Running
+3        started  10.234.194.134  juju-25937f-3  ubuntu@22.04  runnervmiav63  Running
+4        started  10.234.194.60   juju-25937f-4  ubuntu@22.04  runnervmiav63  Running
+5        started  10.234.194.11   juju-25937f-5  ubuntu@22.04  runnervmiav63  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:09:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:09:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:12:14 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:12:14 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:12:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:12:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:13:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:13:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:13:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:13:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:14:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:14:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-2: 02:14:19 ERROR unit.postgresql/2.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-2/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fc71c5339a0 state=finished raised Exception>]
+unit-postgresql-2: 02:14:45 ERROR unit.postgresql/2.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:15:27 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.234.194.11", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.234.194.147", user "relation-6", database "postgres", no encryption
+
+unit-pgbouncer-0: 02:16:29 ERROR unit.pgbouncer/0.juju-log Failed to create user: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:16:29 ERROR unit.pgbouncer/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 316, in create_user
+    with self._connect_to_database() as connection, connection.cursor() as cursor:
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 184, in _connect_to_database
+    connection = psycopg2.connect(
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/charm.py", line 1068, in <module>
+    main(PgBouncerCharm)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 423, in _emit
+    self.framework.reemit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 920, in reemit
+    self._reemit()
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/src/relations/backend_database.py", line 235, in _on_database_created
+    self.postgres.create_user(self.auth_user, hashed_password, admin=True) if isinstance(
+  File "/var/lib/juju/agents/unit-pgbouncer-0/charm/lib/charms/postgresql_k8s/v0/postgresql.py", line 341, in create_user
+    raise PostgreSQLCreateUserError() from e
+charms.postgresql_k8s.v0.postgresql.PostgreSQLCreateUserError: None
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
