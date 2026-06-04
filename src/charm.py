@@ -16,7 +16,7 @@ import subprocess
 import sys
 from configparser import ConfigParser
 from functools import cached_property
-from typing import Dict, List, Literal, Optional, Union, get_args
+from typing import Dict, List, Literal, Optional, Tuple, Union, get_args
 
 if sys.version_info < (3, 9):
     from utils import _remove_stale_otel_sdk_packages
@@ -162,6 +162,9 @@ class PgBouncerCharm(TypedCharmBase):
             self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
         else:
             self.tls = None
+            self.framework.observe(self.on["certificates"].relation_joined, self._on_tls_joined)
+            self.framework.observe(self.on["certificates"].relation_broken, self._on_tls_broken)
+
         self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
@@ -242,11 +245,6 @@ class PgBouncerCharm(TypedCharmBase):
             os.chown(f"{app_conf_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
             os.makedirs(f"{app_run_dir}/{INSTANCE_DIR}{service_id}", 0o777, exist_ok=True)
             os.chown(f"{app_run_dir}/{INSTANCE_DIR}{service_id}", pg_user.pw_uid, pg_user.pw_gid)
-
-    @property
-    def tracing_endpoint(self) -> Optional[str]:
-        """Otlp http endpoint for charm instrumentation."""
-        return self._tracing_endpoint_config
 
     def render_utility_files(self):
         """Render charm utility services and configuration."""
@@ -988,7 +986,7 @@ class PgBouncerCharm(TypedCharmBase):
     # =================
 
     def _install_snap_packages(
-        self, packages: list[tuple[str, dict[str, dict[str, str]]]], refresh: bool = False
+        self, packages: List[Tuple[str, Dict[str, Dict[str, str]]]], refresh: bool = False
     ) -> None:
         """Installs package(s) to container.
 
