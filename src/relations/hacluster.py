@@ -6,11 +6,14 @@ import json
 import logging
 from hashlib import shake_128
 from ipaddress import IPv4Address, IPv6Address
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
-from ops import CharmBase, Object, Relation, RelationChangedEvent, Unit
+from ops import Object, Relation, RelationChangedEvent, Unit
 
 from constants import HACLUSTER_RELATION_NAME
+
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,7 @@ logger = logging.getLogger(__name__)
 class HaCluster(Object):
     """Defines hacluster functunality."""
 
-    def __init__(self, charm: CharmBase):
+    def __init__(self, charm: "PgBouncerCharm"):
         super().__init__(charm, HACLUSTER_RELATION_NAME)
 
         self.charm = charm

@@ -86,7 +86,7 @@ Some example relation data is below. All values are examples, generated in a run
 
 import json
 import logging
-from typing import Dict, Iterable, List
+from typing import TYPE_CHECKING, Dict, Iterable, List
 
 from charms.pgbouncer_k8s.v0 import pgb
 from charms.postgresql_k8s.v0.postgresql import (
@@ -95,7 +95,6 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLDeleteUserError,
 )
 from ops.charm import (
-    CharmBase,
     RelationBrokenEvent,
     RelationChangedEvent,
     RelationDepartedEvent,
@@ -112,6 +111,9 @@ from ops.model import (
 from single_kernel_postgresql.compat.postgresql import PostgreSQLBase as PostgreSQLv1
 
 from constants import EXTENSIONS_BLOCKING_MESSAGE
+
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +136,7 @@ class DbProvides(Object):
         - relation-broken
     """
 
-    def __init__(self, charm: CharmBase, admin: bool = False):
+    def __init__(self, charm: "PgBouncerCharm", admin: bool = False):
         """Constructor for DbProvides object.
 
         Args:

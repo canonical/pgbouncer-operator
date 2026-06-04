@@ -37,7 +37,7 @@ f"{dbname}_readonly".
 
 import logging
 from hashlib import shake_128
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 from urllib.parse import quote
 
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -51,7 +51,6 @@ from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
 from ops import (
     Application,
     BlockedStatus,
-    CharmBase,
     MaintenanceStatus,
     Object,
     Relation,
@@ -68,6 +67,10 @@ from single_kernel_postgresql.compat.postgresql import (
 
 from constants import CLIENT_RELATION_NAME, PGB_RUN_DIR
 
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +82,7 @@ class PgBouncerProvider(Object):
         - relation-broken
     """
 
-    def __init__(self, charm: CharmBase, relation_name: str = CLIENT_RELATION_NAME) -> None:
+    def __init__(self, charm: "PgBouncerCharm", relation_name: str = CLIENT_RELATION_NAME) -> None:
         """Constructor for PgbouncerProvider object.
 
         Args:

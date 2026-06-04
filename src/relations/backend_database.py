@@ -48,7 +48,7 @@ Example:
 
 import logging
 from functools import cached_property
-from typing import Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -57,7 +57,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from charms.pgbouncer_k8s.v0.pgb import generate_password, get_md5_password, get_scram_password
 from charms.postgresql_k8s.v0.postgresql import PostgreSQL as PostgreSQLv0
-from ops.charm import CharmBase, RelationBrokenEvent, RelationDepartedEvent
+from ops.charm import RelationBrokenEvent, RelationDepartedEvent
 from ops.framework import Object
 from ops.model import (
     Application,
@@ -80,6 +80,9 @@ from constants import (
     PGB,
 )
 
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,7 +99,7 @@ class BackendDatabaseRequires(Object):
         - relation-broken
     """
 
-    def __init__(self, charm: CharmBase):
+    def __init__(self, charm: "PgBouncerCharm"):
         super().__init__(charm, BACKEND_RELATION_NAME)
 
         self.charm = charm

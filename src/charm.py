@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
+from functools import cached_property
 from typing import Dict, List, Literal, Optional, Union, get_args
 
 if sys.version_info < (3, 9):
@@ -94,7 +95,7 @@ from upgrade import PgbouncerUpgrade, get_pgbouncer_dependencies_model
 
 logger = logging.getLogger(__name__)
 
-Scopes = Literal[APP_SCOPE, UNIT_SCOPE]
+Scopes = Literal["app", "unit"]
 
 INSTANCE_DIR = "instance_"
 
@@ -160,7 +161,7 @@ class PgBouncerCharm(TypedCharmBase):
         if sys.version_info > (3, 9):
             self.tls = PostgreSQLTLS(self, PEER_RELATION_NAME)
         else:
-            pass
+            self.tls = None
         self.hacluster = HaCluster(self)
 
         self.service_ids = list(range(self.instances_count))
@@ -191,11 +192,18 @@ class PgBouncerCharm(TypedCharmBase):
             substrate="vm",
         )
 
-    @property
+    def _on_tls_joined(self, _) -> None:
+        self.unit.status = BlockedStatus("TLS unavailable on 20.04 base")
+
+    def _on_tls_broken(self, _) -> None:
+        if self.is_blocked and self.unit.status.message == "TLS unavailable on 20.04 base":
+            self.unit.status = ActiveStatus()
+
+    @cached_property
     def instances_count(self):
         """Returns the amount of instances to spin based on expose."""
-        if self._is_exposed:
-            return max(min(os.cpu_count(), 4), 2)
+        if self._is_exposed and (cpus := os.cpu_count()):
+            return max(min(cpus, 4), 2)
         else:
             return 1
 
@@ -900,9 +908,7 @@ class PgBouncerCharm(TypedCharmBase):
             template = Template(file.read())
             databases = self._get_relation_config()
             readonly_dbs = self._get_readonly_dbs(databases)
-            enable_tls = (
-                sys.version_info > (3, 9) and self._is_exposed and all(self.tls.get_tls_files())
-            )
+            enable_tls = self.tls and self._is_exposed and all(self.tls.get_tls_files())
             addr = "*" if self._is_exposed else "127.0.0.1"
             # Modify & render config files for each service instance
             for service_id in self.service_ids:
@@ -981,7 +987,9 @@ class PgBouncerCharm(TypedCharmBase):
     #  Charm Utilities
     # =================
 
-    def _install_snap_packages(self, packages: List[str], refresh: bool = False) -> None:
+    def _install_snap_packages(
+        self, packages: list[tuple[str, dict[str, dict[str, str]]]], refresh: bool = False
+    ) -> None:
         """Installs package(s) to container.
 
         Args:

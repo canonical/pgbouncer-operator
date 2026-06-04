@@ -5,7 +5,7 @@
 
 import json
 import logging
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import psycopg2
 from charms.data_platform_libs.v0.upgrade import (
@@ -31,6 +31,9 @@ from constants import (
     SNAP_PACKAGES,
 )
 
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
+
 DEFAULT_MESSAGE = "Pre-upgrade check failed and cannot safely upgrade"
 
 logger = logging.getLogger(__name__)
@@ -53,10 +56,10 @@ def get_pgbouncer_dependencies_model() -> PgbouncerDependencyModel:
 class PgbouncerUpgrade(DataUpgrade):
     """PostgreSQL upgrade class."""
 
-    def __init__(self, charm, model: BaseModel, **kwargs) -> None:
+    def __init__(self, charm: "PgBouncerCharm", model: BaseModel, **kwargs) -> None:
         """Initialize the class."""
         super().__init__(charm, model, **kwargs)
-        self.charm = charm
+        self.charm: PgBouncerCharm = charm
 
     @override
     def build_upgrade_stack(self) -> List[int]:
