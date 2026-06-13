@@ -1,0 +1,43 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.23   unsupported  02:04:55Z
+
+App                  Version  Status       Scale  Charm                Channel       Rev  Exposed  Message
+pgbouncer                     error            3  pgbouncer            1/stable      914  no       hook failed: "pgb-peers-relation-joined"
+postgresql                    maintenance    1/3  postgresql           14/edge      1162  no       installing PostgreSQL
+postgresql-test-app           error            3  postgresql-test-app  latest/edge   535  no       hook failed: "database-relation-joined"
+
+Unit                    Workload     Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0*  blocked      idle        0        10.37.139.149          No database integration available
+  pgbouncer/0*          error        idle                 10.37.139.149          hook failed: "pgb-peers-relation-joined"
+postgresql-test-app/1   error        idle        1        10.37.139.77           hook failed: "database-relation-joined"
+  pgbouncer/1           error        idle                 10.37.139.77           hook failed: "pgb-peers-relation-created"
+postgresql-test-app/2   blocked      idle        2        10.37.139.104          No database integration available
+  pgbouncer/2           maintenance  executing            10.37.139.104          (install) Installing and configuring PgBouncer
+postgresql/0            waiting      allocating  3        10.37.139.227          waiting for machine
+postgresql/1*           maintenance  executing   4        10.37.139.136          (install) installing PostgreSQL
+postgresql/2            waiting      allocating  5        10.37.139.182          agent initialising
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.37.139.149  juju-498f22-0  ubuntu@22.04  runnervmqtt2i  Running
+1        started  10.37.139.77   juju-498f22-1  ubuntu@22.04  runnervmqtt2i  Running
+2        started  10.37.139.104  juju-498f22-2  ubuntu@22.04  runnervmqtt2i  Running
+3        down     10.37.139.227  juju-498f22-3  ubuntu@22.04  runnervmqtt2i  Running
+4        started  10.37.139.136  juju-498f22-4  ubuntu@22.04  runnervmqtt2i  Running
+5        started  10.37.139.182  juju-498f22-5  ubuntu@22.04  runnervmqtt2i  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:00:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:00:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:04:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:04:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:04:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:04:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:04:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:04:40 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
