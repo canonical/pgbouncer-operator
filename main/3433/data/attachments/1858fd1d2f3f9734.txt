@@ -1,0 +1,40 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.23   unsupported  02:16:05Z
+
+App            Version  Status  Scale  Charm          Channel         Rev  Exposed  Message
+mailman3-core           active      1  mailman3-core  latest/stable    18  no       Ready (source version/commit e1d5a03)
+pgbouncer      1.21.0   active      1  pgbouncer                        0  no       
+postgresql     14.23    active      2  postgresql     14/edge        1162  no       
+
+Unit              Workload  Agent      Machine  Public address  Ports     Message
+mailman3-core/0*  active    executing  2        10.85.2.215     25/tcp    (juju-exec) Ready (source version/commit e1d5a03)
+  pgbouncer/0*    active    executing           10.85.2.215               
+postgresql/0      active    idle       0        10.85.2.221     5432/tcp  
+postgresql/1*     active    idle       1        10.85.2.166     5432/tcp  Primary
+
+Machine  State    Address      Inst id        Base          AZ             Message
+0        started  10.85.2.221  juju-1b779d-0  ubuntu@22.04  runnervmqtt2i  Running
+1        started  10.85.2.166  juju-1b779d-1  ubuntu@22.04  runnervmqtt2i  Running
+2        started  10.85.2.215  juju-1b779d-2  ubuntu@20.04  runnervmqtt2i  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-1: 02:06:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:06:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:06:58 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f6fa8b631f0 state=finished raised Exception>]
+unit-postgresql-1: 02:07:08 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-0: 02:07:14 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:07:14 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:10:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:10:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
