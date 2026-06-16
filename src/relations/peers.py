@@ -27,13 +27,16 @@ Example:
 
 import logging
 from hashlib import shake_128
-from typing import List, Optional, Set
+from typing import TYPE_CHECKING, List, Optional, Set
 
-from ops.charm import CharmBase, HookEvent
+from ops.charm import HookEvent
 from ops.framework import Object
 from ops.model import Relation, Unit
 
 from constants import APP_SCOPE, PEER_RELATION_NAME, UNIT_SCOPE, Scopes
+
+if TYPE_CHECKING:
+    from charm import PgBouncerCharm
 
 ADDRESS_KEY = "private-address"
 LEADER_ADDRESS_KEY = "leader_ip"
@@ -53,7 +56,7 @@ class Peers(Object):
         - relation-changed
     """
 
-    def __init__(self, charm: CharmBase):
+    def __init__(self, charm: "PgBouncerCharm"):
         super().__init__(charm, PEER_RELATION_NAME)
 
         self.charm = charm

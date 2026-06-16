@@ -10,7 +10,7 @@ import sys
 from collections import defaultdict
 
 if sys.version_info < (3, 9):
-    from importlib_metadata import distributions
+    from importlib_metadata import distributions  # type: ignore
 else:
     distributions = None
 
