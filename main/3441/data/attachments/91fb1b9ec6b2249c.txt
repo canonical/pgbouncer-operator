@@ -1,0 +1,61 @@
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:85 Refresh the charm
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:88 Wait for upgrade to start
+[32mINFO    [0m integration.test_upgrade_data_integrator:test_upgrade_data_integrator.py:97 Wait for upgrade to complete
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] waiting: other units upgrading first...
+  pgbouncer/1 [executing] waiting: other units upgrading first...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.24   unsupported  02:14:59Z
+
+App              Version  Status  Scale  Charm            Channel       Rev  Exposed  Message
+data-integrator           active      2  data-integrator  latest/edge   417  no       
+pgbouncer        1.21.0   active      2  pgbouncer                        0  no       
+postgresql       14.23    active      3  postgresql       14/edge      1162  no       
+
+Unit                Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*  active    idle   0        10.77.39.158              
+  pgbouncer/0*      active    idle            10.77.39.158    6432/tcp  
+data-integrator/1   active    idle   1        10.77.39.162              
+  pgbouncer/1       active    idle            10.77.39.162    6432/tcp  
+postgresql/0        active    idle   2        10.77.39.198    5432/tcp  
+postgresql/1*       active    idle   3        10.77.39.88     5432/tcp  Primary
+postgresql/2        active    idle   4        10.77.39.147    5432/tcp  
+
+Machine  State    Address       Inst id        Base          AZ             Message
+0        started  10.77.39.158  juju-1e2084-0  ubuntu@22.04  runnervmqtt2i  Running
+1        started  10.77.39.162  juju-1e2084-1  ubuntu@22.04  runnervmqtt2i  Running
+2        started  10.77.39.198  juju-1e2084-2  ubuntu@22.04  runnervmqtt2i  Running
+3        started  10.77.39.88   juju-1e2084-3  ubuntu@22.04  runnervmqtt2i  Running
+4        started  10.77.39.147  juju-1e2084-4  ubuntu@22.04  runnervmqtt2i  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:05:48 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:05:48 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:08:30 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:08:30 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:08:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:08:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:09:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:09:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:09:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:09:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:09:55 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f105a9631f0 state=finished raised Exception>]
+unit-postgresql-1: 02:10:15 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
