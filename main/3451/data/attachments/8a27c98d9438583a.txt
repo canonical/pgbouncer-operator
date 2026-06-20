@@ -1,0 +1,110 @@
+[32mINFO    [0m integration.relations.test_db:test_db.py:108 Deploying test app
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-test-app-549
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-1
+[32mINFO    [0m integration.relations.test_db:test_db.py:123 Relating without enabling extensions
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/0 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/0 [idle] blocked: bad relation request - remote app requested extensions, which are unsupported. Please remove this relation.
+[32mINFO    [0m integration.relations.test_db:test_db.py:138 Relating with enabled extensions
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy (not enough units yet - 0/1)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer-jammy/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer-jammy/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.24   unsupported  02:16:05Z
+
+App                  Version  Status   Scale  Charm                Channel         Rev  Exposed  Message
+mailman3-core                 active       1  mailman3-core        latest/stable    18  no       Ready (source version/commit e1d5a03)
+pgbouncer                     unknown      0  pgbouncer                              0  no       
+pgbouncer-jammy      1.21.0   active       1  pgbouncer                              1  no       
+postgresql           14.23    active       2  postgresql           14/edge        1177  no       
+postgresql-test-app           blocked      1  postgresql-test-app  latest/edge     549  no       No database integration available
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*        active    idle   2        10.160.61.215   25/tcp    Ready (source version/commit e1d5a03)
+postgresql-test-app/0*  blocked   idle   3        10.160.61.216             No database integration available
+  pgbouncer-jammy/1*    active    idle            10.160.61.216             
+postgresql/0*           active    idle   0        10.160.61.169   5432/tcp  Primary
+postgresql/1            active    idle   1        10.160.61.173   5432/tcp  
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.160.61.169  juju-5fc955-0  ubuntu@22.04  runnervm7b5n9  Running
+1        started  10.160.61.173  juju-5fc955-1  ubuntu@22.04  runnervm7b5n9  Running
+2        started  10.160.61.215  juju-5fc955-2  ubuntu@20.04  runnervm7b5n9  Running
+3        started  10.160.61.216  juju-5fc955-3  ubuntu@22.04  runnervm7b5n9  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:00:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:00:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 02:00:49 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fd188003df0 state=finished raised Exception>]
+unit-postgresql-0: 02:00:59 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-1: 02:01:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:01:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:04:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:04:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:11:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:11:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:11:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:11:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:11:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:12:58 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:12:58 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-jammy-0: 02:13:52 ERROR unit.pgbouncer-jammy/0.juju-log ERROR - `extensions` (pg_trgm:public, unaccent:public) cannot be requested through relations - Please enable extensions through `juju config` and add the relation again.
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 02:14:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,57 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] active: 
+  pgbouncer/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.24   unsupported  02:10:32Z
+
+App                       Version  Status  Scale  Charm                     Channel       Rev  Exposed  Message
+data-integrator                    active      2  data-integrator           latest/edge   418  no       
+pgbouncer                 1.21.0   active      2  pgbouncer                                 0  no       
+postgresql                14.23    active      2  postgresql                14/edge      1177  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable      586  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*           active    idle   1        10.114.77.105             
+  pgbouncer/0*               active    idle            10.114.77.105   6432/tcp  
+data-integrator/1            active    idle   2        10.114.77.248             
+  pgbouncer/1                active    idle            10.114.77.248   6432/tcp  
+postgresql/0                 active    idle   3        10.114.77.199   5432/tcp  
+postgresql/1*                active    idle   4        10.114.77.210   5432/tcp  Primary
+self-signed-certificates/0*  active    idle   0        10.114.77.225             
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.114.77.225  juju-c6646d-0  ubuntu@24.04  runnervm7b5n9  Running
+1        started  10.114.77.105  juju-c6646d-1  ubuntu@24.04  runnervm7b5n9  Running
+2        started  10.114.77.248  juju-c6646d-2  ubuntu@24.04  runnervm7b5n9  Running
+3        started  10.114.77.199  juju-c6646d-3  ubuntu@22.04  runnervm7b5n9  Running
+4        started  10.114.77.210  juju-c6646d-4  ubuntu@22.04  runnervm7b5n9  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:02:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:02:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:02:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:02:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:58 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:58 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:51 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:51 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:04:20 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 569, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 369, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f0e4d98bd30 state=finished raised Exception>]
+unit-postgresql-1: 02:04:30 ERROR unit.postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-pgbouncer-0: 02:04:53 ERROR unit.pgbouncer/0.juju-log backend-database:6: deferring database-created hook - Unable to initialise auth function: connection to server at "10.114.77.210", port 5432 failed: FATAL:  no pg_hba.conf entry for host "10.114.77.105", user "relation-6", database "postgres", no encryption
+
+unit-pgbouncer-1: 02:09:45 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "6dce2836-2c63-4d40-8c8a-845d9ec6646d:r#8#self-signed-certificates": settings 6dce2836-2c63-4d40-8c8a-845d9ec6646d:r#8#self-signed-certificates not found (not found)
+unit-pgbouncer-0: 02:09:45 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "6dce2836-2c63-4d40-8c8a-845d9ec6646d:r#8#self-signed-certificates": settings 6dce2836-2c63-4d40-8c8a-845d9ec6646d:r#8#self-signed-certificates not found (not found)
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
