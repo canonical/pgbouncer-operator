@@ -22,13 +22,13 @@ charm = [
     "psycopg2<2.9.11; python_version == '3.8'",
     "psycopg[c]==3.3.4; python_version > '3.9'",
     # Focal cannot use 3.3.2
-    "psycopg[c]<3.3; python_version == '3.8'",
+    "psycopg[c]<3.4; python_version == '3.8'",
     "postgresql-charms-single-kernel==16.3.0"
 ]
 
 libs = [
     # data_platform_libs/v0/data_interfaces.py
-    "ops>=2.0.0",
+    "ops>=3.7.1",
     # data_platform_libs/v0/upgrade.py
     "poetry-core",
     # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
