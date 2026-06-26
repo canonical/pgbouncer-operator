@@ -39,7 +39,7 @@ libs = [
     # tls_certificates_interface/v2/tls_certificates.py
     "cryptography; python_version > '3.9'",
     # Focal cannot build 45
-    "cryptography <45; python_version == '3.8'",
+    "cryptography <49; python_version == '3.8'",
     "jsonschema",
     "idna",
 ]
