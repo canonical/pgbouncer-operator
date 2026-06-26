@@ -24,7 +24,6 @@ jobs:
       LANDSCAPE_ACCOUNT_NAME: ${{ secrets.LANDSCAPE_ACCOUNT_NAME }}
       LANDSCAPE_REGISTRATION_KEY: ${{ secrets.LANDSCAPE_REGISTRATION_KEY }}
     permissions:
-      actions: read  # Needed for GitHub API call to get workflow version
       contents: write  # Needed for Allure Report
 
   release:
@@ -38,5 +37,4 @@ jobs:
     secrets:
       charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
     permissions:
-      actions: read  # Needed for GitHub API call to get workflow version
       contents: write  # Needed to create git tags
