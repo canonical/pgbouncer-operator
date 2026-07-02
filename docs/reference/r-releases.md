@@ -15,6 +15,7 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [PostgreSQL 16 on 24.04](https://charmhub.io/postgresql?channel=16/stable) | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|[1017], [1018], [1019], [1020], [1021], [1022]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[909], [910], [911], [912], [913], [914]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[897], [898], [899], [900], [901], [902]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[873], [874], [875], [876], [877], [878]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
@@ -35,6 +36,17 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 > 
 > See: [`juju info`](https://juju.is/docs/juju/juju-info).
 
+### Release 1017-1022
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
+|:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
+| [1017] | ![check] | | ![check] | | |
+| [1018] | | ![check] | | ![check] | |
+| [1019] | | ![check] | ![check] | | |
+| [1020] | ![check] | | | ![check] | |
+| [1021] |  | ![check] | | | ![check] |
+| [1022] |  ![check] | | | | ![check] |
+
+[details=Release 909-914]
 ### Release 909-914
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -44,6 +56,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [912] | ![check] | | | | ![check] |
 | [913] |  | ![check] |  | | ![check] |
 | [914] |  ![check] | | | ![check] |
+[/details]
 
 [details=Release 897-902]
 ### Release 897-902
@@ -153,6 +166,12 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
  Our release notes are an ongoing work in progress. If there is any additional information about releases that you would like to see or suggestions for other improvements, don't hesitate to contact us on [Matrix ](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [leave a comment](https://discourse.charmhub.io/t/pgbouncer-reference-release-notes/12285).
 
 <!--LINKS-->
+[1017]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
+[1018]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
+[1019]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
+[1020]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
+[1021]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
+[1022]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
 [909]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
 [910]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
 [911]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev909
