@@ -1,0 +1,435 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.25   unsupported  02:08:13Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+another-application           blocked      1  postgresql-test-app  latest/edge   559  no       No database integration available
+another-pgbouncer    1.21.0   active       2  pgbouncer                            1  no       
+another-postgresql   14.23    active       2  postgresql           14/edge      1179  no       
+pgbouncer            1.21.0   active       2  pgbouncer                            0  no       
+postgresql           14.23    active       2  postgresql           14/edge      1179  no       
+postgresql-test-app           active       2  postgresql-test-app  latest/edge   559  no       received database credentials of the second database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+another-application/0*  blocked   idle   4        10.62.55.41               No database integration available
+another-postgresql/0    active    idle   5        10.62.55.32     5432/tcp  
+another-postgresql/1*   active    idle   6        10.62.55.90     5432/tcp  Primary
+postgresql-test-app/1*  active    idle   3        10.62.55.58               received database credentials of the second database
+  another-pgbouncer/1*  active    idle            10.62.55.58               
+  pgbouncer/2*          active    idle            10.62.55.58               
+postgresql-test-app/2   active    idle   7        10.62.55.48               received database credentials of the second database
+  another-pgbouncer/5   active    idle            10.62.55.48               
+  pgbouncer/9           active    idle            10.62.55.48               
+postgresql/0*           active    idle   1        10.62.55.135    5432/tcp  Primary
+postgresql/1            active    idle   2        10.62.55.52     5432/tcp  
+
+Machine  State    Address       Inst id        Base          AZ             Message
+1        started  10.62.55.135  juju-927166-1  ubuntu@22.04  runnervmkkn4f  Running
+2        started  10.62.55.52   juju-927166-2  ubuntu@22.04  runnervmkkn4f  Running
+3        started  10.62.55.58   juju-927166-3  ubuntu@22.04  runnervmkkn4f  Running
+4        started  10.62.55.41   juju-927166-4  ubuntu@22.04  runnervmkkn4f  Running
+5        started  10.62.55.32   juju-927166-5  ubuntu@22.04  runnervmkkn4f  Running
+6        started  10.62.55.90   juju-927166-6  ubuntu@22.04  runnervmkkn4f  Running
+7        started  10.62.55.48   juju-927166-7  ubuntu@22.04  runnervmkkn4f  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:49:32 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:49:32 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:50:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:50:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:51:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:51:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:51:35 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 581, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 372, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fd06d913700 state=finished raised Exception>]
+machine-3: 01:56:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:56:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-pgbouncer-1: 01:58:06 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "cc1ed808-f5fe-48df-8ef5-8f5796927166:r#7#postgresql-test-app": settings cc1ed808-f5fe-48df-8ef5-8f5796927166:r#7#postgresql-test-app not found (not found)
+machine-0: 01:58:15 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:58:15 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:58:23 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:58:23 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 01:59:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:59:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:59:43 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:59:43 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:00:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:00:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-postgresql-0: 02:00:12 ERROR unit.another-postgresql/0.juju-log An exception occurred when installing charmed-postgresql. Reason: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:12 ERROR unit.another-postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 888, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 965, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 1014, in _load_info
+    info = self._snap_client.get_snap_information(name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 914, in get_snap_information
+    return self._request('GET', 'find', {'name': name})[0]  # type: ignore
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 840, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 900, in _request_raw
+    raise SnapAPIError(body, code, status, message) from e
+charmlibs.snap._snap.SnapAPIError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 2689, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1155, in _on_install
+    self._install_snap_packages(packages=SNAP_PACKAGES)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1911, in _install_snap_packages
+    snap_package = snap_cache[snap_name]
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 967, in __getitem__
+    raise SnapNotFoundError(f"Snap '{snap_name}' not found!") from e
+charmlibs.snap._snap.SnapNotFoundError: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:12 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+unit-another-postgresql-0: 02:00:25 ERROR unit.another-postgresql/0.juju-log An exception occurred when installing charmed-postgresql. Reason: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:25 ERROR unit.another-postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 888, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 965, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 1014, in _load_info
+    info = self._snap_client.get_snap_information(name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 914, in get_snap_information
+    return self._request('GET', 'find', {'name': name})[0]  # type: ignore
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 840, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 900, in _request_raw
+    raise SnapAPIError(body, code, status, message) from e
+charmlibs.snap._snap.SnapAPIError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 2689, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1155, in _on_install
+    self._install_snap_packages(packages=SNAP_PACKAGES)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1911, in _install_snap_packages
+    snap_package = snap_cache[snap_name]
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 967, in __getitem__
+    raise SnapNotFoundError(f"Snap '{snap_name}' not found!") from e
+charmlibs.snap._snap.SnapNotFoundError: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:25 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+unit-another-postgresql-0: 02:00:39 ERROR unit.another-postgresql/0.juju-log An exception occurred when installing charmed-postgresql. Reason: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:39 ERROR unit.another-postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 888, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 965, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 1014, in _load_info
+    info = self._snap_client.get_snap_information(name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 914, in get_snap_information
+    return self._request('GET', 'find', {'name': name})[0]  # type: ignore
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 840, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 900, in _request_raw
+    raise SnapAPIError(body, code, status, message) from e
+charmlibs.snap._snap.SnapAPIError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 2689, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1155, in _on_install
+    self._install_snap_packages(packages=SNAP_PACKAGES)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1911, in _install_snap_packages
+    snap_package = snap_cache[snap_name]
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 967, in __getitem__
+    raise SnapNotFoundError(f"Snap '{snap_name}' not found!") from e
+charmlibs.snap._snap.SnapNotFoundError: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:00:39 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+unit-another-postgresql-0: 02:01:02 ERROR unit.another-postgresql/0.juju-log An exception occurred when installing charmed-postgresql. Reason: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:01:02 ERROR unit.another-postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 888, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 965, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 1014, in _load_info
+    info = self._snap_client.get_snap_information(name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 914, in get_snap_information
+    return self._request('GET', 'find', {'name': name})[0]  # type: ignore
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 840, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 900, in _request_raw
+    raise SnapAPIError(body, code, status, message) from e
+charmlibs.snap._snap.SnapAPIError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 2689, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1155, in _on_install
+    self._install_snap_packages(packages=SNAP_PACKAGES)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1911, in _install_snap_packages
+    snap_package = snap_cache[snap_name]
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 967, in __getitem__
+    raise SnapNotFoundError(f"Snap '{snap_name}' not found!") from e
+charmlibs.snap._snap.SnapNotFoundError: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:01:03 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+unit-another-postgresql-1: 02:01:10 ERROR unit.another-postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-1/charm/src/cluster.py", line 581, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-1/charm/src/cluster.py", line 372, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fad2e8ab700 state=finished raised Exception>]
+unit-another-postgresql-1: 02:01:21 ERROR unit.another-postgresql/1.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-another-postgresql-0: 02:01:44 ERROR unit.another-postgresql/0.juju-log An exception occurred when installing charmed-postgresql. Reason: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:01:44 ERROR unit.another-postgresql/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 888, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 965, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 1014, in _load_info
+    info = self._snap_client.get_snap_information(name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 914, in get_snap_information
+    return self._request('GET', 'find', {'name': name})[0]  # type: ignore
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 840, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 900, in _request_raw
+    raise SnapAPIError(body, code, status, message) from e
+charmlibs.snap._snap.SnapAPIError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 2689, in <module>
+    main(PostgresqlOperatorCharm)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 507, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 491, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 426, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 470, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 337, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 910, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1028, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1155, in _on_install
+    self._install_snap_packages(packages=SNAP_PACKAGES)
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/charm.py", line 1911, in _install_snap_packages
+    snap_package = snap_cache[snap_name]
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/venv/lib/python3.10/site-packages/charmlibs/snap/_snap.py", line 967, in __getitem__
+    raise SnapNotFoundError(f"Snap '{snap_name}' not found!") from e
+charmlibs.snap._snap.SnapNotFoundError: Snap 'charmed-postgresql' not found!
+unit-another-postgresql-0: 02:01:45 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:49 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:54 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:03:59 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-7: 02:06:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:06:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
