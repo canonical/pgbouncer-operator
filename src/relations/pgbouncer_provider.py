@@ -384,6 +384,7 @@ class PgBouncerProvider(Object):
                 database = self.database_provides.fetch_relation_field(relation.id, "database")
                 password = self.database_provides.fetch_my_relation_field(relation.id, "password")
 
+            ro_database = f"{database}_readonly" if len(f"{database}_readonly") < 64 else database
             if bool(
                 self.database_provides.fetch_relation_field(
                     relation.id, "external-node-connectivity"
@@ -393,19 +394,21 @@ class PgBouncerProvider(Object):
                     self.database_provides.set_read_only_endpoints(
                         relation.id, f"{self.charm.config.vip}:{port}"
                     )
-                    read_only_uri = f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{database}_readonly"
+                    read_only_uri = f"postgresql://{user}:{password}@{self.charm.config.vip}:{port}/{ro_database}"
                 else:
                     self.database_provides.set_read_only_endpoints(
                         relation.id, exposed_read_only_endpoints
                     )
-                    read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{database}_readonly"
+                    read_only_uri = f"postgresql://{user}:{password}@{exposed_read_only_hosts}:{port}/{ro_database}"
             else:
                 if self.charm.config.local_connection_type == "uds":
                     host = f"{PGB_RUN_DIR}/{self.charm.app.name}/instance_0"
                 else:
                     host = "localhost"
                 self.database_provides.set_read_only_endpoints(relation.id, f"{host}:{port}")
-                read_only_uri = f"postgresql://{user}:{password}@{quote(host, safe=',')}:{port}/{database}_readonly"
+                read_only_uri = (
+                    f"postgresql://{user}:{password}@{quote(host, safe=',')}:{port}/{ro_database}"
+                )
             # Make sure that the URI will be a secret
             if (
                 secret_fields := self.database_provides.fetch_relation_field(
