@@ -22,3 +22,4 @@ class CharmConfig(BaseConfigModel):
     local_connection_type: Literal["tcp", "uds"]
     pool_mode: Literal["session", "transaction", "statement"]
     max_db_connections: conint(ge=0)
+    max_prepared_statements: conint(ge=0)

@@ -77,3 +77,9 @@ options:
 
       0 = unlimited.
     type: int
+
+  max_prepared_statements:
+    default: 0
+    description: |
+      Number of prepared statements kept alive in backend connections.
+    type: int
