@@ -81,5 +81,5 @@ options:
   max_prepared_statements:
     default: 0
     description: |
-      Number of prepared statements kept alive in backend connections.
+      Number of prepared statements kept alive on backend connections.
     type: int
