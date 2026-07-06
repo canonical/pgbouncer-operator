@@ -37,7 +37,7 @@ else:
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_and_relate(ops_test: OpsTest, charm):
+async def test_deploy_and_relate(ops_test: OpsTest, charm_noble):
     """Test basic functionality of database relation interface."""
     # Deploy both charms (multiple units for each application to test that later they correctly
     # set data in the relation application databag using only the leader unit).
@@ -45,7 +45,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.deploy(
-                charm,
+                charm_noble,
                 application_name=PGB,
                 num_units=0,
             ),
@@ -61,14 +61,14 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
                 channel="edge",
                 num_units=3,
                 config=config,
-                series="jammy",
+                series="noble",
             ),
             ops_test.model.deploy(
                 tls_certificates_app_name, config=tls_config, channel=tls_channel
             ),
             ops_test.model.deploy(
                 HACLUSTER_NAME,
-                channel="2.4/stable",
+                channel="2.8/stable",
                 num_units=0,
             ),
         )
@@ -113,7 +113,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm):
     assert host == vip
 
 
-async def test_add_tls(ops_test: OpsTest, charm):
+async def test_add_tls(ops_test: OpsTest):
     await ops_test.model.add_relation(PGB, tls_certificates_app_name)
     await ops_test.model.wait_for_idle(status="active")
 
@@ -123,7 +123,7 @@ async def test_add_tls(ops_test: OpsTest, charm):
     check_exposed_connection(credentials, True)
 
 
-async def test_remove_tls(ops_test: OpsTest, charm):
+async def test_remove_tls(ops_test: OpsTest):
     await ops_test.model.applications[PGB].remove_relation(
         f"{PGB}:certificates", f"{tls_certificates_app_name}:certificates"
     )
