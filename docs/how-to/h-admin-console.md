@@ -9,6 +9,7 @@ Find the Juju secret ID:
 ```
 $ SECRET_ID=$(juju secrets --format=json | jq -r 'to_entries[] | select(.value.label == "pgb-peers.pgbouncer.app") | .key')
 ```
+> If your PgBouncer app was deployed with a different name, make sure to modify the label to `"pgb-peers.<your-pgbouncer-name>.app"`
 
 Reveal the password:
 
