@@ -1,2 +1,3 @@
 no-binary = false
-
+exclude-newer = "1 day"
+exclude-newer-package = {postgresql-charms-single-kernel=false}
