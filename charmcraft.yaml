@@ -28,6 +28,8 @@ parts:
       - libssl-dev  # Needed to build Python dependencies with Rust from source
       - pkg-config  # Needed to build Python dependencies with Rust from source
       - libpq-dev
+    build-environment:
+      - UV_NO_BINARY: "true"
     uv-groups:
       - charm
       - libs
