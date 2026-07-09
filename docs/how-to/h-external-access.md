@@ -72,7 +72,7 @@ juju config pgbouncer/0 vip=<your_virtual_ip>
 
 ### Integrate with HACluster
 
-Alternatively, you can integrate with the [HACluster charm](https://charmhub.io/hacluster) if you would like a Virtual IP that is generated and maintained for you.
+Alternatively, you can integrate with the [HACluster charm](https://charmhub.io/hacluster) if you would like a Virtual IP that is generated and maintained for you. The pgbouncer have been tested with hacluster tracks `2.4` and `2.8`.
 
 HACluster is a collection of solutions by [ClusterLabs](https://clusterlabs.org/) designed to create and manage resources. The creation of resources like Virtual IPs is handled by [Pacemaker](https://clusterlabs.org/pacemaker/), whereas the management of these resources is handled by [Corosync](https://clusterlabs.org/corosync.html). 
 
@@ -87,10 +87,10 @@ The steps below show you how to deploy and set up PostgreSQL, PgBouncer, Data In
 
 First, deploy all the charms
 ```shell
-juju deploy postgresql --channel 14/edge --trust
-juju deploy -n 3 data-integrator --config database-name=test_database
-juju deploy pgbouncer --channel dpe/edge
-juju deploy hacluster
+juju deploy postgresql
+juju deploy data-integrator -n 3  --config database-name=test_database
+juju deploy pgbouncer
+juju deploy hacluster --channel 2.8/stable
 ```
 > Note that the `data-integrator` requires a minimum of 3 nodes for this HACluster setup to work
 

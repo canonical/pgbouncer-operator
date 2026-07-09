@@ -79,6 +79,8 @@ format = {requires-python = ">=3.12"}
 
 [tool.uv]
 no-binary = true
+exclude-newer = "1 day"
+exclude-newer-package = {postgresql-charms-single-kernel=false}
 build-constraint-dependencies = [
     "setuptools_scm < 8.3.0; python_version < '3.10'",
     "maturin < 1.8.4; python_version <= '3.8'",

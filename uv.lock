@@ -9,6 +9,13 @@ resolution-markers = [
     "python_full_version == '3.9.*'",
 ]
 
+[options]
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer-span = "P1D"
+
+[options.exclude-newer-package]
+postgresql-charms-single-kernel = false
+
 [manifest]
 build-constraints = [
     { name = "maturin", marker = "python_full_version < '3.9'", specifier = "<1.8.4" },
