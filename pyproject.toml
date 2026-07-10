@@ -78,7 +78,6 @@ lint = {requires-python = ">=3.12"}
 format = {requires-python = ">=3.12"}
 
 [tool.uv]
-no-binary = true
 exclude-newer = "1 day"
 exclude-newer-package = {postgresql-charms-single-kernel=false}
 build-constraint-dependencies = [
