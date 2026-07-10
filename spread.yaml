@@ -128,7 +128,7 @@ prepare-each: |
     # Each version of python-libjuju is only compatible with one major Juju version
     # Override python-libjuju version pinned in poetry.lock
     uv remove --group integration juju
-    uv --config-file=tox_uv.toml add --group integration 'juju<3'
+    uv add --group integration 'juju<3'
   fi
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
