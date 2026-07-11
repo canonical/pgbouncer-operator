@@ -57,6 +57,7 @@ async def test_config_parameters(ops_test: OpsTest, charm) -> None:
         "local_connection_type": test_string,
         "pool_mode": test_string,
         "max_db_connections": "-1",
+        "max_prepared_statements": "1001",
     }
 
     for key, val in configs.items():
