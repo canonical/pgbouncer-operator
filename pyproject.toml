@@ -12,7 +12,7 @@ charm = [
     "jinja2==3.1.6",
     "ops[tracing]==3.8.0; python_version > '3.9'",
     # Focal cannot use 3
-    "ops[tracing]<3; python_version == '3.8'",
+    "ops[tracing]<4; python_version == '3.8'",
     "tenacity==9.1.4; python_version > '3.9'",
     # Focal cannot use 9.1
     "tenacity<9.1; python_version == '3.8'",
