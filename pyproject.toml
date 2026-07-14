@@ -45,7 +45,7 @@ libs = [
 ]
 
 format = [
-    "ruff==0.15.20"
+    "ruff==0.15.21"
 ]
 
 lint = [
