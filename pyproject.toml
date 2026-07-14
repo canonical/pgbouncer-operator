@@ -19,7 +19,7 @@ charm = [
     "pydantic==1.10.26",
     "psycopg2==2.9.12; python_version > '3.9'",
     # Focal cannot use 2.9.11
-    "psycopg2<2.9.11; python_version == '3.8'",
+    "psycopg2<2.9.13; python_version == '3.8'",
     "psycopg[c]==3.3.4; python_version > '3.9'",
     # Focal cannot use 3.3.2
     "psycopg[c]<3.3; python_version == '3.8'",
