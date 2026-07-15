@@ -1662,7 +1662,7 @@ charm = [
     { name = "psycopg2", marker = "python_full_version == '3.8.*'", specifier = "<2.9.13" },
     { name = "psycopg2", marker = "python_full_version >= '3.10'", specifier = "==2.9.12" },
     { name = "pydantic", specifier = "==1.10.26" },
-    { name = "tenacity", marker = "python_full_version == '3.8.*'", specifier = "<9.1" },
+    { name = "tenacity", marker = "python_full_version == '3.8.*'", specifier = "<9.2" },
     { name = "tenacity", marker = "python_full_version >= '3.10'", specifier = "==9.1.4" },
 ]
 format = [{ name = "ruff", marker = "python_full_version >= '3.12'", specifier = "==0.15.21" }]
