@@ -1,0 +1,81 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/postgresql-1199
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: waiting for machine
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [allocating] waiting: agent initialising
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] waiting: waiting to start PostgreSQL
+  postgresql/1 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary (degraded)
+  postgresql/1 [executing] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary (degraded)
+  postgresql/1 [executing] waiting: waiting to start PostgreSQL
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/focal/mailman3-core-18
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing mailman3,postfix,postfix-policyd-spf-python,spamassassin,spamc
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing mailman3,postfix,postfix-policyd-spf-python,spamassassin,spamc
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing python3-mailman-hyperkitty
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  pgbouncer/0 [executing] maintenance: updating PgBouncer config
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  pgbouncer/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+[32mINFO    [0m root:helpers.py:97 (0, '{"pgbouncer/0":{"workload-version":"1.21.0","machine":"2","opened-ports":null,"public-address":"10.230.96.223","charm":"local:jammy/pgbouncer-0","leader":true,"life":"alive","relation-info":[{"relation-id":5,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"provided-secrets\\": \\"[\\\\\\"mtls-cert\\\\\\"]\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\", \\\\\\"read-only-uris\\\\\\", \\\\\\"entity-name\\\\\\", \\\\\\"entity-password\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.230.96.59:5432","read-only-endpoints":"10.230.96.146:5432","secret-tls":"secret://416c70ed-a2af-4431-8ed5-f5cb037c6b4e/5etp0tgnh8ke2iiqd6fg","secret-user":"secret://416c70ed-a2af-4431-8ed5-f5cb037c6b4e/5r621lpldo3fgm62l640","version":"14.23"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.230.96.59/32","ingress-address":"10.230.96.59","private-address":"10.230.96.59"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.230.96.146/32","ingress-address":"10.230.96.146","private-address":"10.230.96.146"}}}},{"relation-id":6,"endpoint":"db","related-endpoint":"db","application-data":{},"local-unit":{"in-scope":false,"data":null},"related-units":{"mailman3-core/0":{"in-scope":true,"data":{"database":"mailman3","egress-subnets":"10.230.96.223/32","ingress-address":"10.230.96.223","private-address":"10.230.96.223"}}}},{"relation-id":0,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"5432","leader_ip":"10.230.96.223"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.230.96.223/32","ingress-address":"10.230.96.223","pgb_dbs":"468067f3e2f88531db254c9c96b0e335","private-address":"10.230.96.223","userlist_nonce":"b6nBMDuYEi6EIeqy6f3DQZUI"}}},{"relation-id":1,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.230.96.223/32","ingress-address":"10.230.96.223","private-address":"10.230.96.223","state":"idle"}}}]}}\n', '')
