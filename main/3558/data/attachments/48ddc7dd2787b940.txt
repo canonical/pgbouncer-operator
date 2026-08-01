@@ -1,0 +1,93 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.27   unsupported  02:16:33Z
+
+App                  Version  Status       Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              maintenance      3  landscape-client     latest/edge    73  no       Configuring landscape client..
+pgbouncer            1.21.0   active           3  pgbouncer                            0  no       
+postgresql           14.23    active           3  postgresql           14/edge      1199  no       
+postgresql-test-app           active           3  postgresql-test-app  latest/edge   565  no       received database credentials of the first database
+ubuntu-advantage              active           6  ubuntu-advantage     latest/edge   148  no       Attached (esm-apps,esm-infra)
+
+Unit                    Workload     Agent      Machine  Public address  Ports     Message
+postgresql-test-app/0*  active       idle       0        10.127.128.99             received database credentials of the first database
+  landscape-client/0*   active       idle                10.127.128.99             Client registered!
+  pgbouncer/0*          active       idle                10.127.128.99             
+  ubuntu-advantage/7    active       idle                10.127.128.99             Attached (esm-apps,esm-infra)
+postgresql-test-app/1   active       idle       1        10.127.128.205            received database credentials of the first database
+  landscape-client/1    maintenance  executing           10.127.128.205            (config-changed) Configuring landscape client..
+  pgbouncer/1           active       idle                10.127.128.205            
+  ubuntu-advantage/5    active       executing           10.127.128.205            (config-changed) Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active       idle       2        10.127.128.198            received database credentials of the first database
+  landscape-client/2    active       idle                10.127.128.198            Client registered!
+  pgbouncer/2           active       idle                10.127.128.198            
+  ubuntu-advantage/6    active       idle                10.127.128.198            Attached (esm-apps,esm-infra)
+postgresql/0            active       idle       3        10.127.128.6    5432/tcp  
+  ubuntu-advantage/2    active       idle                10.127.128.6              Attached (esm-apps,esm-infra)
+postgresql/1*           active       idle       4        10.127.128.100  5432/tcp  Primary
+  ubuntu-advantage/0*   active       idle                10.127.128.100            Attached (esm-apps,esm-infra)
+postgresql/2            active       idle       5        10.127.128.216  5432/tcp  
+  ubuntu-advantage/1    active       idle                10.127.128.216            Attached (esm-apps,esm-infra)
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.127.128.99   juju-19877e-0  ubuntu@22.04  runnervmvrwv9  Running
+1        started  10.127.128.205  juju-19877e-1  ubuntu@22.04  runnervmvrwv9  Running
+2        started  10.127.128.198  juju-19877e-2  ubuntu@22.04  runnervmvrwv9  Running
+3        started  10.127.128.6    juju-19877e-3  ubuntu@22.04  runnervmvrwv9  Running
+4        started  10.127.128.100  juju-19877e-4  ubuntu@22.04  runnervmvrwv9  Running
+5        started  10.127.128.216  juju-19877e-5  ubuntu@22.04  runnervmvrwv9  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:58:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:58:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:01:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:01:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:01:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:01:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:01:48 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:01:48 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:02:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:02:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 02:02:44 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7feb31c23fd0 state=finished raised Exception>]
+unit-postgresql-1: 02:02:49 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fc66278a4d0 state=finished raised Exception>]
+unit-postgresql-1: 02:02:53 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f08c65de530 state=finished raised Exception>]
+unit-postgresql-1: 02:02:56 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f4de22d26e0 state=finished raised Exception>]
+unit-postgresql-1: 02:03:01 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fa8692ba560 state=finished raised Exception>]
+unit-postgresql-1: 02:03:32 ERROR unit.postgresql/1.juju-log database:6: Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
