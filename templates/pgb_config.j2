@@ -42,6 +42,5 @@ client_tls_cert_file = {{ cert_file }}
 client_tls_sslmode = prefer
 {% endif %}
 {% if backend_version > 16 -%}
-server_reset_query = DISCARD ALL; LOAD 'login_hook';
-server_reset_query_always = 1
+server_reset_query = CLOSE ALL; RESET ALL; DEALLOCATE ALL; UNLISTEN *; SELECT pg_advisory_unlock_all(); DISCARD PLANS; DISCARD TEMP; DISCARD SEQUENCES;
 {% endif %}
