@@ -930,6 +930,7 @@ class PgBouncerCharm(TypedCharmBase):
                             key_file=f"{app_conf_dir}/{TLS_KEY_FILE}",
                             ca_file=f"{app_conf_dir}/{TLS_CA_FILE}",
                             cert_file=f"{app_conf_dir}/{TLS_CERT_FILE}",
+                            backend_version=self.backend.backend_major_version,
                         ),
                         0o700,
                     )

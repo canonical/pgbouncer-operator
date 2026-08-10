@@ -418,6 +418,7 @@ class TestCharm(unittest.TestCase):
             auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
             auth_file=auth_file,
             enable_tls=False,
+            backend_version=16,
         )
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
@@ -467,6 +468,7 @@ class TestCharm(unittest.TestCase):
             auth_query="SELECT username, password FROM pgbouncer_auth_BACKNEND_USER.get_auth($1)",
             auth_file=auth_file,
             enable_tls=False,
+            backend_version=16,
         )
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
