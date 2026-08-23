@@ -70,11 +70,12 @@ async def test_deploy(ops_test: OpsTest, charm):
         timeout=3000,
     )
 
-    await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{LS_CLIENT}:container")
+    # TODO: re-enable landscape-client, pending https://bugs.launchpad.net/landscape/+bug/2165025
+    # await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{LS_CLIENT}:container")
     await ops_test.model.relate(f"{CLIENT_APP_NAME}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.relate(f"{PG}:juju-info", f"{UBUNTU_PRO_APP_NAME}:juju-info")
     await ops_test.model.wait_for_idle(
-        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB], status="active"
+        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB], status="active"
     )
 
 
@@ -82,7 +83,7 @@ async def test_scale_up(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 4)
 
     await ops_test.model.wait_for_idle(
-        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
+        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
         status="active",
         timeout=1500,
     )
@@ -92,7 +93,7 @@ async def test_scale_down(ops_test: OpsTest):
     await scale_application(ops_test, CLIENT_APP_NAME, 3)
 
     await ops_test.model.wait_for_idle(
-        apps=[LS_CLIENT, UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
+        apps=[UBUNTU_PRO_APP_NAME, CLIENT_APP_NAME, PG, PGB],
         status="active",
         timeout=1500,
     )
