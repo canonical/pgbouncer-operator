@@ -54,7 +54,7 @@ async def test_deploy(ops_test: OpsTest, charm):
             config={
                 "account-name": os.environ["LANDSCAPE_ACCOUNT_NAME"],
                 "registration-key": os.environ["LANDSCAPE_REGISTRATION_KEY"],
-                "ppa": "ppa:landscape/self-hosted-beta",
+                # "ppa": "ppa:landscape/self-hosted-beta",
             },
             channel="latest/edge",
             num_units=0,
