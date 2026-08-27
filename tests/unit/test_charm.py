@@ -332,7 +332,7 @@ class TestCharm(unittest.TestCase):
     )
     @patch(
         "relations.backend_database.DatabaseRequires.fetch_relation_field",
-        return_value="BACKNEND_USER",
+        side_effect=lambda relation_id, field: "16.14" if field == "version" else "BACKNEND_USER",
     )
     @patch(
         "charm.BackendDatabaseRequires.relation", new_callable=PropertyMock, return_value=Mock()
@@ -340,7 +340,11 @@ class TestCharm(unittest.TestCase):
     @patch(
         "charm.BackendDatabaseRequires.postgres_databag",
         new_callable=PropertyMock,
-        return_value={"endpoints": "HOST:PORT", "read-only-endpoints": "HOST2:PORT"},
+        return_value={
+            "endpoints": "HOST:PORT",
+            "read-only-endpoints": "HOST2:PORT",
+            "version": "16.14",
+        },
     )
     @patch("charm.PgBouncerCharm.get_relation_databases")
     @patch("charm.PgBouncerCharm._reload_pgbouncer")
@@ -472,6 +476,10 @@ class TestCharm(unittest.TestCase):
         )
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
+        )
+        assert (
+            "server_reset_query = CLOSE ALL; RESET ALL; DEALLOCATE ALL; UNLISTEN *; SELECT pg_advisory_unlock_all(); DISCARD PLANS; DISCARD TEMP; DISCARD SEQUENCES;"
+            in expected_content
         )
 
     @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})
