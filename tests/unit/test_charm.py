@@ -326,6 +326,11 @@ class TestCharm(unittest.TestCase):
         _chown.assert_called_with(path, uid=1100, gid=120)
 
     @patch(
+        "charm.BackendDatabaseRequires.backend_major_version",
+        new_callable=PropertyMock,
+        return_value=16,
+    )
+    @patch(
         "charm.PgBouncerCharm.conf_auth_file",
         new_callable=PropertyMock,
         return_value="/dev/shm/pgbouncer_test",
@@ -354,6 +359,7 @@ class TestCharm(unittest.TestCase):
         _backend_rel,
         _,
         __,
+        ___,
     ):
         _get_dbs.return_value = {
             "1": {"name": "first_test", "legacy": True},
