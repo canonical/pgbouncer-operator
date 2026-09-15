@@ -41,7 +41,7 @@ jobs:
           uv pip install flake8 pylint
 
       - name: TICS GitHub Action
-        uses: tiobe/tics-github-action@v3
+        uses: tiobe/tics-github-action@v4
         with:
           mode: qserver
           project: pgbouncer-operator
