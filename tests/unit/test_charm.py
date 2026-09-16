@@ -26,6 +26,7 @@ from parameterized import parameterized
 from charm import PgBouncerCharm
 from constants import (
     BACKEND_RELATION_NAME,
+    CLIENT_RELATION_NAME,
     EXTENSIONS_BLOCKING_MESSAGE,
     PEER_RELATION_NAME,
     PGB_CONF_DIR,
@@ -693,6 +694,21 @@ class TestCharm(unittest.TestCase):
         self.charm.update_status()
 
         assert self.charm.unit.status.message == "VIP: 1.2.3.4"
+
+        # Blocks if subordinate to a principal without any client relation
+        self.charm.unit.status = ActiveStatus()
+        self.harness.add_relation("juju-info", "principal")
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, BlockedStatus)
+        assert self.charm.unit.status.message == "Database client relation not ready"
+
+        # Unblocks once a client relation is established
+        self.charm.unit.status = BlockedStatus()
+        self.harness.add_relation(CLIENT_RELATION_NAME, "client_app")
+        self.charm.update_status()
+
+        assert isinstance(self.charm.unit.status, ActiveStatus)
 
     @patch("charm.PgBouncerCharm.config", new_callable=PropertyMock, return_value={})
     def test_configuration_check(self, _config):
