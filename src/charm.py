@@ -596,7 +596,6 @@ class PgBouncerCharm(TypedCharmBase):
             return BlockedStatus("Database client relation not ready")
 
         return None
-    
 
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
@@ -610,7 +609,7 @@ class PgBouncerCharm(TypedCharmBase):
         if not self.configuration_check():
             return
 
-        blocking_status=self._get_blocking_status()
+        blocking_status = self._get_blocking_status()
         if blocking_status:
             self.unit.status = blocking_status
             return
