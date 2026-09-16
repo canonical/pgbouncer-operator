@@ -607,7 +607,7 @@ class PgBouncerCharm(TypedCharmBase):
             self.unit.status = BlockedStatus("vip configuration without data-intgrator")
             return
 
-        if not self.client_relations:
+        if not self.client_relations and self.model.get_relation("juju-info"):
             self.unit.status = BlockedStatus("Database client relation not ready")
             return
 
