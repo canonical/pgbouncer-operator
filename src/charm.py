@@ -607,6 +607,10 @@ class PgBouncerCharm(TypedCharmBase):
             self.unit.status = BlockedStatus("vip configuration without data-intgrator")
             return
 
+        if not self.client_relations:
+            self.unit.status = BlockedStatus("Database client relation not ready")
+            return
+
         if self.check_pgb_running():
             if self.unit.is_leader() and self.config.vip:
                 self.unit.status = ActiveStatus(f"VIP: {self.config.vip}")
