@@ -1,0 +1,124 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql-test-app (waiting for exactly 3 units, current : 4)
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  ubuntu-advantage/1 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/0 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/3 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/5 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/6 [idle] active: Attached (esm-apps,esm-infra)
+  ubuntu-advantage/7 [idle] active: Attached (esm-apps,esm-infra)
+  postgresql-test-app/2 [idle] active: received database credentials of the first database
+  postgresql-test-app/0 [idle] active: received database credentials of the first database
+  postgresql-test-app/3 [idle] active: received database credentials of the first database
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  pgbouncer/0 [idle] active: 
+  pgbouncer/1 [idle] active: 
+  pgbouncer/3 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.28   unsupported  01:56:16Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+landscape-client              unknown      0  landscape-client     latest/edge    73  no       
+pgbouncer            1.21.0   active       3  pgbouncer                            0  no       
+postgresql           14.24    active       3  postgresql           14/edge      1215  no       
+postgresql-test-app           active       3  postgresql-test-app  latest/edge   591  no       received database credentials of the first database
+ubuntu-advantage              active       6  ubuntu-advantage     latest/edge   148  no       Attached (esm-apps,esm-infra)
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+postgresql-test-app/0*  active    idle   0        10.113.142.121            received database credentials of the first database
+  pgbouncer/0*          active    idle            10.113.142.121            
+  ubuntu-advantage/1*   active    idle            10.113.142.121            Attached (esm-apps,esm-infra)
+postgresql-test-app/2   active    idle   2        10.113.142.31             received database credentials of the first database
+  pgbouncer/1           active    idle            10.113.142.31             
+  ubuntu-advantage/0    active    idle            10.113.142.31             Attached (esm-apps,esm-infra)
+postgresql-test-app/3   active    idle   6        10.113.142.146            received database credentials of the first database
+  pgbouncer/3           active    idle            10.113.142.146            
+  ubuntu-advantage/7    active    idle            10.113.142.146            Attached (esm-apps,esm-infra)
+postgresql/0*           active    idle   3        10.113.142.189  5432/tcp  Primary
+  ubuntu-advantage/5    active    idle            10.113.142.189            Attached (esm-apps,esm-infra)
+postgresql/1            active    idle   4        10.113.142.199  5432/tcp  
+  ubuntu-advantage/3    active    idle            10.113.142.199            Attached (esm-apps,esm-infra)
+postgresql/2            active    idle   5        10.113.142.25   5432/tcp  
+  ubuntu-advantage/6    active    idle            10.113.142.25             Attached (esm-apps,esm-infra)
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.113.142.121  juju-7a16c4-0  ubuntu@22.04  runnervmlun5p  Running
+2        started  10.113.142.31   juju-7a16c4-2  ubuntu@22.04  runnervmlun5p  Running
+3        started  10.113.142.189  juju-7a16c4-3  ubuntu@22.04  runnervmlun5p  Running
+4        started  10.113.142.199  juju-7a16c4-4  ubuntu@22.04  runnervmlun5p  Running
+5        started  10.113.142.25   juju-7a16c4-5  ubuntu@22.04  runnervmlun5p  Running
+6        started  10.113.142.146  juju-7a16c4-6  ubuntu@22.04  runnervmlun5p  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:42:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:42:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:44:49 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:44:49 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:45:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:45:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:45:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:45:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:45:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:45:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:46:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:46:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:46:24 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fada24fb190 state=finished raised Exception>]
+unit-postgresql-0: 01:46:28 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f6f32304a90 state=finished raised Exception>]
+unit-postgresql-0: 01:46:32 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7ff47a370040 state=finished raised Exception>]
+unit-postgresql-0: 01:46:36 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f0ab2464040 state=finished raised Exception>]
+unit-postgresql-0: 01:46:40 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f0345e3ca30 state=finished raised Exception>]
+unit-postgresql-0: 01:47:12 ERROR unit.postgresql/0.juju-log database:6: Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-6: 01:52:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:52:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:29 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 01:55:41 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
