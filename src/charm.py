@@ -575,6 +575,29 @@ class PgBouncerCharm(TypedCharmBase):
             logger.exception("Invalid configuration")
             return False
 
+    def _get_blocking_status(self) -> Optional[BlockedStatus]:
+        """Return the blocked status that applies to the unit, if any."""
+        if self.backend.postgres is None:
+            return BlockedStatus("waiting for backend database relation to initialise")
+
+        if not self.backend.ready:
+            return BlockedStatus("backend database relation not ready")
+
+        if self.hacluster.relation and not self._is_exposed:
+            return BlockedStatus("ha integration used without data-intgrator")
+
+        if self.hacluster.relation and not self.config.vip:
+            return BlockedStatus("ha integration used without vip configuration")
+
+        if self.config.vip and not self._is_exposed:
+            return BlockedStatus("vip configuration without data-intgrator")
+
+        if not self.client_relations and self.model.get_relation("juju-info"):
+            return BlockedStatus("Database client relation not ready")
+
+        return None
+    
+
     def update_status(self):
         """Health check to update pgbouncer status based on charm state."""
         if self.unit.status.message in [
@@ -587,28 +610,9 @@ class PgBouncerCharm(TypedCharmBase):
         if not self.configuration_check():
             return
 
-        if self.backend.postgres is None:
-            self.unit.status = BlockedStatus("waiting for backend database relation to initialise")
-            return
-
-        if not self.backend.ready:
-            self.unit.status = BlockedStatus("backend database relation not ready")
-            return
-
-        if self.hacluster.relation and not self._is_exposed:
-            self.unit.status = BlockedStatus("ha integration used without data-intgrator")
-            return
-
-        if self.hacluster.relation and not self.config.vip:
-            self.unit.status = BlockedStatus("ha integration used without vip configuration")
-            return
-
-        if self.config.vip and not self._is_exposed:
-            self.unit.status = BlockedStatus("vip configuration without data-intgrator")
-            return
-
-        if not self.client_relations and self.model.get_relation("juju-info"):
-            self.unit.status = BlockedStatus("Database client relation not ready")
+        blocking_status=self._get_blocking_status()
+        if blocking_status:
+            self.unit.status = blocking_status
             return
 
         if self.check_pgb_running():
