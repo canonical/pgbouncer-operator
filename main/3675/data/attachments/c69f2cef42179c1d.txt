@@ -1,0 +1,386 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.28   unsupported  02:01:27Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+another-application           blocked      1  postgresql-test-app  latest/edge   591  no       No database integration available
+another-pgbouncer    1.21.0   active       1  pgbouncer                            1  no       
+another-postgresql   14.24    active       2  postgresql           14/edge      1217  no       
+pgbouncer            1.21.0   active       1  pgbouncer                            0  no       
+postgresql           14.24    active       2  postgresql           14/edge      1217  no       
+postgresql-test-app           active       1  postgresql-test-app  latest/edge   591  no       received database credentials of the second database
+
+Unit                    Workload  Agent  Machine  Public address  Ports     Message
+another-application/0*  blocked   idle   4        10.74.202.93              No database integration available
+another-postgresql/0*   active    idle   5        10.74.202.10    5432/tcp  Primary
+another-postgresql/1    active    idle   6        10.74.202.245   5432/tcp  
+postgresql-test-app/1*  active    idle   3        10.74.202.201             received database credentials of the second database
+  another-pgbouncer/3*  active    idle            10.74.202.201             
+  pgbouncer/5*          active    idle            10.74.202.201             
+postgresql/0*           active    idle   1        10.74.202.113   5432/tcp  Primary
+postgresql/1            active    idle   2        10.74.202.23    5432/tcp  
+
+Machine  State    Address        Inst id        Base          AZ             Message
+1        started  10.74.202.113  juju-6a3c3d-1  ubuntu@22.04  runnervmlun5p  Running
+2        started  10.74.202.23   juju-6a3c3d-2  ubuntu@22.04  runnervmlun5p  Running
+3        started  10.74.202.201  juju-6a3c3d-3  ubuntu@22.04  runnervmlun5p  Running
+4        started  10.74.202.93   juju-6a3c3d-4  ubuntu@22.04  runnervmlun5p  Running
+5        started  10.74.202.10   juju-6a3c3d-5  ubuntu@22.04  runnervmlun5p  Running
+6        started  10.74.202.245  juju-6a3c3d-6  ubuntu@22.04  runnervmlun5p  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:41:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:41:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:42:19 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:42:19 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:42:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:42:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:42:53 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f41c2742f20 state=finished raised Exception>]
+unit-postgresql-0: 01:42:55 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f5666934040 state=finished raised Exception>]
+unit-postgresql-0: 01:42:56 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fad68a30a30 state=finished raised Exception>]
+unit-postgresql-0: 01:42:58 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f70091d0a30 state=finished raised Exception>]
+unit-postgresql-0: 01:43:00 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f578c28c9d0 state=finished raised Exception>]
+unit-postgresql-0: 01:43:08 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-3: 01:47:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:47:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-test-app-1: 01:49:16 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#pgbouncer": settings 34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#pgbouncer not found (not found)
+unit-pgbouncer-1: 01:49:16 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#postgresql-test-app": settings 34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#postgresql-test-app not found (not found)
+unit-pgbouncer-0: 01:49:18 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#postgresql-test-app": settings 34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#7#postgresql-test-app not found (not found)
+machine-3: 01:49:35 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:49:35 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:49:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 01:50:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:50:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:51:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:51:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:51:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:51:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-another-postgresql-0: 01:51:46 ERROR unit.another-postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fe3350fc850 state=finished raised Exception>]
+unit-another-postgresql-0: 01:51:49 ERROR unit.another-postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fbcd8c9ca90 state=finished raised Exception>]
+unit-another-postgresql-0: 01:51:51 ERROR unit.another-postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fb949d44a30 state=finished raised Exception>]
+unit-another-postgresql-0: 01:51:53 ERROR unit.another-postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f164bff9ba0 state=finished raised Exception>]
+unit-another-postgresql-0: 01:51:56 ERROR unit.another-postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-another-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f7100864a30 state=finished raised Exception>]
+unit-another-postgresql-0: 01:52:04 ERROR unit.another-postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-postgresql-test-app-1: 01:56:55 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#15#pgbouncer": settings 34091d5d-7a37-4124-88d1-b3099c6a3c3d:r#15#pgbouncer not found (not found)
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:00 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:01 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 01:57:02 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:36 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:38 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:00:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+unit-postgresql-test-app-1: 02:01:18 ERROR unit.postgresql-test-app/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 598, in <module>
+    main(ApplicationCharm)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 522, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 506, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 439, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 483, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 336, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 914, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1034, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 523, in _on_run_sql_action
+    connection = self.connect_to_database(
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 592, in connect_to_database
+    connection = psycopg2.connect(connstr)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  bouncer config error
+
+unit-postgresql-test-app-1: 02:01:20 ERROR unit.postgresql-test-app/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 598, in <module>
+    main(ApplicationCharm)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 522, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 506, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 439, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 483, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 336, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 914, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1034, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 523, in _on_run_sql_action
+    connection = self.connect_to_database(
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 592, in connect_to_database
+    connection = psycopg2.connect(connstr)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  bouncer config error
+
+unit-postgresql-test-app-1: 02:01:22 ERROR unit.postgresql-test-app/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 598, in <module>
+    main(ApplicationCharm)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 522, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 506, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 439, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 483, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 336, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 914, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1034, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 523, in _on_run_sql_action
+    connection = self.connect_to_database(
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 592, in connect_to_database
+    connection = psycopg2.connect(connstr)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  bouncer config error
+
+unit-postgresql-test-app-1: 02:01:24 ERROR unit.postgresql-test-app/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 598, in <module>
+    main(ApplicationCharm)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/__init__.py", line 360, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 522, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 506, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 439, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/_main.py", line 483, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 336, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 914, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 1034, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 523, in _on_run_sql_action
+    connection = self.connect_to_database(
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/src/charm.py", line 592, in connect_to_database
+    connection = psycopg2.connect(connstr)
+  File "/var/lib/juju/agents/unit-postgresql-test-app-1/charm/venv/lib/python3.10/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: connection to server on socket "/var/snap/charmed-pgbouncer/current/run/pgbouncer/pgbouncer/instance_0/.s.PGSQL.6432" failed: FATAL:  bouncer config error
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
