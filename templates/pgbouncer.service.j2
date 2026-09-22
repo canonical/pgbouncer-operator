@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+OOMScoreAdjust={{ oom_score_adjust }}
 ExecStartPre=-/usr/bin/install -o snap_daemon -g snap_daemon -m 700 -d \
         /var/snap/charmed-pgbouncer/common/var/log/pgbouncer/{{ app_name }}/instance_%i/ \
         {{ snap_tmp_dir }}/{{ app_name }}/instance_%i/

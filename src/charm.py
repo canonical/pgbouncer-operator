@@ -83,6 +83,7 @@ from constants import (
     TRACING_RELATION_NAME,
     UNIT_SCOPE,
 )
+from oom import ensure_snap_oom_protection
 from relations.backend_database import BackendDatabaseRequires
 from relations.db import DbProvides
 from relations.hacluster import HaCluster
@@ -237,12 +238,16 @@ class PgBouncerCharm(TypedCharmBase):
 
     def render_utility_files(self):
         """Render charm utility services and configuration."""
+        oom_score_adjust = ensure_snap_oom_protection(PGBOUNCER_SNAP_NAME)
         # Render pgbouncer service file and reload systemd
         with open("templates/pgbouncer.service.j2") as file:
             template = Template(file.read())
         # Render the template file with the correct values.
         rendered = template.render(
-            app_name=self.app.name, conf_dir=PGB_CONF_DIR, snap_tmp_dir=SNAP_TMP_DIR
+            app_name=self.app.name,
+            conf_dir=PGB_CONF_DIR,
+            snap_tmp_dir=SNAP_TMP_DIR,
+            oom_score_adjust=oom_score_adjust,
         )
 
         self.render_file(
@@ -995,6 +1000,7 @@ class PgBouncerCharm(TypedCharmBase):
         """
         for snap_name, snap_version in packages:
             try:
+                ensure_snap_oom_protection(snap_name)
                 snap_cache = snap.SnapCache()
                 snap_package = snap_cache[snap_name]
 
