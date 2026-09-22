@@ -5,6 +5,7 @@ import logging
 import math
 import platform
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 
 import ops.testing
@@ -32,6 +33,7 @@ from constants import (
     PGB_CONF_DIR,
     PGB_LOG_DIR,
     PGB_RUN_DIR,
+    PGBOUNCER_SNAP_NAME,
     SECRET_INTERNAL_LABEL,
     SNAP_PACKAGES,
 )
@@ -44,6 +46,9 @@ ops.testing.SIMULATE_CAN_CONNECT = True
 
 class TestCharm(unittest.TestCase):
     def setUp(self):
+        protection = patch("charm.ensure_snap_oom_protection", return_value=-897)
+        self.ensure_oom_protection = protection.start()
+        self.addCleanup(protection.stop)
         self.harness = Harness(PgBouncerCharm)
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
@@ -311,6 +316,71 @@ class TestCharm(unittest.TestCase):
         _snap_cache.return_value.__getitem__.assert_called_once_with("postgresql")
         assert not _snap_package.ensure.called
         assert not _snap_package.hold.called
+
+    @parameterized.expand([(False, False), (True, False), (True, True)])
+    @patch("charm.snap.SnapCache")
+    def test_snap_protection_precedes_install(self, present, refresh, snap_cache):
+        package = snap_cache.return_value.__getitem__.return_value
+        package.present = present
+        calls = Mock()
+        calls.attach_mock(self.ensure_oom_protection, "protect")
+        calls.attach_mock(snap_cache, "cache")
+
+        self.charm._install_snap_packages(SNAP_PACKAGES, refresh=refresh)
+
+        assert calls.mock_calls[:3] == [
+            call.protect(PGBOUNCER_SNAP_NAME),
+            call.cache(),
+            call.cache().__getitem__(PGBOUNCER_SNAP_NAME),
+        ]
+        assert package.ensure.call_count == (not present or refresh)
+
+    @patch("charm.snap.SnapCache")
+    def test_snap_protection_failure_prevents_install(self, snap_cache):
+        self.ensure_oom_protection.side_effect = snap.SnapError("hint is full")
+
+        self.charm.on.install.emit()
+
+        snap_cache.assert_not_called()
+        assert self.charm.unit.status == BlockedStatus("failed to install snap packages")
+
+    @parameterized.expand([(-899,), (-897,), (-801,)])
+    @patch("charm.systemd")
+    @patch("charm.PgBouncerCharm.render_file")
+    def test_render_utility_files_oom_protection(self, adjustment, render_file, systemd_mock):
+        self.ensure_oom_protection.return_value = adjustment
+        self.charm.service_ids = [0, 1]
+        template = Path("templates/pgbouncer.service.j2").read_text()
+        logrotate = Path("templates/logrotate.j2").read_text()
+        with patch(
+            "builtins.open",
+            side_effect=[
+                unittest.mock.mock_open(read_data=template).return_value,
+                unittest.mock.mock_open(read_data=logrotate).return_value,
+                unittest.mock.mock_open().return_value,
+            ],
+        ):
+            self.charm.render_utility_files()
+
+        self.ensure_oom_protection.assert_called_once_with(PGBOUNCER_SNAP_NAME)
+        rendered = render_file.call_args.args[1]
+        assert render_file.call_args.args[0] == "/etc/systemd/system/pgbouncer-pgbouncer@.service"
+        assert f"OOMScoreAdjust={adjustment}\n" in rendered
+        assert "instance_%i/pgbouncer.ini" in rendered
+        assert "ExecStart=/snap/bin/charmed-pgbouncer.pgbouncer-server" in rendered
+        assert "ExecReload=kill -HUP $MAINPID" in rendered
+        assert systemd_mock.mock_calls == [call.daemon_reload()]
+
+    @patch("charm.systemd")
+    @patch("charm.PgBouncerCharm.render_file")
+    def test_render_utility_files_fails_without_protection(self, render_file, systemd_mock):
+        self.ensure_oom_protection.side_effect = snap.SnapError("query failed")
+
+        with pytest.raises(snap.SnapError, match="query failed"):
+            self.charm.render_utility_files()
+
+        render_file.assert_not_called()
+        assert not systemd_mock.mock_calls
 
     @patch("os.chmod")
     @patch("os.chown")

@@ -85,6 +85,9 @@ class TestUpgrade(unittest.TestCase):
         _install_snap_packages.assert_called_once_with(packages=SNAP_PACKAGES, refresh=True)
         _render_prometheus_service.assert_called_once_with()
         _render_utility_files.assert_called_once_with()
+        # Existing upgrade rendering owns restarts; OOM configuration adds none.
+        _systemd.service_start.assert_not_called()
+        _systemd.service_restart.assert_not_called()
         _cluster_checks.assert_called_once_with()
         _set_unit_completed.assert_called_once_with()
         _update_status.assert_called_once_with()
