@@ -86,3 +86,29 @@ options:
 
       Default: 100
     type: int
+
+  client_login_timeout:
+    default: 60.0
+    description: |
+      Maximum time in seconds that a client can take to log in before being disconnected.
+
+      Default: 60.0
+    type: float
+
+  reserve_pool_timeout:
+    default: 5.0
+    description: |
+      Number of seconds a client waits before PgBouncer uses additional connections from the reserve pool.
+      A value of 0 disables this timeout.
+
+      Default: 5.0
+    type: float
+
+  server_idle_timeout:
+    default: 600.0
+    description: |
+      Number of seconds an idle server connection is kept open before being closed.
+      A value of 0 disables this timeout.
+
+      Default: 600.0
+    type: float

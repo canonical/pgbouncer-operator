@@ -42,6 +42,7 @@ async def test_config_parameters(ops_test: OpsTest, charm) -> None:
         )
         await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
         await ops_test.model.wait_for_idle(apps=[PG, CLIENT_APP_NAME], timeout=1200)
+
         # Relate the charms and wait for them exchanging some connection data.
         await ops_test.model.add_relation(f"{CLIENT_APP_NAME}:{FIRST_DATABASE_RELATION_NAME}", PGB)
 
@@ -58,6 +59,9 @@ async def test_config_parameters(ops_test: OpsTest, charm) -> None:
         "pool_mode": test_string,
         "max_db_connections": "-1",
         "max_prepared_statements": "1001",
+        "client_login_timeout": "-1",
+        "reserve_pool_timeout": "-1",
+        "server_idle_timeout": "-1",
     }
 
     for key, val in configs.items():

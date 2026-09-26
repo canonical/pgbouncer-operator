@@ -59,7 +59,21 @@ Set these using the command `juju config <option>=<value>`.
   - Note that when you hit the limit, closing a client connection to one pool will not immediately allow a server connection to be established for another pool, because the server connection for the first pool is still open. Once the server connection closes (due to idle timeout), a new server connection will immediately be opened for the waiting pool.
   - 0 = unlimited
 
-From these values and the current deployment, the following pgbouncer.ini config values are calculated proportional to `max_db_connections`:
+- `client_login_timeout`:
+  - default: `60.0`
+  - Maximum time in seconds that a client can take to log in before being disconnected.
+
+- `reserve_pool_timeout`:
+  - default: `5.0`
+  - Number of seconds a client waits before PgBouncer uses additional connections from the reserve pool.
+  - `0` disables this timeout.
+
+- `server_idle_timeout`:
+  - default: `600.0`
+  - Number of seconds an idle server connection is kept open before being closed.
+  - `0` disables this timeout.
+
+From `max_db_connections` and the current deployment, the following pgbouncer.ini config values are calculated:
 
 - `effective_db_connections = max_db_connections / number of pgbouncer instances running in a unit`
   - Number of pgbouncer instances is equal to number of cpu cores on unit.

@@ -369,6 +369,12 @@ class TestCharm(unittest.TestCase):
 
         with open("templates/pgb_config.j2") as file:
             template = Template(file.read())
+        with self.harness.hooks_disabled():
+            self.harness.update_config({
+                "client_login_timeout": 30.5,
+                "reserve_pool_timeout": 7.5,
+                "server_idle_timeout": 120.0,
+            })
         self.charm.render_pgb_config()
         _reload.assert_called()
         effective_db_connections = 100
@@ -416,6 +422,9 @@ class TestCharm(unittest.TestCase):
             pool_mode="session",
             max_db_connections=100,
             max_prepared_statements=100,
+            client_login_timeout=30.5,
+            reserve_pool_timeout=7.5,
+            server_idle_timeout=120.0,
             default_pool_size=default_pool_size,
             min_pool_size=min_pool_size,
             reserve_pool_size=reserve_pool_size,
@@ -427,6 +436,9 @@ class TestCharm(unittest.TestCase):
             enable_tls=False,
             backend_version=16,
         )
+        assert "client_login_timeout = 30.5" in expected_content
+        assert "reserve_pool_timeout = 7.5" in expected_content
+        assert "server_idle_timeout = 120.0" in expected_content
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
@@ -466,6 +478,9 @@ class TestCharm(unittest.TestCase):
             pool_mode="session",
             max_db_connections=0,
             max_prepared_statements=100,
+            client_login_timeout=30.5,
+            reserve_pool_timeout=7.5,
+            server_idle_timeout=120.0,
             default_pool_size=20,
             min_pool_size=10,
             reserve_pool_size=10,
