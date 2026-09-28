@@ -1,0 +1,204 @@
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-1
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-586
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: 
+  postgresql/1 [executing] waiting: Awaiting restart operation
+  postgresql/2 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  postgresql/2 [idle] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [executing] maintenance: Executing restart operation
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/focal/mailman3-core-18
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: installing charm software
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing mailman3,postfix,postfix-policyd-spf-python,spamassassin,spamc
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: configuring postfix for posts to mailing lists
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [executing] maintenance: Installing python3-mailman-hyperkitty
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [idle] active: Primary
+  postgresql/1 [idle] active: 
+  postgresql/2 [idle] active: 
+  pgbouncer/1 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mailman3-core/0 [idle] active: Ready (source version/commit e1d5a03)
+  postgresql/0 [executing] active: Primary
+  postgresql/1 [executing] active: 
+  postgresql/2 [executing] active: 
+  pgbouncer/1 [executing] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  postgresql/0 [executing] active: Primary
+  postgresql/2 [idle] active: 
+  pgbouncer/1 [idle] blocked: waiting for backend database relation to initialise
+[32mINFO    [0m root:helpers.py:97 (0, '{"pgbouncer/1":{"workload-version":"1.21.0","machine":"5","opened-ports":null,"public-address":"10.54.46.52","charm":"local:jammy/pgbouncer-1","leader":true,"life":"alive","relation-info":[{"relation-id":10,"endpoint":"backend-database","related-endpoint":"database","application-data":{"data":"{\\"database\\": \\"pgbouncer\\", \\"extra-user-roles\\": \\"SUPERUSER\\", \\"provided-secrets\\": \\"[\\\\\\"mtls-cert\\\\\\"]\\", \\"requested-secrets\\": \\"[\\\\\\"username\\\\\\", \\\\\\"password\\\\\\", \\\\\\"tls\\\\\\", \\\\\\"tls-ca\\\\\\", \\\\\\"uris\\\\\\", \\\\\\"read-only-uris\\\\\\", \\\\\\"entity-name\\\\\\", \\\\\\"entity-password\\\\\\"]\\"}","database":"pgbouncer","endpoints":"10.54.46.51:5432","read-only-endpoints":"10.54.46.22:5432,10.54.46.253:5432","secret-tls":"secret://11e548b3-e9c1-4140-8466-1bdb7760b829/s91jho6sorclad2fvs60","secret-user":"secret://11e548b3-e9c1-4140-8466-1bdb7760b829/8dss8cv7ek2fqrf4u4e0","version":"14.24"},"local-unit":{"in-scope":false,"data":null},"related-units":{"postgresql/0":{"in-scope":true,"data":{"egress-subnets":"10.54.46.51/32","ingress-address":"10.54.46.51","private-address":"10.54.46.51"}},"postgresql/1":{"in-scope":true,"data":{"egress-subnets":"10.54.46.253/32","ingress-address":"10.54.46.253","private-address":"10.54.46.253"}},"postgresql/2":{"in-scope":true,"data":{"egress-subnets":"10.54.46.22/32","ingress-address":"10.54.46.22","private-address":"10.54.46.22"}}}},{"relation-id":12,"endpoint":"db","related-endpoint":"db","application-data":{},"local-unit":{"in-scope":false,"data":null},"related-units":{"mailman3-core/0":{"in-scope":true,"data":{"database":"mailman3","egress-subnets":"10.54.46.52/32","ingress-address":"10.54.46.52","private-address":"10.54.46.52"}}}},{"relation-id":8,"endpoint":"pgb-peers","related-endpoint":"pgb-peers","application-data":{"current_port":"6432","leader_ip":"10.54.46.52"},"local-unit":{"in-scope":true,"data":{"auth_file_set":"true","egress-subnets":"10.54.46.52/32","ingress-address":"10.54.46.52","pgb_dbs":"468067f3e2f88531db254c9c96b0e335","private-address":"10.54.46.52","userlist_nonce":"uFjuUvwc1fEunI4A3PcW1s7b"}}},{"relation-id":9,"endpoint":"upgrade","related-endpoint":"upgrade","application-data":{"dependencies":"{\\"charm\\": {\\"dependencies\\": {}, \\"name\\": \\"pgbouncer\\", \\"upgrade_supported\\": \\"\\u003e0\\", \\"version\\": \\"1\\"}, \\"snap\\": {\\"dependencies\\": {}, \\"name\\": \\"charmed-postgresql\\", \\"upgrade_supported\\": \\"^1\\", \\"version\\": \\"1.18.0\\"}}"},"local-unit":{"in-scope":true,"data":{"egress-subnets":"10.54.46.52/32","ingress-address":"10.54.46.52","private-address":"10.54.46.52","state":"idle"}}}]}}\n', '')
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.28   unsupported  02:07:54Z
+
+App                       Version  Status  Scale  Charm                     Channel         Rev  Exposed  Message
+mailman3-core                      active      1  mailman3-core             latest/stable    18  no       Ready (source version/commit e1d5a03)
+pgbouncer                 1.21.0   active      1  pgbouncer                                   1  no       
+postgresql                14.24    active      3  postgresql                14/edge        1217  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable        586  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+mailman3-core/0*             active    idle   5        10.54.46.52     25/tcp    Ready (source version/commit e1d5a03)
+  pgbouncer/1*               active    idle            10.54.46.52               
+postgresql/0*                active    idle   0        10.54.46.51     5432/tcp  Primary
+postgresql/1                 active    idle   1        10.54.46.253    5432/tcp  
+postgresql/2                 active    idle   2        10.54.46.22     5432/tcp  
+self-signed-certificates/0*  active    idle   4        10.54.46.57               
+
+Machine  State    Address       Inst id        Base          AZ             Message
+0        started  10.54.46.51   juju-60b829-0  ubuntu@22.04  runnervmtr4k5  Running
+1        started  10.54.46.253  juju-60b829-1  ubuntu@22.04  runnervmtr4k5  Running
+2        started  10.54.46.22   juju-60b829-2  ubuntu@22.04  runnervmtr4k5  Running
+4        started  10.54.46.57   juju-60b829-4  ubuntu@24.04  runnervmtr4k5  Running
+5        started  10.54.46.52   juju-60b829-5  ubuntu@20.04  runnervmtr4k5  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:48:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:48:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-0: 01:49:43 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f47d90e6ef0 state=finished raised Exception>]
+unit-postgresql-0: 01:49:46 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fe929224100 state=finished raised Exception>]
+unit-postgresql-0: 01:49:48 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f9e1c85ba30 state=finished raised Exception>]
+unit-postgresql-0: 01:49:50 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fec1546cac0 state=finished raised Exception>]
+unit-postgresql-0: 01:49:53 ERROR unit.postgresql/0.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-0/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f6c09b9b9d0 state=finished raised Exception>]
+unit-postgresql-0: 01:50:02 ERROR unit.postgresql/0.juju-log Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+machine-2: 01:50:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:50:40 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:50:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:50:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:53:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:53:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 01:57:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 01:58:14 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:58:14 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:02:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:02:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
