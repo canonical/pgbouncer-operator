@@ -1,0 +1,36 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.28   unsupported  02:09:22Z
+
+App                  Version  Status   Scale  Charm                Channel       Rev  Exposed  Message
+pgbouncer                     unknown      0  pgbouncer            1/edge       1105  no       
+postgresql                    waiting    0/3  postgresql           14/edge      1217  no       waiting for machine
+postgresql-test-app           waiting    0/3  postgresql-test-app  latest/edge   599  no       waiting for machine
+
+Unit                   Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0  waiting   allocating  0                               waiting for machine
+postgresql-test-app/1  waiting   allocating  1                               waiting for machine
+postgresql-test-app/2  waiting   allocating  2                               waiting for machine
+postgresql/0           waiting   allocating  3                               waiting for machine
+postgresql/1           waiting   allocating  4                               waiting for machine
+postgresql/2           waiting   allocating  5                               waiting for machine
+
+Machine  State  Address  Inst id  Base          AZ  Message
+0        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+1        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+2        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+3        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+4        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+5        down            pending  ubuntu@22.04      attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The req...
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+controller-0: 01:55:08 ERROR juju.worker.provisioner cannot start instance for machine "0": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+controller-0: 01:55:14 ERROR juju.worker.provisioner cannot start instance for machine "2": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+controller-0: 01:55:14 ERROR juju.worker.provisioner cannot start instance for machine "1": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+controller-0: 01:55:20 ERROR juju.worker.provisioner cannot start instance for machine "3": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+controller-0: 01:55:21 ERROR juju.worker.provisioner cannot start instance for machine "4": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+controller-0: 01:55:21 ERROR juju.worker.provisioner cannot start instance for machine "5": attempt count exceeded: Failed remote image download: Failed getting remote image info: Failed getting image: The requested image could not be found for fingerprint "adcbed7cebaf412c4eff31afd4428dee45d36ac785671df450f121b30690e609"
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
