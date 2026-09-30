@@ -15,6 +15,7 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [PostgreSQL 16 on 24.04](https://charmhub.io/postgresql?channel=16/stable) | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|[1017], [1018], [1019], [1020], [1021], [1022]| `1.21.0` | `3.6.24+` | ![check] | ![check] | ![check] | ![check]
 |[1017], [1018], [1019], [1020], [1021], [1022]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[909], [910], [911], [912], [913], [914]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[897], [898], [899], [900], [901], [902]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
@@ -36,6 +37,18 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 > 
 > See: [`juju info`](https://juju.is/docs/juju/juju-info).
 
+### Release 1083-1093
+| Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
+|:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
+| [1093] | | ![check] | ![check] | | |
+| [1092] | ![check] | | ![check] | |
+| [1091] | | ![check] | ![check] | | |
+| [1090] | ![check] | | | ![check] | |
+| [1084] |  | ![check] | | | ![check] |
+| [1083] |  ![check] | | | | ![check] |
+
+
+[details=Older releases]
 ### Release 1017-1022
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -46,7 +59,6 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [1021] |  | ![check] | | | ![check] |
 | [1022] |  ![check] | | | | ![check] |
 
-[details=Release 909-914]
 ### Release 909-914
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -56,9 +68,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [912] | ![check] | | | | ![check] |
 | [913] |  | ![check] |  | | ![check] |
 | [914] |  ![check] | | | ![check] |
-[/details]
 
-[details=Release 897-902]
 ### Release 897-902
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -68,9 +78,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [900] | ![check] | | | | ![check] |
 | [901] |  | ![check] |  | | ![check] |
 | [902] |  ![check] | |  | ![check] |
-[/details]
 
-[details=Release 873-878]
 ### Release 873-878
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy) | Ubuntu 24.04 (noble)
 |:-----:|:--------:|:--------:|:-----:|:-----:|:-----:|
@@ -80,9 +88,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [875] | ![check] | | ![check] |  | 
 | [874] |  | ![check] |  | | ![check] |
 | [873] |  | ![check] |  | ![check] |
-[/details]
 
-[details=Release 639-642]
 ### Release 639-642
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
@@ -90,9 +96,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [640] | ![check] |  | ![check] |          |
 | [641] |  | ![check] | ![check] | |
 | [642] |  | ![check] | | ![check] |
-[/details]
 
-[details=Release 394-397]
 ### Release 394-397
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
@@ -100,19 +104,16 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [395] | ![check] |          | ![check] |          |
 | [396] | ![check] |          |          | ![check] |
 | [397] |          | ![check] |          | ![check] |
-[/details]
 
-[details=Release 278-281]
+### Release 278-281
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
 | [278] | ![check] |          |          | ![check] |
 | [279] | ![check] |          | ![check] |          |
 | [280] |          | ![check] |          | ![check] |
 | [281] |          | ![check] | ![check] |          |
-[/details]
 
-[details=Release 254-257]
-
+### Release 257-254
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
 | [254] |          | ![check] | ![check] |          |
@@ -120,10 +121,7 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [256] | ![check] |          |          | ![check] |
 | [257] |          | ![check] |          | ![check] |
 
-[/details]
-
-[details=Release 173-176]
-
+### Release 173-176
 | Revision | `amd64` | `arm64` | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:-----:|:--------:|:--------:|:-----:|:-----:|
 | [173] |          | ![check] |          | ![check] |
@@ -131,28 +129,19 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
 | [175] | ![check] |          | ![check] |          |
 | [176] |          | ![check] | ![check] |          |
 
-[/details]
-
-[details=Release 88-89]
-
+### Release 88-89
 | Revision | amd64 | arm64 | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:----:|:--------:|:--------:|:-----:|:-----:|
 | [89] | ![check] |          | ![check] |          |
 | [88] | ![check] |          |          | ![check] |
 
-[/details]
-
-[details=Release 80-81]
-
+### Release 80-81
 | Revision | amd64 | arm64 | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:----:|:--------:|:--------:|:-----:|:-----:|
 | [81] | ![check] |          |          | ![check] |
 | [80] | ![check] |          | ![check] |          |
 
-[/details]
-
-[details=Release 76-77]
-
+### Release 76-77
 | Revision | amd64 | arm64 | Ubuntu 20.04 (focal) | Ubuntu 22.04 (jammy)
 |:----:|:--------:|:--------:|:-----:|:-----:|
 | [77] | ![check] |          | ![check] |          |
@@ -166,6 +155,12 @@ Due to the [subordinate](https://juju.is/docs/sdk/charm-taxonomy#heading--subord
  Our release notes are an ongoing work in progress. If there is any additional information about releases that you would like to see or suggestions for other improvements, don't hesitate to contact us on [Matrix ](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [leave a comment](https://discourse.charmhub.io/t/pgbouncer-reference-release-notes/12285).
 
 <!--LINKS-->
+[1093]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
+[1092]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
+[1091]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
+[1090]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
+[1084]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
+[1083]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1083
 [1017]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
 [1018]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
 [1019]: https://github.com/canonical/pgbouncer-operator/releases/tag/rev1017
