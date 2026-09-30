@@ -369,12 +369,6 @@ class TestCharm(unittest.TestCase):
 
         with open("templates/pgb_config.j2") as file:
             template = Template(file.read())
-        with self.harness.hooks_disabled():
-            self.harness.update_config({
-                "client_login_timeout": 30.5,
-                "reserve_pool_timeout": 7.5,
-                "server_idle_timeout": 120.0,
-            })
         self.charm.render_pgb_config()
         _reload.assert_called()
         effective_db_connections = 100
@@ -422,9 +416,9 @@ class TestCharm(unittest.TestCase):
             pool_mode="session",
             max_db_connections=100,
             max_prepared_statements=100,
-            client_login_timeout=30.5,
-            reserve_pool_timeout=7.5,
-            server_idle_timeout=120.0,
+            client_login_timeout=60.0,
+            reserve_pool_timeout=5.0,
+            server_idle_timeout=600.0,
             default_pool_size=default_pool_size,
             min_pool_size=min_pool_size,
             reserve_pool_size=reserve_pool_size,
@@ -436,9 +430,6 @@ class TestCharm(unittest.TestCase):
             enable_tls=False,
             backend_version=16,
         )
-        assert "client_login_timeout = 30.5" in expected_content
-        assert "reserve_pool_timeout = 7.5" in expected_content
-        assert "server_idle_timeout = 120.0" in expected_content
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
         )
@@ -478,9 +469,9 @@ class TestCharm(unittest.TestCase):
             pool_mode="session",
             max_db_connections=0,
             max_prepared_statements=100,
-            client_login_timeout=30.5,
-            reserve_pool_timeout=7.5,
-            server_idle_timeout=120.0,
+            client_login_timeout=60.0,
+            reserve_pool_timeout=5.0,
+            server_idle_timeout=600.0,
             default_pool_size=20,
             min_pool_size=10,
             reserve_pool_size=10,
@@ -494,6 +485,60 @@ class TestCharm(unittest.TestCase):
         )
         _render.assert_called_once_with(
             f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", expected_content, 0o700
+        )
+
+    @patch(
+        "charm.BackendDatabaseRequires.backend_major_version",
+        new_callable=PropertyMock,
+        return_value=16,
+    )
+    @patch(
+        "charm.PgBouncerCharm.conf_auth_file",
+        new_callable=PropertyMock,
+        return_value="/dev/shm/pgbouncer_test",
+    )
+    @patch(
+        "relations.backend_database.DatabaseRequires.fetch_relation_field",
+        return_value="BACKNEND_USER",
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.relation", new_callable=PropertyMock, return_value=Mock()
+    )
+    @patch(
+        "charm.BackendDatabaseRequires.postgres_databag",
+        new_callable=PropertyMock,
+        return_value={"endpoints": "HOST:PORT", "read-only-endpoints": "HOST2:PORT"},
+    )
+    @patch("charm.PgBouncerCharm.get_relation_databases")
+    @patch("charm.PgBouncerCharm._reload_pgbouncer")
+    @patch("charm.PgBouncerCharm.render_file")
+    def test_render_pgb_config_custom_timeouts(
+        self,
+        _render,
+        _reload,
+        _get_dbs,
+        _postgres_databag,
+        _backend_rel,
+        _,
+        __,
+        ___,
+    ):
+        _get_dbs.return_value = {}
+        with self.harness.hooks_disabled():
+            self.harness.update_config({
+                "client_login_timeout": 30.5,
+                "reserve_pool_timeout": 7.5,
+                "server_idle_timeout": 120.0,
+            })
+
+        self.charm.render_pgb_config()
+
+        rendered_content = _render.call_args.args[1]
+        assert "client_login_timeout = 30.5" in rendered_content
+        assert "reserve_pool_timeout = 7.5" in rendered_content
+        assert "server_idle_timeout = 120.0" in rendered_content
+        _render.assert_called_once_with(
+            f"{PGB_CONF_DIR}/pgbouncer/instance_0/pgbouncer.ini", rendered_content, 0o700
         )
 
     @patch("charm.Peers.app_databag", new_callable=PropertyMock, return_value={})

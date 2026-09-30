@@ -91,6 +91,7 @@ options:
     default: 60.0
     description: |
       Maximum time in seconds that a client can take to log in before being disconnected.
+      A value of 0 disables this timeout.
 
       Default: 60.0
     type: float

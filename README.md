@@ -62,6 +62,7 @@ Set these using the command `juju config <option>=<value>`.
 - `client_login_timeout`:
   - default: `60.0`
   - Maximum time in seconds that a client can take to log in before being disconnected.
+  - `0` disables this timeout.
 
 - `reserve_pool_timeout`:
   - default: `5.0`

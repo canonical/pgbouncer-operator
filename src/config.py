@@ -23,6 +23,6 @@ class CharmConfig(BaseConfigModel):
     pool_mode: Literal["session", "transaction", "statement"]
     max_db_connections: conint(ge=0)
     max_prepared_statements: conint(ge=0, le=1000)
-    client_login_timeout: confloat(ge=0)
-    reserve_pool_timeout: confloat(ge=0)
-    server_idle_timeout: confloat(ge=0)
+    client_login_timeout: confloat(ge=0, allow_inf_nan=False)
+    reserve_pool_timeout: confloat(ge=0, allow_inf_nan=False)
+    server_idle_timeout: confloat(ge=0, allow_inf_nan=False)

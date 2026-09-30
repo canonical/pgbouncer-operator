@@ -42,6 +42,9 @@ def test_timeout_config_accepts_valid_values():
         ("client_login_timeout", -1),
         ("reserve_pool_timeout", -1),
         ("server_idle_timeout", -1),
+        ("client_login_timeout", float("inf")),
+        ("reserve_pool_timeout", float("inf")),
+        ("server_idle_timeout", float("inf")),
     ],
 )
 def test_timeout_config_rejects_invalid_values(field, value):
