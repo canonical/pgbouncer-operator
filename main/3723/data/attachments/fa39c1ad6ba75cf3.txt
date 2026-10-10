@@ -1,0 +1,25 @@
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:jammy/pgbouncer-0
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:09:21Z
+
+App                  Version  Status   Scale  Charm                Channel      Rev  Exposed  Message
+pgbouncer                     unknown      0  pgbouncer                           0  no       
+postgresql-test-app           waiting    0/3  postgresql-test-app  latest/edge  608  no       waiting for machine
+ubuntu-advantage              unknown      0  ubuntu-advantage     latest/edge  148  no       
+
+Unit                   Workload  Agent       Machine  Public address  Ports  Message
+postgresql-test-app/0  waiting   allocating  0                               waiting for machine
+postgresql-test-app/1  waiting   allocating  1                               waiting for machine
+postgresql-test-app/2  waiting   allocating  2                               waiting for machine
+
+Machine  State    Address  Inst id  Base          AZ  Message
+0        pending           pending  ubuntu@22.04      acquiring LXD image
+1        pending           pending  ubuntu@22.04      acquiring LXD image
+2        pending           pending  ubuntu@22.04      acquiring LXD image
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
