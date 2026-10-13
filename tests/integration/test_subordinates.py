@@ -59,6 +59,7 @@ async def test_deploy(ops_test: OpsTest, charm):
             channel="latest/edge",
             num_units=0,
             base="ubuntu@22.04",
+            series="jammy",
         ),
     )
     await ops_test.model.add_relation(f"{PGB}:{BACKEND_RELATION_NAME}", f"{PG}:database")
