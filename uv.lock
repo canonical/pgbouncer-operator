@@ -649,8 +649,9 @@ dependencies = [
     { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pydantic" },
     { name = "pyyaml" },
-    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "tenacity", version = "9.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "tenacity", version = "9.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "typing-extensions", version = "4.13.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "typing-extensions", version = "4.16.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
@@ -1738,7 +1739,7 @@ charm = [
     { name = "psycopg2", version = "2.9.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pydantic" },
     { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
-    { name = "tenacity", version = "9.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "tenacity", version = "9.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 format = [
     { name = "ruff", marker = "python_full_version >= '3.12'" },
@@ -1753,7 +1754,7 @@ integration = [
     { name = "psycopg2-binary", marker = "python_full_version >= '3.12'" },
     { name = "pytest", marker = "python_full_version >= '3.12'" },
     { name = "pytest-operator", marker = "python_full_version >= '3.12'" },
-    { name = "tenacity", version = "9.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "tenacity", version = "9.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 libs = [
     { name = "cosl" },
@@ -1798,7 +1799,7 @@ charm = [
     { name = "psycopg2", marker = "python_full_version >= '3.10'", specifier = "==2.9.13" },
     { name = "pydantic", specifier = "==1.10.26" },
     { name = "tenacity", marker = "python_full_version == '3.8.*'" },
-    { name = "tenacity", marker = "python_full_version >= '3.10'", specifier = "==9.1.4" },
+    { name = "tenacity", marker = "python_full_version >= '3.10'", specifier = "==9.2.1" },
 ]
 format = [{ name = "ruff", marker = "python_full_version >= '3.12'", specifier = "==0.16.9" }]
 integration = [
@@ -1811,7 +1812,7 @@ integration = [
     { name = "psycopg2-binary", marker = "python_full_version >= '3.12'", specifier = "==2.9.13" },
     { name = "pytest", marker = "python_full_version >= '3.12'", specifier = "==9.1.1" },
     { name = "pytest-operator", marker = "python_full_version >= '3.12'", specifier = "==0.43.2" },
-    { name = "tenacity", marker = "python_full_version >= '3.12'", specifier = "==9.1.4" },
+    { name = "tenacity", marker = "python_full_version >= '3.12'", specifier = "==9.2.1" },
 ]
 libs = [
     { name = "cosl" },
@@ -1883,8 +1884,9 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "tenacity", version = "9.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "tenacity", version = "9.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/68/79/956fc364b70849a54348dab1e8a0e8f39f286ae69621fb967d8f09c9cd6c/postgresql_charms_single_kernel-16.3.10.tar.gz", hash = "sha256:4049d3c9b5fd2b1a43659373d707493234ebf14ec486fcd52940586bae065c76", size = 174444, upload-time = "2026-09-28T13:59:19.801Z" }
 wheels = [
@@ -2943,7 +2945,6 @@ name = "tenacity"
 version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version == '3.9.*'",
     "python_full_version < '3.9'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cd/94/91fccdb4b8110642462e653d5dcb27e7b674742ad68efd146367da7bdb10/tenacity-9.0.0.tar.gz", hash = "sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b", size = 47421, upload-time = "2024-07-29T12:12:27.547Z" }
@@ -2953,7 +2954,19 @@ wheels = [
 
 [[package]]
 name = "tenacity"
-version = "9.1.4"
+version = "9.1.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.9.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d4/2b0cd0fe285e14b36db076e78c93766ff1d529d70408bd1d2a5a84f1d929/tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb", size = 48036, upload-time = "2025-04-02T08:25:09.966Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/30/643397144bfbfec6f6ef821f36f33e57d35946c44a2352d3c9f0ae847619/tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138", size = 28248, upload-time = "2025-04-02T08:25:07.678Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.2.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -2961,9 +2974,9 @@ resolution-markers = [
     "python_full_version == '3.11.*'",
     "python_full_version == '3.10.*'",
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/9e/497c1c8ebe5a5b5d1d4a7511aea22c0bb1a97e3170d98abdef0e1b34265a/tenacity-9.2.1.tar.gz", hash = "sha256:a606b5c808d0cded4a359d5b9932d867ff2a6a6b64d37350260fd01bbdf83839", size = 58261, upload-time = "2026-10-07T12:13:01.633Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/26/1ff2b0721ac66a3ec5b1402b333110b352ab0a8724052ac279a7b82d40c4/tenacity-9.2.1-py3-none-any.whl", hash = "sha256:9e56f17539296baab7beabb08b92f6ee3d7be92d8be72d763360677c2ad6580e", size = 32310, upload-time = "2026-10-07T12:13:00.102Z" },
 ]
 
 [[package]]
