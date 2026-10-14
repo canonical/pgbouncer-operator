@@ -645,8 +645,8 @@ version = "1.10.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "diskcache" },
-    { name = "ops", version = "2.23.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "ops", version = "3.8.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -1583,7 +1583,7 @@ wheels = [
 
 [[package]]
 name = "ops"
-version = "2.23.5"
+version = "2.23.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.9.*'",
@@ -1594,19 +1594,19 @@ dependencies = [
     { name = "pyyaml" },
     { name = "websocket-client", version = "1.8.0", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/6c/4765feeaffe2a2c6ee4d7de0f06512b2cc84a7f97f5ea19c96db9b4436da/ops-2.23.5.tar.gz", hash = "sha256:270dc1581ed437205cbb385354e778e9ed302c5a4b89b0ef8a738a16d6516aff", size = 538848, upload-time = "2026-08-31T05:18:30.096Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/78/eac419ee3d2a5904a9fa250861077b61f9d3a31d7edcb04505ac704596e7/ops-2.23.6.tar.gz", hash = "sha256:03939c2de79fc60df1273484d2b4a45b921f403d4692a95f7b702a756e68a990", size = 539598, upload-time = "2026-10-08T22:53:41.761Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/fb/a58bca4e7a94bc80d83062f1eebaa912c6381b16a61e8ba17aba4eb05376/ops-2.23.5-py3-none-any.whl", hash = "sha256:d18ccdb56db17c4ee51c4a3dfcb930f09da0fe411ae1551559e0a7b60aa3b1d0", size = 191048, upload-time = "2026-08-31T05:18:28.374Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/06/f68d22a4342fad0c5fea07b222b811159190b9299d57683bec6b027dba15/ops-2.23.6-py3-none-any.whl", hash = "sha256:cd5c9671c1178e81b5e5d5b09613e23799cfbd5737232e39086eae3b23a0bf6a", size = 191129, upload-time = "2026-10-08T22:53:40.096Z" },
 ]
 
 [package.optional-dependencies]
 tracing = [
-    { name = "ops-tracing", version = "2.23.5", source = { registry = "https://pypi.org/simple" } },
+    { name = "ops-tracing", version = "2.23.6", source = { registry = "https://pypi.org/simple" } },
 ]
 
 [[package]]
 name = "ops"
-version = "3.8.2"
+version = "3.9.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -1619,36 +1619,36 @@ dependencies = [
     { name = "pyyaml" },
     { name = "websocket-client", version = "1.9.2", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/0a/6e5730c50c1737b505ccd0d7bc3c53c625745a75aae9faa2fe635ea7a473/ops-3.8.2.tar.gz", hash = "sha256:a516e76a76fdfd4a37f26f2b9956c332b56bda72014c8565ceb4f6deb137407f", size = 610712, upload-time = "2026-08-31T04:37:49.011Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/03/d87306f7e704a0f75f461d40d6141bfbd1ea38ba329ca0e88f6c3a20cfd5/ops-3.9.0.tar.gz", hash = "sha256:f8fd7fa05359e9fc057663b1a652602f5803db0b37e1bbfe9b63971c54e4b3b3", size = 420379, upload-time = "2026-10-08T05:36:18.184Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/4c/ddaef2a0f8d208aed071087b61e6984bb8507cf202c965025446cf4cce8a/ops-3.8.2-py3-none-any.whl", hash = "sha256:dcead2241d17921441123425072dd6adddf5f337dc6d6fd2b3ba1fd60a0af822", size = 215761, upload-time = "2026-08-31T04:37:45.153Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/2f/faf83b14fd88c0e5ae26a4f5eb66f06f708fe322223823acfd45f8d32594/ops-3.9.0-py3-none-any.whl", hash = "sha256:2dc7a77edae408886ccd348be590df0e03589dfe5e3e115e238d5746850eed0c", size = 219271, upload-time = "2026-10-08T05:36:14.03Z" },
 ]
 
 [package.optional-dependencies]
 tracing = [
-    { name = "ops-tracing", version = "3.8.2", source = { registry = "https://pypi.org/simple" } },
+    { name = "ops-tracing", version = "3.9.0", source = { registry = "https://pypi.org/simple" } },
 ]
 
 [[package]]
 name = "ops-tracing"
-version = "2.23.5"
+version = "2.23.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version < '3.9'",
 ]
 dependencies = [
     { name = "opentelemetry-sdk", version = "1.33.1", source = { registry = "https://pypi.org/simple" } },
-    { name = "ops", version = "2.23.5", source = { registry = "https://pypi.org/simple" } },
+    { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" } },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/6e/8f8aae9d0440be0d2cc6cb7c4554ba96c543f5e1d58388072e79a2a20292/ops_tracing-2.23.5.tar.gz", hash = "sha256:630a22b32d7da67c7f58283ebef5ef36d3701f0c4592d6ee7d536d0cdd88461d", size = 28450, upload-time = "2026-08-31T05:18:27.735Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/7f/8fe3e5b444a59e4674f0d5d694855807bfdc0220b30e8f135ce95a7a70b7/ops_tracing-2.23.6.tar.gz", hash = "sha256:a22d84e31e7a1ddefe355430d312e95413453db2f0ecd4514cfec4afa6b37b79", size = 28952, upload-time = "2026-10-08T22:53:42.46Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/ca/005064efc6c0bc2043c3a8a8e6ffc9adeb66a03f75056f31226ffa321b88/ops_tracing-2.23.5-py3-none-any.whl", hash = "sha256:06d5b39817cb7b184f7756b64851e9138fd5952f5b855f37c732ab923f7cb233", size = 31407, upload-time = "2026-08-31T05:18:26.626Z" },
+    { url = "https://files.pythonhosted.org/packages/53/ff/a33063dcc14f2b3071fd412716a8c68266748b30f04da263a5988bf557f3/ops_tracing-2.23.6-py3-none-any.whl", hash = "sha256:61fa90aaa018e3ca5fb0d560c5ef1a0381ba457b3fe6d3ea1741ed07bb24e4cf", size = 31384, upload-time = "2026-10-08T22:53:41.196Z" },
 ]
 
 [[package]]
 name = "ops-tracing"
-version = "3.8.2"
+version = "3.9.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -1659,12 +1659,12 @@ resolution-markers = [
 dependencies = [
     { name = "opentelemetry-api", version = "1.45.0", source = { registry = "https://pypi.org/simple" } },
     { name = "opentelemetry-sdk", version = "1.45.0", source = { registry = "https://pypi.org/simple" } },
-    { name = "ops", version = "3.8.2", source = { registry = "https://pypi.org/simple" } },
+    { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" } },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/43/9b968604c7308a18a27176db2ff7b0f4035f04033d8782e3014530b712fa/ops_tracing-3.8.2.tar.gz", hash = "sha256:30049c9a28688dad4f34653b983daf9a7904ebc7d56203639ae2e99fdf7c388f", size = 29995, upload-time = "2026-08-31T04:37:51.223Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/74/f328894681d67b225107323a65ad115560c642ab7b28909b125f56a67516/ops_tracing-3.9.0.tar.gz", hash = "sha256:ca49fe32e5b86b55fd8ea600b2edd0cd02fbc5c88320d3befe9fde846546eac0", size = 33738, upload-time = "2026-10-08T05:36:20.792Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/bb/3ce7a5c59d0d149c615a221d829685538378264c2be97a1f80462f0a7a6d/ops_tracing-3.8.2-py3-none-any.whl", hash = "sha256:5809909692210aa3d782cad93a631fa69653b304d2abdc185922cca76e59621a", size = 32988, upload-time = "2026-08-31T04:37:47.818Z" },
+    { url = "https://files.pythonhosted.org/packages/43/09/66dbaed3e0ca6b83a8561e979fa6eeaf2d2bb20daee6e3497db0972c1bc2/ops_tracing-3.9.0-py3-none-any.whl", hash = "sha256:3046311e3cb5de95147c953c945d6186cb78a1af42ed4ebe775720024065b2f1", size = 33293, upload-time = "2026-10-08T05:36:16.963Z" },
 ]
 
 [[package]]
@@ -1729,8 +1729,8 @@ source = { virtual = "." }
 [package.dev-dependencies]
 charm = [
     { name = "jinja2" },
-    { name = "ops", version = "2.23.5", source = { registry = "https://pypi.org/simple" }, extra = ["tracing"], marker = "python_full_version < '3.9'" },
-    { name = "ops", version = "3.8.2", source = { registry = "https://pypi.org/simple" }, extra = ["tracing"], marker = "python_full_version >= '3.10'" },
+    { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" }, extra = ["tracing"], marker = "python_full_version < '3.9'" },
+    { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, extra = ["tracing"], marker = "python_full_version >= '3.10'" },
     { name = "postgresql-charms-single-kernel" },
     { name = "psycopg", version = "3.2.13", source = { registry = "https://pypi.org/simple" }, extra = ["c"], marker = "python_full_version < '3.9'" },
     { name = "psycopg", version = "3.3.6", source = { registry = "https://pypi.org/simple" }, extra = ["c"], marker = "python_full_version >= '3.10'" },
@@ -1763,8 +1763,8 @@ libs = [
     { name = "idna", version = "3.20", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "jsonschema", version = "4.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "jsonschema", version = "4.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "ops", version = "2.23.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "ops", version = "3.8.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "poetry-core", version = "1.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "poetry-core", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pydantic" },
@@ -1790,7 +1790,7 @@ unit = ">=3.12"
 charm = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "ops", extras = ["tracing"], marker = "python_full_version == '3.8.*'" },
-    { name = "ops", extras = ["tracing"], marker = "python_full_version >= '3.10'", specifier = "==3.8.2" },
+    { name = "ops", extras = ["tracing"], marker = "python_full_version >= '3.10'", specifier = "==3.9.0" },
     { name = "postgresql-charms-single-kernel", specifier = "==16.3.10" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version == '3.8.*'" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version >= '3.10'", specifier = "==3.3.6" },
@@ -1881,8 +1881,8 @@ name = "postgresql-charms-single-kernel"
 version = "16.3.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ops", version = "2.23.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "ops", version = "3.8.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "ops", version = "2.23.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "ops", version = "3.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "tenacity", version = "9.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "tenacity", version = "9.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
