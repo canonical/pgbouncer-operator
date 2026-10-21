@@ -1902,7 +1902,7 @@ charm = [
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "ops", extras = ["tracing"], marker = "python_full_version == '3.8.*'" },
     { name = "ops", extras = ["tracing"], marker = "python_full_version >= '3.10'", specifier = "==3.9.0" },
-    { name = "postgresql-charms-single-kernel", specifier = "==16.3.19" },
+    { name = "postgresql-charms-single-kernel", specifier = "==16.3.20" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version == '3.8.*'" },
     { name = "psycopg", extras = ["c"], marker = "python_full_version >= '3.10'", specifier = "==3.3.6" },
     { name = "psycopg2", marker = "python_full_version == '3.8.*'" },
@@ -1990,7 +1990,7 @@ wheels = [
 
 [[package]]
 name = "postgresql-charms-single-kernel"
-version = "16.3.19"
+version = "16.3.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography", version = "44.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version <= '3.9'" },
@@ -2001,9 +2001,9 @@ dependencies = [
     { name = "tenacity", version = "9.1.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "tenacity", version = "9.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/11/df/8323964f70333961f1dcd6b92a888b210a14304e070c71797470e0261ff6/postgresql_charms_single_kernel-16.3.19.tar.gz", hash = "sha256:dc1fe229488bda6650a29422b7a87a1db3a55131b1cf21ddaad6ad6d9087d83f", size = 239093, upload-time = "2026-10-16T13:57:58.052Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/fa/611a3091aa7012ccd091e579a9cba7fb6bbdfd1969a5e0b84ae07a45bb10/postgresql_charms_single_kernel-16.3.20.tar.gz", hash = "sha256:d5eb56983e0fa371c695ac4cc0d47406676d2dd669be6b34508fcce87350584b", size = 430581, upload-time = "2026-10-21T06:25:53.199Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e8/37/34146924cc5a61b588e5cda1b1b653204ed2501d343223fecf84763585c3/postgresql_charms_single_kernel-16.3.19-py3-none-any.whl", hash = "sha256:b135baab5b8b827e83d0feecebb9d34e909ab4382adde88623eeeaf39ced53fa", size = 280316, upload-time = "2026-10-16T13:57:56.56Z" },
+    { url = "https://files.pythonhosted.org/packages/66/db/d45946905c5fcf18b9b442e9f82dadc421b9eb454858f6f0bcc194605129/postgresql_charms_single_kernel-16.3.20-py3-none-any.whl", hash = "sha256:68390002d316b052e23ae368450da457f39208fe7f6d9fee2a2fcb559e96f328", size = 486067, upload-time = "2026-10-21T06:25:51.539Z" },
 ]
 
 [[package]]
