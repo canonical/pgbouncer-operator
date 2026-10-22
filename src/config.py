@@ -18,7 +18,7 @@ class CharmConfig(BaseConfigModel):
 
     listen_port: PositiveInt
     metrics_port: PositiveInt
-    vip: Optional[IPvAnyAddress]
+    vip: Optional[IPvAnyAddress] = None
     local_connection_type: Literal["tcp", "uds"]
     pool_mode: Literal["session", "transaction", "statement"]
     max_db_connections: conint(ge=0)
