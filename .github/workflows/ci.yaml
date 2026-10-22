@@ -77,9 +77,10 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v54.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@charmcraft-monorepo
     with:
       cache: false
+      charmcraft-snap-channel: latest/candidate
     permissions:
       contents: read
     cache-mode: none
