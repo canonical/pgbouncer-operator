@@ -15,7 +15,7 @@ For each release, this table shows:
 
 | Release| PgBouncer version | Juju version | [PostgreSQL 16 on 24.04](https://charmhub.io/postgresql?channel=16/stable) | [TLS encryption](/t/12310) | [COS monitoring](/t/12308) | [Minor version upgrades](/t/12317) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|[1017], [1018], [1019], [1020], [1021], [1022]| `1.21.0` | `3.6.24+` | ![check] | ![check] | ![check] | ![check]
+|[1083], [1084], [1090], [1091], [1092], [1093]| `1.21.0` | `3.6.24+` | ![check] | ![check] | ![check] | ![check]
 |[1017], [1018], [1019], [1020], [1021], [1022]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[909], [910], [911], [912], [913], [914]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
 |[897], [898], [899], [900], [901], [902]| `1.21.0` | `3.6.1+` | ![check] | ![check] | ![check] | ![check]
