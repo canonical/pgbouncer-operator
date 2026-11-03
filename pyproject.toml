@@ -16,7 +16,7 @@ charm = [
     "tenacity==9.2.1; python_version > '3.9'",
     # Focal cannot use 9.1
     "tenacity; python_version == '3.8'",
-    "pydantic==1.10.26",
+    "pydantic==1.10.27",
     "psycopg2==2.9.13; python_version > '3.9'",
     # Focal cannot use 2.9.11
     "psycopg2; python_version == '3.8'",
