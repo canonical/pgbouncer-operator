@@ -86,3 +86,18 @@ options:
 
       Default: 100
     type: int
+
+  exposed_instances:
+    default: auto
+    description: |
+      Controls the number of Pgbouncer instances started on exposed deployment of the charm.
+      Allowed values are:
+
+      single
+      Starts a single Pgbouncer instance
+
+      auto
+      Starts at least 2 and up to 4 Pgbouncer instances, based on the amount of available CPU cores.
+
+      Default: auto
+    type: string
