@@ -80,6 +80,7 @@ jobs:
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v54.0.0
     with:
       cache: false
+      lxd-snap-channel: "5.21/stable"
     permissions:
       contents: read
     cache-mode: none
