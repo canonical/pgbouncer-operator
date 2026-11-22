@@ -77,10 +77,13 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v56.0.0
+    # `temp-pgb-workaround` branch temporary workaround to unblock release for Launchpad team
+    # (20.04 fails to build on 26.04 runner because of apparmor issues). Not a long-term solution,
+    # since 22.04 runner will be removed from GitHub before end of pgbouncer-operator 20.04 LTS
+    # period.
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@temp-pgb-workaround
     with:
       cache: false
-      lxd-snap-channel: "5.21/stable"
     permissions:
       contents: read
     cache-mode: none
