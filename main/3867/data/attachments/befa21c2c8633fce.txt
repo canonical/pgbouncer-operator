@@ -1,0 +1,109 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] active: VIP: 10.53.100.180
+  pgbouncer/2 [idle] active: 
+  pgbouncer/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/3 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [executing] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  pgbouncer/0 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/2 [idle] blocked: ha integration used without vip configuration
+  pgbouncer/3 [idle] blocked: ha integration used without vip configuration
+[32mINFO    [0m integration.relations.pgbouncer_provider.test_data_integrator_ha:test_data_integrator_ha.py:154 Data integrator host is 10.53.100.179
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:02:35Z
+
+App                       Version  Status  Scale  Charm                     Channel       Rev  Exposed  Message
+data-integrator                    active      3  data-integrator           latest/edge   546  no       
+hacluster                 2.1.6    active      3  hacluster                 2.8/stable    164  no       Unit is ready and clustered
+pgbouncer                 1.21.0   active      3  pgbouncer                                 0  no       
+postgresql                14.24    active      2  postgresql                14/edge      1258  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable      710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+data-integrator/0*           active    idle   0        10.53.100.179             
+  hacluster/0*               active    idle            10.53.100.179             Unit is ready and clustered
+  pgbouncer/0*               active    idle            10.53.100.179   6432/tcp  
+data-integrator/1            active    idle   1        10.53.100.232             
+  hacluster/2                active    idle            10.53.100.232             Unit is ready and clustered
+  pgbouncer/3                active    idle            10.53.100.232   6432/tcp  
+data-integrator/2            active    idle   2        10.53.100.34              
+  hacluster/1                active    idle            10.53.100.34              Unit is ready and clustered
+  pgbouncer/2                active    idle            10.53.100.34    6432/tcp  
+postgresql/0                 active    idle   4        10.53.100.121   5432/tcp  
+postgresql/1*                active    idle   5        10.53.100.86    5432/tcp  Primary
+self-signed-certificates/0*  active    idle   3        10.53.100.238             
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.53.100.179  juju-8dd990-0  ubuntu@24.04  runnervmeozm8  Running
+1        started  10.53.100.232  juju-8dd990-1  ubuntu@24.04  runnervmeozm8  Running
+2        started  10.53.100.34   juju-8dd990-2  ubuntu@24.04  runnervmeozm8  Running
+3        started  10.53.100.238  juju-8dd990-3  ubuntu@24.04  runnervmeozm8  Running
+4        started  10.53.100.121  juju-8dd990-4  ubuntu@22.04  runnervmeozm8  Running
+5        started  10.53.100.86   juju-8dd990-5  ubuntu@22.04  runnervmeozm8  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:46:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:46:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:46:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:46:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:47:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:47:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:47:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:47:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:47:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:47:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:47:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:47:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-postgresql-1: 01:48:22 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f6bd80cc400 state=finished raised Exception>]
+unit-postgresql-1: 01:48:24 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7f3160e88b50 state=finished raised Exception>]
+unit-postgresql-1: 01:48:26 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fb963505360 state=finished raised Exception>]
+unit-postgresql-1: 01:48:29 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7ff85c028b50 state=finished raised Exception>]
+unit-postgresql-1: 01:48:33 ERROR unit.postgresql/1.juju-log Unable to get the state of the cluster
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 588, in are_replicas_up
+    members = self.cluster_status()
+  File "/var/lib/juju/agents/unit-postgresql-1/charm/src/cluster.py", line 377, in cluster_status
+    raise RetryError(
+tenacity.RetryError: RetryError[<Future at 0x7fd9052c5360 state=finished raised Exception>]
+unit-postgresql-1: 01:49:05 ERROR unit.postgresql/1.juju-log upgrade:5: Failed to list PostgreSQL database users: could not translate host name "None" to address: Temporary failure in name resolution
+
+unit-self-signed-certificates-0: 01:59:38 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#pgbouncer": settings f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#pgbouncer not found (not found)
+unit-pgbouncer-2: 01:59:40 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#self-signed-certificates": settings f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#self-signed-certificates not found (not found)
+unit-pgbouncer-3: 01:59:40 ERROR juju.worker.dependency "uniter" manifold worker returned unexpected error: relation scope id "f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#self-signed-certificates": settings f5eb4559-2000-4625-884c-a7a7fd8dd990:r#11#self-signed-certificates not found (not found)
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
