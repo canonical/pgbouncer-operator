@@ -13,12 +13,6 @@
   ],
   packageRules: [
     {
-      matchPackageNames: [
-        'pydantic',
-      ],
-      allowedVersions: '<2.0.0',
-    },
-    {
       matchPackageNames: ['postgresql-charms-single-kernel'],
       schedule: ['* * * * *'],
       minimumReleaseAge: '0',

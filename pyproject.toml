@@ -16,7 +16,6 @@ charm = [
     "tenacity==9.2.1; python_version > '3.9'",
     # Focal cannot use 9.1
     "tenacity; python_version == '3.8'",
-    "pydantic==1.10.27",
     "psycopg2==2.9.13; python_version > '3.9'",
     # Focal cannot use 2.9.11
     "psycopg2; python_version == '3.8'",
@@ -31,9 +30,11 @@ libs = [
     "ops>=2.0.0",
     # data_platform_libs/v0/upgrade.py
     "poetry-core",
-    # data_platform_libs/v0/upgrade.py requires pydantic ^1.10
+    # data_platform_libs/v0/upgrade.py requires pydantic
     # grafana_agent/v0/cos_agent.py requires pydantic
-    "pydantic<2",
+    "pydantic",
+    # Focal caonnot build 2.11
+    "pydantic <2.11; python_version == '3.8'",
     # grafana_agent/v0/cos_agent.py
     "cosl",
     # tls_certificates_interface/v2/tls_certificates.py
