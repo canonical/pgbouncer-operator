@@ -5,7 +5,7 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 import tenacity
-from charms.data_platform_libs.v0.upgrade import ClusterNotReadyError
+from charms.data_platform_libs.v1.upgrade import ClusterNotReadyError
 from ops.testing import Harness
 
 from charm import PgBouncerCharm

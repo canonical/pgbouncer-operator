@@ -17,6 +17,27 @@ platforms:
 # - actions.yaml, config.yaml, metadata.yaml
 #   (https://github.com/canonical/charmcraft/blob/9ff19c328e23b50cc06f04e8a5ad4835740badf4/charmcraft/services/package.py#L290-L293
 #   https://github.com/canonical/charmcraft/blob/9ff19c328e23b50cc06f04e8a5ad4835740badf4/charmcraft/services/package.py#L156-L157)
+charm-libs:
+  - lib: data_platform_libs.data_interfaces
+    version: "0"
+  - lib: data_platform_libs.data_models
+    version: "1"
+  - lib: data_platform_libs.upgrade
+    version: "1"
+  - lib: grafana_agent.cos_agent
+    version: "0"
+  - lib: operator_libs_linux.systemd
+    version: "1"
+  - lib: operator_libs_linux.snap
+    version: "2"
+  - lib: pgbouncer_k8s.pgb
+    version: "0"
+  - lib: postgresql_k8s.postgresql
+    version: "0"
+  - lib: postgresql_k8s.postgresql_tls
+    version: "0"
+  - lib: tls_certificates_interface.tls_certificates
+    version: "2"
 parts:
   charm-uv:
     plugin: uv

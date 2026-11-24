@@ -28,7 +28,7 @@ if sys.version_info < (3, 9):
 
 import psycopg2
 from charms.data_platform_libs.v0.data_interfaces import DataPeerData, DataPeerUnitData
-from charms.data_platform_libs.v0.data_models import TypedCharmBase
+from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider, ProtocolNotFoundError
 from charms.operator_libs_linux.v1 import systemd
 from charms.operator_libs_linux.v2 import snap
