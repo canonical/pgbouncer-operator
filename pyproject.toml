@@ -10,20 +10,20 @@ requires-python = ">=3.8"
 [dependency-groups]
 charm = [
     "jinja2==3.1.6",
-    "ops[tracing]==3.9.0; python_version > '3.9'",
+    "ops[tracing]==3.10.0; python_version > '3.9'",
     # Focal cannot use 3
     "ops[tracing]; python_version == '3.8'",
     "tenacity==9.2.1; python_version > '3.9'",
     # Focal cannot use 9.1
     "tenacity; python_version == '3.8'",
-    "pydantic==1.10.26",
+    "pydantic==1.10.27",
     "psycopg2==2.9.13; python_version > '3.9'",
     # Focal cannot use 2.9.11
     "psycopg2; python_version == '3.8'",
-    "psycopg[c]==3.3.6; python_version > '3.9'",
+    "psycopg[c]==3.3.9; python_version > '3.9'",
     # Focal cannot use 3.3.2
     "psycopg[c]; python_version == '3.8'",
-    "postgresql-charms-single-kernel==16.3.19"
+    "postgresql-charms-single-kernel==16.3.26"
 ]
 
 libs = [
@@ -45,7 +45,7 @@ libs = [
 ]
 
 format = [
-    "ruff==0.17.2"
+    "ruff==0.17.6"
 ]
 
 lint = [
@@ -53,7 +53,7 @@ lint = [
 ]
 
 unit = [
-    "coverage[toml]==7.17.0",
+    "coverage[toml]==7.17.4",
     "pytest==9.1.1",
     "parameterized==0.9.0"
 ]
@@ -68,7 +68,7 @@ integration = [
     "landscape-api-py3==0.9.0",
     "allure-pytest==2.16.2",
     "allure-pytest-default-results==0.1.4",
-    "jubilant==1.14.0"
+    "jubilant==1.15.0"
 ]
 
 [tool.uv.dependency-groups]
