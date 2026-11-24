@@ -10,7 +10,7 @@ requires-python = ">=3.8"
 [dependency-groups]
 charm = [
     "jinja2==3.1.6",
-    "ops[tracing]==3.9.0; python_version > '3.9'",
+    "ops[tracing]==3.10.0; python_version > '3.9'",
     # Focal cannot use 3
     "ops[tracing]; python_version == '3.8'",
     "tenacity==9.2.1; python_version > '3.9'",
