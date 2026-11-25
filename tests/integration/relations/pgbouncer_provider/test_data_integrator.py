@@ -17,6 +17,7 @@ from ...helpers.helpers import (
     get_unit_cores,
 )
 from ...juju_ import juju_major_version
+from ...markers import juju3
 from .helpers import (
     DATA_INTEGRATOR_APP_NAME,
     check_exposed_connection,
@@ -123,19 +124,21 @@ async def test_change_config(ops_test: OpsTest):
         assert service_cfg is not f"cat: {path}: No such file or directory"
 
 
+@juju3
 async def test_change_exposed_instances(ops_test: OpsTest):
     units = [ops_test.model.units[f"{PGB}/0"], ops_test.model.units[f"{PGB}/1"]]
     cores = max(min(await get_unit_cores(ops_test, units[0]), 4), 2)
-    params = {"timeout": 10} if juju_major_version < 3 else {"timeout": 10, "block": True}
 
     await ops_test.model.applications[PGB].set_config({"exposed_instances": "single"})
     await ops_test.model.wait_for_idle(apps=[PGB], timeout=120)
 
     for unit in units:
-        res = await unit.run(f"systemctl is-active {PGB}-{PGB}@0", **params)
+        res = await unit.run(f"systemctl is-active {PGB}-{PGB}@0", timeout=10, block=True)
         assert res.results["stdout"] == "active\n"
         for service_id in range(1, cores):
-            res = await unit.run(f"systemctl is-active {PGB}-{PGB}@{service_id}", **params)
+            res = await unit.run(
+                f"systemctl is-active {PGB}-{PGB}@{service_id}", timeout=10, block=True
+            )
             assert res.results["stdout"] == "inactive\n"
 
     # revert the config
@@ -144,5 +147,7 @@ async def test_change_exposed_instances(ops_test: OpsTest):
 
     for unit in units:
         for service_id in range(cores):
-            res = await unit.run(f"systemctl is-active {PGB}-{PGB}@{service_id}", **params)
+            res = await unit.run(
+                f"systemctl is-active {PGB}-{PGB}@{service_id}", timeout=10, block=True
+            )
             assert res.results["stdout"] == "active\n"
