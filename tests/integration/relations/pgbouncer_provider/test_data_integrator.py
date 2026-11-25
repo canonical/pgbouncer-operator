@@ -135,7 +135,7 @@ async def test_change_exposed_instances(ops_test: OpsTest):
         assert res.results["stdout"] == "active\n"
         for service_id in range(1, cores):
             res = await unit.run(
-                f"systemctl status {PGB}-{PGB}@{service_id}", timeout=10, block=True
+                f"systemctl is-active {PGB}-{PGB}@{service_id}", timeout=10, block=True
             )
             assert res.results["stdout"] == "inactive\n"
 
@@ -146,6 +146,6 @@ async def test_change_exposed_instances(ops_test: OpsTest):
     for unit in units:
         for service_id in range(cores):
             res = await unit.run(
-                f"systemctl status {PGB}-{PGB}@{service_id}", timeout=10, block=True
+                f"systemctl is-active {PGB}-{PGB}@{service_id}", timeout=10, block=True
             )
             assert res.results["stdout"] == "active\n"
