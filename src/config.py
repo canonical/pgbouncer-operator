@@ -23,3 +23,4 @@ class CharmConfig(BaseConfigModel):
     pool_mode: Literal["session", "transaction", "statement"]
     max_db_connections: int = Field(ge=0)
     max_prepared_statements: int = Field(ge=0, le=1000)
+    exposed_instances: Literal["auto", "single"]

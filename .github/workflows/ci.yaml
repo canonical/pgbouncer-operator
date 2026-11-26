@@ -34,7 +34,7 @@ on:
 jobs:
   lint-workflows:
     name: Lint .github/workflows/
-    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v54.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v56.0.0
     permissions:
       contents: read
     cache-mode: none
@@ -77,13 +77,10 @@ jobs:
 
   build:
     name: Build charm
-    # `temp-pgb-workaround` branch temporary workaround to unblock release for Launchpad team
-    # (20.04 fails to build on 26.04 runner because of apparmor issues). Not a long-term solution,
-    # since 22.04 runner will be removed from GitHub before end of pgbouncer-operator 20.04 LTS
-    # period.
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@temp-pgb-workaround
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v56.0.0
     with:
       cache: false
+      charmcraft-snap-channel: latest/candidate  # >=4.5.1
     permissions:
       contents: read
     cache-mode: none
