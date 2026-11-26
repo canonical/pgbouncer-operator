@@ -189,7 +189,7 @@ class PgBouncerCharm(TypedCharmBase):
     @property
     def instances_count(self):
         """Returns the amount of instances to spin based on expose."""
-        if self._is_exposed:
+        if self._is_exposed and self.config.exposed_instances == "auto":
             return max(min(os.cpu_count(), 4), 2)
         else:
             return 1
@@ -620,6 +620,21 @@ class PgBouncerCharm(TypedCharmBase):
             else:
                 self.unit.status = ActiveStatus()
 
+    def _reconcile_expose_service_count(self) -> None:
+        if not self._is_exposed:
+            return
+
+        if self.config.exposed_instances == "auto":
+            for i in self.service_ids:
+                service = f"{PGB}-{self.app.name}@{i}"
+                if not systemd.service_running(service):
+                    systemd.service_start(service)
+        elif self.config.exposed_instances == "single":
+            for i in range(1, max(min(os.cpu_count(), 4), 2)):
+                service = f"{PGB}-{self.app.name}@{i}"
+                if systemd.service_running(service):
+                    systemd.service_stop(service)
+
     def _on_config_changed(self, event) -> None:
         """Config changed handler.
 
@@ -668,6 +683,7 @@ class PgBouncerCharm(TypedCharmBase):
         if self.backend.postgres:
             self.render_prometheus_service()
 
+        self._reconcile_expose_service_count()
         self.update_client_connection_info()
         self.update_status()
 
