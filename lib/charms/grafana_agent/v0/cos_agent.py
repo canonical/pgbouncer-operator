@@ -256,7 +256,7 @@ if TYPE_CHECKING:
 
 LIBID = "dc15fa84cef84ce58155fb84f6c6213a"
 LIBAPI = 0
-LIBPATCH = 25
+LIBPATCH = 27
 
 PYDEPS = ["cosl >= 0.0.50", "pydantic"]
 
@@ -787,7 +787,7 @@ class COSAgentProvider(Object):
     def _dashboards(self) -> List[str]:
         dashboards: List[str] = []
         for d in self._dashboard_dirs:
-            for path in Path(d).glob("*"):
+            for path in sorted(Path(d).glob("*")):
                 with open(path, "rt") as fp:
                     dashboard = json.load(fp)
                 rel_path = str(
@@ -1111,7 +1111,8 @@ class COSAgentRequirer(Object):
                                 type=receiver_protocol_to_transport_protocol[protocol],
                             ),
                         )
-                        for protocol in self.requested_tracing_protocols()
+                        # Sort for a stable order across serializations: the source is a set.
+                        for protocol in sorted(self.requested_tracing_protocols())
                     ],
                 ).dump(relation.data[self._charm.unit])
 
@@ -1251,7 +1252,10 @@ class COSAgentRequirer(Object):
                 peer_data.append(data)
                 app_names.add(app_name)
 
-        return peer_data
+        # Sort for a stable order across events: peer units are iterated as a set, so
+        # consumers aggregating this data (deduping by app name) would otherwise see
+        # varying orders.
+        return sorted(peer_data, key=lambda data: data.app_name)
 
     @property
     def metrics_alerts(self) -> Dict[str, Any]:
@@ -1396,6 +1400,7 @@ class COSAgentRequirer(Object):
         dashboards: List[Dict[str, Any]] = []
 
         seen_apps: List[str] = []
+        no_title_counter = 0
         for data in self._gather_peer_data():
             app_name = data.app_name
             if app_name in seen_apps:
@@ -1405,7 +1410,10 @@ class COSAgentRequirer(Object):
             for encoded_dashboard in data.dashboards or ():
                 content = json.loads(LZMABase64.decompress(encoded_dashboard))
 
-                title = content.get("title", "no_title")
+                title = content.get("title") or content.get("dashboard", {}).get("title")
+                if not title:
+                    no_title_counter += 1
+                    title = f"no_title_{no_title_counter}"
 
                 dashboards.append(
                     {
@@ -1417,7 +1425,11 @@ class COSAgentRequirer(Object):
                     }
                 )
 
-        return dashboards
+        # Sort for a stable order regardless of the order in which dashboards were stored.
+        return sorted(
+            dashboards,
+            key=lambda dashboard: (dashboard["charm"], dashboard["title"]),
+        )
 
 
 def charm_tracing_config(
